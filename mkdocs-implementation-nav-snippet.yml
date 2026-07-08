@@ -1,0 +1,13 @@
+# Add this under nav in mkdocs.yml
+
+    - Implementation:
+        - Implementation Map: implementation/implementation.md
+        - Repository Structure: implementation/repository.md
+        - Modules: implementation/modules.md
+        - Implementation Skeleton: implementation/skeleton.md
+        - Naming Standards: implementation/naming.md
+        - Coding Standards: implementation/coding.md
+        - Build: implementation/build.md
+        - Testing: implementation/testing.md
+        - Local Development: implementation/local-development.md
+        - CI/CD: implementation/ci-cd.md

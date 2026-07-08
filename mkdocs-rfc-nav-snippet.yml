@@ -1,0 +1,8 @@
+# Replace or update the RFC nav section in mkdocs.yml
+
+    - RFC:
+        - RFC Framework: rfc/README.md
+        - RFC Index: rfc/index.md
+        - RFC Template: rfc/rfc-template.md
+        - RFC-0000 Authoring Standard: rfc/rfc-0000-authoring-standard.md
+        - RFC-9000 AI Control Plane Reservation: rfc/rfc-9000-ai-control-plane-reservation.md

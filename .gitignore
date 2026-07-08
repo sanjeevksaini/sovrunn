@@ -1,0 +1,25 @@
+.DS_Store
+.DS_Store
+.venv/
+site/
+
+# macOS
+
+.DS_Store
+
+# Python / MkDocs
+
+.venv/
+
+site/
+
+# Build outputs
+
+dist/
+
+build/
+
+# Logs
+
+*.log
+
