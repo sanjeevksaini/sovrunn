@@ -185,6 +185,7 @@
   },
   "active": "4ed0a69e9db78f8a",
   "lastOpenFiles": [
+    "rfc/index.md",
     "architecture/transaction-runtime.md",
     "architecture/sir-runtime.md",
     "architecture/session-runtime.md",
@@ -210,7 +211,6 @@
     "architecture/ai-control-plane.md",
     "rfc/rfc-template.md",
     "rfc/rfc-0000-authoring-standard.md",
-    "rfc/index.md",
     "specifications/capability",
     "specifications/serialization",
     "specifications/protocol",

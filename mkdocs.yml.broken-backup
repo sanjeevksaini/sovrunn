@@ -1,8 +1,7 @@
 site_name: Sovrunn Data Engine Documentation
-site_description: Architecture, specifications, runtime, control plane, data plane, implementation, and RFC documentation for Sovrunn Data Engine.
+site_description: Architecture, specifications, runtime, control plane, and data plane documentation for Sovrunn Data Engine.
 site_author: Sovrunn
 docs_dir: docs
-site_dir: site
 
 theme:
   name: material
@@ -59,23 +58,24 @@ plugins:
   - search
 
 nav:
-  - Home: architecture/architecture.md
+  - Home: README.md
 
   - Foundation:
       - Vision: foundation/vision.md
       - Constitution: foundation/constitution.md
       - Philosophy: foundation/philosophy.md
       - Ontology: foundation/ontology.md
+      - Glossary: foundation/glossary.md
       - Ownership: foundation/ownership.md
       - Style: foundation/style.md
-      - Glossary: foundation/glossary.md
-      - ADS: foundation/ads.md
+      - Architecture Decision Standards: foundation/ads.md
 
   - Architecture:
       - Architecture Overview: architecture/architecture.md
+
       - Runtime:
           - Runtime Map: architecture/runtime/runtime-map.md
-          - SDE Runtime: architecture/runtime/runtime.md
+          - Runtime Architecture: architecture/runtime/runtime.md
           - Execution Flow: architecture/runtime/execution-flow.md
           - Session Flow: architecture/runtime/session-flow.md
           - Transaction Flow: architecture/runtime/transaction-flow.md
@@ -94,92 +94,99 @@ nav:
           - Capability Registry: architecture/runtime/capability-registry.md
           - Result Model: architecture/runtime/result-model.md
           - Error Model: architecture/runtime/error-model.md
+
       - Data Plane:
           - Data Plane Map: architecture/data-plane/data-plane-map.md
           - Data Plane Architecture: architecture/data-plane/data-plane.md
+
           - Request Flow:
               - Overview: architecture/data-plane/request-flow.md
-              - Downstream Delegation: architecture/data-plane/request-flow/downstream-delegation.md
-              - Execution Start: architecture/data-plane/request-flow/execution-start.md
-              - Planning Handoff: architecture/data-plane/request-flow/planning-handoff.md
               - Request Entry: architecture/data-plane/request-flow/request-entry.md
-              - Response Return: architecture/data-plane/request-flow/response-return.md
               - SIR Creation: architecture/data-plane/request-flow/sir-creation.md
+              - Planning Handoff: architecture/data-plane/request-flow/planning-handoff.md
+              - Execution Start: architecture/data-plane/request-flow/execution-start.md
+              - Downstream Delegation: architecture/data-plane/request-flow/downstream-delegation.md
+              - Response Return: architecture/data-plane/request-flow/response-return.md
+
           - Protocol Execution:
               - Overview: architecture/data-plane/protocol-execution.md
-              - Protocol Error Mapping: architecture/data-plane/protocol-execution/protocol-error-mapping.md
-              - Protocol Normalization: architecture/data-plane/protocol-execution/protocol-normalization.md
-              - Protocol Plugin Resolution: architecture/data-plane/protocol-execution/protocol-plugin-resolution.md
               - Protocol Request Entry: architecture/data-plane/protocol-execution/protocol-request-entry.md
-              - Protocol Response Mapping: architecture/data-plane/protocol-execution/protocol-response-mapping.md
+              - Protocol Plugin Resolution: architecture/data-plane/protocol-execution/protocol-plugin-resolution.md
+              - Protocol Normalization: architecture/data-plane/protocol-execution/protocol-normalization.md
               - Protocol Session Transaction: architecture/data-plane/protocol-execution/protocol-session-transaction.md
+              - Protocol Response Mapping: architecture/data-plane/protocol-execution/protocol-response-mapping.md
+              - Protocol Error Mapping: architecture/data-plane/protocol-execution/protocol-error-mapping.md
+
           - Planning Execution:
               - Overview: architecture/data-plane/planning-execution.md
+              - SIR Intake: architecture/data-plane/planning-execution/sir-intake.md
+              - Runtime State Resolution: architecture/data-plane/planning-execution/runtime-state-resolution.md
               - Capability Resolution: architecture/data-plane/planning-execution/capability-resolution.md
+              - Policy Validation: architecture/data-plane/planning-execution/policy-validation.md
               - Engine Selection: architecture/data-plane/planning-execution/engine-selection.md
               - Execution Plan Production: architecture/data-plane/planning-execution/execution-plan-production.md
-              - Policy Validation: architecture/data-plane/planning-execution/policy-validation.md
-              - Runtime State Resolution: architecture/data-plane/planning-execution/runtime-state-resolution.md
-              - SIR Intake: architecture/data-plane/planning-execution/sir-intake.md
+
           - Kernel Execution:
               - Overview: architecture/data-plane/kernel-execution.md
+              - Execution Intake: architecture/data-plane/kernel-execution/execution-intake.md
               - Context Binding: architecture/data-plane/kernel-execution/context-binding.md
               - Dependency Evaluation: architecture/data-plane/kernel-execution/dependency-evaluation.md
-              - Execution Intake: architecture/data-plane/kernel-execution/execution-intake.md
-              - Kernel Completion: architecture/data-plane/kernel-execution/kernel-completion.md
               - Operation Dispatch: architecture/data-plane/kernel-execution/operation-dispatch.md
               - Result Aggregation: architecture/data-plane/kernel-execution/result-aggregation.md
+              - Kernel Completion: architecture/data-plane/kernel-execution/kernel-completion.md
+
           - Engine Execution:
               - Overview: architecture/data-plane/engine-execution.md
-              - Downstream Invocation: architecture/data-plane/engine-execution/downstream-invocation.md
-              - Engine Completion: architecture/data-plane/engine-execution/engine-completion.md
+              - Engine Request Intake: architecture/data-plane/engine-execution/engine-request-intake.md
               - Engine Metadata Resolution: architecture/data-plane/engine-execution/engine-metadata-resolution.md
               - Engine Plugin Resolution: architecture/data-plane/engine-execution/engine-plugin-resolution.md
-              - Engine Request Intake: architecture/data-plane/engine-execution/engine-request-intake.md
               - Execution Fragment Translation: architecture/data-plane/engine-execution/execution-fragment-translation.md
+              - Downstream Invocation: architecture/data-plane/engine-execution/downstream-invocation.md
               - Native Output Mapping: architecture/data-plane/engine-execution/native-output-mapping.md
+              - Engine Completion: architecture/data-plane/engine-execution/engine-completion.md
+
           - Result Propagation:
               - Overview: architecture/data-plane/result-propagation.md
-              - Client Response Return: architecture/data-plane/result-propagation/client-response-return.md
+              - Native Result Intake: architecture/data-plane/result-propagation/native-result-intake.md
+              - Result Model Mapping: architecture/data-plane/result-propagation/result-model-mapping.md
               - Engine Result Return: architecture/data-plane/result-propagation/engine-result-return.md
               - Kernel Result Aggregation: architecture/data-plane/result-propagation/kernel-result-aggregation.md
-              - Native Result Intake: architecture/data-plane/result-propagation/native-result-intake.md
               - Protocol Result Mapping: architecture/data-plane/result-propagation/protocol-result-mapping.md
-              - Result Model Mapping: architecture/data-plane/result-propagation/result-model-mapping.md
+              - Client Response Return: architecture/data-plane/result-propagation/client-response-return.md
+
           - Error Propagation:
               - Overview: architecture/data-plane/error-propagation.md
-              - Client Error Return: architecture/data-plane/error-propagation/client-error-return.md
               - Error Detection: architecture/data-plane/error-propagation/error-detection.md
+              - Native Error Mapping: architecture/data-plane/error-propagation/native-error-mapping.md
               - Error Model Creation: architecture/data-plane/error-propagation/error-model-creation.md
               - Kernel Error Handling: architecture/data-plane/error-propagation/kernel-error-handling.md
-              - Native Error Mapping: architecture/data-plane/error-propagation/native-error-mapping.md
               - Protocol Error Mapping: architecture/data-plane/error-propagation/protocol-error-mapping.md
+              - Client Error Return: architecture/data-plane/error-propagation/client-error-return.md
+
       - Control Plane:
           - Control Plane Map: architecture/control-plane/control-plane-map.md
           - Control Plane Architecture: architecture/control-plane/control-plane.md
           - Control Plane Foundation: architecture/control-plane/control-plane-foundation.md
           - Management Plane: architecture/control-plane/management-plane.md
           - AI Control Plane: architecture/control-plane/ai-control-plane.md
-          - Core Control Plane Compatibility: architecture/control-plane/core-control-plane.md
-          - Foundation Services Compatibility: architecture/control-plane/foundation-services.md
-          - Foundation Providers Compatibility: architecture/control-plane/foundation-providers.md
-          - Datastore Management Plane Compatibility: architecture/control-plane/datastore-management-plane.md
           - Management Plane Framework:
-              - Management Plane Framework: architecture/control-plane/management-plane-framework/management-plane-framework.md
-              - Management Plane Registry: architecture/control-plane/management-plane-framework/management-plane-registry.md
-              - Management Plane Manifest: architecture/control-plane/management-plane-framework/management-plane-manifest.md
-              - Management Plane Controller Runtime: architecture/control-plane/management-plane-framework/management-plane-controller-runtime.md
-              - Management Plane Admission: architecture/control-plane/management-plane-framework/management-plane-admission.md
-              - Management Plane Conformance: architecture/control-plane/management-plane-framework/management-plane-conformance.md
+              - Overview: architecture/control-plane/management-plane-framework/management-plane-framework.md
+              - Registry: architecture/control-plane/management-plane-framework/management-plane-registry.md
+              - Manifest: architecture/control-plane/management-plane-framework/management-plane-manifest.md
+              - Controller Runtime: architecture/control-plane/management-plane-framework/management-plane-controller-runtime.md
+              - Admission: architecture/control-plane/management-plane-framework/management-plane-admission.md
+              - Conformance: architecture/control-plane/management-plane-framework/management-plane-conformance.md
+
           - Core Control Plane:
-              - Core Control Plane: architecture/control-plane/core-control-plane/core-control-plane.md
+              - Overview: architecture/control-plane/core-control-plane/core-control-plane.md
               - Runtime Registry: architecture/control-plane/core-control-plane/runtime-registry.md
               - Plugin Registry: architecture/control-plane/core-control-plane/plugin-registry.md
               - Engine Registry: architecture/control-plane/core-control-plane/engine-registry.md
               - Capability Governance: architecture/control-plane/core-control-plane/capability-governance.md
               - Deployment Governance: architecture/control-plane/core-control-plane/deployment-governance.md
+
           - Foundation Services:
-              - Foundation Services: architecture/control-plane/foundation-services/foundation-services.md
+              - Overview: architecture/control-plane/foundation-services/foundation-services.md
               - Identity Service: architecture/control-plane/foundation-services/identity-service.md
               - Authorization Service: architecture/control-plane/foundation-services/authorization-service.md
               - Tenant Management Service: architecture/control-plane/foundation-services/tenant-management-service.md
@@ -192,8 +199,9 @@ nav:
               - Observability Service: architecture/control-plane/foundation-services/observability-service.md
               - Registry Framework: architecture/control-plane/foundation-services/registry-framework.md
               - Plugin Framework: architecture/control-plane/foundation-services/plugin-framework.md
+
           - Foundation Providers:
-              - Foundation Providers: architecture/control-plane/foundation-providers/foundation-providers.md
+              - Overview: architecture/control-plane/foundation-providers/foundation-providers.md
               - Identity Provider: architecture/control-plane/foundation-providers/identity-provider.md
               - Authorization Provider: architecture/control-plane/foundation-providers/authorization-provider.md
               - Tenant Management Provider: architecture/control-plane/foundation-providers/tenant-management-provider.md
@@ -206,8 +214,9 @@ nav:
               - Observability Provider: architecture/control-plane/foundation-providers/observability-provider.md
               - Registry Provider: architecture/control-plane/foundation-providers/registry-provider.md
               - Plugin Provider: architecture/control-plane/foundation-providers/plugin-provider.md
+
           - Datastore Management Plane:
-              - Datastore Management Plane: architecture/control-plane/datastore-management-plane/datastore-management-plane.md
+              - Overview: architecture/control-plane/datastore-management-plane/datastore-management-plane.md
               - dstoreOps: architecture/control-plane/datastore-management-plane/dstoreops.md
               - Datastore Registry: architecture/control-plane/datastore-management-plane/datastore-registry.md
               - Datastore Operator Registry: architecture/control-plane/datastore-management-plane/datastore-operator-registry.md
@@ -226,82 +235,79 @@ nav:
               - Retirement Controller: architecture/control-plane/datastore-management-plane/retirement-controller.md
 
   - Specifications:
-      - Versioning:
-          - Versioning Specification: specifications/versioning/versioning.md
-      - Serialization:
-          - Serialization Specification: specifications/serialization/serialization.md
+      - Reuse:
+          - Philosophy: specifications/reuse/philosophy.md
+          - Policy: specifications/reuse/policy.md
+          - Decision Framework: specifications/reuse/decision-framework.md
+          - Adopted Architecture Patterns: specifications/reuse/adopted-architecture-patterns.md
+          - Adopted Standards: specifications/reuse/adopted-standards.md
+          - Adopted Libraries: specifications/reuse/adopted-libraries.md
+          - Adopted Algorithms: specifications/reuse/adopted-algorithms.md
+
       - SIR:
-          - Semantic Intermediate Representation: specifications/sir/sir.md
+          - SIR: specifications/sir/sir.md
           - Concepts: specifications/sir/concepts.md
-          - Resources: specifications/sir/resources.md
           - Operations: specifications/sir/operations.md
+          - Resources: specifications/sir/resources.md
           - Relationships: specifications/sir/relationships.md
-          - Expressions: specifications/sir/expressions.md
           - Constraints: specifications/sir/constraints.md
+          - Expressions: specifications/sir/expressions.md
           - Metadata: specifications/sir/metadata.md
           - Capabilities: specifications/sir/capabilities.md
           - Capability Model: specifications/sir/capability-model.md
           - Serialization: specifications/sir/serialization.md
           - Versioning: specifications/sir/versioning.md
           - Conformance: specifications/sir/conformance.md
+
       - Capability:
-          - Capability Specification: specifications/capability/capability.md
-          - Transactions Capability Specification: specifications/capability/transactions.md
-          - Security Capability Specification: specifications/capability/security.md
-          - Object Capability Specification: specifications/capability/object.md
-          - Cache Capability Specification: specifications/capability/cache.md
-          - Search Capability Specification: specifications/capability/search.md
-          - Indexing Capability Specification: specifications/capability/indexing.md
-          - Streaming Capability Specification: specifications/capability/streaming.md
-          - Federation Capability Specification: specifications/capability/federation.md
-          - Vector Capability Specification: specifications/capability/vector.md
-          - Graph Capability Specification: specifications/capability/graph.md
+          - Capability: specifications/capability/capability.md
+          - Transactions: specifications/capability/transactions.md
+          - Security: specifications/capability/security.md
+          - Object: specifications/capability/object.md
+          - Cache: specifications/capability/cache.md
+          - Search: specifications/capability/search.md
+          - Indexing: specifications/capability/indexing.md
+          - Streaming: specifications/capability/streaming.md
+          - Federation: specifications/capability/federation.md
+          - Vector: specifications/capability/vector.md
+          - Graph: specifications/capability/graph.md
+
       - Protocol:
-          - Protocol Specification: specifications/protocol/protocol.md
-          - PostgreSQL Protocol Specification: specifications/protocol/postgresql.md
-          - MySQL Protocol Specification: specifications/protocol/mysql.md
-          - MongoDB Protocol Specification: specifications/protocol/mongodb.md
-          - Redis Protocol Specification: specifications/protocol/redis.md
-          - REST Protocol Specification: specifications/protocol/rest.md
-          - gRPC Protocol Specification: specifications/protocol/grpc.md
-          - Native Protocol Specification: specifications/protocol/native.md
+          - Protocol: specifications/protocol/protocol.md
+          - PostgreSQL: specifications/protocol/postgresql.md
+          - MySQL: specifications/protocol/mysql.md
+          - MongoDB: specifications/protocol/mongodb.md
+          - Redis: specifications/protocol/redis.md
+          - REST: specifications/protocol/rest.md
+          - gRPC: specifications/protocol/grpc.md
+          - Native: specifications/protocol/native.md
+
       - Engine:
-          - Engine Specification: specifications/engine/engine.md
-          - PostgreSQL Engine Specification: specifications/engine/postgresql.md
-          - MySQL Engine Specification: specifications/engine/mysql.md
-          - MongoDB Engine Specification: specifications/engine/mongodb.md
-          - Redis Engine Specification: specifications/engine/redis.md
-          - Cassandra Engine Specification: specifications/engine/cassandra.md
-          - OpenSearch Engine Specification: specifications/engine/opensearch.md
-          - Neo4j Engine Specification: specifications/engine/neo4j.md
-          - Milvus Engine Specification: specifications/engine/milvus.md
-          - S3 Engine Specification: specifications/engine/s3.md
-          - Iceberg Engine Specification: specifications/engine/iceberg.md
-          - Delta Lake Engine Specification: specifications/engine/delta-lake.md
-          - Parquet Engine Specification: specifications/engine/parquet.md
-      - Reuse:
-          - Reuse Philosophy: specifications/reuse/philosophy.md
-          - Reuse Policy: specifications/reuse/policy.md
-          - Decision Framework: specifications/reuse/decision-framework.md
-          - Adopted Standards: specifications/reuse/adopted-standards.md
-          - Adopted Libraries: specifications/reuse/adopted-libraries.md
-          - Adopted Algorithms: specifications/reuse/adopted-algorithms.md
-          - Adopted Architecture Patterns: specifications/reuse/adopted-architecture-patterns.md
+          - Engine: specifications/engine/engine.md
+          - PostgreSQL: specifications/engine/postgresql.md
+          - MySQL: specifications/engine/mysql.md
+          - MongoDB: specifications/engine/mongodb.md
+          - Redis: specifications/engine/redis.md
+          - Cassandra: specifications/engine/cassandra.md
+          - OpenSearch: specifications/engine/opensearch.md
+          - Neo4j: specifications/engine/neo4j.md
+          - Milvus: specifications/engine/milvus.md
+          - S3: specifications/engine/s3.md
+          - Iceberg: specifications/engine/iceberg.md
+          - Delta Lake: specifications/engine/delta-lake.md
+          - Parquet: specifications/engine/parquet.md
+
+      - Serialization: specifications/serialization/serialization.md
+      - Versioning: specifications/versioning/versioning.md
 
   - Implementation:
-      - Implementation Map: implementation/implementation.md
-      - Repository Structure: implementation/repository.md
+      - Repository: implementation/repository.md
       - Modules: implementation/modules.md
-      - Implementation Skeleton: implementation/skeleton.md
-      - Naming Standards: implementation/naming.md
-      - Coding Standards: implementation/coding.md
+      - Skeleton: implementation/skeleton.md
+      - Naming: implementation/naming.md
+      - Coding: implementation/coding.md
       - Build: implementation/build.md
       - Testing: implementation/testing.md
-      - Local Development: implementation/local-development.md
-      - CI/CD: implementation/ci-cd.md
 
-  - RFCs:
-      - RFC Index: rfc/index.md
-      - RFC Template: rfc/rfc-template.md
-      - RFC-0000 Authoring Standard: rfc/rfc-0000-authoring-standard.md
-      - RFC-9000 AI Control Plane Reservation: rfc/rfc-9000-ai-control-plane-reservation.md
+  - RFC:
+      - RFC Index: rfc/README.md
