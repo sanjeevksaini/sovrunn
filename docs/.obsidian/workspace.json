@@ -11,14 +11,10 @@
             "id": "4ed0a69e9db78f8a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "protocol-session-transaction"
+              "title": "New tab"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for protocol-session-transaction"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from protocol-session-transaction"
+              "title": "Outgoing links"
             }
           },
           {
@@ -156,13 +150,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of protocol-session-transaction"
+              "title": "Outline"
             }
           }
         ]
@@ -185,6 +178,29 @@
   },
   "active": "4ed0a69e9db78f8a",
   "lastOpenFiles": [
+    "glossary.md",
+    "foundation/PHASE1_REVIEW_STATUS.md",
+    "decisions/DECISION_INDEX.md",
+    "architecture/platform-core.md",
+    "architecture/organization-governance.md",
+    "architecture/development-phases.md",
+    "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
+    "ai/AI_FEATURE_FACTORY.md",
+    "ai/AI_DOC_AUTHORING_STANDARD.md",
+    "ai/AI_CONTEXT_GUIDE.md",
+    "ai",
+    "rfc/RFC-0020-serviceops-plugin-framework.md",
+    "rfc/RFC-0012-organization-tenant-governance-model.md",
+    "decisions/DECISION_INDEX.md.pages",
+    "README.md",
+    "glossary",
+    "untitled folder",
+    "decisions/adr",
+    "decisions/untitled folder",
+    "decisions",
+    "implementation/skeleton-old.md",
+    "mvp/skeleton.md",
+    "mvp",
     "rfc/index.md",
     "architecture/transaction-runtime.md",
     "architecture/sir-runtime.md",
@@ -196,30 +212,7 @@
     "architecture/planning.md",
     "architecture/execution-plan.md",
     "architecture/execution-context.md",
-    "architecture/error-model.md",
-    "architecture/engine-runtime.md",
-    "architecture/data-kernel.md",
-    "architecture/capability-registry.md",
-    "rfc/index_1.md",
-    "implementation/local-development.md",
-    "implementation/implementation.md",
-    "implementation/ci-cd.md",
-    "rfc/rfc-9000-ai-control-plane-reservation.md",
-    "foundation/glossary.md",
-    "foundation/glossary-regenerated.md",
-    "architecture/control-plane/ai-control-plane.md",
-    "architecture/ai-control-plane.md",
-    "rfc/rfc-template.md",
-    "rfc/rfc-0000-authoring-standard.md",
     "specifications/capability",
-    "specifications/serialization",
-    "specifications/protocol",
-    "specifications/engine",
-    "specifications/versioning",
-    "architecture/data-plane/error-propagation",
-    "architecture/data-plane/result-propagation",
-    "architecture/data-plane/engine-execution",
-    "architecture/data-plane/kernel-execution",
-    "architecture/data-plane/planning-execution"
+    "specifications/serialization"
   ]
 }
