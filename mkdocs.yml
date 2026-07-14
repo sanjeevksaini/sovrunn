@@ -292,7 +292,6 @@ nav:
       - Implementation Map: implementation/implementation.md
       - Repository Structure: implementation/repository.md
       - Modules: implementation/modules.md
-      - Implementation Skeleton: implementation/skeleton.md
       - Naming Standards: implementation/naming.md
       - Coding Standards: implementation/coding.md
       - Build: implementation/build.md

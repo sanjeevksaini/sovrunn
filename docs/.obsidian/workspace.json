@@ -178,6 +178,13 @@
   },
   "active": "4ed0a69e9db78f8a",
   "lastOpenFiles": [
+    "engineering/ai-controlled-development.md",
+    "engineering/context-engineering-standard.md",
+    "engineering",
+    "untitled folder",
+    "architecture/observability-and-audit-baseline.md",
+    "architecture/gitops-desired-state-model.md",
+    "architecture/controller-reconciliation-model.md",
     "scripts/demo_phase1.sh",
     "scripts",
     "configs/sovrunn-api.local.yaml",
@@ -201,18 +208,11 @@
     "features",
     "demo",
     "api/API_CONTRACT_PHASE1.md",
-    "api",
     "glossary.md",
     "foundation/PHASE1_REVIEW_STATUS.md",
     "decisions/DECISION_INDEX.md",
     "architecture/platform-core.md",
     "architecture/organization-governance.md",
-    "architecture/development-phases.md",
-    "architecture/data-plane/protocol-execution/protocol-session-transaction.md",
-    "ai/AI_FEATURE_FACTORY.md",
-    "ai/AI_DOC_AUTHORING_STANDARD.md",
-    "ai/AI_CONTEXT_GUIDE.md",
-    "ai",
-    "decisions/DECISION_INDEX.md.pages"
+    "architecture/development-phases.md"
   ]
 }
