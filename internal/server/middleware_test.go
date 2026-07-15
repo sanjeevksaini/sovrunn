@@ -34,10 +34,14 @@ func TestRequestIDMiddleware_PropagatesWhenPresent(t *testing.T) {
 	}
 }
 
+func apiChain(logger *log.Logger, handler http.Handler) http.Handler {
+	return requestIDMiddleware(loggingMiddleware(logger)(contentTypeMiddleware(handler)))
+}
+
 func TestContentTypeMiddleware_RejectsPOSTWithoutJSON(t *testing.T) {
-	h := requestIDMiddleware(contentTypeMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := apiChain(log.Default(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	})))
+	}))
 	req := httptest.NewRequest(http.MethodPost, "/v1/organizations", strings.NewReader(`{}`))
 	req.Header.Set("Content-Type", "text/plain")
 	rec := httptest.NewRecorder()
@@ -47,12 +51,49 @@ func TestContentTypeMiddleware_RejectsPOSTWithoutJSON(t *testing.T) {
 	}
 }
 
+func TestContentTypeMiddleware_RejectsPOSTWithoutJSON_LogsRequest(t *testing.T) {
+	var buf bytes.Buffer
+	logger := log.New(&buf, "", 0)
+	h := apiChain(logger, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called for rejected content type")
+	}))
+	req := httptest.NewRequest(http.MethodPost, "/v1/organizations", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "text/plain")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnsupportedMediaType {
+		t.Fatalf("status = %d, want 415", rec.Code)
+	}
+	out := buf.String()
+	for _, field := range []string{"request_id=", "method=POST", "path=/v1/organizations", "status_code=415", "latency_ms=", "error_code=VALIDATION_FAILED"} {
+		if !strings.Contains(out, field) {
+			t.Errorf("log missing %q: %s", field, out)
+		}
+	}
+}
+
+func TestContentTypeMiddleware_RejectsPOSTWithoutJSON_IncludesRequestID(t *testing.T) {
+	h := apiChain(log.Default(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called for rejected content type")
+	}))
+	req := httptest.NewRequest(http.MethodPost, "/v1/organizations", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "text/plain")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnsupportedMediaType {
+		t.Fatalf("status = %d, want 415", rec.Code)
+	}
+	if rec.Header().Get(headerRequestID) == "" {
+		t.Fatal("expected X-Sovrunn-Request-ID on 415 response")
+	}
+}
+
 func TestContentTypeMiddleware_PassThroughGET(t *testing.T) {
 	called := false
-	h := requestIDMiddleware(contentTypeMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := apiChain(log.Default(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 		w.WriteHeader(http.StatusOK)
-	})))
+	}))
 	req := httptest.NewRequest(http.MethodGet, "/v1/organizations", nil)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,23 +36,23 @@ func New(
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 
 	chain := func(h http.Handler) http.Handler {
-		return requestIDMiddleware(contentTypeMiddleware(loggingMiddleware(logger)(h)))
+		return requestIDMiddleware(loggingMiddleware(logger)(contentTypeMiddleware(h)))
+	}
+	bootstrapChain := func(h http.Handler) http.Handler {
+		return requestIDMiddleware(loggingMiddleware(logger)(h))
 	}
 
 	mux.Handle("/v1/organizations", chain(http.HandlerFunc(org.HandleCollection)))
 	mux.Handle("/v1/organizations/", chain(http.HandlerFunc(org.HandleItem)))
 
-	bootstrapChain := requestIDMiddleware(loggingMiddleware(logger)(http.HandlerFunc(nil)))
-	_ = bootstrapChain
-
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		requestIDMiddleware(loggingMiddleware(logger)(http.HandlerFunc(bootstrap.Healthz))).ServeHTTP(w, r)
+		bootstrapChain(http.HandlerFunc(bootstrap.Healthz)).ServeHTTP(w, r)
 	})
 	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
-		requestIDMiddleware(loggingMiddleware(logger)(http.HandlerFunc(bootstrap.Readyz))).ServeHTTP(w, r)
+		bootstrapChain(http.HandlerFunc(bootstrap.Readyz)).ServeHTTP(w, r)
 	})
 	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
-		requestIDMiddleware(loggingMiddleware(logger)(http.HandlerFunc(bootstrap.Version))).ServeHTTP(w, r)
+		bootstrapChain(http.HandlerFunc(bootstrap.Version)).ServeHTTP(w, r)
 	})
 
 	return &Server{
@@ -67,15 +68,20 @@ func New(
 
 // Start binds the listener, marks readiness true, and blocks until signal.
 func (s *Server) Start() error {
+	listener, err := net.Listen("tcp", s.httpServer.Addr)
+	if err != nil {
+		return err
+	}
+
+	s.readiness.SetReady(true)
+
 	errCh := make(chan error, 1)
 	go func() {
 		s.logger.Printf("server listening on %s", s.cfg.Addr())
-		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.httpServer.Serve(listener); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
 	}()
-
-	s.readiness.SetReady(true)
 
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
