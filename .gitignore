@@ -42,3 +42,6 @@ docs/.obsidian/
 
 *.broken-backup
 
+
+# Build outputs
+bin/
