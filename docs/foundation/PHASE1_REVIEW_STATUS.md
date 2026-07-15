@@ -23,10 +23,7 @@ The following documents are approved for Phase 1:
 - docs/ai/AI_CONTEXT_GUIDE.md
 - docs/ai/AI_DOC_AUTHORING_STANDARD.md
 - docs/ai/AI_FEATURE_FACTORY.md
-- docs/engineering/go-style.md
-- docs/engineering/package-layout.md
-- docs/engineering/security-checklist.md
-- docs/engineering/testing-standard.md
+- docs/engineering/go-coding-guardrails.md
 
 ## Minor Changes Incorporated
 

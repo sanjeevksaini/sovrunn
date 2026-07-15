@@ -1,0 +1,27 @@
+---
+description: Sovrunn Phase 1 architecture rules
+alwaysApply: true
+---
+
+# Sovrunn Architecture Rules
+
+Use source documents in `docs/architecture/`, `docs/resource-specs/`, `docs/api/`, and the current feature file.
+
+Resource model:
+
+```text
+metadata = identity and classification
+spec = desired state
+status = observed state
+operation = lifecycle trace
+```
+
+Hierarchy:
+
+```text
+Organization -> OrganizationUnit -> Tenant -> Project -> ServiceInstance -> ServiceBinding
+ServiceClass -> ServicePlan
+Plugin -> Capability
+```
+
+Implementation must remain in-memory for Phase 1 unless explicitly approved otherwise.

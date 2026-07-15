@@ -23,3 +23,22 @@ build/
 
 *.log
 
+
+# macOS
+
+.DS_Store
+
+__MACOSX/
+
+# Generated docs
+
+site/
+
+# Local editor metadata
+
+docs/.obsidian/
+
+# Backups
+
+*.broken-backup
+

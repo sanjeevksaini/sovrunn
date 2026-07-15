@@ -2,144 +2,113 @@
 doc_type: ai_guide
 title: AI Context Guide
 status: draft
-phase: 0
-ai_load_priority: always
-ai_summary: Tells AI coding agents which Sovrunn files to read and how to use them before implementing features.
+phase: 1
+ai_summary: Short guide pointing AI agents to the canonical context-loading and implementation standards.
 ---
 
 # AI Context Guide
 
-## 1. Purpose
-
-This file tells AI agents how to work on Sovrunn.
-
-AI must not invent architecture.
-
-AI must load the correct context, follow accepted decisions, and keep generated code aligned with the platform constitution.
-
-## 2. Required Always-Load Files
-
-For most Sovrunn development tasks, load:
+AI agents working on Sovrunn must follow the canonical context-loading rules in:
 
 ```text
-docs/foundation/vision.md
-docs/foundation/philosophy.md
+docs/engineering/ai-context-loading-standard.md
+```
+
+That file is the authoritative source of truth for context priority and classification.
+
+Individual file front matter is only a local hint.
+
+If local metadata conflicts with `ai-context-loading-standard.md`, the central standard wins.
+
+## Go Implementation
+
+For Go implementation, AI agents must also follow:
+
+```text
+docs/engineering/go-coding-guardrails.md
+```
+
+## Core Rule
+
+Do not load all repository files by default.
+
+Use the smallest complete context set for the task:
+
+```text
+ALWAYS
++ current FEATURE file
++ GO_IMPLEMENTATION when coding Go
++ role-specific prompt or steering files when needed
+```
+
+## Default Go Coding Context
+
+For a Go feature implementation, load:
+
+```text
+AGENTS.md
+README.md
 docs/foundation/constitution.md
 docs/decisions/DECISION_INDEX.md
 docs/glossary.md
-docs/ai/AI_DOC_AUTHORING_STANDARD.md
-docs/ai/AI_FEATURE_FACTORY.md
+docs/features/FEATURE_SEQUENCE.md
+docs/resource-specs/RESOURCE_MODEL_PHASE1.md
+docs/api/API_CONTRACT_PHASE1.md
+docs/engineering/ai-context-loading-standard.md
+docs/engineering/go-coding-guardrails.md
+docs/architecture/controller-reconciliation-model.md
+docs/architecture/observability-and-audit-baseline.md
+current FEATURE-xxxx file
 ```
 
-## 3. Phase-Specific Files
+Do not load future feature files unless explicitly requested.
 
-For Phase 1 work, also load:
+## Canonical Ownership
+
+If files conflict, canonical ownership wins:
 
 ```text
-docs/architecture/development-phases.md
-docs/architecture/platform-core.md
-docs/architecture/organization-governance.md
-docs/engineering/go-style.md
-docs/engineering/package-layout.md
-docs/engineering/testing-standard.md
-docs/engineering/security-checklist.md
-docs/rfc/RFC-0012-organization-tenant-governance-model.md
-docs/rfc/RFC-0020-serviceops-plugin-framework.md
+context loading
+  docs/engineering/ai-context-loading-standard.md
+
+Go coding
+  docs/engineering/go-coding-guardrails.md
+
+terminology
+  docs/glossary.md
+
+accepted decisions
+  docs/decisions/DECISION_INDEX.md
+
+API behavior
+  docs/api/API_CONTRACT_PHASE1.md
+
+resource model
+  docs/resource-specs/RESOURCE_MODEL_PHASE1.md
+
+feature scope
+  current docs/features/FEATURE-xxxx file
+
+master AI operating contract
+  AGENTS.md
 ```
 
-## 4. AI Operating Rules
+## Archive Rule
 
-AI must:
+Archive and historical files are not source of truth.
 
-- use canonical terms from `glossary.md`,
-- follow `constitution.md`,
-- follow `DECISION_INDEX.md`,
-- follow relevant RFCs,
-- follow engineering standards,
-- keep scope within current phase,
-- ask for missing context when needed,
-- state assumptions explicitly,
-- generate tests with code,
-- update docs when behavior changes.
-
-AI must not:
-
-- invent new architecture,
-- create future-phase features unless requested,
-- bypass Operation model,
-- bypass policy/audit concepts,
-- introduce uncontrolled AI actions,
-- expose secrets,
-- implement custom infrastructure where open-source substrate is intended,
-- use synonyms for core terms.
-
-## 5. Feature Task Context Bundle
-
-Every feature task should define:
+Do not load:
 
 ```text
-Always Load
-Phase Load
-Feature Load
-Engineering Load
-Existing Code Paths
-Expected Output Files
-Acceptance Criteria
+docs/archive/
+old SDE-only notes
+temporary update reports
+generated site/
+.git/
+.DS_Store
+__MACOSX/
 ```
 
-## 6. AI Coding Sequence
+unless the user explicitly asks for history or comparison.
 
-Use this sequence:
-
-```text
-1. Read required context files.
-2. Summarize applicable decisions.
-3. Confirm in-scope and out-of-scope.
-4. Identify resource/API changes.
-5. Identify code paths.
-6. Generate or update tests.
-7. Generate implementation.
-8. Run tests where possible.
-9. Update docs.
-10. Report changed files and acceptance status.
-```
-
-## 7. Constitutional Checks
-
-Before finishing a task, AI must verify:
-
-- organization-first governance respected,
-- tenant isolation respected,
-- policy inheritance not weakened,
-- Operation created for lifecycle changes,
-- audit fields preserved,
-- no secrets exposed,
-- no AI in latency-sensitive hot path,
-- no future-phase scope creep,
-- failure modes explicit.
-
-## 8. Missing Context Rule
-
-If a required RFC, spec, or standard is missing, AI should not silently invent it.
-
-AI should respond with:
-
-```text
-Missing required context: <file>.
-Assumption if proceeding: <assumption>.
-Risk: <risk>.
-```
-
-## 9. Output Format for AI Work
-
-AI should return:
-
-```text
-Summary
-Files changed
-Tests added
-Acceptance criteria status
-Open questions
-Risks
-Next recommended task
-```
+This file is a short pointer guide. It does not override `ai-context-loading-standard.md`.

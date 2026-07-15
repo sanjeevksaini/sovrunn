@@ -1,0 +1,46 @@
+---
+description: Sovrunn Go implementation rules focused on correctness, security, latency, performance, observability, scaling, and serverless readiness
+alwaysApply: true
+---
+
+# Sovrunn Go Style Rules
+
+Follow:
+
+- `docs/engineering/go-coding-guardrails.md`
+- `docs/architecture/observability-and-audit-baseline.md`
+- `docs/architecture/controller-reconciliation-model.md`
+- `docs/api/API_CONTRACT_PHASE1.md`
+- current feature file
+
+Mandatory rules:
+
+- Use idiomatic Go.
+- Keep dependencies minimal.
+- Prefer standard library where practical.
+- Use `context.Context` for request-scoped/blocking functions.
+- Do not store `context.Context` in structs.
+- Use explicit structs.
+- Avoid `map[string]any` except at boundaries.
+- Use metadata/spec/status resource shape.
+- Treat `status` as system-owned.
+- Reject user-authored status.
+- Use deterministic validation.
+- Use stable error codes.
+- Do not panic for normal errors.
+- Do not log secrets.
+- Limit HTTP request body size.
+- Use structured logs.
+- Generate or propagate request IDs.
+- Keep registry behind interfaces.
+- Protect maps with `sync.RWMutex`.
+- Do not return mutable internal maps.
+- Avoid unbounded goroutines, queues, channels, and memory growth.
+- Avoid synchronous remote calls in hot request paths.
+- Avoid reflection-heavy hot paths.
+- Add tests for validation, registry, API handlers, and error paths.
+- Run `go test ./...` before completion.
+- Run `go vet ./...` before completion.
+- Run `go test -race ./...` for concurrency-sensitive changes.
+
+Do not introduce future features unless explicitly approved.

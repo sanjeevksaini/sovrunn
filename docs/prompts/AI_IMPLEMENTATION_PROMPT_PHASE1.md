@@ -22,10 +22,8 @@ docs/glossary.md
 docs/architecture/platform-core.md
 docs/architecture/organization-governance.md
 docs/ai/AI_FEATURE_FACTORY.md
-docs/engineering/go-style.md
-docs/engineering/package-layout.md
-docs/engineering/testing-standard.md
 docs/features/FEATURE_SEQUENCE.md
+docs/engineering/go-coding-guardrails.md
 ```
 
 Then load the specific feature file being implemented.

@@ -1,199 +1,233 @@
 ---
 doc_type: engineering_standard
-title: AI Controlled Development Standard
+title: AI Controlled Development
 status: draft
 phase: 1
-ai_load_priority: always
-ai_summary: Defines how AI tools may generate Sovrunn code while preserving architectural control, test discipline, and feature boundaries.
+ai_load_priority: reference
+ai_summary: Operating model for founder-controlled, spec-first, test-gated AI-assisted development.
 ---
 
-# AI Controlled Development Standard
+# AI Controlled Development
 
-## 1. Purpose
+Sovrunn uses AI-assisted development, not AI-owned development.
 
-Sovrunn is built with heavy AI assistance, but AI must remain under architectural control.
+AI tools may accelerate planning, coding, review, debugging, and documentation, but architecture remains founder-controlled, spec-first, test-gated, and terminal-verified.
 
-The principle is:
+## Purpose
+
+This document defines how AI should participate in Sovrunn engineering without causing architecture drift, scope expansion, or unverifiable implementation.
+
+Canonical context loading rules are defined in:
 
 ```text
-AI may generate implementation.
-AI must not own architecture.
+docs/engineering/ai-context-loading-standard.md
 ```
 
-## 2. Required Inputs Before AI Coding
-
-An AI coding task must include:
+Canonical Go implementation rules are defined in:
 
 ```text
-feature ID
-feature spec
-resource spec
-API contract
-acceptance criteria
-non-goals
-relevant engineering standards
+docs/engineering/go-coding-guardrails.md
 ```
 
-For Phase 1, AI must load:
+## Development Principle
 
 ```text
+Human owns architecture.
+Specs define scope.
+AI proposes changes.
+Terminal verifies truth.
+Git records history.
+```
+
+## Tool Responsibilities
+
+```text
+Kiro
+  architecture/spec/task planning
+
+Cursor
+  code editing/refactoring/debugging/tests
+
+ChatGPT
+  deep architecture review, exact patches, debugging, consistency review
+
+Terminal
+  source of truth for build, test, runtime, Git, and benchmark behavior
+```
+
+No tool owns a separate architecture.
+
+## AI Must Follow Canonical Sources
+
+AI agents must follow:
+
+```text
+AGENTS.md
+README.md
 docs/foundation/constitution.md
 docs/decisions/DECISION_INDEX.md
 docs/glossary.md
-docs/ai/AI_CONTEXT_GUIDE.md
 docs/features/FEATURE_SEQUENCE.md
 docs/resource-specs/RESOURCE_MODEL_PHASE1.md
 docs/api/API_CONTRACT_PHASE1.md
-docs/engineering/go-style.md
-docs/engineering/package-layout.md
-docs/engineering/testing-standard.md
-docs/engineering/ai-controlled-development.md
+docs/engineering/ai-context-loading-standard.md
 ```
 
-Then it must load only the current feature file.
-
-## 3. What AI May Do
-
-AI may generate:
+For Go work, also follow:
 
 ```text
-Go structs
-validation functions
-in-memory registry methods
-REST handlers
-tests
-curl examples
-README updates
-demo scripts
-small refactors
-test-gap analysis
+docs/engineering/go-coding-guardrails.md
+docs/architecture/controller-reconciliation-model.md
+docs/architecture/observability-and-audit-baseline.md
 ```
 
-## 4. What AI Must Not Do
+## Feature Discipline
+
+AI must implement one feature at a time.
+
+AI must not implement future features early.
+
+During a feature implementation, AI should load:
+
+```text
+ALWAYS context
+GO_IMPLEMENTATION context, when coding Go
+current FEATURE file only
+```
+
+Do not load future feature files unless explicitly requested.
+
+## AI May Do
+
+AI may:
+
+```text
+summarize architecture
+review design consistency
+generate feature plans
+generate Go code
+generate tests
+generate documentation
+suggest exact patches
+debug terminal output
+explain test failures
+suggest performance improvements
+suggest security improvements
+```
+
+## AI Must Not Do
 
 AI must not:
 
 ```text
-invent new architecture
-create new resource kinds without approval
-rename accepted canonical terms
-skip feature specs
-skip tests
+invent architecture
+change resource hierarchy
+rename canonical terms
+change accepted decisions
 change feature sequence
 implement future features early
-introduce Kubernetes CRDs before approval
-introduce a persistent database before approval
-introduce plugin execution before approval
-introduce AI agent execution before approval
-introduce UI or portal code before approval
-introduce billing implementation before approval
-bypass validation rules
-remove audit/operation hooks
-change security-sensitive behavior silently
+remove validation
+remove tests
+skip terminal verification
+hide uncertainty
+add unapproved dependencies
+introduce persistent storage in Phase 1
+introduce Kubernetes CRDs in Phase 1
+introduce ServiceOps execution in Phase 1
+introduce AI agent execution in Phase 1
+introduce UI or billing in Phase 1
 ```
 
-## 5. Feature Boundary Rule
+## Scope Control
 
-AI must implement one feature at a time.
-
-While implementing `FEATURE-0001 Organization Resource and Registry`, AI may implement:
+Every AI coding task must clearly state:
 
 ```text
-Organization resource
-Organization registry
-Organization validation
-Organization API
-minimal health/readiness/version endpoints
-Organization tests
+feature ID
+scope
+non-goals
+files expected to change
+tests expected
+verification commands
 ```
 
-It must not implement:
+AI should stop and ask for approval if the task requires:
 
 ```text
-Tenant
-Project
-ServiceInstance
-Plugin execution
-database storage
-Kubernetes CRDs
-GitOps controller
+new resource kinds
+API contract changes
+terminology changes
+feature sequence changes
+new dependencies
+persistent storage
+distributed systems behavior
+security-sensitive behavior
 ```
 
-## 6. Architecture Drift Control
+## Verification
 
-Every AI-generated change must be checked against:
+Terminal verification is mandatory.
+
+For Go code:
+
+```bash
+make fmt
+make test
+make vet
+```
+
+For concurrency-sensitive changes:
+
+```bash
+go test -race ./...
+```
+
+For documentation:
+
+```bash
+mkdocs build --strict
+```
+
+If a command fails, AI must report the failure and should not mark the task complete.
+
+## Required AI Completion Report
+
+For every implementation task, AI must report:
 
 ```text
-constitution.md
-DECISION_INDEX.md
-glossary.md
-FEATURE_SEQUENCE.md
-current feature file
-RESOURCE_MODEL_PHASE1.md
-API_CONTRACT_PHASE1.md
+feature implemented
+files changed
+why each file changed
+tests added
+validation added
+security considerations
+observability considerations
+performance considerations
+commands run
+command results
+non-goals intentionally not implemented
+known limitations
+next feature boundary
 ```
 
-If AI proposes a change that conflicts with those files, reject the change unless a founder-approved architecture update is made.
+## Human Review Gates
 
-## 7. Test-Gated Rule
-
-No AI-generated feature is accepted without tests.
-
-Minimum tests:
+Human approval is required for:
 
 ```text
-resource validation tests
-registry create/get/list/update/delete tests
-duplicate name tests
-missing reference tests where applicable
-delete-blocked tests where applicable
-API handler happy-path tests
-API handler error-path tests
+architecture changes
+resource model changes
+API contract changes
+accepted decision changes
+dependency additions
+security model changes
+storage model changes
+multi-tenant isolation changes
+AI autonomy level changes
 ```
 
-## 8. Dependency Control
+## Final Rule
 
-AI must not add new dependencies unless there is a clear reason.
+AI accelerates Sovrunn development.
 
-Before adding a dependency, AI must explain:
-
-```text
-why it is needed
-what alternative exists in the standard library
-whether it affects security or supply-chain risk
-whether it is required for Phase 1
-```
-
-## 9. Review Checklist
-
-Before accepting AI-generated code, verify:
-
-```text
-feature ID is clear
-scope matches the feature file
-canonical terms are used
-resource shape follows metadata/spec/status
-validation rules are implemented
-errors are deterministic
-tests pass
-non-goals are respected
-API contract is followed
-logs do not leak secrets
-new dependencies are justified
-```
-
-## 10. Commit Rule
-
-Each feature should be committed separately.
-
-Recommended commit format:
-
-```text
-feat(FEATURE-0001): implement Organization resource and registry
-test(FEATURE-0001): add Organization registry and API tests
-docs(FEATURE-0001): add Organization demo commands
-```
-
-## 11. Final Principle
-
-AI accelerates Sovrunn development. Architecture remains founder-controlled, spec-first, test-gated, and review-driven.
+AI does not replace architecture governance, tests, terminal verification, or human judgment.

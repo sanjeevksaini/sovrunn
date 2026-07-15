@@ -1,0 +1,21 @@
+---
+description: Sovrunn testing rules
+alwaysApply: true
+---
+
+# Sovrunn Testing Rules
+
+Every Phase 1 feature must include tests.
+
+Minimum expected tests:
+
+- resource validation happy path
+- resource validation failure path
+- registry create/get/list/update/delete
+- duplicate name tests
+- missing reference tests where applicable
+- delete-blocked tests where applicable
+- API handler happy path
+- API handler error path
+
+Feature is not complete until tests pass.

@@ -1,0 +1,26 @@
+---
+description: AI coding boundaries for Sovrunn
+alwaysApply: true
+---
+
+# Sovrunn AI Boundaries
+
+AI may generate code, tests, docs, refactors, fixes, and curl demos.
+
+AI must not:
+
+- own architecture decisions
+- change resource hierarchy
+- change feature sequence
+- rename canonical terms
+- add future features early
+- introduce persistent database storage in Phase 1
+- introduce Kubernetes CRDs in Phase 1
+- introduce plugin execution in Phase 1
+- introduce UI in Phase 1
+- introduce AI agent execution in Phase 1
+- remove tests or validation to make code pass
+
+When uncertain, stop and ask for human decision.
+
+Use docs/engineering/ai-context-loading-standard.md to decide what context to load. Do not load all docs by default.

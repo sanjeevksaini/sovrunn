@@ -1,0 +1,28 @@
+---
+description: Sovrunn constitution and scope rules
+alwaysApply: true
+---
+
+# Sovrunn Constitution Rules
+
+- Sovrunn is a sovereign cloud-native PaaS platform.
+- SDE is a major differentiated capability inside Sovrunn, not the entire platform.
+- Use accepted terminology from `docs/glossary.md`.
+- Follow `docs/foundation/constitution.md`.
+- Follow `docs/decisions/DECISION_INDEX.md`.
+- Do not invent resource kinds.
+- Do not rename canonical concepts.
+- Do not expand Phase 1 scope.
+- Do not implement future features early.
+
+Phase 1 non-goals:
+
+- no persistent database storage
+- no Kubernetes CRDs
+- no GitOps controller
+- no ServiceOps plugin execution
+- no real infrastructure provisioning
+- no UI portal
+- no billing engine
+- no AI agent execution
+- no SDE transformation
