@@ -49,6 +49,53 @@ func createOU(h *OUHandler, orgName, name, desc string) *httptest.ResponseRecord
 	return rec
 }
 
+// newBlockerWiring builds an OrgHandler and OUHandler that share a single
+// OrganizationUnitRegistry through an OUChildBlockerChecker, mirroring the
+// production wiring in cmd/sovrunn-api/main.go. This lets HTTP-level tests
+// exercise Organization delete blocking end-to-end.
+func newBlockerWiring() (*OrgHandler, *OUHandler, *registry.OrganizationRegistry) {
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
+	orgHandler := NewOrgHandler(orgRegistry, ouBlocker)
+	ouHandler := NewOUHandler(ouRegistry, orgRegistry)
+	return orgHandler, ouHandler, orgRegistry
+}
+
+func TestOrgDeleteBlockedByOU(t *testing.T) {
+	orgHandler, ouHandler, orgReg := newBlockerWiring()
+	seedOrg(t, orgReg, "nic")
+	if rec := createOU(ouHandler, "nic", "ministry-health", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create OU status = %d, want 201; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/organizations/nic", nil, "")
+	rec := httptest.NewRecorder()
+	orgHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "OrganizationUnit") {
+		t.Errorf("message = %q, want it to identify OrganizationUnit", errBody.Message)
+	}
+}
+
+func TestOrgDeleteAllowedWhenNoOUs(t *testing.T) {
+	orgHandler, _, orgReg := newBlockerWiring()
+	seedOrg(t, orgReg, "empty-org")
+
+	req := jsonRequest(http.MethodDelete, "/v1/organizations/empty-org", nil, "")
+	rec := httptest.NewRecorder()
+	orgHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestOUHandler_Create_Valid(t *testing.T) {
 	h, orgReg, _ := newTestOUHandler()
 	seedOrg(t, orgReg, "nic")
