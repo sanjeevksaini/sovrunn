@@ -22,11 +22,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	reg := registry.NewOrganizationRegistry()
-	orgHandler := api.NewOrgHandler(reg, registry.NoopChildBlockerChecker{})
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
+
+	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry)
+
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
-	srv := server.New(cfg, orgHandler, bootstrapHandler, readiness)
+	srv := server.New(cfg, orgHandler, ouHandler, bootstrapHandler, readiness)
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)

@@ -29,6 +29,7 @@ type Server struct {
 func New(
 	cfg config.Config,
 	org *api.OrgHandler,
+	ou *api.OUHandler,
 	bootstrap *api.BootstrapHandler,
 	readiness *health.ReadinessState,
 ) *Server {
@@ -44,6 +45,9 @@ func New(
 
 	mux.Handle("/v1/organizations", chain(http.HandlerFunc(org.HandleCollection)))
 	mux.Handle("/v1/organizations/", chain(http.HandlerFunc(org.HandleItem)))
+
+	mux.Handle("/v1/organization-units", chain(http.HandlerFunc(ou.HandleCollection)))
+	mux.Handle("/v1/organization-units/", chain(http.HandlerFunc(ou.HandleItem)))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		bootstrapChain(http.HandlerFunc(bootstrap.Healthz)).ServeHTTP(w, r)

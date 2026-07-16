@@ -31,10 +31,12 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	}
 
 	readiness := &health.ReadinessState{}
-	reg := registry.NewOrganizationRegistry()
-	orgHandler := api.NewOrgHandler(reg, registry.NoopChildBlockerChecker{})
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{})
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	srv := New(cfg, orgHandler, bootstrap, readiness)
+	srv := New(cfg, orgHandler, ouHandler, bootstrap, readiness)
 
 	if err := srv.Start(); err == nil {
 		t.Fatal("Start() expected error when port is already in use")
