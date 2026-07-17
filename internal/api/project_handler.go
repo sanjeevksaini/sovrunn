@@ -115,7 +115,16 @@ func (h *ProjectHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: CreateProject
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpCreateProject,
+		ResourceKind:         resources.ProjectKind,
+		ResourceName:         created.Metadata.Name,
+		OrganizationName:     created.Spec.OrganizationName,
+		OrganizationUnitName: created.Spec.OrganizationUnitName,
+		TenantName:           created.Spec.TenantName,
+		ProjectName:          created.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusCreated, created)
 }
 
@@ -230,7 +239,16 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request, orgName,
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: UpdateProject
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpUpdateProject,
+		ResourceKind:         resources.ProjectKind,
+		ResourceName:         updated.Metadata.Name,
+		OrganizationName:     updated.Spec.OrganizationName,
+		OrganizationUnitName: updated.Spec.OrganizationUnitName,
+		TenantName:           updated.Spec.TenantName,
+		ProjectName:          updated.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusOK, updated)
 }
 
@@ -250,7 +268,16 @@ func (h *ProjectHandler) Delete(w http.ResponseWriter, r *http.Request, orgName,
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: DeleteProject
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpDeleteProject,
+		ResourceKind:         resources.ProjectKind,
+		ResourceName:         name,
+		OrganizationName:     orgName,
+		OrganizationUnitName: ouName,
+		TenantName:           tenantName,
+		ProjectName:          name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	w.Header().Set("Content-Type", "application/json")
 	if reqID := requestctx.RequestIDFromContext(r.Context()); reqID != "" {
 		w.Header().Set("X-Sovrunn-Request-ID", reqID)

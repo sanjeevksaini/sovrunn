@@ -117,7 +117,15 @@ func (h *TenantHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: CreateTenant
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpCreateTenant,
+		ResourceKind:         resources.TenantKind,
+		ResourceName:         created.Metadata.Name,
+		OrganizationName:     created.Spec.OrganizationName,
+		OrganizationUnitName: created.Spec.OrganizationUnitName,
+		TenantName:           created.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusCreated, created)
 }
 
@@ -222,7 +230,15 @@ func (h *TenantHandler) Update(w http.ResponseWriter, r *http.Request, orgName, 
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: UpdateTenant
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpUpdateTenant,
+		ResourceKind:         resources.TenantKind,
+		ResourceName:         updated.Metadata.Name,
+		OrganizationName:     updated.Spec.OrganizationName,
+		OrganizationUnitName: updated.Spec.OrganizationUnitName,
+		TenantName:           updated.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusOK, updated)
 }
 
@@ -255,7 +271,15 @@ func (h *TenantHandler) Delete(w http.ResponseWriter, r *http.Request, orgName, 
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: DeleteTenant
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpDeleteTenant,
+		ResourceKind:         resources.TenantKind,
+		ResourceName:         name,
+		OrganizationName:     orgName,
+		OrganizationUnitName: ouName,
+		TenantName:           name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	w.Header().Set("Content-Type", "application/json")
 	if reqID := requestctx.RequestIDFromContext(r.Context()); reqID != "" {
 		w.Header().Set("X-Sovrunn-Request-ID", reqID)

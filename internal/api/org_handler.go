@@ -91,7 +91,13 @@ func (h *OrgHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: CreateOrganization
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:             resources.OpCreateOrganization,
+		ResourceKind:     resources.OrganizationKind,
+		ResourceName:     org.Metadata.Name,
+		OrganizationName: org.Metadata.Name,
+		RequestID:        requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusCreated, org)
 }
 
@@ -176,7 +182,13 @@ func (h *OrgHandler) Update(w http.ResponseWriter, r *http.Request, name string)
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: UpdateOrganization
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:             resources.OpUpdateOrganization,
+		ResourceKind:     resources.OrganizationKind,
+		ResourceName:     updated.Metadata.Name,
+		OrganizationName: updated.Metadata.Name,
+		RequestID:        requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusOK, updated)
 }
 
@@ -217,7 +229,13 @@ func (h *OrgHandler) Delete(w http.ResponseWriter, r *http.Request, name string)
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: DeleteOrganization
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:             resources.OpDeleteOrganization,
+		ResourceKind:     resources.OrganizationKind,
+		ResourceName:     name,
+		OrganizationName: name,
+		RequestID:        requestIDFromContext(r.Context()),
+	})
 	w.Header().Set("Content-Type", "application/json")
 	if reqID := requestctx.RequestIDFromContext(r.Context()); reqID != "" {
 		w.Header().Set("X-Sovrunn-Request-ID", reqID)
