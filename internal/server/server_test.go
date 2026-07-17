@@ -38,7 +38,7 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	tenantRegistry := registry.NewTenantRegistry()
 	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{})
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
 	srv := New(cfg, orgHandler, ouHandler, tenantHandler, bootstrap, readiness)
 
@@ -61,7 +61,7 @@ func newTestServer() *Server {
 	tenantRegistry := registry.NewTenantRegistry()
 	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{})
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
 	return New(cfg, orgHandler, ouHandler, tenantHandler, bootstrap, readiness)
 }

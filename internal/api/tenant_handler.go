@@ -13,18 +13,22 @@ import (
 
 // TenantHandler holds dependencies for Tenant CRUD endpoints. ouLookup
 // verifies that a referenced parent OrganizationUnit exists; the registry
-// stores Tenant state. Both are injected by main.
+// stores Tenant state. blocker is optional (FEATURE-0004) and prevents
+// deleting Tenants that still have child resources such as Projects.
 type TenantHandler struct {
 	registry registry.TenantRegistryIface
 	ouLookup registry.OrganizationUnitLookup
+	blocker  registry.TenantChildBlocker
 }
 
-// NewTenantHandler constructs a TenantHandler.
+// NewTenantHandler constructs a TenantHandler. blocker may be nil, in which
+// case Tenant delete proceeds without child-blocker checks.
 func NewTenantHandler(
 	reg registry.TenantRegistryIface,
 	ouLookup registry.OrganizationUnitLookup,
+	blocker registry.TenantChildBlocker,
 ) *TenantHandler {
-	return &TenantHandler{registry: reg, ouLookup: ouLookup}
+	return &TenantHandler{registry: reg, ouLookup: ouLookup, blocker: blocker}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
@@ -225,6 +229,19 @@ func (h *TenantHandler) Delete(w http.ResponseWriter, r *http.Request, orgName, 
 	if errs := validation.ValidateTenantPathSegments(orgName, ouName, name); len(errs) > 0 {
 		writeValidationErrors(w, r, errs)
 		return
+	}
+
+	if h.blocker != nil {
+		blockers, err := h.blocker.BlockedByTenantChildren(r.Context(), orgName, ouName, name)
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, resources.ErrCodeInternalError, "internal error", "", "")
+			return
+		}
+		if len(blockers) > 0 {
+			msg := "deletion blocked by " + blockers[0].Kind + " resources"
+			writeError(w, r, http.StatusConflict, resources.ErrCodeDeleteBlocked, msg, "", "")
+			return
+		}
 	}
 
 	if err := h.registry.DeleteTenant(r.Context(), orgName, ouName, name); err != nil {

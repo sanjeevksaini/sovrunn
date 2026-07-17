@@ -31,7 +31,7 @@ func main() {
 
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker)
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil)
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
