@@ -31,6 +31,7 @@ func New(
 	org *api.OrgHandler,
 	ou *api.OUHandler,
 	tenant *api.TenantHandler,
+	project *api.ProjectHandler,
 	bootstrap *api.BootstrapHandler,
 	readiness *health.ReadinessState,
 ) *Server {
@@ -52,6 +53,9 @@ func New(
 
 	mux.Handle("/v1/tenants", chain(http.HandlerFunc(tenant.HandleCollection)))
 	mux.Handle("/v1/tenants/", chain(http.HandlerFunc(tenant.HandleItem)))
+
+	mux.Handle("/v1/projects", chain(http.HandlerFunc(project.HandleCollection)))
+	mux.Handle("/v1/projects/", chain(http.HandlerFunc(project.HandleItem)))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		bootstrapChain(http.HandlerFunc(bootstrap.Healthz)).ServeHTTP(w, r)

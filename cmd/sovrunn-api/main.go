@@ -28,14 +28,17 @@ func main() {
 
 	tenantRegistry := registry.NewTenantRegistry()
 	tenantBlocker := registry.NewTenantChildBlockerChecker(tenantRegistry)
+	projectRegistry := registry.NewProjectRegistry()
+	projectBlocker := registry.NewProjectChildBlockerChecker(projectRegistry)
 
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker)
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker)
+	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry)
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
-	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, bootstrapHandler, readiness)
+	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, bootstrapHandler, readiness)
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)

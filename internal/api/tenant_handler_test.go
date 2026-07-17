@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +21,7 @@ import (
 func newTestTenantHandler() (*TenantHandler, *registry.OrganizationUnitRegistry, *registry.TenantRegistry) {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
-	handler := NewTenantHandler(tenantRegistry, ouRegistry)
+	handler := NewTenantHandler(tenantRegistry, ouRegistry, nil)
 	return handler, ouRegistry, tenantRegistry
 }
 
@@ -676,7 +677,7 @@ func newTenantBlockerWiring() (*OUHandler, *TenantHandler, *registry.Organizatio
 	tenantRegistry := registry.NewTenantRegistry()
 	tenantBlocker := registry.NewTenantChildBlockerChecker(tenantRegistry)
 	ouHandler := NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
-	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry)
+	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, nil)
 	return ouHandler, tenantHandler, orgRegistry, ouRegistry
 }
 
@@ -720,5 +721,107 @@ func TestOUDeleteAllowedWhenNoTenants(t *testing.T) {
 	}
 	if rec.Body.Len() != 0 {
 		t.Errorf("body = %q, want empty", rec.Body.String())
+	}
+}
+
+// stubTenantChildBlocker is a controllable registry.TenantChildBlocker used to
+// exercise the FEATURE-0004 Tenant delete blocking path.
+type stubTenantChildBlocker struct {
+	blockers []registry.BlockedBy
+	err      error
+}
+
+func (s stubTenantChildBlocker) BlockedByTenantChildren(
+	_ context.Context, _, _, _ string,
+) ([]registry.BlockedBy, error) {
+	return s.blockers, s.err
+}
+
+// newTenantHandlerWithBlocker builds a TenantHandler with the given blocker and
+// returns it alongside the OU and Tenant registries for seeding.
+func newTenantHandlerWithBlocker(blocker registry.TenantChildBlocker) (*TenantHandler, *registry.OrganizationUnitRegistry, *registry.TenantRegistry) {
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	tenantRegistry := registry.NewTenantRegistry()
+	handler := NewTenantHandler(tenantRegistry, ouRegistry, blocker)
+	return handler, ouRegistry, tenantRegistry
+}
+
+func TestTenantHandler_Delete_NilBlockerAllows(t *testing.T) {
+	h, ouReg, _ := newTestTenantHandler()
+	seedOU(t, ouReg, "nic", "ministry-health")
+	if rec := createTenant(h, "nic", "ministry-health", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create Tenant status = %d, want 201", rec.Code)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec.Body.Len() != 0 {
+		t.Errorf("body = %q, want empty", rec.Body.String())
+	}
+}
+
+func TestTenantHandler_Delete_BlockedByProject(t *testing.T) {
+	blocker := stubTenantChildBlocker{blockers: []registry.BlockedBy{{Kind: "Project", Count: 1}}}
+	h, ouReg, _ := newTenantHandlerWithBlocker(blocker)
+	seedOU(t, ouReg, "nic", "ministry-health")
+	if rec := createTenant(h, "nic", "ministry-health", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create Tenant status = %d, want 201", rec.Code)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "Project") {
+		t.Errorf("message = %q, want it to identify Project", errBody.Message)
+	}
+}
+
+func TestTenantHandler_Delete_EmptyBlockerAllows(t *testing.T) {
+	blocker := stubTenantChildBlocker{blockers: nil}
+	h, ouReg, _ := newTenantHandlerWithBlocker(blocker)
+	seedOU(t, ouReg, "nic", "ministry-health")
+	if rec := createTenant(h, "nic", "ministry-health", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create Tenant status = %d, want 201", rec.Code)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec.Body.Len() != 0 {
+		t.Errorf("body = %q, want empty", rec.Body.String())
+	}
+}
+
+func TestTenantHandler_Delete_BlockerErrorMapsTo500(t *testing.T) {
+	blocker := stubTenantChildBlocker{err: errors.New("count failed")}
+	h, ouReg, _ := newTenantHandlerWithBlocker(blocker)
+	seedOU(t, ouReg, "nic", "ministry-health")
+	if rec := createTenant(h, "nic", "ministry-health", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create Tenant status = %d, want 201", rec.Code)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeInternalError {
+		t.Errorf("code = %q, want INTERNAL_ERROR", errBody.Code)
 	}
 }
