@@ -27,9 +27,10 @@ func main() {
 	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
 
 	tenantRegistry := registry.NewTenantRegistry()
+	tenantBlocker := registry.NewTenantChildBlockerChecker(tenantRegistry)
 
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker)
-	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
 	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry)
 
 	readiness := &health.ReadinessState{}
