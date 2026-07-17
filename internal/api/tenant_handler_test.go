@@ -665,3 +665,60 @@ func TestTenantHandler_Item_MethodNotAllowed(t *testing.T) {
 		t.Fatalf("status = %d, want 405", rec.Code)
 	}
 }
+
+// newTenantBlockerWiring builds an OUHandler and TenantHandler that share a
+// single TenantRegistry through a TenantChildBlockerChecker, mirroring the
+// production wiring in cmd/sovrunn-api/main.go. This lets HTTP-level tests
+// exercise OrganizationUnit delete blocking by Tenants end-to-end.
+func newTenantBlockerWiring() (*OUHandler, *TenantHandler, *registry.OrganizationRegistry, *registry.OrganizationUnitRegistry) {
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	tenantRegistry := registry.NewTenantRegistry()
+	tenantBlocker := registry.NewTenantChildBlockerChecker(tenantRegistry)
+	ouHandler := NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
+	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry)
+	return ouHandler, tenantHandler, orgRegistry, ouRegistry
+}
+
+func TestOUDeleteBlockedByTenant(t *testing.T) {
+	ouHandler, tenantHandler, orgReg, _ := newTenantBlockerWiring()
+	seedOrg(t, orgReg, "nic")
+	if rec := createOU(ouHandler, "nic", "ministry-health", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create OU status = %d, want 201; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec := createTenant(tenantHandler, "nic", "ministry-health", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create Tenant status = %d, want 201; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/organization-units/nic/ministry-health", nil, "")
+	rec := httptest.NewRecorder()
+	ouHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "Tenant") {
+		t.Errorf("message = %q, want it to identify Tenant", errBody.Message)
+	}
+}
+
+func TestOUDeleteAllowedWhenNoTenants(t *testing.T) {
+	ouHandler, _, orgReg, _ := newTenantBlockerWiring()
+	seedOrg(t, orgReg, "nic")
+	if rec := createOU(ouHandler, "nic", "ministry-health", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create OU status = %d, want 201; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/organization-units/nic/ministry-health", nil, "")
+	rec := httptest.NewRecorder()
+	ouHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec.Body.Len() != 0 {
+		t.Errorf("body = %q, want empty", rec.Body.String())
+	}
+}
