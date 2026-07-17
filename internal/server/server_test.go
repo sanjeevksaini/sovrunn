@@ -46,7 +46,7 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, nil)
 	operationHandler := api.NewOperationHandler(operationRegistry)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, bootstrap, readiness)
+	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, nil, nil, bootstrap, readiness)
 
 	if err := srv.Start(); err == nil {
 		t.Fatal("Start() expected error when port is already in use")
@@ -73,7 +73,7 @@ func newTestServer() *Server {
 	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, nil)
 	operationHandler := api.NewOperationHandler(operationRegistry)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, bootstrap, readiness)
+	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, nil, nil, bootstrap, readiness)
 }
 
 func TestServer_TenantRoutes_Registered(t *testing.T) {
