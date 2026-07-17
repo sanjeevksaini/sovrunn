@@ -35,9 +35,10 @@ type ServicePlanStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
-// ServicePlanKind is set by the server, never from client input.
+// APIVersion and Kind constants are set by the server, never from client input.
 const (
-	ServicePlanKind = "ServicePlan"
+	ServicePlanAPIVersion = "platform.sovrunn.io/v1alpha1"
+	ServicePlanKind       = "ServicePlan"
 )
 
 // ServicePlan tier constants.
