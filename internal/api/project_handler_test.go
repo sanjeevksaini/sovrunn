@@ -757,3 +757,61 @@ func TestProjectHandler_Item_MethodNotAllowed(t *testing.T) {
 		t.Fatalf("status = %d, want 405", rec.Code)
 	}
 }
+
+// newProjectBlockerWiring builds a TenantHandler and ProjectHandler that share
+// in-memory registries, with the real ProjectChildBlockerChecker wired into the
+// Tenant delete path (matching production wiring in cmd/sovrunn-api/main.go).
+func newProjectBlockerWiring() (*TenantHandler, *ProjectHandler, *registry.OrganizationUnitRegistry, *registry.TenantRegistry) {
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	tenantRegistry := registry.NewTenantRegistry()
+	projectRegistry := registry.NewProjectRegistry()
+	projectBlocker := registry.NewProjectChildBlockerChecker(projectRegistry)
+	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker)
+	projectHandler := NewProjectHandler(projectRegistry, tenantRegistry)
+	return tenantHandler, projectHandler, ouRegistry, tenantRegistry
+}
+
+func TestIntegration_TenantDeleteBlockedByProject(t *testing.T) {
+	tenantHandler, projectHandler, ouReg, _ := newProjectBlockerWiring()
+	seedOU(t, ouReg, "nic", "ministry-health")
+
+	if rec := createTenant(tenantHandler, "nic", "ministry-health", "payments", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create tenant status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec := createProject(projectHandler, "nic", "ministry-health", "payments", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create project status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/payments", nil, "")
+	rec := httptest.NewRecorder()
+	tenantHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "Project") {
+		t.Errorf("message = %q, want it to contain Project", errBody.Message)
+	}
+}
+
+func TestIntegration_TenantDeleteAllowedWhenNoProject(t *testing.T) {
+	tenantHandler, _, ouReg, _ := newProjectBlockerWiring()
+	seedOU(t, ouReg, "nic", "ministry-health")
+
+	if rec := createTenant(tenantHandler, "nic", "ministry-health", "payments", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create tenant status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/tenants/nic/ministry-health/payments", nil, "")
+	rec := httptest.NewRecorder()
+	tenantHandler.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+	if rec.Body.Len() != 0 {
+		t.Errorf("body = %q, want empty", rec.Body.String())
+	}
+}
