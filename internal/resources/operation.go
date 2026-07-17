@@ -19,6 +19,8 @@ type OperationSpec struct {
 	OrganizationUnitName string `json:"organizationUnitName,omitempty"`
 	TenantName           string `json:"tenantName,omitempty"`
 	ProjectName          string `json:"projectName,omitempty"`
+	ServiceClassName     string `json:"serviceClassName,omitempty"`
+	ServicePlanName      string `json:"servicePlanName,omitempty"`
 	Actor                string `json:"actor"`
 	RequestID            string `json:"requestId,omitempty"`
 }
@@ -61,4 +63,14 @@ const (
 	OpCreateProject          = "CreateProject"
 	OpUpdateProject          = "UpdateProject"
 	OpDeleteProject          = "DeleteProject"
+)
+
+// Catalog operation type constants (FEATURE-0006).
+const (
+	OpCreateServiceClass = "CreateServiceClass"
+	OpUpdateServiceClass = "UpdateServiceClass"
+	OpDeleteServiceClass = "DeleteServiceClass"
+	OpCreateServicePlan  = "CreateServicePlan"
+	OpUpdateServicePlan  = "UpdateServicePlan"
+	OpDeleteServicePlan  = "DeleteServicePlan"
 )
