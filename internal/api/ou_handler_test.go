@@ -19,7 +19,7 @@ import (
 func newTestOUHandler() (*OUHandler, *registry.OrganizationRegistry, *registry.OrganizationUnitRegistry) {
 	orgRegistry := registry.NewOrganizationRegistry()
 	ouRegistry := registry.NewOrganizationUnitRegistry()
-	handler := NewOUHandler(ouRegistry, orgRegistry)
+	handler := NewOUHandler(ouRegistry, orgRegistry, nil)
 	return handler, orgRegistry, ouRegistry
 }
 
@@ -58,7 +58,7 @@ func newBlockerWiring() (*OrgHandler, *OUHandler, *registry.OrganizationRegistry
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
 	orgHandler := NewOrgHandler(orgRegistry, ouBlocker)
-	ouHandler := NewOUHandler(ouRegistry, orgRegistry)
+	ouHandler := NewOUHandler(ouRegistry, orgRegistry, nil)
 	return orgHandler, ouHandler, orgRegistry
 }
 
@@ -586,6 +586,48 @@ func TestOUHandler_Delete_Success(t *testing.T) {
 	}
 }
 
+func TestOUHandler_Delete_BlockerReturningTenantBlocksDelete(t *testing.T) {
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	h := NewOUHandler(ouRegistry, orgRegistry, staticOUBlocker{
+		blockers: []registry.BlockedBy{{Kind: "Tenant", Count: 2}},
+	})
+	seedOrg(t, orgRegistry, "nic")
+	_ = createOU(h, "nic", "ministry-health", "")
+
+	req := jsonRequest(http.MethodDelete, "/v1/organization-units/nic/ministry-health", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "Tenant") {
+		t.Errorf("message = %q, want it to identify Tenant", errBody.Message)
+	}
+	if _, err := ouRegistry.GetOrganizationUnit(context.Background(), "nic", "ministry-health"); err != nil {
+		t.Fatalf("blocked delete removed resource, GetOrganizationUnit() error = %v", err)
+	}
+}
+
+func TestOUHandler_Delete_EmptyBlockerAllowsDelete(t *testing.T) {
+	orgRegistry := registry.NewOrganizationRegistry()
+	ouRegistry := registry.NewOrganizationUnitRegistry()
+	h := NewOUHandler(ouRegistry, orgRegistry, staticOUBlocker{})
+	seedOrg(t, orgRegistry, "nic")
+	_ = createOU(h, "nic", "ministry-health", "")
+
+	req := jsonRequest(http.MethodDelete, "/v1/organization-units/nic/ministry-health", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestOUHandler_Delete_NotFound(t *testing.T) {
 	h, orgReg, _ := newTestOUHandler()
 	seedOrg(t, orgReg, "nic")
@@ -615,4 +657,15 @@ func TestOUHandler_Delete_InvalidPathSegments(t *testing.T) {
 	if errBody.Code != resources.ErrCodeValidationFailed {
 		t.Errorf("code = %q, want VALIDATION_FAILED", errBody.Code)
 	}
+}
+
+type staticOUBlocker struct {
+	blockers []registry.BlockedBy
+	err      error
+}
+
+func (b staticOUBlocker) BlockedByOUChildren(
+	ctx context.Context, orgName, ouName string,
+) ([]registry.BlockedBy, error) {
+	return b.blockers, b.err
 }

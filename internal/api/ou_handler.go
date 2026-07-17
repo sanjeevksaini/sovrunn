@@ -13,18 +13,21 @@ import (
 
 // OUHandler holds dependencies for OrganizationUnit CRUD endpoints.
 // orgLookup verifies that a referenced parent Organization exists; the
-// registry stores OrganizationUnit state. Both are injected by main.
+// registry stores OrganizationUnit state. blocker is optional and prevents
+// deleting OrganizationUnits with child resources.
 type OUHandler struct {
 	registry  registry.OrganizationUnitRegistryIface
 	orgLookup registry.OrganizationLookup
+	blocker   registry.OUChildBlocker
 }
 
 // NewOUHandler constructs an OUHandler.
 func NewOUHandler(
 	reg registry.OrganizationUnitRegistryIface,
 	orgLookup registry.OrganizationLookup,
+	blocker registry.OUChildBlocker,
 ) *OUHandler {
-	return &OUHandler{registry: reg, orgLookup: orgLookup}
+	return &OUHandler{registry: reg, orgLookup: orgLookup, blocker: blocker}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
@@ -212,6 +215,19 @@ func (h *OUHandler) Delete(w http.ResponseWriter, r *http.Request, orgName, name
 	if errs := validation.ValidateOUPathSegments(orgName, name); len(errs) > 0 {
 		writeValidationErrors(w, r, errs)
 		return
+	}
+
+	if h.blocker != nil {
+		blockers, err := h.blocker.BlockedByOUChildren(r.Context(), orgName, name)
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, resources.ErrCodeInternalError, "internal error", "", "")
+			return
+		}
+		if len(blockers) > 0 {
+			msg := "deletion blocked by " + blockers[0].Kind + " resources"
+			writeError(w, r, http.StatusConflict, resources.ErrCodeDeleteBlocked, msg, "", "")
+			return
+		}
 	}
 
 	if err := h.registry.DeleteOrganizationUnit(r.Context(), orgName, name); err != nil {
