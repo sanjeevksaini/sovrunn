@@ -27,7 +27,7 @@ func main() {
 	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
 
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker)
-	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
