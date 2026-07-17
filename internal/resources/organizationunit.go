@@ -27,6 +27,7 @@ type OrganizationUnitStatus struct {
 
 // APIVersion and Kind constants — set by server, never from client.
 const (
-	OUAPIVersion = "platform.sovrunn.io/v1alpha1"
-	OUKind       = "OrganizationUnit"
+	OUAPIVersion         = "platform.sovrunn.io/v1alpha1"
+	OUKind               = "OrganizationUnit"
+	OrganizationUnitKind = "OrganizationUnit"
 )

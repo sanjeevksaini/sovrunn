@@ -16,7 +16,7 @@ import (
 )
 
 func newTestHandler() *OrgHandler {
-	return NewOrgHandler(registry.NewOrganizationRegistry(), registry.NoopChildBlockerChecker{})
+	return NewOrgHandler(registry.NewOrganizationRegistry(), registry.NoopChildBlockerChecker{}, nil)
 }
 
 func withRequestID(r *http.Request, id string) *http.Request {

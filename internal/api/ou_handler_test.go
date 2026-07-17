@@ -19,7 +19,7 @@ import (
 func newTestOUHandler() (*OUHandler, *registry.OrganizationRegistry, *registry.OrganizationUnitRegistry) {
 	orgRegistry := registry.NewOrganizationRegistry()
 	ouRegistry := registry.NewOrganizationUnitRegistry()
-	handler := NewOUHandler(ouRegistry, orgRegistry, nil)
+	handler := NewOUHandler(ouRegistry, orgRegistry, nil, nil)
 	return handler, orgRegistry, ouRegistry
 }
 
@@ -57,8 +57,8 @@ func newBlockerWiring() (*OrgHandler, *OUHandler, *registry.OrganizationRegistry
 	orgRegistry := registry.NewOrganizationRegistry()
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	ouBlocker := registry.NewOUChildBlockerChecker(ouRegistry)
-	orgHandler := NewOrgHandler(orgRegistry, ouBlocker)
-	ouHandler := NewOUHandler(ouRegistry, orgRegistry, nil)
+	orgHandler := NewOrgHandler(orgRegistry, ouBlocker, nil)
+	ouHandler := NewOUHandler(ouRegistry, orgRegistry, nil, nil)
 	return orgHandler, ouHandler, orgRegistry
 }
 
@@ -591,7 +591,7 @@ func TestOUHandler_Delete_BlockerReturningTenantBlocksDelete(t *testing.T) {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	h := NewOUHandler(ouRegistry, orgRegistry, staticOUBlocker{
 		blockers: []registry.BlockedBy{{Kind: "Tenant", Count: 2}},
-	})
+	}, nil)
 	seedOrg(t, orgRegistry, "nic")
 	_ = createOU(h, "nic", "ministry-health", "")
 
@@ -616,7 +616,7 @@ func TestOUHandler_Delete_BlockerReturningTenantBlocksDelete(t *testing.T) {
 func TestOUHandler_Delete_EmptyBlockerAllowsDelete(t *testing.T) {
 	orgRegistry := registry.NewOrganizationRegistry()
 	ouRegistry := registry.NewOrganizationUnitRegistry()
-	h := NewOUHandler(ouRegistry, orgRegistry, staticOUBlocker{})
+	h := NewOUHandler(ouRegistry, orgRegistry, staticOUBlocker{}, nil)
 	seedOrg(t, orgRegistry, "nic")
 	_ = createOU(h, "nic", "ministry-health", "")
 

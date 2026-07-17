@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,7 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/config"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/registry"
+	"github.com/sanjeevksaini/sovrunn/internal/resources"
 )
 
 func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
@@ -37,12 +39,14 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
 	projectRegistry := registry.NewProjectRegistry()
-	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{})
-	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil)
-	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry)
+	operationRegistry := registry.NewOperationRegistry()
+	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{}, nil)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil, nil)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil, nil)
+	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, nil)
+	operationHandler := api.NewOperationHandler(operationRegistry)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, bootstrap, readiness)
+	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, bootstrap, readiness)
 
 	if err := srv.Start(); err == nil {
 		t.Fatal("Start() expected error when port is already in use")
@@ -62,12 +66,14 @@ func newTestServer() *Server {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
 	projectRegistry := registry.NewProjectRegistry()
-	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{})
-	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil)
-	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry)
+	operationRegistry := registry.NewOperationRegistry()
+	orgHandler := api.NewOrgHandler(orgRegistry, registry.NoopChildBlockerChecker{}, nil)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, nil, nil)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, nil, nil)
+	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, nil)
+	operationHandler := api.NewOperationHandler(operationRegistry)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, bootstrap, readiness)
+	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, bootstrap, readiness)
 }
 
 func TestServer_TenantRoutes_Registered(t *testing.T) {
@@ -131,6 +137,48 @@ func TestServer_ProjectRoutes_Registered(t *testing.T) {
 		srv.httpServer.Handler.ServeHTTP(rec, req)
 		if rec.Code != http.StatusMethodNotAllowed {
 			t.Fatalf("DELETE /v1/projects status = %d, want 405", rec.Code)
+		}
+	})
+}
+
+func TestServer_OperationRoutes_Registered(t *testing.T) {
+	srv := newTestServer()
+
+	t.Run("collection GET returns empty list", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/operations", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET /v1/operations status = %d, want 200; body=%s", rec.Code, rec.Body.String())
+		}
+		if rec.Body.String() != "{\"items\":[]}\n" {
+			t.Fatalf("GET /v1/operations body = %q, want {\"items\":[]}", rec.Body.String())
+		}
+	})
+
+	t.Run("bare item path returns 404", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/operations/", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/operations/ status = %d, want 404", rec.Code)
+		}
+		var envelope resources.APIErrorEnvelope
+		if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+			t.Fatalf("decode error response: %v", err)
+		}
+		if envelope.Error.Code != resources.ErrCodeResourceNotFound {
+			t.Fatalf("error.code = %q, want RESOURCE_NOT_FOUND", envelope.Error.Code)
+		}
+	})
+
+	t.Run("collection POST returns 405", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodPost, "/v1/operations", nil)
+		req.Header.Set("Content-Type", "application/json")
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("POST /v1/operations status = %d, want 405", rec.Code)
 		}
 	})
 }

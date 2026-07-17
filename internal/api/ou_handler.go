@@ -19,15 +19,17 @@ type OUHandler struct {
 	registry  registry.OrganizationUnitRegistryIface
 	orgLookup registry.OrganizationLookup
 	blocker   registry.OUChildBlocker
+	emitter   OperationEmitter
 }
 
-// NewOUHandler constructs an OUHandler.
+// NewOUHandler constructs an OUHandler. emitter may be nil.
 func NewOUHandler(
 	reg registry.OrganizationUnitRegistryIface,
 	orgLookup registry.OrganizationLookup,
 	blocker registry.OUChildBlocker,
+	emitter OperationEmitter,
 ) *OUHandler {
-	return &OUHandler{registry: reg, orgLookup: orgLookup, blocker: blocker}
+	return &OUHandler{registry: reg, orgLookup: orgLookup, blocker: blocker, emitter: emitter}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
@@ -111,7 +113,14 @@ func (h *OUHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: CreateOrganizationUnit
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpCreateOrganizationUnit,
+		ResourceKind:         resources.OrganizationUnitKind,
+		ResourceName:         created.Metadata.Name,
+		OrganizationName:     created.Spec.OrganizationName,
+		OrganizationUnitName: created.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusCreated, created)
 }
 
@@ -206,7 +215,14 @@ func (h *OUHandler) Update(w http.ResponseWriter, r *http.Request, orgName, name
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: UpdateOrganizationUnit
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpUpdateOrganizationUnit,
+		ResourceKind:         resources.OrganizationUnitKind,
+		ResourceName:         updated.Metadata.Name,
+		OrganizationName:     updated.Spec.OrganizationName,
+		OrganizationUnitName: updated.Metadata.Name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	writeJSON(w, r, http.StatusOK, updated)
 }
 
@@ -239,7 +255,14 @@ func (h *OUHandler) Delete(w http.ResponseWriter, r *http.Request, orgName, name
 		return
 	}
 
-	// TODO(FEATURE-0005): emit Operation record — type: DeleteOrganizationUnit
+	emitOperation(r.Context(), h.emitter, resources.OperationSpec{
+		Type:                 resources.OpDeleteOrganizationUnit,
+		ResourceKind:         resources.OrganizationUnitKind,
+		ResourceName:         name,
+		OrganizationName:     orgName,
+		OrganizationUnitName: name,
+		RequestID:            requestIDFromContext(r.Context()),
+	})
 	w.Header().Set("Content-Type", "application/json")
 	if reqID := requestctx.RequestIDFromContext(r.Context()); reqID != "" {
 		w.Header().Set("X-Sovrunn-Request-ID", reqID)

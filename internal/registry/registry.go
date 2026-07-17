@@ -12,6 +12,11 @@ import (
 var (
 	ErrNotFound      = errors.New("resource not found")
 	ErrAlreadyExists = errors.New("resource already exists")
+
+	// ErrMissingOperationID is returned by the storage-only OperationRegistry
+	// when CreateOperation is called with an empty metadata.name. The registry
+	// never generates Operation IDs; the caller (emitter) must supply one.
+	ErrMissingOperationID = errors.New("operation id is required")
 )
 
 // OrganizationRegistryIface is the storage contract for Organization

@@ -47,6 +47,7 @@ const (
 
 // APIVersion and Kind constants — set by server, never from client.
 const (
-	OrgAPIVersion = "platform.sovrunn.io/v1alpha1"
-	OrgKind       = "Organization"
+	OrgAPIVersion    = "platform.sovrunn.io/v1alpha1"
+	OrgKind          = "Organization"
+	OrganizationKind = "Organization"
 )
