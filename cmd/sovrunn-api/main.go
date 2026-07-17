@@ -33,15 +33,21 @@ func main() {
 	operationRegistry := registry.NewOperationRegistry()
 	emitter := api.NewRegistryEmitter(operationRegistry, nil)
 
+	serviceClassRegistry := registry.NewServiceClassRegistry()
+	servicePlanRegistry := registry.NewServicePlanRegistry()
+	serviceClassBlocker := registry.NewServicePlanChildBlockerChecker(servicePlanRegistry)
+
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker, emitter)
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker, emitter)
 	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker, emitter)
 	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, emitter)
 	operationHandler := api.NewOperationHandler(operationRegistry)
+	serviceClassHandler := api.NewServiceClassHandler(serviceClassRegistry, serviceClassBlocker, emitter)
+	servicePlanHandler := api.NewServicePlanHandler(servicePlanRegistry, serviceClassRegistry, emitter)
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
-	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, bootstrapHandler, readiness)
+	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, bootstrapHandler, readiness)
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)
