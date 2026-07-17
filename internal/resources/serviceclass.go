@@ -32,9 +32,10 @@ type ServiceClassStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
-// ServiceClassKind is set by the server, never from client input.
+// APIVersion and Kind constants are set by the server, never from client input.
 const (
-	ServiceClassKind = "ServiceClass"
+	ServiceClassAPIVersion = "platform.sovrunn.io/v1alpha1"
+	ServiceClassKind       = "ServiceClass"
 )
 
 // ServiceClass category constants.
