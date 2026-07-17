@@ -30,6 +30,7 @@ func New(
 	cfg config.Config,
 	org *api.OrgHandler,
 	ou *api.OUHandler,
+	tenant *api.TenantHandler,
 	bootstrap *api.BootstrapHandler,
 	readiness *health.ReadinessState,
 ) *Server {
@@ -48,6 +49,9 @@ func New(
 
 	mux.Handle("/v1/organization-units", chain(http.HandlerFunc(ou.HandleCollection)))
 	mux.Handle("/v1/organization-units/", chain(http.HandlerFunc(ou.HandleItem)))
+
+	mux.Handle("/v1/tenants", chain(http.HandlerFunc(tenant.HandleCollection)))
+	mux.Handle("/v1/tenants/", chain(http.HandlerFunc(tenant.HandleItem)))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		bootstrapChain(http.HandlerFunc(bootstrap.Healthz)).ServeHTTP(w, r)
