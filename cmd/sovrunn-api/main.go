@@ -31,11 +31,12 @@ func main() {
 	projectRegistry := registry.NewProjectRegistry()
 	projectBlocker := registry.NewProjectChildBlockerChecker(projectRegistry)
 	operationRegistry := registry.NewOperationRegistry()
+	emitter := api.NewRegistryEmitter(operationRegistry, nil)
 
-	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker, nil)
-	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker, nil)
-	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker, nil)
-	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, nil)
+	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker, emitter)
+	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker, emitter)
+	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker, emitter)
+	projectHandler := api.NewProjectHandler(projectRegistry, tenantRegistry, emitter)
 	operationHandler := api.NewOperationHandler(operationRegistry)
 
 	readiness := &health.ReadinessState{}
