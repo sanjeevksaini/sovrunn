@@ -19,15 +19,17 @@ type OUHandler struct {
 	registry  registry.OrganizationUnitRegistryIface
 	orgLookup registry.OrganizationLookup
 	blocker   registry.OUChildBlocker
+	emitter   OperationEmitter
 }
 
-// NewOUHandler constructs an OUHandler.
+// NewOUHandler constructs an OUHandler. emitter may be nil.
 func NewOUHandler(
 	reg registry.OrganizationUnitRegistryIface,
 	orgLookup registry.OrganizationLookup,
 	blocker registry.OUChildBlocker,
+	emitter OperationEmitter,
 ) *OUHandler {
-	return &OUHandler{registry: reg, orgLookup: orgLookup, blocker: blocker}
+	return &OUHandler{registry: reg, orgLookup: orgLookup, blocker: blocker, emitter: emitter}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.

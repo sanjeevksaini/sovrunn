@@ -20,7 +20,7 @@ import (
 func newTestProjectHandler() (*ProjectHandler, *registry.TenantRegistry, *registry.ProjectRegistry) {
 	tenantRegistry := registry.NewTenantRegistry()
 	projectRegistry := registry.NewProjectRegistry()
-	handler := NewProjectHandler(projectRegistry, tenantRegistry)
+	handler := NewProjectHandler(projectRegistry, tenantRegistry, nil)
 	return handler, tenantRegistry, projectRegistry
 }
 
@@ -766,8 +766,8 @@ func newProjectBlockerWiring() (*TenantHandler, *ProjectHandler, *registry.Organ
 	tenantRegistry := registry.NewTenantRegistry()
 	projectRegistry := registry.NewProjectRegistry()
 	projectBlocker := registry.NewProjectChildBlockerChecker(projectRegistry)
-	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker)
-	projectHandler := NewProjectHandler(projectRegistry, tenantRegistry)
+	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker, nil)
+	projectHandler := NewProjectHandler(projectRegistry, tenantRegistry, nil)
 	return tenantHandler, projectHandler, ouRegistry, tenantRegistry
 }
 

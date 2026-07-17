@@ -12,18 +12,21 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/validation"
 )
 
-// OrgHandler holds dependencies injected by main.
+// OrgHandler holds dependencies injected by main. emitter is optional
+// (nil-safe) and records Operations after successful mutations in a later task.
 type OrgHandler struct {
 	registry registry.OrganizationRegistryIface
 	blocker  registry.ChildBlockerChecker
+	emitter  OperationEmitter
 }
 
-// NewOrgHandler constructs an OrgHandler.
+// NewOrgHandler constructs an OrgHandler. emitter may be nil.
 func NewOrgHandler(
 	reg registry.OrganizationRegistryIface,
 	blocker registry.ChildBlockerChecker,
+	emitter OperationEmitter,
 ) *OrgHandler {
-	return &OrgHandler{registry: reg, blocker: blocker}
+	return &OrgHandler{registry: reg, blocker: blocker, emitter: emitter}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.

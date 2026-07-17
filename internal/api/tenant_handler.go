@@ -19,16 +19,18 @@ type TenantHandler struct {
 	registry registry.TenantRegistryIface
 	ouLookup registry.OrganizationUnitLookup
 	blocker  registry.TenantChildBlocker
+	emitter  OperationEmitter
 }
 
 // NewTenantHandler constructs a TenantHandler. blocker may be nil, in which
-// case Tenant delete proceeds without child-blocker checks.
+// case Tenant delete proceeds without child-blocker checks. emitter may be nil.
 func NewTenantHandler(
 	reg registry.TenantRegistryIface,
 	ouLookup registry.OrganizationUnitLookup,
 	blocker registry.TenantChildBlocker,
+	emitter OperationEmitter,
 ) *TenantHandler {
-	return &TenantHandler{registry: reg, ouLookup: ouLookup, blocker: blocker}
+	return &TenantHandler{registry: reg, ouLookup: ouLookup, blocker: blocker, emitter: emitter}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.

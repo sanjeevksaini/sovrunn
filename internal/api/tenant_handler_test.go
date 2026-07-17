@@ -21,7 +21,7 @@ import (
 func newTestTenantHandler() (*TenantHandler, *registry.OrganizationUnitRegistry, *registry.TenantRegistry) {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
-	handler := NewTenantHandler(tenantRegistry, ouRegistry, nil)
+	handler := NewTenantHandler(tenantRegistry, ouRegistry, nil, nil)
 	return handler, ouRegistry, tenantRegistry
 }
 
@@ -676,8 +676,8 @@ func newTenantBlockerWiring() (*OUHandler, *TenantHandler, *registry.Organizatio
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
 	tenantBlocker := registry.NewTenantChildBlockerChecker(tenantRegistry)
-	ouHandler := NewOUHandler(ouRegistry, orgRegistry, tenantBlocker)
-	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, nil)
+	ouHandler := NewOUHandler(ouRegistry, orgRegistry, tenantBlocker, nil)
+	tenantHandler := NewTenantHandler(tenantRegistry, ouRegistry, nil, nil)
 	return ouHandler, tenantHandler, orgRegistry, ouRegistry
 }
 
@@ -742,7 +742,7 @@ func (s stubTenantChildBlocker) BlockedByTenantChildren(
 func newTenantHandlerWithBlocker(blocker registry.TenantChildBlocker) (*TenantHandler, *registry.OrganizationUnitRegistry, *registry.TenantRegistry) {
 	ouRegistry := registry.NewOrganizationUnitRegistry()
 	tenantRegistry := registry.NewTenantRegistry()
-	handler := NewTenantHandler(tenantRegistry, ouRegistry, blocker)
+	handler := NewTenantHandler(tenantRegistry, ouRegistry, blocker, nil)
 	return handler, ouRegistry, tenantRegistry
 }
 

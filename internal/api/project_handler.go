@@ -17,14 +17,16 @@ import (
 type ProjectHandler struct {
 	registry     registry.ProjectRegistryIface
 	tenantLookup registry.TenantLookup
+	emitter      OperationEmitter
 }
 
-// NewProjectHandler constructs a ProjectHandler.
+// NewProjectHandler constructs a ProjectHandler. emitter may be nil.
 func NewProjectHandler(
 	reg registry.ProjectRegistryIface,
 	tenantLookup registry.TenantLookup,
+	emitter OperationEmitter,
 ) *ProjectHandler {
-	return &ProjectHandler{registry: reg, tenantLookup: tenantLookup}
+	return &ProjectHandler{registry: reg, tenantLookup: tenantLookup, emitter: emitter}
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
