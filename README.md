@@ -291,6 +291,39 @@ Run demo, after implementation exists:
 make demo
 ```
 
+## Running the Demo
+
+Prerequisites:
+- **bash 4+** required. macOS ships bash 3.2 by default. Install a modern bash via
+  Homebrew (`brew install bash`) and either invoke with `/usr/local/bin/bash` (Intel)
+  or `/opt/homebrew/bin/bash` (Apple Silicon), or add the Homebrew bash to your PATH.
+  Verify with `bash --version`.
+- **curl** must be available (pre-installed on macOS and most Linux distributions).
+- The `sovrunn-api` server must be running (`make run`).
+
+Run the full Phase 1 demo flow:
+
+```bash
+make run &
+sleep 2
+make demo
+```
+
+The demo exercises all Phase 1 resources end-to-end. To re-run, restart the server first:
+
+```bash
+kill %1
+make run &
+sleep 2
+make demo
+```
+
+Override the base URL if the server runs on a different port:
+
+```bash
+BASE_URL=http://127.0.0.1:9090 make demo
+```
+
 ## Documentation Site
 
 If MkDocs is configured, build the documentation with:
