@@ -57,49 +57,139 @@
         "implementation": [
           {
             "priority": 1,
-            "label": "Implementation",
-            "model": "claude-sonnet-4.5",
+            "label": "Cursor auto model",
+            "model": "auto",
             "effort": "medium",
-            "why": "Use for repo-aware implementation, tests, and small refactors."
+            "why": "Uses an available Cursor model under the current account limits."
           },
           {
             "priority": 2,
-            "label": "Fallback",
-            "model": "gpt-5.5",
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
             "effort": "medium",
-            "why": "Use if Cursor supports it and the task needs stronger reasoning."
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
           }
         ],
         "debug": [
           {
             "priority": 1,
-            "label": "Debug loop",
-            "model": "claude-sonnet-4.5",
+            "label": "Cursor auto model",
+            "model": "auto",
             "effort": "medium",
-            "why": "Use for fast compiler/test error fixing."
+            "why": "Uses an available Cursor model under the current account limits."
           },
           {
             "priority": 2,
-            "label": "Deep debug",
-            "model": "gpt-5.5-thinking",
-            "effort": "high",
-            "why": "Use for difficult architecture-level or multi-file debugging."
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
           }
         ],
         "routine_code": [
           {
             "priority": 1,
-            "label": "Implementation",
-            "model": "claude-sonnet-4.5",
+            "label": "Cursor auto model",
+            "model": "auto",
             "effort": "medium",
-            "why": "Use for repo-aware implementation, tests, and small refactors."
+            "why": "Uses an available Cursor model under the current account limits."
           },
           {
             "priority": 2,
-            "label": "Fallback",
-            "model": "gpt-5.5",
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
             "effort": "medium",
-            "why": "Use if Cursor supports it and the task needs stronger reasoning."
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "test": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "refactor": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "small_fix": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
           }
         ]
       }
