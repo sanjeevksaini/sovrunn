@@ -1,9 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -25,6 +27,14 @@ type siTestEnv struct {
 	scReg      *registry.ServiceClassRegistry
 	spReg      *registry.ServicePlanRegistry
 	bindingReg *registry.ServiceBindingRegistry
+}
+
+type staticCapabilityLookup struct {
+	active bool
+}
+
+func (l staticCapabilityLookup) HasActiveCapabilityForServiceClass(context.Context, string) (bool, error) {
+	return l.active, nil
 }
 
 func newTestServiceInstanceHandler() *siTestEnv {
@@ -222,6 +232,49 @@ func TestServiceInstanceHandler_Create_Valid(t *testing.T) {
 		si.Spec.ProjectRef != "prod" || si.Spec.ServiceClassRef != "postgres" ||
 		si.Spec.ServicePlanRef != "small" {
 		t.Errorf("unexpected spec: %+v", si.Spec)
+	}
+}
+
+func TestServiceInstanceHandler_Create_CapabilityWarning(t *testing.T) {
+	tests := []struct {
+		name        string
+		active      bool
+		wantWarning bool
+	}{
+		{name: "no active capability logs warning", active: false, wantWarning: true},
+		{name: "active capability does not log warning", active: true, wantWarning: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			env := newTestServiceInstanceHandler()
+			env.seedDefaults(t)
+
+			var logs bytes.Buffer
+			env.handler.capabilityLookup = staticCapabilityLookup{active: tt.active}
+			env.handler.logger = log.New(&logs, "", 0)
+
+			rec := createServiceInstance(env.handler, "pg-prod")
+			if rec.Code != http.StatusCreated {
+				t.Fatalf("status = %d, want 201; body=%s", rec.Code, rec.Body.String())
+			}
+
+			logOutput := logs.String()
+			hasWarning := strings.Contains(logOutput, "no active capability registered for ServiceClass")
+			if hasWarning != tt.wantWarning {
+				t.Errorf("warning present = %t, want %t; logs=%q", hasWarning, tt.wantWarning, logOutput)
+			}
+			if tt.wantWarning {
+				if !strings.Contains(logOutput, `service_instance="pg-prod"`) {
+					t.Errorf("logs = %q, want service_instance field", logOutput)
+				}
+				if !strings.Contains(logOutput, `service_class="postgres"`) {
+					t.Errorf("logs = %q, want service_class field", logOutput)
+				}
+			} else if logOutput != "" {
+				t.Errorf("logs = %q, want no warning", logOutput)
+			}
+		})
 	}
 }
 
