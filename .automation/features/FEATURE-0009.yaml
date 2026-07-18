@@ -1,0 +1,7 @@
+feature_id: FEATURE-0009
+slug: api-server-health-readiness
+title: api server health readiness
+phase_branch: phase1-foundation
+feature_branch: feature-0009-api-server-health-readiness
+spec_path: .kiro/specs/api-server-health-readiness
+status: branch_created
