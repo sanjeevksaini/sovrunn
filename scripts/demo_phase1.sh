@@ -72,8 +72,6 @@ assert_not_contains() {
   exit 1
 }
 
-# === Demo flow begins below ===
-
 step "Checking server health..."
 api_call GET "$BASE_URL/healthz" 200
 
@@ -179,3 +177,18 @@ api_call POST "$BASE_URL/v1/service-bindings" 201 '{
     "bindingType":"credentials"
   }
 }'
+
+step "Listing Operations..."
+api_call GET "$BASE_URL/v1/operations" 200
+assert_not_contains "$RESPONSE_BODY" '"items":[]' "No operations found"
+
+step "Getting ServiceInstance nhm-prod-postgres..."
+api_call GET "$BASE_URL/v1/service-instances/nhm-prod-postgres" 200
+assert_contains "$RESPONSE_BODY" "nhm-prod-postgres" "ServiceInstance name not found in response"
+
+step "Getting ServiceBinding nhm-app-postgres-binding..."
+api_call GET "$BASE_URL/v1/service-bindings/nhm-app-postgres-binding" 200
+assert_contains "$RESPONSE_BODY" "nhm-app-postgres-binding" "ServiceBinding name not found in response"
+
+echo ""
+echo "==> Demo completed successfully."
