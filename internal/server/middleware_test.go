@@ -2,11 +2,14 @@ package server
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/sanjeevksaini/sovrunn/internal/resources"
 )
 
 func TestRequestIDMiddleware_GeneratesWhenAbsent(t *testing.T) {
@@ -116,5 +119,91 @@ func TestLoggingMiddleware_WritesStructuredLog(t *testing.T) {
 		if !strings.Contains(out, field) {
 			t.Errorf("log missing %q: %s", field, out)
 		}
+	}
+}
+
+func TestMethodGET_AllowsGET(t *testing.T) {
+	called := false
+	h := methodGET(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if !called {
+		t.Fatal("handler not called for GET")
+	}
+	if rec.Code == http.StatusMethodNotAllowed {
+		t.Fatal("GET must not return 405")
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+}
+
+func TestMethodGET_RejectsPOST(t *testing.T) {
+	assertMethodGETRejectsWithBody(t, http.MethodPost)
+}
+
+func TestMethodGET_RejectsPUT(t *testing.T) {
+	assertMethodGETRejectsWithBody(t, http.MethodPut)
+}
+
+func TestMethodGET_RejectsDELETE(t *testing.T) {
+	assertMethodGETRejectsWithBody(t, http.MethodDelete)
+}
+
+func TestMethodGET_RejectsPATCH(t *testing.T) {
+	assertMethodGETRejectsWithBody(t, http.MethodPatch)
+}
+
+func TestMethodGET_RejectsHEAD(t *testing.T) {
+	h := methodGET(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called for HEAD")
+	}))
+	req := httptest.NewRequest(http.MethodHead, "/healthz", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want 405", rec.Code)
+	}
+	if got := rec.Header().Get("Allow"); got != "GET" {
+		t.Errorf("Allow = %q, want GET", got)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", got)
+	}
+	if rec.Body.Len() != 0 {
+		t.Fatalf("HEAD body length = %d, want 0", rec.Body.Len())
+	}
+}
+
+func assertMethodGETRejectsWithBody(t *testing.T, method string) {
+	t.Helper()
+	h := methodGET(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatalf("handler should not be called for %s", method)
+	}))
+	req := httptest.NewRequest(method, "/healthz", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want 405", rec.Code)
+	}
+	if got := rec.Header().Get("Allow"); got != "GET" {
+		t.Errorf("Allow = %q, want GET", got)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", got)
+	}
+	var envelope resources.APIErrorEnvelope
+	if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if envelope.Error.Code != resources.ErrCodeMethodNotAllowed {
+		t.Errorf("code = %q, want METHOD_NOT_ALLOWED", envelope.Error.Code)
+	}
+	if envelope.Error.Message != "only GET is supported" {
+		t.Errorf("message = %q, want %q", envelope.Error.Message, "only GET is supported")
 	}
 }
