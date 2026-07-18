@@ -55,3 +55,4 @@ bin/
 .automation/model-usage/
 .automation/reviews/
 docs/generated-prompts/
+.automation/pr/
