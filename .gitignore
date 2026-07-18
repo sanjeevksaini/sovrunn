@@ -45,3 +45,6 @@ docs/.obsidian/
 
 # Build outputs
 bin/
+
+#feature-factory
+.automation/templates/gitignore-feature-factory.snippet
