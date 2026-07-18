@@ -21,6 +21,14 @@ type ServicePlanRegistryIface interface {
 	CountByServiceClass(ctx context.Context, serviceClassName string) (int, error)
 }
 
+// ServicePlanLookup is a narrow interface for verifying ServicePlan existence
+// and its association with a ServiceClass. The existing *ServicePlanRegistry
+// already satisfies it via GetServicePlan. It is intended for injection into
+// the ServiceInstanceHandler and is NOT used inside ServicePlanRegistry.
+type ServicePlanLookup interface {
+	GetServicePlan(ctx context.Context, serviceClassName, name string) (resources.ServicePlan, error)
+}
+
 // ServicePlanRegistry is the Phase 1 in-memory implementation of
 // ServicePlanRegistryIface. All public methods are safe for concurrent use.
 // The registry holds no package-level global state and uses the composite key

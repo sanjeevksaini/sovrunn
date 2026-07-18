@@ -20,6 +20,14 @@ type CapabilityRegistryIface interface {
 	CountByPlugin(ctx context.Context, pluginName string) (int, error)
 }
 
+// CapabilityLookup is a narrow interface for checking whether an active
+// Capability exists for a given ServiceClass. Satisfied by CapabilityLookupImpl
+// in capability_lookup.go. It is intended for injection into the
+// ServiceInstanceHandler and is NOT used inside CapabilityRegistry.
+type CapabilityLookup interface {
+	HasActiveCapabilityForServiceClass(ctx context.Context, serviceClassRef string) (bool, error)
+}
+
 // CapabilityRegistry is the Phase 1 in-memory implementation of
 // CapabilityRegistryIface. All public methods are safe for concurrent use.
 // The registry holds no package-level global state and is keyed by
