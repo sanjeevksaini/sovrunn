@@ -13,20 +13,28 @@ import (
 
 // ProjectHandler holds dependencies for Project CRUD endpoints. tenantLookup
 // verifies that a referenced parent Tenant exists; the registry stores Project
-// state. Both are injected by main.
+// state. Both are injected by main. emitter and instanceBlocker are optional
+// (nil-safe).
 type ProjectHandler struct {
-	registry     registry.ProjectRegistryIface
-	tenantLookup registry.TenantLookup
-	emitter      OperationEmitter
+	registry        registry.ProjectRegistryIface
+	tenantLookup    registry.TenantLookup
+	instanceBlocker registry.ProjectInstanceBlocker
+	emitter         OperationEmitter
 }
 
-// NewProjectHandler constructs a ProjectHandler. emitter may be nil.
+// NewProjectHandler constructs a ProjectHandler. emitter and the optional
+// instanceBlocker may be nil.
 func NewProjectHandler(
 	reg registry.ProjectRegistryIface,
 	tenantLookup registry.TenantLookup,
 	emitter OperationEmitter,
+	instanceBlocker ...registry.ProjectInstanceBlocker,
 ) *ProjectHandler {
-	return &ProjectHandler{registry: reg, tenantLookup: tenantLookup, emitter: emitter}
+	h := &ProjectHandler{registry: reg, tenantLookup: tenantLookup, emitter: emitter}
+	if len(instanceBlocker) > 0 {
+		h.instanceBlocker = instanceBlocker[0]
+	}
+	return h
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
@@ -254,12 +262,27 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request, orgName,
 
 // Delete handles DELETE /v1/projects/{organizationName}/{organizationUnitName}/{tenantName}/{name}.
 func (h *ProjectHandler) Delete(w http.ResponseWriter, r *http.Request, orgName, ouName, tenantName, name string) {
+	ctx := r.Context()
+
 	if errs := validation.ValidateProjectPathSegments(orgName, ouName, tenantName, name); len(errs) > 0 {
 		writeValidationErrors(w, r, errs)
 		return
 	}
 
-	if err := h.registry.DeleteProject(r.Context(), orgName, ouName, tenantName, name); err != nil {
+	if h.instanceBlocker != nil {
+		blockers, err := h.instanceBlocker.BlockedByProjectInstances(ctx, orgName, ouName, tenantName, name)
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, resources.ErrCodeInternalError, "internal error", "", "")
+			return
+		}
+		if len(blockers) > 0 {
+			writeError(w, r, http.StatusConflict, resources.ErrCodeDeleteBlocked,
+				"deletion blocked by ServiceInstance resources", "", "")
+			return
+		}
+	}
+
+	if err := h.registry.DeleteProject(ctx, orgName, ouName, tenantName, name); err != nil {
 		if errors.Is(err, registry.ErrNotFound) {
 			writeError(w, r, http.StatusNotFound, resources.ErrCodeResourceNotFound, "project not found", "", "")
 			return
