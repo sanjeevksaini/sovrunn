@@ -85,6 +85,22 @@
             "effort": "high",
             "why": "Use for difficult architecture-level or multi-file debugging."
           }
+        ],
+        "routine_code": [
+          {
+            "priority": 1,
+            "label": "Implementation",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use for repo-aware implementation, tests, and small refactors."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "gpt-5.5",
+            "effort": "medium",
+            "why": "Use if Cursor supports it and the task needs stronger reasoning."
+          }
         ]
       }
     },

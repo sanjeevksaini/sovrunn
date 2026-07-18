@@ -116,3 +116,7 @@ ff-pr:
 ff-state:
 	./scripts/feature-state.py get --feature "$(FEATURE)"
 
+
+.PHONY: ff-task-flow
+ff-task-flow:
+	./scripts/task-flow.sh --feature "$(FEATURE)" --start-task "$${START_TASK:-1}"

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 FEATURE=""; TOOL=""; STAGE=""; TASK=""; SELECTED_MODEL=""; EFFORT=""; FALLBACK_USED="no"; FALLBACK_REASON="none"

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 FEATURE=""; SLUG=""; TITLE=""; PHASE_BRANCH="phase1-foundation"
