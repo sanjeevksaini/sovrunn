@@ -73,3 +73,9 @@ assert_not_contains() {
 }
 
 # === Demo flow begins below ===
+
+step "Checking server health..."
+api_call GET "$BASE_URL/healthz" 200
+
+step "Checking server readiness..."
+api_call GET "$BASE_URL/readyz" 200
