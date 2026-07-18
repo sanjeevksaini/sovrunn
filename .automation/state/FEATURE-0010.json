@@ -1,16 +1,16 @@
 {
   "created_at": "2026-07-18T16:01:06.756175+00:00",
   "current_stage": "cursor",
-  "current_task": "3",
+  "current_task": "4",
   "feature_branch": "feature-0010-basic-cli-api-demo",
   "feature_id": "FEATURE-0010",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0010",
   "human_gate_required": "false",
-  "last_committed_task": "3",
+  "last_committed_task": "4",
   "phase_branch": "phase1-foundation",
   "slug": "basic-cli-api-demo",
   "spec_path": ".kiro/specs/basic-cli-api-demo",
-  "status": "cursor_task_3_committed",
+  "status": "cursor_task_4_committed",
   "title": "basic cli api demo",
-  "updated_at": "2026-07-18T16:53:44.621641+00:00"
+  "updated_at": "2026-07-18T16:56:47.581336+00:00"
 }

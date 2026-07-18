@@ -111,3 +111,19 @@ api_call POST "$BASE_URL/v1/projects" 201 '{
   "metadata":{"name":"production","displayName":"Production"},
   "spec":{"organizationName":"nic","organizationUnitName":"ministry-health","tenantName":"national-health-mission"}
 }'
+
+step "Registering ServiceClass datastore-postgresql..."
+api_call POST "$BASE_URL/v1/service-classes" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"ServiceClass",
+  "metadata":{"name":"datastore-postgresql","displayName":"PostgreSQL"},
+  "spec":{"category":"Database","description":"Managed PostgreSQL datastore","lifecycle":"Active"}
+}'
+
+step "Registering ServicePlan postgres-small-ha..."
+api_call POST "$BASE_URL/v1/service-plans" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"ServicePlan",
+  "metadata":{"name":"postgres-small-ha"},
+  "spec":{"serviceClassName":"datastore-postgresql","description":"Small HA PostgreSQL plan","tier":"Small","lifecycle":"Active"}
+}'
