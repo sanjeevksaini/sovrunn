@@ -47,7 +47,7 @@ func main() {
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
-	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, bootstrapHandler, readiness)
+	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, nil, nil, bootstrapHandler, readiness)
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)
