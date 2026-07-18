@@ -1,16 +1,16 @@
 {
   "created_at": "2026-07-18T09:16:54.198287+00:00",
   "current_stage": "cursor",
-  "current_task": "5",
+  "current_task": "6",
   "feature_branch": "feature-0008-serviceinstance-servicebinding",
   "feature_id": "FEATURE-0008",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0008",
   "human_gate_required": "false",
-  "last_committed_task": "5",
+  "last_committed_task": "6",
   "phase_branch": "phase1-foundation",
   "slug": "serviceinstance-servicebinding",
   "spec_path": ".kiro/specs/serviceinstance-servicebinding",
-  "status": "cursor_task_5_committed",
+  "status": "cursor_task_6_committed",
   "title": "serviceinstance and servicebinding",
-  "updated_at": "2026-07-18T10:16:18.266893+00:00"
+  "updated_at": "2026-07-18T10:18:14.342412+00:00"
 }
