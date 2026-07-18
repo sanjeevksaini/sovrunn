@@ -151,3 +151,31 @@ api_call POST "$BASE_URL/v1/capabilities" 201 '{
   "metadata":{"name":"postgres-basic-bind"},
   "spec":{"pluginRef":"postgres-dstoreops-basic","serviceClassRef":"datastore-postgresql","operation":"Bind","supported":true}
 }'
+
+step "Creating ServiceInstance nhm-prod-postgres..."
+api_call POST "$BASE_URL/v1/service-instances" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"ServiceInstance",
+  "metadata":{"name":"nhm-prod-postgres","displayName":"NHM Production PostgreSQL"},
+  "spec":{
+    "organizationRef":"nic",
+    "organizationUnitRef":"ministry-health",
+    "tenantRef":"national-health-mission",
+    "projectRef":"production",
+    "serviceClassRef":"datastore-postgresql",
+    "servicePlanRef":"postgres-small-ha",
+    "parameters":{"storage":"100Gi"}
+  }
+}'
+
+step "Creating ServiceBinding nhm-app-postgres-binding..."
+api_call POST "$BASE_URL/v1/service-bindings" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"ServiceBinding",
+  "metadata":{"name":"nhm-app-postgres-binding","displayName":"NHM Application PostgreSQL Binding"},
+  "spec":{
+    "serviceInstanceRef":"nhm-prod-postgres",
+    "consumerRef":{"kind":"Application","name":"nhm-app"},
+    "bindingType":"credentials"
+  }
+}'
