@@ -1,16 +1,16 @@
 {
   "created_at": "2026-07-18T04:56:14.690380+00:00",
   "current_stage": "cursor",
-  "current_task": "12",
+  "current_task": "13",
   "feature_branch": "feature-0007-plugin-capability-registry",
   "feature_id": "FEATURE-0007",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0007",
   "human_gate_required": "false",
-  "last_committed_task": "12",
+  "last_committed_task": "13",
   "phase_branch": "phase1-foundation",
   "slug": "plugin-capability-registry",
   "spec_path": ".kiro/specs/plugin-capability-registry",
-  "status": "cursor_task_12_committed",
+  "status": "cursor_task_13_committed",
   "title": "Plugin and Capability Registry",
-  "updated_at": "2026-07-18T08:25:22.659774+00:00"
+  "updated_at": "2026-07-18T08:26:35.226784+00:00"
 }
