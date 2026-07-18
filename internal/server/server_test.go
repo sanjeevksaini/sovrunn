@@ -56,7 +56,7 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	pluginHandler := api.NewPluginHandler(pluginRegistry, serviceClassRegistry, pluginBlocker, nil)
 	capabilityHandler := api.NewCapabilityHandler(capabilityRegistry, pluginRegistry, serviceClassRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, bootstrap, readiness)
+	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, nil, nil, bootstrap, readiness)
 
 	if err := srv.Start(); err == nil {
 		t.Fatal("Start() expected error when port is already in use")
@@ -93,7 +93,7 @@ func newTestServer() *Server {
 	pluginHandler := api.NewPluginHandler(pluginRegistry, serviceClassRegistry, pluginBlocker, nil)
 	capabilityHandler := api.NewCapabilityHandler(capabilityRegistry, pluginRegistry, serviceClassRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, bootstrap, readiness)
+	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, nil, nil, bootstrap, readiness)
 }
 
 func TestServer_TenantRoutes_Registered(t *testing.T) {

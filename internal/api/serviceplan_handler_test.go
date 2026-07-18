@@ -587,6 +587,67 @@ func TestServicePlanHandler_Delete_Success(t *testing.T) {
 	}
 }
 
+func TestServicePlanHandler_Delete_BlockedByServiceInstance(t *testing.T) {
+	scReg := registry.NewServiceClassRegistry()
+	spReg := registry.NewServicePlanRegistry()
+	siReg := registry.NewServiceInstanceRegistry()
+	blocker := registry.NewServiceInstancePlanBlockerChecker(siReg)
+	h := NewServicePlanHandler(spReg, scReg, nil, blocker)
+
+	seedServiceClass(t, scReg, "postgres")
+	if rec := createServicePlan(h, "postgres", "small"); rec.Code != http.StatusCreated {
+		t.Fatalf("create plan status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+	_, err := siReg.CreateServiceInstance(context.Background(), resources.ServiceInstance{
+		Metadata: resources.Metadata{Name: "database"},
+		Spec: resources.ServiceInstanceSpec{
+			ServiceClassRef: "postgres",
+			ServicePlanRef:  "small",
+		},
+	})
+	if err != nil {
+		t.Fatalf("create service instance: %v", err)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/service-plans/postgres/small", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "ServiceInstance") {
+		t.Errorf("message = %q, want ServiceInstance blocking kind", errBody.Message)
+	}
+	if _, err := spReg.GetServicePlan(context.Background(), "postgres", "small"); err != nil {
+		t.Errorf("blocked plan was removed: %v", err)
+	}
+}
+
+func TestServicePlanHandler_Delete_ZeroServiceInstances(t *testing.T) {
+	scReg := registry.NewServiceClassRegistry()
+	spReg := registry.NewServicePlanRegistry()
+	blocker := registry.NewServiceInstancePlanBlockerChecker(registry.NewServiceInstanceRegistry())
+	h := NewServicePlanHandler(spReg, scReg, nil, blocker)
+
+	seedServiceClass(t, scReg, "postgres")
+	if rec := createServicePlan(h, "postgres", "small"); rec.Code != http.StatusCreated {
+		t.Fatalf("create plan status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/service-plans/postgres/small", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestServicePlanHandler_Delete_NotFound(t *testing.T) {
 	h, _, _ := newTestServicePlanHandler()
 	req := jsonRequest(http.MethodDelete, "/v1/service-plans/postgres/missing", nil, "")

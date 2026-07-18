@@ -703,6 +703,71 @@ func TestProjectHandler_Delete_Success(t *testing.T) {
 	}
 }
 
+func TestProjectHandler_Delete_BlockedByServiceInstance(t *testing.T) {
+	tenantReg := registry.NewTenantRegistry()
+	projectReg := registry.NewProjectRegistry()
+	siReg := registry.NewServiceInstanceRegistry()
+	blocker := registry.NewServiceInstanceProjectBlockerChecker(siReg)
+	h := NewProjectHandler(projectReg, tenantReg, nil, blocker)
+
+	seedTenant(t, tenantReg, "nic", "ministry-health", "payments")
+	if rec := createProject(h, "nic", "ministry-health", "payments", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create project status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+	_, err := siReg.CreateServiceInstance(context.Background(), resources.ServiceInstance{
+		Metadata: resources.Metadata{Name: "database"},
+		Spec: resources.ServiceInstanceSpec{
+			OrganizationRef:     "nic",
+			OrganizationUnitRef: "ministry-health",
+			TenantRef:           "payments",
+			ProjectRef:          "prod",
+			ServiceClassRef:     "postgres",
+			ServicePlanRef:      "small",
+		},
+	})
+	if err != nil {
+		t.Fatalf("create service instance: %v", err)
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/projects/nic/ministry-health/payments/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409; body=%s", rec.Code, rec.Body.String())
+	}
+	errBody := decodeAPIError(t, rec)
+	if errBody.Code != resources.ErrCodeDeleteBlocked {
+		t.Errorf("code = %q, want DELETE_BLOCKED", errBody.Code)
+	}
+	if !strings.Contains(errBody.Message, "ServiceInstance") {
+		t.Errorf("message = %q, want ServiceInstance blocking kind", errBody.Message)
+	}
+	if _, err := projectReg.GetProject(context.Background(), "nic", "ministry-health", "payments", "prod"); err != nil {
+		t.Errorf("blocked project was removed: %v", err)
+	}
+}
+
+func TestProjectHandler_Delete_ZeroServiceInstances(t *testing.T) {
+	tenantReg := registry.NewTenantRegistry()
+	projectReg := registry.NewProjectRegistry()
+	blocker := registry.NewServiceInstanceProjectBlockerChecker(registry.NewServiceInstanceRegistry())
+	h := NewProjectHandler(projectReg, tenantReg, nil, blocker)
+
+	seedTenant(t, tenantReg, "nic", "ministry-health", "payments")
+	if rec := createProject(h, "nic", "ministry-health", "payments", "prod", ""); rec.Code != http.StatusCreated {
+		t.Fatalf("create project status = %d; body=%s", rec.Code, rec.Body.String())
+	}
+
+	req := jsonRequest(http.MethodDelete, "/v1/projects/nic/ministry-health/payments/prod", nil, "")
+	rec := httptest.NewRecorder()
+	h.HandleItem(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204; body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestProjectHandler_Delete_NotFound(t *testing.T) {
 	h, tenantReg, _ := newTestProjectHandler()
 	seedTenant(t, tenantReg, "nic", "ministry-health", "payments")

@@ -23,6 +23,8 @@ type OperationSpec struct {
 	ServicePlanName      string `json:"servicePlanName,omitempty"`
 	PluginName           string `json:"pluginName,omitempty"`
 	CapabilityName       string `json:"capabilityName,omitempty"`
+	ServiceInstanceName  string `json:"serviceInstanceName,omitempty"`
+	ServiceBindingName   string `json:"serviceBindingName,omitempty"`
 	Actor                string `json:"actor"`
 	RequestID            string `json:"requestId,omitempty"`
 }
@@ -84,4 +86,13 @@ const (
 	OpDeletePlugin     = "DeletePlugin"
 	OpCreateCapability = "CreateCapability"
 	OpDeleteCapability = "DeleteCapability"
+)
+
+// Service consumption operation type constants (FEATURE-0008).
+const (
+	OpCreateServiceInstance = "CreateServiceInstance"
+	OpUpdateServiceInstance = "UpdateServiceInstance"
+	OpDeleteServiceInstance = "DeleteServiceInstance"
+	OpCreateServiceBinding  = "CreateServiceBinding"
+	OpDeleteServiceBinding  = "DeleteServiceBinding"
 )

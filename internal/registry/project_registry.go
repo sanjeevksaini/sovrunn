@@ -29,6 +29,14 @@ type TenantLookup interface {
 	GetTenant(ctx context.Context, orgName, ouName, name string) (resources.Tenant, error)
 }
 
+// ProjectLookup is a narrow interface for verifying parent Project existence.
+// The existing *ProjectRegistry already satisfies it via GetProject. It is
+// intended for injection into the ServiceInstanceHandler and is NOT used
+// inside ProjectRegistry.
+type ProjectLookup interface {
+	GetProject(ctx context.Context, orgName, ouName, tenantName, name string) (resources.Project, error)
+}
+
 // ProjectRegistry is the Phase 1 in-memory implementation of
 // ProjectRegistryIface. All public methods are safe for concurrent use. The
 // registry holds no package-level global state and uses the composite key

@@ -12,25 +12,32 @@ import (
 )
 
 // ServicePlanHandler holds dependencies for ServicePlan CRUD endpoints.
-// emitter is optional (nil-safe). serviceClassLookup verifies parent
-// ServiceClass existence on create and update.
+// emitter and instanceBlocker are optional (nil-safe). serviceClassLookup
+// verifies parent ServiceClass existence on create and update.
 type ServicePlanHandler struct {
 	registry           registry.ServicePlanRegistryIface
 	serviceClassLookup registry.ServiceClassLookup
+	instanceBlocker    registry.ServicePlanInstanceBlocker
 	emitter            OperationEmitter
 }
 
-// NewServicePlanHandler constructs a ServicePlanHandler. emitter may be nil.
+// NewServicePlanHandler constructs a ServicePlanHandler. emitter and the
+// optional instanceBlocker may be nil.
 func NewServicePlanHandler(
 	reg registry.ServicePlanRegistryIface,
 	serviceClassLookup registry.ServiceClassLookup,
 	emitter OperationEmitter,
+	instanceBlocker ...registry.ServicePlanInstanceBlocker,
 ) *ServicePlanHandler {
-	return &ServicePlanHandler{
+	h := &ServicePlanHandler{
 		registry:           reg,
 		serviceClassLookup: serviceClassLookup,
 		emitter:            emitter,
 	}
+	if len(instanceBlocker) > 0 {
+		h.instanceBlocker = instanceBlocker[0]
+	}
+	return h
 }
 
 // HandleCollection dispatches POST → Create and GET → List.
@@ -257,6 +264,19 @@ func (h *ServicePlanHandler) Delete(w http.ResponseWriter, r *http.Request, serv
 	if errs := validation.ValidateServicePlanPathSegments(serviceClassName, name); len(errs) > 0 {
 		writeValidationErrors(w, r, errs)
 		return
+	}
+
+	if h.instanceBlocker != nil {
+		blockers, err := h.instanceBlocker.BlockedByServicePlanInstances(ctx, serviceClassName, name)
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, resources.ErrCodeInternalError, "internal error", "", "")
+			return
+		}
+		if len(blockers) > 0 {
+			writeError(w, r, http.StatusConflict, resources.ErrCodeDeleteBlocked,
+				"deletion blocked by ServiceInstance resources", "", "")
+			return
+		}
 	}
 
 	if err := h.registry.DeleteServicePlan(ctx, serviceClassName, name); err != nil {
