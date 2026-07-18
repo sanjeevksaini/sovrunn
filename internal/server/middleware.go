@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -101,4 +102,29 @@ func errorCodeForStatus(status int) string {
 	default:
 		return string(resources.ErrCodeValidationFailed)
 	}
+}
+
+// methodGET rejects non-GET requests with 405 Method Not Allowed.
+// For HEAD: responds with 405, Allow: GET, Content-Type: application/json, no body.
+// For other methods: responds with 405, Allow: GET, APIErrorEnvelope JSON body.
+func methodGET(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Header().Set("Allow", "GET")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		if r.Method == http.MethodHead {
+			return
+		}
+		envelope := resources.APIErrorEnvelope{
+			Error: resources.APIError{
+				Code:    resources.ErrCodeMethodNotAllowed,
+				Message: "only GET is supported",
+			},
+		}
+		_ = json.NewEncoder(w).Encode(envelope)
+	})
 }

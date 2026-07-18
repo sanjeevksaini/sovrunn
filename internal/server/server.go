@@ -52,7 +52,7 @@ func New(
 		return requestIDMiddleware(loggingMiddleware(logger)(contentTypeMiddleware(h)))
 	}
 	bootstrapChain := func(h http.Handler) http.Handler {
-		return requestIDMiddleware(loggingMiddleware(logger)(h))
+		return requestIDMiddleware(loggingMiddleware(logger)(methodGET(h)))
 	}
 
 	mux.Handle("/v1/organizations", chain(http.HandlerFunc(org.HandleCollection)))
@@ -154,7 +154,7 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	s.readiness.SetReady(false)
+	s.readiness.SetShuttingDown()
 	return s.httpServer.Shutdown(ctx)
 }
 

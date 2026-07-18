@@ -2,6 +2,9 @@
 
 APP_NAME=sovrunn-api
 CONFIG=configs/sovrunn-api.local.yaml
+VERSION ?= dev
+MODULE  = github.com/sanjeevksaini/sovrunn
+LDFLAGS = -X '$(MODULE)/internal/api.buildVersion=$(VERSION)'
 
 fmt:
 	go fmt ./...
@@ -17,7 +20,7 @@ test-race:
 
 build:
 	mkdir -p bin
-	go build -o bin/$(APP_NAME) ./cmd/sovrunn-api
+	go build -ldflags "$(LDFLAGS)" -o bin/$(APP_NAME) ./cmd/sovrunn-api
 
 run:
 	go run ./cmd/sovrunn-api --config $(CONFIG)
