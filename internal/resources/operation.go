@@ -21,6 +21,8 @@ type OperationSpec struct {
 	ProjectName          string `json:"projectName,omitempty"`
 	ServiceClassName     string `json:"serviceClassName,omitempty"`
 	ServicePlanName      string `json:"servicePlanName,omitempty"`
+	PluginName           string `json:"pluginName,omitempty"`
+	CapabilityName       string `json:"capabilityName,omitempty"`
 	Actor                string `json:"actor"`
 	RequestID            string `json:"requestId,omitempty"`
 }
@@ -73,4 +75,13 @@ const (
 	OpCreateServicePlan  = "CreateServicePlan"
 	OpUpdateServicePlan  = "UpdateServicePlan"
 	OpDeleteServicePlan  = "DeleteServicePlan"
+)
+
+// Plugin and Capability operation type constants (FEATURE-0007).
+const (
+	OpCreatePlugin     = "CreatePlugin"
+	OpUpdatePlugin     = "UpdatePlugin"
+	OpDeletePlugin     = "DeletePlugin"
+	OpCreateCapability = "CreateCapability"
+	OpDeleteCapability = "DeleteCapability"
 )
