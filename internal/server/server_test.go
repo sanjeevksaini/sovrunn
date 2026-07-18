@@ -50,8 +50,13 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	operationHandler := api.NewOperationHandler(operationRegistry)
 	serviceClassHandler := api.NewServiceClassHandler(serviceClassRegistry, serviceClassBlocker, nil)
 	servicePlanHandler := api.NewServicePlanHandler(servicePlanRegistry, serviceClassRegistry, nil)
+	pluginRegistry := registry.NewPluginRegistry()
+	capabilityRegistry := registry.NewCapabilityRegistry()
+	pluginBlocker := registry.NewCapabilityChildBlockerChecker(capabilityRegistry)
+	pluginHandler := api.NewPluginHandler(pluginRegistry, serviceClassRegistry, pluginBlocker, nil)
+	capabilityHandler := api.NewCapabilityHandler(capabilityRegistry, pluginRegistry, serviceClassRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, bootstrap, readiness)
+	srv := New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, bootstrap, readiness)
 
 	if err := srv.Start(); err == nil {
 		t.Fatal("Start() expected error when port is already in use")
@@ -82,8 +87,13 @@ func newTestServer() *Server {
 	operationHandler := api.NewOperationHandler(operationRegistry)
 	serviceClassHandler := api.NewServiceClassHandler(serviceClassRegistry, serviceClassBlocker, nil)
 	servicePlanHandler := api.NewServicePlanHandler(servicePlanRegistry, serviceClassRegistry, nil)
+	pluginRegistry := registry.NewPluginRegistry()
+	capabilityRegistry := registry.NewCapabilityRegistry()
+	pluginBlocker := registry.NewCapabilityChildBlockerChecker(capabilityRegistry)
+	pluginHandler := api.NewPluginHandler(pluginRegistry, serviceClassRegistry, pluginBlocker, nil)
+	capabilityHandler := api.NewCapabilityHandler(capabilityRegistry, pluginRegistry, serviceClassRegistry, nil)
 	bootstrap := api.NewBootstrapHandler(cfg, readiness)
-	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, bootstrap, readiness)
+	return New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, bootstrap, readiness)
 }
 
 func TestServer_TenantRoutes_Registered(t *testing.T) {
@@ -339,6 +349,156 @@ func TestServer_ServicePlanRoutes_Registered(t *testing.T) {
 		srv.httpServer.Handler.ServeHTTP(rec, req)
 		if rec.Code != http.StatusMethodNotAllowed {
 			t.Fatalf("DELETE /v1/service-plans status = %d, want 405", rec.Code)
+		}
+	})
+}
+
+func TestServer_PluginRoutes_Registered(t *testing.T) {
+	srv := newTestServer()
+
+	t.Run("collection GET returns empty list", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/plugins", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET /v1/plugins status = %d, want 200; body=%s", rec.Code, rec.Body.String())
+		}
+		if rec.Body.String() != "{\"items\":[]}\n" {
+			t.Fatalf("GET /v1/plugins body = %q, want {\"items\":[]}", rec.Body.String())
+		}
+		if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+			t.Errorf("Content-Type = %q, want application/json", ct)
+		}
+		if reqID := rec.Header().Get("X-Sovrunn-Request-ID"); reqID == "" {
+			t.Error("X-Sovrunn-Request-ID missing; middleware chain should set it")
+		}
+	})
+
+	t.Run("bare item path returns 404", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/plugins/", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/plugins/ status = %d, want 404", rec.Code)
+		}
+	})
+
+	t.Run("item path reachable returns 404 for missing resource", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/plugins/postgres-ops", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/plugins/postgres-ops status = %d, want 404", rec.Code)
+		}
+		var envelope resources.APIErrorEnvelope
+		if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+			t.Fatalf("decode error response: %v", err)
+		}
+		if envelope.Error.Code != resources.ErrCodeResourceNotFound {
+			t.Fatalf("error.code = %q, want RESOURCE_NOT_FOUND", envelope.Error.Code)
+		}
+		if reqID := rec.Header().Get("X-Sovrunn-Request-ID"); reqID == "" {
+			t.Error("X-Sovrunn-Request-ID missing; middleware chain should set it")
+		}
+	})
+
+	t.Run("wrong-shape item path returns 404", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/plugins/postgres-ops/extra", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/plugins/postgres-ops/extra status = %d, want 404", rec.Code)
+		}
+		var envelope resources.APIErrorEnvelope
+		if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+			t.Fatalf("decode error response: %v", err)
+		}
+		if envelope.Error.Code != resources.ErrCodeResourceNotFound {
+			t.Fatalf("error.code = %q, want RESOURCE_NOT_FOUND", envelope.Error.Code)
+		}
+	})
+
+	t.Run("collection unsupported method returns 405", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodDelete, "/v1/plugins", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("DELETE /v1/plugins status = %d, want 405", rec.Code)
+		}
+	})
+}
+
+func TestServer_CapabilityRoutes_Registered(t *testing.T) {
+	srv := newTestServer()
+
+	t.Run("collection GET returns empty list", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/capabilities", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET /v1/capabilities status = %d, want 200; body=%s", rec.Code, rec.Body.String())
+		}
+		if rec.Body.String() != "{\"items\":[]}\n" {
+			t.Fatalf("GET /v1/capabilities body = %q, want {\"items\":[]}", rec.Body.String())
+		}
+		if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+			t.Errorf("Content-Type = %q, want application/json", ct)
+		}
+		if reqID := rec.Header().Get("X-Sovrunn-Request-ID"); reqID == "" {
+			t.Error("X-Sovrunn-Request-ID missing; middleware chain should set it")
+		}
+	})
+
+	t.Run("bare item path returns 404", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/capabilities/", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/capabilities/ status = %d, want 404", rec.Code)
+		}
+	})
+
+	t.Run("item path reachable returns 404 for missing resource", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/capabilities/postgres-provision", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/capabilities/postgres-provision status = %d, want 404", rec.Code)
+		}
+		var envelope resources.APIErrorEnvelope
+		if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+			t.Fatalf("decode error response: %v", err)
+		}
+		if envelope.Error.Code != resources.ErrCodeResourceNotFound {
+			t.Fatalf("error.code = %q, want RESOURCE_NOT_FOUND", envelope.Error.Code)
+		}
+		if reqID := rec.Header().Get("X-Sovrunn-Request-ID"); reqID == "" {
+			t.Error("X-Sovrunn-Request-ID missing; middleware chain should set it")
+		}
+	})
+
+	t.Run("wrong-shape item path returns 404", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/v1/capabilities/postgres-provision/extra", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("GET /v1/capabilities/postgres-provision/extra status = %d, want 404", rec.Code)
+		}
+		var envelope resources.APIErrorEnvelope
+		if err := json.NewDecoder(rec.Body).Decode(&envelope); err != nil {
+			t.Fatalf("decode error response: %v", err)
+		}
+		if envelope.Error.Code != resources.ErrCodeResourceNotFound {
+			t.Fatalf("error.code = %q, want RESOURCE_NOT_FOUND", envelope.Error.Code)
+		}
+	})
+
+	t.Run("collection unsupported method returns 405", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodDelete, "/v1/capabilities", nil)
+		srv.httpServer.Handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("DELETE /v1/capabilities status = %d, want 405", rec.Code)
 		}
 	})
 }

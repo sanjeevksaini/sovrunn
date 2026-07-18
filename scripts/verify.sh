@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 echo "==> Running Docker Go verification"

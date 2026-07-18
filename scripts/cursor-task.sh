@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
@@ -131,7 +131,7 @@ for idx in "${!MODELS_TO_TRY[@]}"; do
     date -u '+%Y-%m-%dT%H:%M:%SZ'
   } >> "$LOG_FILE"
   set +e
-  "$CURSOR_BIN" -p --output-format "$OUTPUT_FORMAT" --model "$model" "$PROMPT_TEXT" 2>&1 | tee -a "$LOG_FILE"
+  "$CURSOR_BIN" -p --trust --force --output-format "$OUTPUT_FORMAT" --model "$model" "$PROMPT_TEXT" 2>&1 | tee -a "$LOG_FILE"
   STATUS=${PIPESTATUS[0]}
   set -e
   if [[ $STATUS -eq 0 ]]; then

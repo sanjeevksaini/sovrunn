@@ -48,3 +48,11 @@ bin/
 
 #feature-factory
 .automation/templates/gitignore-feature-factory.snippet
+
+# Feature Factory generated runtime artifacts
+.automation/generated-prompts/
+.automation/logs/
+.automation/model-usage/
+.automation/reviews/
+docs/generated-prompts/
+.automation/pr/

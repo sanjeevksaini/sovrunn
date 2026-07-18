@@ -37,6 +37,10 @@ func main() {
 	servicePlanRegistry := registry.NewServicePlanRegistry()
 	serviceClassBlocker := registry.NewServicePlanChildBlockerChecker(servicePlanRegistry)
 
+	pluginRegistry := registry.NewPluginRegistry()
+	capabilityRegistry := registry.NewCapabilityRegistry()
+	pluginBlocker := registry.NewCapabilityChildBlockerChecker(capabilityRegistry)
+
 	orgHandler := api.NewOrgHandler(orgRegistry, ouBlocker, emitter)
 	ouHandler := api.NewOUHandler(ouRegistry, orgRegistry, tenantBlocker, emitter)
 	tenantHandler := api.NewTenantHandler(tenantRegistry, ouRegistry, projectBlocker, emitter)
@@ -44,10 +48,12 @@ func main() {
 	operationHandler := api.NewOperationHandler(operationRegistry)
 	serviceClassHandler := api.NewServiceClassHandler(serviceClassRegistry, serviceClassBlocker, emitter)
 	servicePlanHandler := api.NewServicePlanHandler(servicePlanRegistry, serviceClassRegistry, emitter)
+	pluginHandler := api.NewPluginHandler(pluginRegistry, serviceClassRegistry, pluginBlocker, emitter)
+	capabilityHandler := api.NewCapabilityHandler(capabilityRegistry, pluginRegistry, serviceClassRegistry, emitter)
 
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
-	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, bootstrapHandler, readiness)
+	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, bootstrapHandler, readiness)
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)

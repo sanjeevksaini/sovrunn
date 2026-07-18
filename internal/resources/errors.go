@@ -9,6 +9,7 @@ const (
 	ErrCodeResourceNotFound      ErrorCode = "RESOURCE_NOT_FOUND"
 	ErrCodeResourceAlreadyExists ErrorCode = "RESOURCE_ALREADY_EXISTS"
 	ErrCodeDeleteBlocked         ErrorCode = "DELETE_BLOCKED"
+	ErrCodeMethodNotAllowed      ErrorCode = "METHOD_NOT_ALLOWED"
 	ErrCodeInternalError         ErrorCode = "INTERNAL_ERROR"
 )
 

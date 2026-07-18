@@ -1,0 +1,266 @@
+{
+  "tools": {
+    "kiro": {
+      "profiles": {
+        "requirements": [
+          {
+            "priority": 1,
+            "label": "Architecture-heavy",
+            "model": "claude-opus-4.8",
+            "effort": "high",
+            "why": "Use for requirements because this stage defines scope, constraints, goals, non-goals, and platform boundaries."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use if Opus is unavailable; keep the prompt strict and bounded."
+          }
+        ],
+        "design": [
+          {
+            "priority": 1,
+            "label": "System design",
+            "model": "claude-opus-4.8",
+            "effort": "high",
+            "why": "Use for design because this stage needs architecture consistency, interface design, and tradeoff reasoning."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use if Opus is unavailable; require explicit architecture-boundary checks."
+          }
+        ],
+        "tasks": [
+          {
+            "priority": 1,
+            "label": "Task decomposition",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use for tasks because this stage needs structured implementation sequencing and acceptance criteria."
+          },
+          {
+            "priority": 2,
+            "label": "Complex fallback",
+            "model": "claude-opus-4.8",
+            "effort": "high",
+            "why": "Use if task sequencing crosses multiple architecture layers."
+          }
+        ]
+      }
+    },
+    "cursor": {
+      "profiles": {
+        "implementation": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "debug": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "routine_code": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "test": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "refactor": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ],
+        "small_fix": [
+          {
+            "priority": 1,
+            "label": "Cursor auto model",
+            "model": "auto",
+            "effort": "medium",
+            "why": "Uses an available Cursor model under the current account limits."
+          },
+          {
+            "priority": 2,
+            "label": "Primary Cursor coding model",
+            "model": "gpt-5.3-codex",
+            "effort": "medium",
+            "why": "Preferred coding model when usage quota is available."
+          },
+          {
+            "priority": 3,
+            "label": "Fast Cursor coding fallback",
+            "model": "gpt-5.3-codex-fast",
+            "effort": "medium",
+            "why": "Fast fallback when usage quota is available."
+          }
+        ]
+      }
+    },
+    "reviewer": {
+      "profiles": {
+        "requirements": [
+          {
+            "priority": 1,
+            "label": "Independent review",
+            "model": "gpt-5.5-thinking",
+            "effort": "high",
+            "why": "Use for requirements review because this needs architecture, product, and scope validation."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-opus-4.8",
+            "effort": "high",
+            "why": "Use if GPT-5.5 Thinking is unavailable."
+          }
+        ],
+        "design": [
+          {
+            "priority": 1,
+            "label": "Architecture review",
+            "model": "gpt-5.5-thinking",
+            "effort": "high",
+            "why": "Use for design review because this checks architecture consistency, layering, and long-term platform fit."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-opus-4.8",
+            "effort": "high",
+            "why": "Use if GPT-5.5 Thinking is unavailable."
+          }
+        ],
+        "tasks": [
+          {
+            "priority": 1,
+            "label": "Sequencing review",
+            "model": "gpt-5.5-thinking",
+            "effort": "medium",
+            "why": "Use for task review because this checks completeness, sequencing, and testability."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use if GPT-5.5 Thinking is unavailable."
+          }
+        ],
+        "implementation": [
+          {
+            "priority": 1,
+            "label": "Diff review",
+            "model": "gpt-5.5-thinking",
+            "effort": "high",
+            "why": "Use for implementation review because this checks architecture safety, tests, and hidden coupling."
+          },
+          {
+            "priority": 2,
+            "label": "Fallback",
+            "model": "claude-sonnet-4.5",
+            "effort": "medium",
+            "why": "Use if GPT-5.5 Thinking is unavailable."
+          }
+        ]
+      }
+    }
+  }
+}

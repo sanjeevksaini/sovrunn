@@ -26,8 +26,8 @@ type Server struct {
 }
 
 // New constructs the Server with routes and middleware registered.
-// ServiceClass and ServicePlan routes are registered only when the corresponding
-// handlers are non-nil.
+// ServiceClass, ServicePlan, Plugin, and Capability routes are registered only
+// when the corresponding handlers are non-nil.
 func New(
 	cfg config.Config,
 	org *api.OrgHandler,
@@ -37,6 +37,8 @@ func New(
 	operation *api.OperationHandler,
 	serviceClass *api.ServiceClassHandler,
 	servicePlan *api.ServicePlanHandler,
+	plugin *api.PluginHandler,
+	capability *api.CapabilityHandler,
 	bootstrap *api.BootstrapHandler,
 	readiness *health.ReadinessState,
 ) *Server {
@@ -72,6 +74,14 @@ func New(
 	if servicePlan != nil {
 		mux.Handle("/v1/service-plans", chain(http.HandlerFunc(servicePlan.HandleCollection)))
 		mux.Handle("/v1/service-plans/", chain(http.HandlerFunc(servicePlan.HandleItem)))
+	}
+	if plugin != nil {
+		mux.Handle("/v1/plugins", chain(http.HandlerFunc(plugin.HandleCollection)))
+		mux.Handle("/v1/plugins/", chain(http.HandlerFunc(plugin.HandleItem)))
+	}
+	if capability != nil {
+		mux.Handle("/v1/capabilities", chain(http.HandlerFunc(capability.HandleCollection)))
+		mux.Handle("/v1/capabilities/", chain(http.HandlerFunc(capability.HandleItem)))
 	}
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

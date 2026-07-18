@@ -1,0 +1,7 @@
+feature_id: FEATURE-0007
+slug: plugin-capability-registry
+title: Plugin and Capability Registry
+phase_branch: phase1-foundation
+feature_branch: feature-0007-plugin-capability-registry
+spec_path: .kiro/specs/plugin-capability-registry
+status: branch_created
