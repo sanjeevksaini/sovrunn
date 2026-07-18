@@ -1,0 +1,7 @@
+feature_id: FEATURE-0008
+slug: serviceinstance-servicebinding
+title: serviceinstance and servicebinding
+phase_branch: phase1-foundation
+feature_branch: feature-0008-serviceinstance-servicebinding
+spec_path: .kiro/specs/serviceinstance-servicebinding
+status: branch_created

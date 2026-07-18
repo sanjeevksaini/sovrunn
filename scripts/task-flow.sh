@@ -56,7 +56,20 @@ TASKS_FILE=".kiro/specs/${SPEC_SLUG}/tasks.md"
 
 [[ -f "$TASKS_FILE" ]] || fail "tasks.md not found: $TASKS_FILE"
 
-TASK_IDS="$(grep -E '^- \[[ xX]\] [0-9]+' "$TASKS_FILE" | sed -E 's/^- \[[ xX]\] ([0-9]+).*/\1/')"
+TASK_IDS="$(awk '
+  /^[[:space:]]*- \\[[ xX]\\][[:space:]]+[0-9]+(\\.|[[:space:]])/ {
+    line=$0
+    sub(/^[[:space:]]*- \\[[ xX]\\][[:space:]]+/, "", line)
+    sub(/[^0-9].*$/, "", line)
+    if (line != "" && !seen[line]++) print line
+  }
+  /^[[:space:]]*#{1,6}[[:space:]]*Task[[:space:]]+[0-9]+[:.]?/ {
+    line=$0
+    sub(/^[[:space:]]*#{1,6}[[:space:]]*Task[[:space:]]+/, "", line)
+    sub(/[^0-9].*$/, "", line)
+    if (line != "" && !seen[line]++) print line
+  }
+' "$TASKS_FILE")"
 
 [[ -n "$TASK_IDS" ]] || fail "could not detect numbered tasks in $TASKS_FILE"
 
