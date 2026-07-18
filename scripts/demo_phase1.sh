@@ -127,3 +127,27 @@ api_call POST "$BASE_URL/v1/service-plans" 201 '{
   "metadata":{"name":"postgres-small-ha"},
   "spec":{"serviceClassName":"datastore-postgresql","description":"Small HA PostgreSQL plan","tier":"Small","lifecycle":"Active"}
 }'
+
+step "Registering Plugin postgres-dstoreops-basic..."
+api_call POST "$BASE_URL/v1/plugins" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"Plugin",
+  "metadata":{"name":"postgres-dstoreops-basic","displayName":"PostgreSQL Basic dStoreOps"},
+  "spec":{"pluginType":"dStoreOps","version":"1.0.0","serviceClassRefs":["datastore-postgresql"],"deploymentMode":"compiled-in"}
+}'
+
+step "Registering Capability postgres-basic-provision..."
+api_call POST "$BASE_URL/v1/capabilities" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"Capability",
+  "metadata":{"name":"postgres-basic-provision"},
+  "spec":{"pluginRef":"postgres-dstoreops-basic","serviceClassRef":"datastore-postgresql","operation":"Provision","supported":true}
+}'
+
+step "Registering Capability postgres-basic-bind..."
+api_call POST "$BASE_URL/v1/capabilities" 201 '{
+  "apiVersion":"platform.sovrunn.io/v1alpha1",
+  "kind":"Capability",
+  "metadata":{"name":"postgres-basic-bind"},
+  "spec":{"pluginRef":"postgres-dstoreops-basic","serviceClassRef":"datastore-postgresql","operation":"Bind","supported":true}
+}'
