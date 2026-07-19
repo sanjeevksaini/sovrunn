@@ -20,7 +20,9 @@ func TestServer_Start_FailsWhenPortInUse_ReadinessFalse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("net.Listen() error = %v", err)
 	}
-	defer ln.Close()
+	defer func() {
+		_ = ln.Close()
+	}()
 
 	tcpAddr, ok := ln.Addr().(*net.TCPAddr)
 	if !ok {
@@ -172,7 +174,7 @@ func TestServer_LiveReadinessAndShutdown(t *testing.T) {
 	}
 	tcpAddr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
-		listener.Close()
+		_ = listener.Close()
 		t.Fatal("expected TCP address")
 	}
 	port := tcpAddr.Port
@@ -208,7 +210,7 @@ func TestServer_LiveReadinessAndShutdown(t *testing.T) {
 
 		resp, err := client.Get(baseURL + "/readyz")
 		if err == nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				break
 			}
@@ -223,7 +225,7 @@ func TestServer_LiveReadinessAndShutdown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET /healthz error = %v", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("GET /healthz status = %d, want 200", resp.StatusCode)
 	}

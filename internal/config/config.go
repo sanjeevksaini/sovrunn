@@ -67,11 +67,10 @@ func validateConfigPath(path string) (string, error) {
 		return "", fmt.Errorf("config path is required")
 	}
 	cleanPath := filepath.Clean(path)
-	if filepath.IsAbs(cleanPath) {
-		return "", fmt.Errorf("config path must be relative: %s", path)
-	}
-	if cleanPath == ".." || strings.HasPrefix(cleanPath, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("config path must not escape repository: %s", path)
+	if !filepath.IsAbs(cleanPath) {
+		if cleanPath == ".." || strings.HasPrefix(cleanPath, ".."+string(os.PathSeparator)) {
+			return "", fmt.Errorf("config path must not escape repository: %s", path)
+		}
 	}
 	info, err := os.Stat(cleanPath)
 	if err != nil {
