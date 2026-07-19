@@ -131,3 +131,7 @@ ff-feature-flow:
 .PHONY: phase1-consistency
 phase1-consistency:
 	./scripts/phase1-consistency-check.sh
+
+.PHONY: phase1-integration
+phase1-integration:
+	./scripts/phase1-integration-test.sh
