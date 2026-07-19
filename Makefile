@@ -127,3 +127,7 @@ ff-task-flow:
 .PHONY: ff-feature-flow
 ff-feature-flow:
 	./scripts/feature-flow.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" --start-task "$${START_TASK:-1}"
+
+.PHONY: phase1-consistency
+phase1-consistency:
+	./scripts/phase1-consistency-check.sh
