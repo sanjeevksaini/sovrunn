@@ -53,6 +53,7 @@ The consistency gate accepts intentional aliases:
 | OrganizationRegistry Get | ~210 ns/op | 688 B/op, 5 allocs/op | PASS |
 | OrganizationRegistry List100 | ~28 us/op | ~87 KB/op, 504 allocs/op | PASS for Phase 1 |
 | OrganizationRegistry List1000 | ~366 us/op | ~860 KB/op, 5004 allocs/op | PASS for Phase 1, pagination required later |
+| phase1-integration | PASS | End-to-end API flow validates server lifecycle, health, readiness, resource creation, list endpoints, operations, and invalid request handling |
 
 ## Performance Decision
 
