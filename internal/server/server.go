@@ -108,8 +108,12 @@ func New(
 	return &Server{
 		cfg: cfg,
 		httpServer: &http.Server{
-			Addr:    cfg.Addr(),
-			Handler: mux,
+			Addr:              cfg.Addr(),
+			Handler:           mux,
+			ReadHeaderTimeout: 5 * time.Second,
+			ReadTimeout:       15 * time.Second,
+			WriteTimeout:      30 * time.Second,
+			IdleTimeout:       60 * time.Second,
 		},
 		readiness: readiness,
 		logger:    logger,

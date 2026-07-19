@@ -13,7 +13,7 @@ import (
 
 // Phase 1 stub secret reference stored on ServiceBinding status. No real
 // credentials are generated.
-const serviceBindingStubSecretRef = "stub-secret-ref"
+const serviceBindingStubSecretRef = "stub-secret-ref" // #nosec G101 -- placeholder reference name, not secret material.
 
 // ServiceBindingHandler holds dependencies for ServiceBinding create, read,
 // list, and delete endpoints. ServiceBinding does not support update (PUT→405).

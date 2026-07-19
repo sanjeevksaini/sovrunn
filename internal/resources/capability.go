@@ -50,7 +50,7 @@ const (
 	CapOpUpgrade           = "Upgrade"
 	CapOpBackup            = "Backup"
 	CapOpRestore           = "Restore"
-	CapOpRotateCredentials = "RotateCredentials"
+	CapOpRotateCredentials = "RotateCredentials" // #nosec G101 -- operation name, not a hardcoded credential.
 	CapOpUnbind            = "Unbind"
 	CapOpDelete            = "Delete"
 )
