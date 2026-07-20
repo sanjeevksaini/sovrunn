@@ -10,6 +10,7 @@ ai_summary: Implements service consumption resources without real provisioning.
 ---
 
 # FEATURE-0008 ServiceInstance and ServiceBinding
+> **Phase 1 baseline note:** This document remains valid as the Phase 1 baseline. Phase 2 extends Sovrunn with reuse-first architecture, adapter boundaries, provider-neutral resource modeling, policy evaluation abstraction, decision/audit standards, plugin taxonomy, and governed placement. Do not treat this Phase 1 document as the complete Phase 2 scope.
 
 ## 1. Objective
 

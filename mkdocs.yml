@@ -1,5 +1,5 @@
 site_name: Sovrunn Documentation
-site_description: Sovereign cloud-native PaaS platform architecture, Phase 1 foundation, implementation guidance, and RFCs.
+site_description: Sovereign cloud-native PaaS platform architecture, Architecture Operating System, Phase 2 foundation, implementation guidance, and RFCs.
 site_author: Sovrunn
 docs_dir: docs
 site_dir: site
@@ -19,30 +19,87 @@ plugins:
 
 nav:
   - Home: README.md
+  - Architecture Operating System:
+      - Current Baseline: context/CURRENT_ARCHITECTURE_BASELINE.md
+      - Architecture Version: context/ARCHITECTURE_VERSION.md
+      - Context Pack: context/SOVRUNN_CONTEXT_PACK.md
+      - Current Phase Context: context/CURRENT_PHASE_CONTEXT.md
+      - Current Decision Summary: context/CURRENT_DECISION_SUMMARY.md
+      - Open Questions: context/OPEN_QUESTIONS.md
+      - ChatGPT Session Prompt: context/CHATGPT_ARCHITECTURE_SESSION_PROMPT.md
+      - Change Control: governance/ARCHITECTURE_CHANGE_CONTROL.md
+      - Ownership: governance/ARCHITECTURE_OWNERSHIP.md
+      - Review Gates: governance/REVIEW_GATES.md
+      - Feature Traceability: traceability/FEATURE_TRACEABILITY_MATRIX.md
+      - Decision Traceability: traceability/DECISION_TRACEABILITY_MATRIX.md
   - Foundation:
       - Vision: foundation/vision.md
       - Philosophy: foundation/philosophy.md
       - Constitution: foundation/constitution.md
       - Phase 1 Review Status: foundation/PHASE1_REVIEW_STATUS.md
-  - Decisions:
-      - Decision Index: decisions/DECISION_INDEX.md
-  - Glossary: glossary.md
-  - Architecture:
+  - Roadmap and Phases:
       - Development Phases: architecture/development-phases.md
+      - Canonical Feature Roadmap: roadmap/SOVRUNN_FEATURE_ROADMAP.md
+      - Roadmap README: roadmap/README.md
+      - Feature Index: features/FEATURE_INDEX.md
+      - Phase 2 Scope: phase2/PHASE2_SCOPE.md
+      - Phase 2 Feature Sequence: phase2/PHASE2_FEATURE_SEQUENCE.md
+      - Phase 2 Acceptance Gates: phase2/PHASE2_ACCEPTANCE_GATES.md
+      - Phase 2 Reuse Assessment Standard: phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
+      - MVP Governed PostgreSQL PaaS: mvp/MVP_001_GOVERNED_POSTGRESQL_PAAS.md
+      - MVP Customer Demo Scenarios: mvp/MVP_001_CUSTOMER_DEMO_SCENARIOS.md
+      - MVP Out of Scope: mvp/MVP_001_OUT_OF_SCOPE.md
+  - Architecture:
       - Platform Core: architecture/platform-core.md
+      - API Resource Standard: architecture/api-resource-standard.md
+      - Decision and Audit Standard: architecture/decision-and-audit-standard.md
+      - Provider-Neutral Resource Model: architecture/provider-neutral-resource-model.md
+      - Policy Evaluation Abstraction: architecture/policy-evaluation-abstraction.md
+      - Placement Decision Engine: architecture/placement-decision-engine.md
+      - Plugin Taxonomy and Boundaries: architecture/plugin-taxonomy-and-boundaries.md
+      - Adapter Boundary Model: architecture/adapter-boundary-model.md
       - Organization Governance: architecture/organization-governance.md
       - Controller Reconciliation Model: architecture/controller-reconciliation-model.md
       - Observability and Audit Baseline: architecture/observability-and-audit-baseline.md
       - GitOps Desired State Model: architecture/gitops-desired-state-model.md
+  - Decisions:
+      - Decision Index: decisions/DECISION_INDEX.md
+      - Reuse Before Build: decisions/DEC-0026-reuse-before-build.md
+      - Phase 2 Scope: decisions/DEC-0027-phase2-scope.md
+      - Policy Engine Adapter: decisions/DEC-0028-policy-engine-adapter.md
+      - Plugin Planes: decisions/DEC-0029-plugin-planes.md
+      - PostgreSQL MVP: decisions/DEC-0030-postgresql-mvp.md
+      - Adapter Boundaries: decisions/DEC-0036-adapter-boundaries.md
+  - RFC:
+      - Organization Tenant Governance Model: rfc/RFC-0012-organization-tenant-governance-model.md
+      - ServiceOps Plugin Framework: rfc/RFC-0020-serviceops-plugin-framework.md
+      - Reuse-First Architecture: rfc/RFC-0021-reuse-first-architecture.md
+      - API Resource Standard: rfc/RFC-0022-api-resource-standard.md
+      - Decision and Audit Standard: rfc/RFC-0023-decision-and-audit-standard.md
+      - Provider-Neutral Resource Model: rfc/RFC-0024-provider-neutral-resource-model.md
+      - Policy Evaluation Abstraction: rfc/RFC-0025-policy-evaluation-abstraction.md
+      - Placement Decision Engine v0: rfc/RFC-0026-placement-decision-engine-v0.md
+      - Plugin Taxonomy and Boundaries: rfc/RFC-0027-plugin-taxonomy-and-boundaries.md
+      - Service Runtime Profile: rfc/RFC-0028-service-runtime-profile.md
+      - Governed PostgreSQL MVP: rfc/RFC-0029-governed-postgresql-mvp.md
   - Engineering:
       - AI Controlled Development: engineering/ai-controlled-development.md
       - Context Engineering Standard: engineering/context-engineering-standard.md
+      - AI Context Loading Standard: engineering/ai-context-loading-standard.md
+      - Go Version Standard: engineering/go-version-standard.md
       - Go Coding Guardrails: engineering/go-coding-guardrails.md
-  - AI:
-      - AI Context Guide: ai/AI_CONTEXT_GUIDE.md
-      - AI Doc Authoring Standard: ai/AI_DOC_AUTHORING_STANDARD.md
-      - AI Feature Factory: ai/AI_FEATURE_FACTORY.md
-  - Phase 1:
+      - Go Observability Standard: engineering/go-observability-standard.md
+  - Handoff and Prompts:
+      - Architecture Decision Handoff Template: templates/ARCHITECTURE_DECISION_HANDOFF.md
+      - ChatGPT Handoff Prompt: prompts/chatgpt/architecture-decision-handoff.prompt.md
+      - Kiro Architecture Update Prompt: prompts/kiro/architecture-update.prompt.md
+      - Kiro Architecture Update Example: prompts/kiro/architecture-update-example.prompt.md
+      - Cursor Task Prompt: prompts/cursor/task.prompt.md
+      - Reviewer Approval Prompt: prompts/reviewer/approval-review.prompt.md
+      - Architecture Handoff Reviews: reviews/architecture-decision-handoffs/README.md
+  - Structurizr:
+      - Structurizr README: diagrams/structurizr/README.md
+  - Phase 1 Baseline:
       - Feature Sequence: features/FEATURE_SEQUENCE.md
       - Resource Model: resource-specs/RESOURCE_MODEL_PHASE1.md
       - API Contract: api/API_CONTRACT_PHASE1.md
@@ -58,11 +115,21 @@ nav:
           - FEATURE-0008 ServiceInstance and ServiceBinding: features/FEATURE-0008-serviceinstance-and-servicebinding.md
           - FEATURE-0009 Health Readiness: features/FEATURE-0009-api-server-health-readiness.md
           - FEATURE-0010 Demo Flow: features/FEATURE-0010-basic-cli-api-demo-flow.md
-  - RFC:
-      - Organization Tenant Governance Model: rfc/RFC-0012-organization-tenant-governance-model.md
-      - ServiceOps Plugin Framework: rfc/RFC-0020-serviceops-plugin-framework.md
-  - Prompts:
-      - Phase 1 Implementation Prompt: prompts/AI_IMPLEMENTATION_PROMPT_PHASE1.md
-      - ChatGPT Review Prompt: prompts/CHATGPT_REVIEW_PROMPT.md
-      - ChatGPT Patch Prompt: prompts/CHATGPT_PATCH_PROMPT.md
-      - ChatGPT Debug Prompt: prompts/CHATGPT_DEBUG_PROMPT.md
+  - AI and Automation:
+      - AI Context Guide: ai/AI_CONTEXT_GUIDE.md
+      - AI Doc Authoring Standard: ai/AI_DOC_AUTHORING_STANDARD.md
+      - AI Feature Factory: ai/AI_FEATURE_FACTORY.md
+      - Feature Factory: automation/FEATURE_FACTORY.md
+      - Kiro Decision Policy: automation/KIRO_DECISION_POLICY.md
+      - Model Selection Policy: automation/MODEL_SELECTION_POLICY.md
+  - Templates:
+      - Architecture Change Request: templates/ARCHITECTURE_CHANGE_REQUEST.md
+      - Decision Record: templates/DECISION_RECORD_TEMPLATE.md
+      - RFC: templates/RFC_TEMPLATE.md
+      - Feature Review: templates/FEATURE_REVIEW_TEMPLATE.md
+      - Monthly Architecture Review: templates/MONTHLY_ARCHITECTURE_REVIEW_TEMPLATE.md
+  - Reviews:
+      - Architecture Drift Review Template: reviews/architecture-drift-review-template.md
+      - Phase 1 Consistency Review: reviews/phase1-consistency-review.md
+      - Phase 1 Validation Audit: reviews/phase1-validation-audit.md
+  - Glossary: glossary.md

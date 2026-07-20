@@ -10,6 +10,7 @@ ai_summary: Implements Project as a workload or environment grouping inside a Te
 ---
 
 # FEATURE-0004 Project Resource
+> **Phase 1 baseline note:** This document remains valid as the Phase 1 baseline. Phase 2 extends Sovrunn with reuse-first architecture, adapter boundaries, provider-neutral resource modeling, policy evaluation abstraction, decision/audit standards, plugin taxonomy, and governed placement. Do not treat this Phase 1 document as the complete Phase 2 scope.
 
 ## 1. Objective
 

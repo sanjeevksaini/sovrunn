@@ -10,6 +10,7 @@ ai_summary: Implements Tenant as the primary isolated consumption boundary.
 ---
 
 # FEATURE-0003 Tenant Resource
+> **Phase 1 baseline note:** This document remains valid as the Phase 1 baseline. Phase 2 extends Sovrunn with reuse-first architecture, adapter boundaries, provider-neutral resource modeling, policy evaluation abstraction, decision/audit standards, plugin taxonomy, and governed placement. Do not treat this Phase 1 document as the complete Phase 2 scope.
 
 ## 1. Objective
 

@@ -119,3 +119,43 @@ One concept = one canonical term.
 | Tool Registry | Registry of governed tools AI agents may call. |
 | RAG Knowledge Base | Indexed Sovrunn docs, decisions, RFCs, specs, runbooks, and state used for AI retrieval. |
 | Plan Validator | Validator that checks AI-generated plans against schema, policy, quota, security, and capability rules. |
+
+## 11. Phase 2 Provider-Neutral PaaS Fabric Terms
+
+| Term | Definition |
+|---|---|
+| Provider | Operator/business boundary for infrastructure or cloud capacity. |
+| ProviderLocation | Sovereignty/geography boundary where provider resources exist. |
+| ProviderRegion | Region-level provider geography; may map to local provider or hyperscaler terminology. |
+| ProviderDatacenter | Physical site boundary. |
+| DatacenterFailureDomain | Provider-declared failure-isolation boundary inside a datacenter. |
+| IaaSStack | Infrastructure implementation boundary such as Kubernetes, OpenShift, VMware, OpenStack, bare metal, or cloud-native stack. |
+| ResourcePool | Consumable placement boundary used by Sovrunn placement. |
+| ProviderCapability | Declared capability of a ResourcePool or provider substrate. |
+| CapabilityStatus | Capability validation state: declared, validated, certified, degraded, or disabled. |
+| ServiceRuntimeProfile | Internal bridge from customer-facing ServicePlan to runtime and capability requirements. |
+| PlacementRequest | Request to evaluate where a ServiceInstance may run. |
+| PlacementCandidate | Candidate ResourcePool and context considered by placement. |
+| PlacementDecision | Explainable allow/deny/requires-approval decision for placement. |
+| DecisionObject | Common structure for Sovrunn decisions. |
+| GovernanceDecision | Decision about governance constraints. |
+| SecurityDecision | Decision about security constraints. |
+| DataMovementDecision | Decision about whether data may move or be processed in a location/provider. |
+| DecisionEvent | Event representation of a decision lifecycle. |
+| EvidenceRecord | Proof that a control or requirement is satisfied. |
+| ProfileAssignment | Assignment of a governance, security, data, or cost profile to a scope such as Organization, Tenant, Project, or request. |
+| EffectivePolicyContext | Resolved policy context used by decisions and policy evaluation. |
+| DataPlacementPolicy | Policy describing where data may be stored, processed, replicated, backed up, or cached. |
+| CostGuardrail | Cost or budget boundary considered before placement/scaling/execution. |
+| PolicyEvaluationRequest | Engine-neutral request sent to a policy engine adapter. |
+| PolicyEvaluationResult | Engine-neutral result returned from a policy engine adapter. |
+| PolicyEngineAdapter | Adapter boundary for OPA, Cedar, or other policy engines. |
+| Provider/Substrate Plugin | Plugin that executes or validates infrastructure actions. |
+| PaaS Service Management Plane Plugin | Plugin that plans service lifecycle and topology. |
+| PaaS Service Runtime Plugin | Plugin that configures/checks actual service runtime and bindings. |
+| PluginTrustProfile | Trust and certification metadata for plugins. |
+| PluginCredentialPolicy | Policy governing plugin credentials and permissions. |
+| CredentialRef | Reference to credentials stored outside Sovrunn core records. |
+| OperationEngineAdapter | Adapter boundary for operation/workflow engines. |
+| ObservabilityAdapter | Adapter boundary for metrics, logs, traces, and health systems. |
+| RepositoryAdapter | Persistence boundary for resource stores. |

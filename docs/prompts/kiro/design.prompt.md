@@ -30,9 +30,44 @@ Use these repo context files:
 Design must include overview, resolved decisions, architecture, files, data models, interfaces, validation, API/handler design where applicable, registry/storage design where applicable, operation/audit behavior, error mapping, security/privacy, testing, verification, non-goals, and resolved design questions.
 
 Hard constraints:
-- Keep Go 1.21 compatibility.
+- Follow docs/engineering/go-version-standard.md.
 - Do not introduce external dependencies unless requirements explicitly demand them.
 - internal/api must not import internal/server.
 - Do not add unrelated future scope.
 
 Generate design.md only.
+
+## Phase 2 Reuse and Drift Gates
+
+Every generated feature must include:
+
+```markdown
+## Reuse Assessment
+
+### Existing mature solutions
+- ...
+
+### Decision
+Reuse / Wrap / Extend / Build
+
+### Sovrunn-owned responsibility
+- ...
+
+### Adapter boundary required?
+Yes / No
+
+### Non-goals
+- ...
+```
+
+Architecture drift checks:
+
+- no provider-specific hardcoding in core,
+- no Kubernetes-only assumptions in core,
+- no PostgreSQL lifecycle logic in core placement engine,
+- no custom policy engine embedded in handlers,
+- no raw secret storage,
+- no customer-facing IaaS leakage,
+- explainable decision object,
+- defined audit behavior,
+- preserved adapter boundaries.

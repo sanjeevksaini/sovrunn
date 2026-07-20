@@ -174,3 +174,38 @@ The founder approves:
 - SDE hot-path rules.
 
 AI may draft these but must not treat drafts as accepted without approval.
+
+## Phase 2 Reuse and Drift Gates
+
+Every generated feature must include:
+
+```markdown
+## Reuse Assessment
+
+### Existing mature solutions
+- ...
+
+### Decision
+Reuse / Wrap / Extend / Build
+
+### Sovrunn-owned responsibility
+- ...
+
+### Adapter boundary required?
+Yes / No
+
+### Non-goals
+- ...
+```
+
+Architecture drift checks:
+
+- no provider-specific hardcoding in core,
+- no Kubernetes-only assumptions in core,
+- no PostgreSQL lifecycle logic in core placement engine,
+- no custom policy engine embedded in handlers,
+- no raw secret storage,
+- no customer-facing IaaS leakage,
+- explainable decision object,
+- defined audit behavior,
+- preserved adapter boundaries.

@@ -223,3 +223,21 @@ ServiceOps plugins execute actual service-specific backup and restore.
 - Do not implement full policy engine in Phase 1.
 - Define clean interfaces for future Kyverno/OPA integration.
 - Add negative tests for missing parents and policy weakening.
+
+## Phase 2 Governance Extension
+
+Phase 2 shifts from generic `PolicySet` language toward explicit profile and policy-context objects:
+
+- GovernanceProfile,
+- SecurityProfile,
+- DataPlacementPolicy,
+- CostGuardrail,
+- ProfileAssignment,
+- EffectivePolicyContext,
+- PolicyEvaluationRequest,
+- PolicyEvaluationResult,
+- GovernanceDecision,
+- SecurityDecision,
+- PlacementDecision.
+
+Policy evaluation must go through PolicyEngineAdapter so OPA/Cedar or other engines can be reused later.

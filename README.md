@@ -4,6 +4,36 @@ Sovrunn is a sovereign cloud-native PaaS platform for organizations that need go
 
 Sovrunn builds on proven open-source and open-standard technologies instead of replacing them. It provides the missing product layer for organization governance, tenant isolation, service catalog, service plans, lifecycle operations, policy inheritance, auditability, observability, backup governance, plugin-based service management, and AI-assisted operations.
 
+
+## Current Roadmap Context
+
+Sovrunn now uses a reuse-first phased roadmap. Phase 2 and Phase 3 are the current execution focus. Later phase features are maintained as scope placeholders only and must be rebaselined after Phase 2 and Phase 3 complete.
+
+Authoritative roadmap files:
+
+```text
+docs/architecture/development-phases.md
+docs/phase2/PHASE2_SCOPE.md
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md
+docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md
+docs/features/FEATURE_INDEX.md
+```
+
+Note: `docs/features/FEATURE_ROADMAP_ALL_PHASES.md` is only a pointer to the canonical roadmap to avoid duplicated roadmap sources.
+
+Current MVP anchor:
+
+```text
+MVP-001: Governed PostgreSQL PaaS Placement and Provisioning on one substrate.
+```
+
+Roadmap rule:
+
+```text
+Use future features for scope awareness.
+Do not implement future-phase features during Phase 2 or Phase 3 unless a formal decision changes the phase boundary.
+```
+
 ## Positioning
 
 Sovrunn is the parent platform.
@@ -159,25 +189,29 @@ SDE is important, but it is one capability within the broader Sovrunn platform.
 .
 ├── AGENTS.md
 ├── Makefile
-├── .kiro/
-│   └── steering/
-├── .cursor/
-│   └── rules/
+├── mkdocs.yml
 ├── docs/
-│   ├── foundation/
-│   ├── architecture/
-│   ├── decisions/
-│   ├── engineering/
-│   ├── features/
-│   ├── resource-specs/
-│   ├── api/
-│   ├── prompts/
-│   ├── rfc/
-│   └── demo/
+│   ├── context/          # current architecture baseline, context pack, phase context
+│   ├── governance/       # change control, ownership, review gates
+│   ├── architecture/     # approved architecture source-of-truth docs
+│   ├── decisions/        # DEC index and individual decision records
+│   ├── rfc/              # architecture RFCs
+│   ├── phase2/           # current execution phase scope and gates
+│   ├── roadmap/          # canonical all-phase feature roadmap
+│   ├── traceability/     # feature/decision traceability matrices
+│   ├── templates/        # ACR, handoff, DEC, RFC, review templates
+│   ├── diagrams/         # Structurizr architecture-as-code workspace
+│   ├── engineering/      # Go, observability, context, and AI development standards
+│   ├── features/         # Phase 1 feature docs and feature index
+│   ├── prompts/          # Kiro, Cursor, ChatGPT, and reviewer prompt templates
+│   ├── reviews/          # architecture, feature, phase, and monthly reviews
+│   └── demo/             # demo flows
 ├── configs/
 ├── scripts/
-└── cmd/
+└── tests/
 ```
+
+Generated artifacts such as `site/`, `docs/generated-prompts/`, generated context packs, logs, and zip archives are intentionally ignored and must not be treated as architecture source of truth.
 
 ## Documentation Entry Points
 
@@ -379,3 +413,122 @@ FEATURE-0001 Organization Resource and Registry
 ## License
 
 License to be decided.
+
+## Architecture Operating System
+
+Sovrunn architecture is evolved through a durable Architecture Operating System.
+
+The repo is the source of truth. ChatGPT, Kiro, Cursor, and reviewers must work from the approved baseline and decision records, not from chat memory.
+
+Key files:
+
+- `docs/context/ARCHITECTURE_VERSION.md`
+- `docs/context/CURRENT_ARCHITECTURE_BASELINE.md`
+- `docs/context/SOVRUNN_CONTEXT_PACK.md`
+- `docs/context/CHATGPT_ARCHITECTURE_SESSION_PROMPT.md`
+- `docs/governance/ARCHITECTURE_CHANGE_CONTROL.md`
+- `docs/governance/ARCHITECTURE_OWNERSHIP.md`
+- `docs/governance/REVIEW_GATES.md`
+- `docs/traceability/FEATURE_TRACEABILITY_MATRIX.md`
+- `docs/traceability/DECISION_TRACEABILITY_MATRIX.md`
+
+Generate a fresh context pack before major architecture sessions:
+
+```bash
+make context-pack
+```
+
+Validate a feature before moving to the next feature:
+
+```bash
+make ff-feature-gate FEATURE=FEATURE-0011
+```
+
+Architecture rule:
+
+```text
+ChatGPT can propose.
+Git repo decides.
+DEC/RFC records approve.
+Feature gate enforces.
+```
+
+## ChatGPT + Kiro Architecture Operating Model
+
+Sovrunn uses a governed handoff between architecture discussion and repo updates.
+
+```text
+ChatGPT Project
+  -> architecture tradeoff discussion
+  -> Architecture Decision Handoff
+
+Kiro
+  -> validates handoff against Architecture Operating System
+  -> updates architecture docs / DEC / RFC / requirements / design / tasks
+
+Cursor
+  -> implements Go code from approved Kiro tasks only
+
+Feature Gate
+  -> validates before moving to the next feature
+```
+
+Key files:
+
+- `docs/templates/ARCHITECTURE_DECISION_HANDOFF.md`
+- `docs/prompts/chatgpt/architecture-decision-handoff.prompt.md`
+- `docs/prompts/kiro/architecture-update.prompt.md`
+- `docs/context/CURRENT_ARCHITECTURE_BASELINE.md`
+- `docs/governance/ARCHITECTURE_CHANGE_CONTROL.md`
+
+Before Kiro applies an architecture decision handoff, validate the handoff structure:
+
+```bash
+make arch-handoff-check HANDOFF=docs/reviews/architecture-decision-handoffs/ADH-YYYY-NNN.md
+```
+
+Then Kiro may use `docs/prompts/kiro/architecture-update.prompt.md` to apply the approved handoff.
+
+## Structurizr Architecture Diagrams
+
+Sovrunn uses Structurizr DSL as the architecture-as-code model for approved C4 views.
+
+Key files:
+
+```text
+docs/diagrams/structurizr/workspace.dsl
+docs/diagrams/structurizr/README.md
+```
+
+Run local validation/checks:
+
+```bash
+make structurizr-check
+```
+
+Run Structurizr Lite locally:
+
+```bash
+make structurizr-lite
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+Architecture changes that alter system boundaries, containers, plugin planes, major external systems, or dynamic flows should update `workspace.dsl` as part of the Kiro architecture update workflow.
+
+
+## Minimum Daily Workflow
+
+```text
+1. Use ChatGPT Project only for architecture tradeoff discussion when needed.
+2. Convert approved architecture discussion into an Architecture Decision Handoff.
+3. Use Kiro to validate/apply the handoff to architecture docs and feature specs.
+4. Use Cursor to implement only approved Kiro tasks.
+5. Run `make ff-feature-gate FEATURE=<FEATURE-ID>` before moving to the next feature.
+```
+
+Small clarifications may update docs/specs through a handoff. Major architecture changes require ACR/DEC/RFC updates and human approval.

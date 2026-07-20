@@ -8,6 +8,7 @@ ai_summary: Human-readable demo flow for Phase 1 resources.
 ---
 
 # Phase 1 Demo Flow
+> **Phase 1 baseline note:** This document remains valid as the Phase 1 baseline. Phase 2 extends Sovrunn with reuse-first architecture, adapter boundaries, provider-neutral resource modeling, policy evaluation abstraction, decision/audit standards, plugin taxonomy, and governed placement. Do not treat this Phase 1 document as the complete Phase 2 scope.
 
 Run after the API server is implemented and listening on `127.0.0.1:8080`.
 

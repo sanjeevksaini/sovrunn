@@ -202,3 +202,18 @@ Do not expose secret values in API responses.
 - Keep interfaces clean for future Kubernetes CRD support.
 - Use canonical terms from glossary.md.
 - Add tests for validation and failure modes.
+
+## Phase 2 Extension
+
+Phase 2 extends Platform Core with reuse-first provider-neutral PaaS fabric foundations:
+
+- API/resource standard,
+- decision and audit standard,
+- provider-neutral resource model,
+- adapter boundary model,
+- policy evaluation abstraction,
+- placement decision engine,
+- plugin taxonomy,
+- ServiceRuntimeProfile.
+
+`ServicePlan` remains customer-facing. `ServiceRuntimeProfile` bridges the service plan to runtime and provider capability requirements.
