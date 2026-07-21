@@ -24,16 +24,16 @@ Feature gate and AI agents should use this index instead of guessing Kiro spec p
 
 | Feature | Name | Phase | Scope | Kiro Slug | Purpose |
 |---|---|---|---|---|---|
-| FEATURE-0001 | FEATURE-0001 Organization Resource and Registry | Phase 1 Platform Core Skeleton | Implemented | `organization-resource-and-registry` | Phase 1 baseline feature. |
+| FEATURE-0001 | FEATURE-0001 Organization Resource and Registry | Phase 1 Platform Core Skeleton | Implemented | `organization-resource-registry` | Phase 1 baseline feature. |
 | FEATURE-0002 | FEATURE-0002 OrganizationUnit Resource | Phase 1 Platform Core Skeleton | Implemented | `organizationunit-resource` | Phase 1 baseline feature. |
 | FEATURE-0003 | FEATURE-0003 Tenant Resource | Phase 1 Platform Core Skeleton | Implemented | `tenant-resource` | Phase 1 baseline feature. |
 | FEATURE-0004 | FEATURE-0004 Project Resource | Phase 1 Platform Core Skeleton | Implemented | `project-resource` | Phase 1 baseline feature. |
 | FEATURE-0005 | FEATURE-0005 Operation Resource | Phase 1 Platform Core Skeleton | Implemented | `operation-resource` | Phase 1 baseline feature. |
-| FEATURE-0006 | FEATURE-0006 ServiceClass and ServicePlan | Phase 1 Platform Core Skeleton | Implemented | `serviceclass-and-serviceplan` | Phase 1 baseline feature. |
-| FEATURE-0007 | FEATURE-0007 Plugin and Capability Registry | Phase 1 Platform Core Skeleton | Implemented | `plugin-and-capability-registry` | Phase 1 baseline feature. |
-| FEATURE-0008 | FEATURE-0008 ServiceInstance and ServiceBinding | Phase 1 Platform Core Skeleton | Implemented | `serviceinstance-and-servicebinding` | Phase 1 baseline feature. |
+| FEATURE-0006 | FEATURE-0006 ServiceClass and ServicePlan | Phase 1 Platform Core Skeleton | Implemented | `serviceclass-serviceplan` | Phase 1 baseline feature. |
+| FEATURE-0007 | FEATURE-0007 Plugin and Capability Registry | Phase 1 Platform Core Skeleton | Implemented | `plugin-capability-registry` | Phase 1 baseline feature. |
+| FEATURE-0008 | FEATURE-0008 ServiceInstance and ServiceBinding | Phase 1 Platform Core Skeleton | Implemented | `serviceinstance-servicebinding` | Phase 1 baseline feature. |
 | FEATURE-0009 | FEATURE-0009 API Server Health/Readiness | Phase 1 Platform Core Skeleton | Implemented | `api-server-health-readiness` | Phase 1 baseline feature. |
-| FEATURE-0010 | FEATURE-0010 Basic CLI/API Demo Flow | Phase 1 Platform Core Skeleton | Implemented | `basic-cli-api-demo-flow` | Phase 1 baseline feature. |
+| FEATURE-0010 | FEATURE-0010 Basic CLI/API Demo Flow | Phase 1 Platform Core Skeleton | Implemented | `basic-cli-api-demo` | Phase 1 baseline feature. |
 | FEATURE-0011 | Reuse Assessment Standard | Phase 2: Reuse-First PaaS Fabric Foundation | Executable | `reuse-assessment-standard` | Require Reuse / Wrap / Extend / Build decision for every feature. |
 | FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Phase 2: Reuse-First PaaS Fabric Foundation | Executable | `api-resource-naming-status-and-validation-standard` | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
 | FEATURE-0013 | Decision Object and AuditEvent Standard | Phase 2: Reuse-First PaaS Fabric Foundation | Executable | `decision-object-and-auditevent-standard` | Define common decision and audit event structure. |

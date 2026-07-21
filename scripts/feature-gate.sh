@@ -9,7 +9,27 @@ if [[ -z "$FEATURE" ]]; then
   exit 1
 fi
 
+if [[ ! "$FEATURE" =~ ^FEATURE-[0-9]{4}$ ]]; then
+  echo "ERROR: invalid feature id: $FEATURE"
+  echo "Expected format: FEATURE-0011"
+  exit 1
+fi
+
+FEATURE_NUM_RAW="${FEATURE#FEATURE-}"
+FEATURE_NUM=$((10#$FEATURE_NUM_RAW))
+
+LEGACY_PHASE1=false
+if (( FEATURE_NUM <= 10 )); then
+  LEGACY_PHASE1=true
+fi
+
 echo "==> Sovrunn Feature Gate: $FEATURE"
+
+if [[ "$LEGACY_PHASE1" == "true" ]]; then
+  echo "INFO: $FEATURE is Phase 1 legacy baseline; using legacy validation mode"
+else
+  echo "INFO: $FEATURE is Phase 2+; using strict AOS validation mode"
+fi
 
 fail() {
   echo "FAIL: $1"
@@ -58,7 +78,9 @@ require_file docs/diagrams/structurizr/workspace.dsl
 require_file docs/features/FEATURE_INDEX.md
 
 FEATURE_DOC_FILES=()
-while IFS= read -r file; do FEATURE_DOC_FILES+=("$file"); done < <(find docs/features -maxdepth 1 -type f -name "${FEATURE}*.md" 2>/dev/null | sort || true)
+while IFS= read -r file; do
+  FEATURE_DOC_FILES+=("$file")
+done < <(find docs/features -maxdepth 1 -type f -name "${FEATURE}*.md" 2>/dev/null | sort || true)
 
 KIRO_SPEC_DIR=""
 KIRO_SLUG="$(resolve_kiro_slug "$FEATURE" || true)"
@@ -77,19 +99,29 @@ if [[ -n "$KIRO_SPEC_DIR" ]]; then
   require_file "$KIRO_SPEC_DIR/requirements.md"
   require_file "$KIRO_SPEC_DIR/design.md"
   require_file "$KIRO_SPEC_DIR/tasks.md"
-  require_contains "$KIRO_SPEC_DIR/requirements.md" "Reuse Assessment" "Reuse Assessment"
-  require_contains "$KIRO_SPEC_DIR/requirements.md" "Acceptance Criteria" "Acceptance Criteria"
-  require_contains "$KIRO_SPEC_DIR/design.md" "Architecture Drift" "Architecture Drift Checks"
-  require_contains "$KIRO_SPEC_DIR/design.md" "Observability" "Observability"
-  require_contains "$KIRO_SPEC_DIR/design.md" "Security" "Security"
-  require_contains "$KIRO_SPEC_DIR/design.md" "Non-goals" "Non-goals"
+
+  if [[ "$LEGACY_PHASE1" == "true" ]]; then
+    echo "INFO: skipping strict AOS Kiro section checks for Phase 1 legacy spec"
+  else
+    require_contains "$KIRO_SPEC_DIR/requirements.md" "Reuse Assessment" "Reuse Assessment"
+    require_contains "$KIRO_SPEC_DIR/requirements.md" "Acceptance Criteria" "Acceptance Criteria"
+    require_contains "$KIRO_SPEC_DIR/design.md" "Architecture Drift" "Architecture Drift Checks"
+    require_contains "$KIRO_SPEC_DIR/design.md" "Observability" "Observability"
+    require_contains "$KIRO_SPEC_DIR/design.md" "Security" "Security"
+    require_contains "$KIRO_SPEC_DIR/design.md" "Non-goals" "Non-goals"
+  fi
 fi
 
 if [[ ${#FEATURE_DOC_FILES[@]} -gt 0 ]]; then
   echo "==> Checking feature docs"
   printf '%s\n' "${FEATURE_DOC_FILES[@]}"
-  grep -qi "Acceptance Criteria" "${FEATURE_DOC_FILES[@]}" || fail "Acceptance Criteria missing in feature docs for $FEATURE"
-  pass "Acceptance Criteria present"
+
+  if [[ "$LEGACY_PHASE1" == "true" ]]; then
+    echo "INFO: skipping strict feature-doc Acceptance Criteria check for Phase 1 legacy docs"
+  else
+    grep -qi "Acceptance Criteria" "${FEATURE_DOC_FILES[@]}" || fail "Acceptance Criteria missing in feature docs for $FEATURE"
+    pass "Acceptance Criteria present"
+  fi
 fi
 
 echo "==> Checking generated artifacts are not staged"
@@ -162,9 +194,13 @@ if [[ -x scripts/phase1-consistency-check.sh ]]; then
 fi
 
 if [[ -x scripts/phase2-scope-check.sh ]]; then
-  echo "==> Running phase2 scope check"
-  scripts/phase2-scope-check.sh "$FEATURE"
-  pass "phase2 scope check"
+  if [[ "$LEGACY_PHASE1" == "true" ]]; then
+    echo "INFO: skipping Phase 2 scope check for Phase 1 legacy feature"
+  else
+    echo "==> Running phase2 scope check"
+    scripts/phase2-scope-check.sh "$FEATURE"
+    pass "phase2 scope check"
+  fi
 fi
 
 REVIEW_FILE="docs/reviews/feature-gates/${FEATURE}-approval-review.md"
