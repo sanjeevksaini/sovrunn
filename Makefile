@@ -3,6 +3,8 @@
 APP_NAME=sovrunn-api
 CONFIG=configs/sovrunn-api.local.yaml
 VERSION ?= dev
+GO_VERSION ?= 1.22
+GO_DOCKER_IMAGE ?= golang:$(GO_VERSION)
 MODULE  = github.com/sanjeevksaini/sovrunn
 LDFLAGS = -X '$(MODULE)/internal/api.buildVersion=$(VERSION)'
 
@@ -135,3 +137,34 @@ phase1-consistency:
 .PHONY: phase1-integration
 phase1-integration:
 	./scripts/phase1-integration-test.sh
+
+.PHONY: ff-feature-gate
+ff-feature-gate:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	./scripts/feature-gate.sh $(FEATURE)
+
+.PHONY: context-pack
+context-pack:
+	./scripts/context-pack.sh
+
+.PHONY: phase2-scope-check
+phase2-scope-check:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	./scripts/phase2-scope-check.sh $(FEATURE)
+
+.PHONY: arch-handoff-check
+arch-handoff-check:
+	@test -n "$(HANDOFF)" || (echo "HANDOFF is required"; exit 1)
+	./scripts/architecture-handoff-check.sh "$(HANDOFF)"
+
+.PHONY: structurizr-lite
+structurizr-lite:
+	./scripts/structurizr-lite.sh
+
+.PHONY: structurizr-check
+structurizr-check:
+	./scripts/structurizr-check.sh
+
+.PHONY: structurizr-push
+structurizr-push:
+	./scripts/structurizr-push.sh

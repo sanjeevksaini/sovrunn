@@ -1,58 +1,25 @@
+# macOS / archives
 .DS_Store
-.DS_Store
-.venv/
-site/
-
-# macOS
-
-.DS_Store
-
-# Python / MkDocs
-
-.venv/
-
-site/
-
-# Build outputs
-
-dist/
-
-build/
-
-# Logs
-
-*.log
-
-
-# macOS
-
-.DS_Store
-
 __MACOSX/
-
-# Generated docs
-
-site/
-
-# Local editor metadata
-
-docs/.obsidian/
-
-# Backups
-
-*.broken-backup
-
+*.zip
 
 # Build outputs
 bin/
+site/
 
-#feature-factory
-.automation/templates/gitignore-feature-factory.snippet
-
-# Feature Factory generated runtime artifacts
+# Generated prompt/context artifacts
+docs/generated-prompts/
+docs/context/SOVRUNN_CONTEXT_PACK.generated.md
 .automation/generated-prompts/
 .automation/logs/
 .automation/model-usage/
 .automation/reviews/
-docs/generated-prompts/
 .automation/pr/
+
+# Runtime and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+.env
+.env.*

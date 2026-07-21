@@ -273,3 +273,38 @@ FEATURE_FACTORY_CURSOR_MODE=prompt make -f Makefile.feature-factory ff-cursor-ta
 ```
 
 The spec flow now executes Kiro headlessly for initial stage generation and for reviewer-requested revisions.
+
+## Phase 2 Reuse and Drift Gates
+
+Every generated feature must include:
+
+```markdown
+## Reuse Assessment
+
+### Existing mature solutions
+- ...
+
+### Decision
+Reuse / Wrap / Extend / Build
+
+### Sovrunn-owned responsibility
+- ...
+
+### Adapter boundary required?
+Yes / No
+
+### Non-goals
+- ...
+```
+
+Architecture drift checks:
+
+- no provider-specific hardcoding in core,
+- no Kubernetes-only assumptions in core,
+- no PostgreSQL lifecycle logic in core placement engine,
+- no custom policy engine embedded in handlers,
+- no raw secret storage,
+- no customer-facing IaaS leakage,
+- explainable decision object,
+- defined audit behavior,
+- preserved adapter boundaries.

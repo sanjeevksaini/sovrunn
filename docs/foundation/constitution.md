@@ -290,3 +290,45 @@ Semantic honesty.
 Open standards.
 Enterprise-ready productization.
 ```
+
+## 6. Phase 2 Superseding Principles
+
+These principles extend the original Phase 0/1 constitution for the evolved Sovrunn scope.
+
+### Principle 16: Reuse before build
+
+Sovrunn must not reinvent mature open-source infrastructure, protocols, controllers, policy engines, observability stacks, workflow engines, service operators, identity systems, secret managers, networking stacks, or database lifecycle systems unless a formal decision approves it.
+
+Sovrunn should build the sovereign PaaS control plane, decision layer, plugin contracts, governance model, AI-readable operations context, and customer/provider experience that connects mature components into one governed platform.
+
+### Principle 17: Adapter boundary before integration
+
+Whenever Sovrunn expects to use or replace an external engine later, the core must depend on an adapter boundary, not the concrete implementation.
+
+Required adapter boundaries include:
+
+- PolicyEngineAdapter,
+- IdentityProviderAdapter,
+- SecretProviderAdapter,
+- OperationEngineAdapter,
+- ObservabilityAdapter,
+- EventBusAdapter,
+- repository interfaces.
+
+### Principle 18: Policy abstraction before policy engine
+
+Sovrunn must define PolicyEvaluationRequest and PolicyEvaluationResult before binding to OPA, Cedar, or any other engine.
+
+Go-based policy logic is allowed only as a temporary bootstrap adapter behind PolicyEngineAdapter, not as embedded business logic in handlers or placement.
+
+### Principle 19: Decision-first execution
+
+Sovrunn must create explainable decisions before executing platform changes.
+
+No provisioning, scaling, failover, traffic, backup, data movement, or runtime operation should proceed without the relevant decision context.
+
+### Principle 20: Customer API boundary protection
+
+Customer-facing APIs must expose PaaS outcomes, not low-level provider or IaaS details by default.
+
+Provider, resource pool, failure domain, and capability details may be provider/MSP-facing or internal unless explicitly surfaced as an advanced view.

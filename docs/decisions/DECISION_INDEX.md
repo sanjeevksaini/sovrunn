@@ -1,8 +1,8 @@
 ---
 doc_type: decision_index
 title: Sovrunn Decision Index
-status: draft
-phase: 0
+status: active
+phase: 2
 ai_load_priority: always
 ai_summary: Canonical accepted and proposed decisions that AI must follow during Sovrunn development.
 ---
@@ -21,8 +21,21 @@ AI agents must check this file before generating architecture, code, tests, or d
 |---|---|
 | Proposed | Not yet accepted |
 | Accepted | Must be followed |
+| Implemented | Accepted and implemented in code or docs |
+| Validated | Implemented and verified by feature/phase gate |
 | Superseded | Replaced by a newer decision |
+| Deprecated | Still historical, but not recommended for new work |
 | Rejected | Must not be implemented |
+
+## 3.1 Decision Lifecycle Rule
+
+A decision moves through this lifecycle when applicable:
+
+```text
+IDEA -> PROPOSED -> ACCEPTED -> IMPLEMENTED -> VALIDATED -> SUPERSEDED / DEPRECATED
+```
+
+Chat discussions and generated prompts do not create accepted decisions. Accepted decisions require explicit approval and index updates.
 
 ## 3. Decisions
 
@@ -53,6 +66,17 @@ AI agents must check this file before generating architecture, code, tests, or d
 | DEC-0023 | All meaningful platform changes must create or link to an Operation. | Operations | Accepted | platform-core.md |
 | DEC-0024 | AI agents must operate through governed Sovrunn tools and must not bypass policy, tenant boundaries, approvals, or audit. | AI | Accepted | constitution.md |
 | DEC-0025 | All Sovrunn design files are platform source files optimized for human review and AI reasoning. | Documentation | Accepted | AI_DOC_AUTHORING_STANDARD.md |
+| DEC-0026 | Sovrunn follows reuse-before-build as a core engineering rule. | Architecture | Accepted | DEC-0026 / RFC-0021 |
+| DEC-0027 | Phase 2 builds model, decision, audit, policy-context, adapter, and plugin-taxonomy foundation only. | Roadmap | Accepted | DEC-0027 / PHASE2_SCOPE |
+| DEC-0028 | Policy logic uses PolicyEngineAdapter; Sovrunn must not embed custom policy rules in handlers or placement. | Policy | Accepted | DEC-0028 / RFC-0025 |
+| DEC-0029 | Provider/Substrate Plugin, PaaS Service Management Plane Plugin, and PaaS Service Runtime Plugin are separate plugin planes. | Plugin Model | Accepted | DEC-0029 / RFC-0027 |
+| DEC-0030 | MVP-001 is Governed PostgreSQL PaaS Placement and Provisioning on one substrate. | MVP | Accepted | DEC-0030 / RFC-0029 |
+| DEC-0031 | ServicePlan remains customer-facing; ServiceRuntimeProfile bridges to infrastructure and runtime requirements. | Service Catalog | Accepted | RFC-0028 |
+| DEC-0032 | ResourcePool is the placement boundary. | Placement | Accepted | RFC-0024 |
+| DEC-0033 | ProviderCapability is the compatibility boundary. | Placement | Accepted | RFC-0024 |
+| DEC-0034 | PlacementDecision is required before provisioning. | Placement | Accepted | RFC-0026 |
+| DEC-0035 | Customer-facing APIs must not expose low-level IaaS complexity by default. | API | Accepted | api-resource-standard.md |
+| DEC-0036 | Adapter boundaries are required before integrating external engines expected to evolve or be replaced. | Architecture | Accepted | DEC-0036 / adapter-boundary-model.md |
 
 ## 4. AI Usage Notes
 

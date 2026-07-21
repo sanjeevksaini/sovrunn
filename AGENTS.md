@@ -28,27 +28,29 @@ No tool owns a separate architecture.
 ## Current Phase
 
 ```text
-Phase 1: Sovrunn Platform Core
+Phase 2: Reuse-First PaaS Fabric Foundation
 ```
+
+Phase 0 and Phase 1 documents remain valid baseline records. Phase 2 extends them with reuse-first, adapter-first, provider-neutral, decision-first, audit-first, and plugin-taxonomy-first architecture.
 
 ## Current Implementation Rule
 
 Implement one feature at a time.
 
-Feature order:
+Current Phase 2 feature order is authoritative in:
 
 ```text
-FEATURE-0001 Organization Resource and Registry
-FEATURE-0002 OrganizationUnit Resource
-FEATURE-0003 Tenant Resource
-FEATURE-0004 Project Resource
-FEATURE-0005 Operation Resource
-FEATURE-0006 ServiceClass and ServicePlan
-FEATURE-0007 Plugin and Capability Registry
-FEATURE-0008 ServiceInstance and ServiceBinding
-FEATURE-0009 API server health/readiness
-FEATURE-0010 Basic CLI/API demo flow
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md
 ```
+
+All-phase roadmap placeholders are maintained in:
+
+```text
+docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md
+docs/features/FEATURE_INDEX.md
+```
+
+Future roadmap features may be referenced for scope awareness only. They must not be implemented during Phase 2 or Phase 3 unless a formal decision changes the phase boundary.
 
 ## Authoritative Context Priority
 
@@ -88,6 +90,11 @@ resource model
 feature scope
   current docs/features/FEATURE-xxxx file
 
+phase roadmap
+  docs/architecture/development-phases.md
+  docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md
+  docs/features/FEATURE_INDEX.md
+
 master AI operating contract
   AGENTS.md
 ```
@@ -103,6 +110,8 @@ docs/foundation/constitution.md
 docs/decisions/DECISION_INDEX.md
 docs/glossary.md
 docs/features/FEATURE_SEQUENCE.md
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md when working on Phase 2
+docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md for scope awareness only
 docs/resource-specs/RESOURCE_MODEL_PHASE1.md
 docs/api/API_CONTRACT_PHASE1.md
 docs/engineering/ai-context-loading-standard.md
@@ -259,3 +268,146 @@ next feature boundary
 AI accelerates implementation.
 
 Architecture remains spec-first, founder-controlled, test-gated, terminal-verified, and Git-reviewed.
+
+## Architecture Operating System
+
+Sovrunn uses an Architecture Operating System to keep long-term architecture stable across ChatGPT, Kiro, Cursor, reviewers, and multi-developer teams.
+
+Before architecture work, agents must load:
+
+- `docs/context/ARCHITECTURE_VERSION.md`
+- `docs/context/CURRENT_ARCHITECTURE_BASELINE.md`
+- `docs/context/SOVRUNN_CONTEXT_PACK.md`
+- `docs/context/CURRENT_PHASE_CONTEXT.md`
+- `docs/context/CHATGPT_ARCHITECTURE_SESSION_PROMPT.md`
+
+Before implementation work, agents must also load:
+
+- `docs/governance/REVIEW_GATES.md`
+- `docs/engineering/go-observability-standard.md`
+- `docs/architecture/observability-and-audit-baseline.md`
+
+### Source-of-Truth Priority
+
+1. Current architecture baseline
+2. Accepted DEC files and Decision Index
+3. Approved RFC files
+4. Architecture docs
+5. Phase scope docs
+6. Feature specs
+7. Roadmap placeholders
+8. Chat discussion
+
+Roadmap placeholders are directional only. They do not override current baseline, accepted decisions, or phase scope.
+
+### Architecture Change Control
+
+Agents must not change approved Sovrunn architecture casually.
+
+Any proposed architecture change must be classified as:
+
+- clarification
+- extension
+- correction
+- replacement
+- new decision
+
+A replacement or new decision requires:
+
+- architecture change request,
+- impacted docs listed,
+- impacted features listed,
+- backward compatibility impact,
+- phase impact,
+- explicit human approval,
+- updated DEC/RFC records,
+- updated current architecture baseline.
+
+No implementation may proceed from an unapproved architecture change.
+
+### Feature Gate Rule
+
+Before starting the next feature, the current feature must pass:
+
+```bash
+make ff-feature-gate FEATURE=<FEATURE-ID>
+```
+
+A feature is not complete unless the feature gate passes.
+
+No agent may proceed to the next feature when:
+
+- tests fail,
+- lint fails,
+- security checks fail,
+- reuse assessment is missing,
+- architecture drift checks are missing,
+- acceptance criteria are missing,
+- generated artifacts are staged,
+- Phase 2 scope boundaries are violated,
+- approval review is missing or not approved in strict team mode.
+
+## ChatGPT-to-Kiro Architecture Handoff Rule
+
+Architecture discussion may happen in a ChatGPT Project, but repository updates must be applied through Kiro using an approved Architecture Decision Handoff.
+
+Required handoff contract:
+
+- `docs/templates/ARCHITECTURE_DECISION_HANDOFF.md`
+- `docs/prompts/chatgpt/architecture-decision-handoff.prompt.md`
+- `docs/prompts/kiro/architecture-update.prompt.md`
+
+Operating flow:
+
+1. ChatGPT discusses tradeoffs and produces an Architecture Decision Handoff.
+2. Human approves, rejects, or defers the handoff.
+3. Kiro validates the approved handoff against the Architecture Operating System.
+4. Kiro updates architecture docs, DEC/RFC files, traceability, and Kiro specs.
+5. Cursor implements only from approved Kiro `tasks.md`.
+6. Feature gate validates before moving to the next feature.
+
+Rules:
+
+- ChatGPT handoff is not approval by itself.
+- Kiro must not apply an unapproved handoff.
+- Kiro must not introduce new architecture beyond the handoff.
+- Cursor must not change architecture while implementing Go code.
+- `CURRENT_ARCHITECTURE_BASELINE.md` changes require accepted DEC/RFC or explicit baseline review approval.
+
+## Structurizr Architecture Diagrams
+
+Structurizr DSL is the approved architecture-as-code representation for Sovrunn C4 views.
+
+When changing approved architecture structure, agents must update:
+
+```text
+docs/diagrams/structurizr/workspace.dsl
+```
+
+Update the Structurizr workspace when changes affect:
+
+```text
+system boundaries
+major containers
+plugin boundaries
+external OSS/reuse relationships
+deployment/runtime relationships
+major dynamic flows
+ChatGPT -> Kiro -> Cursor handoff workflow
+```
+
+Do not use ad hoc diagrams as the durable source of truth.
+Markdown architecture docs, DEC/RFC records, and `workspace.dsl` must remain aligned.
+
+Useful commands:
+
+```bash
+make structurizr-check
+make structurizr-lite
+```
+
+Kiro owns architecture/spec updates, including Structurizr DSL updates when an approved Architecture Decision Handoff changes the architecture model.
+Cursor must not change Structurizr DSL unless the approved task explicitly requires diagram/model maintenance.
+
+
+Note: `docs/features/FEATURE_ROADMAP_ALL_PHASES.md` is a pointer to the canonical roadmap only. Do not treat it as a separate source of truth.

@@ -250,3 +250,16 @@ resource context is available for audit
 ## 14. Final Principle
 
 If an administrator asks what happened, who did it, where it happened, and why it failed, Sovrunn must be able to answer.
+
+## Phase 2 Audit and AI-Readable Context Extension
+
+Phase 2 standardizes:
+
+- DecisionObject,
+- DecisionEvent,
+- AuditEvent,
+- EvidenceRecord placeholder,
+- AI-readable DecisionContext,
+- Operation-to-decision linkage.
+
+Sovrunn should reuse OpenTelemetry, Prometheus, Grafana, Loki, Tempo, and related mature systems. Sovrunn builds interpretation, audit, decision history, and AI-readable operational context above those systems.

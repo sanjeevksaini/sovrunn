@@ -61,3 +61,55 @@ Document path:
 
 Document:
 {{DOCUMENT_CONTENT}}
+
+## Phase 2 Reuse and Drift Gates
+
+Every generated feature must include:
+
+```markdown
+## Reuse Assessment
+
+### Existing mature solutions
+- ...
+
+### Decision
+Reuse / Wrap / Extend / Build
+
+### Sovrunn-owned responsibility
+- ...
+
+### Adapter boundary required?
+Yes / No
+
+### Non-goals
+- ...
+```
+
+Architecture drift checks:
+
+- no provider-specific hardcoding in core,
+- no Kubernetes-only assumptions in core,
+- no PostgreSQL lifecycle logic in core placement engine,
+- no custom policy engine embedded in handlers,
+- no raw secret storage,
+- no customer-facing IaaS leakage,
+- explainable decision object,
+- defined audit behavior,
+- preserved adapter boundaries.
+
+
+## Observability Review Gate
+
+Reject or request revision when:
+
+- Go code lacks required structured logging for request, operation, decision, or plugin lifecycle paths.
+- request_id or operation_id is not propagated where applicable.
+- errors do not expose stable reason codes where the API/operation surface requires them.
+- audit-worthy actions are only logged but not emitted as AuditEvents.
+- secrets, credentials, tokens, private keys, connection strings, or raw sensitive payloads can be logged.
+- the implementation summary does not describe observability and audit behavior.
+
+Use:
+
+- `docs/engineering/go-observability-standard.md`
+- `docs/architecture/observability-and-audit-baseline.md`

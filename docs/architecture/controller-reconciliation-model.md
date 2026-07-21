@@ -203,3 +203,17 @@ resources can be serialized as JSON/YAML
 ## 13. Final Principle
 
 Phase 1 may be simple internally, but the public resource model must be ready for future desired-state reconciliation.
+
+## Phase 2 Operation Adapter Extension
+
+Phase 3 may start with a simple Operation Controller v0, but the design must preserve an OperationEngineAdapter boundary so Temporal, Argo Workflows, Kubernetes Jobs, or controller-runtime reconciliation can be reused later.
+
+New concepts:
+
+- OperationEngineAdapter,
+- PluginExecutionRequest,
+- PluginExecutionResult,
+- OperationStep,
+- approval placeholder,
+- retry placeholder,
+- rollback placeholder.
