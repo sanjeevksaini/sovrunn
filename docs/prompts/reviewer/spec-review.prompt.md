@@ -28,26 +28,14 @@ Document content:
 
 ## Phase 2 Reuse and Drift Gates
 
-Every generated feature must include:
+Every FEATURE-0011-and-later feature must include a reuse assessment that
+conforms to the canonical standard:
 
-```markdown
-## Reuse Assessment
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
 
-### Existing mature solutions
-- ...
-
-### Decision
-Reuse / Wrap / Extend / Build
-
-### Sovrunn-owned responsibility
-- ...
-
-### Adapter boundary required?
-Yes / No
-
-### Non-goals
-- ...
-```
+Do not duplicate or redefine the assessment field schema in this document.
+Populate the feature-level reuse summary and capability-level assessments
+using the canonical fields and controlled vocabularies.
 
 Architecture drift checks:
 

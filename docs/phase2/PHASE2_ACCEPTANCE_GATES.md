@@ -30,6 +30,14 @@ Should Sovrunn reuse, wrap, extend, or build?
 What adapter boundary prevents recoding later?
 ```
 
+FEATURE-0011-and-later assessments must conform to the canonical standard:
+
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+
+The strict feature gate enforces structural and consistency validation
+(RA-S* / RA-C*). Human semantic review remains required for architecture
+approval. This gate section does not redefine the assessment field schema.
+
 ## 3. Architecture Drift Gate
 
 Check:

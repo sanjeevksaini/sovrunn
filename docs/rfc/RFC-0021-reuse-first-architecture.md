@@ -21,6 +21,14 @@ Every feature must classify work as:
 Reuse / Wrap / Extend / Build
 ```
 
+The mandatory assessment format, controlled vocabularies, mitigation
+fields, and validation rules are defined by the canonical standard:
+
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+
+This RFC does not redefine that schema. FEATURE-0011 consolidates and
+versions the standard; later features consume it by reference.
+
 Sovrunn builds governance, decisioning, placement, orchestration, audit, evidence, AI-readable context, and customer/provider experience.
 
 Sovrunn reuses or wraps mature systems for policy, IAM, secrets, workflow, Kubernetes control loops, PostgreSQL operations, observability, backup, networking, traffic, AI runtime, and persistence.

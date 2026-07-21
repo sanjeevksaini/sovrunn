@@ -55,12 +55,17 @@ Explain why this is recommended.
 
 ## Reuse-before-build assessment
 
-- Decision: Reuse / Wrap / Extend / Build
-- Mature reusable options considered:
+Populate this section using the canonical Reuse Assessment Standard fields
+and controlled vocabularies. Do not redefine the schema here.
+
+Canonical standard: `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+
+- Disposition: <Reuse | Wrap | Extend | Build>
+- Summary of mature candidates / applicable standards:
   - <option>
-- Sovrunn-owned responsibility:
+- Sovrunn-owned responsibility summary:
   - <responsibility>
-- Non-goals:
+- Non-goals summary:
   - <non-goal>
 
 ## Phase impact

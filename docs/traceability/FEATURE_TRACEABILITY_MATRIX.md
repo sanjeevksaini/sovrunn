@@ -4,7 +4,7 @@ This matrix links features to tenets, decisions, RFCs, tests, and gate status.
 
 | Feature | Phase | Status | Tenets | Decisions | RFCs | Tests/Gates | Notes |
 |---|---|---|---|---|---|---|---|
-| FEATURE-0011 | Phase 2 | Planned | TENET-017 | DEC-0018 | RFC-0021 | Pending | Reuse assessment standard |
+| FEATURE-0011 | Phase 2 | Planned | TENET-017 | DEC-0026, DEC-0036 | RFC-0021 | Pending | Reuse assessment standard (ADH-2026-011) |
 | FEATURE-0012 | Phase 2 | Planned | TENET-015 | DEC-0027 | RFC-0022 | Pending | API/resource standard |
 | FEATURE-0013 | Phase 2 | Planned | TENET-012, TENET-013 | DEC-0026 | RFC-0023 | Pending | Decision and AuditEvent standard |
 | FEATURE-0014 | Phase 2 | Planned | TENET-008 | DEC-0024 | RFC-0024 | Pending | Provider-neutral model |
