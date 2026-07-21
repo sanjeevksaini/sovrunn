@@ -58,6 +58,18 @@ Instruction to Kiro:
 <exact instruction>
 ```
 
+## Reuse Assessment Standard
+
+Reuse assessment format, controlled vocabularies, decision-status semantics,
+and change-control rules are defined only in:
+
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+
+This policy must not redefine the assessment field schema. An Approved
+assessment decision status does not substitute for stage-approval tokens
+(`APPROVED_FOR_DESIGN`, `APPROVED_FOR_TASKS`) or implementation
+authorization (`APPROVED_FOR_CURSOR`).
+
 ## Golden rule
 
 Kiro may decide wording, ordering, and formatting. Kiro may not decide architecture scope, implementation scope, or next-stage approval.

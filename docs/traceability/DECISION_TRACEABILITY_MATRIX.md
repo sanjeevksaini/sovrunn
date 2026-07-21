@@ -4,7 +4,8 @@ This matrix links decisions to architecture docs, RFCs, features, and validation
 
 | Decision | Status | Architecture Docs | RFCs | Features | Validation |
 |---|---|---|---|---|---|
-| DEC-0026 Reuse Before Build | Accepted | constitution, reuse-first architecture | RFC-0021 | FEATURE-0011 | Pending |
+| DEC-0026 Reuse Before Build | Accepted | constitution, reuse-first architecture, PHASE2_REUSE_ASSESSMENT_STANDARD | RFC-0021 | FEATURE-0011 | Pending |
+| DEC-0036 Adapter Boundaries Before External Integration | Accepted | adapter boundaries, PHASE2_REUSE_ASSESSMENT_STANDARD | RFC-0021 | FEATURE-0011 | Pending |
 | DEC-0027 Phase 2 Scope | Accepted | development-phases, PHASE2_SCOPE | RFC-0021 | FEATURE-0011..0026 | Pending |
 | DEC-0028 Policy Engine Abstraction | Accepted | policy-evaluation-abstraction | RFC-0025 | FEATURE-0017 | Pending |
 | DEC-0029 Plugin Taxonomy | Accepted | plugin-taxonomy-and-boundaries | RFC-0027 | FEATURE-0024 | Pending |

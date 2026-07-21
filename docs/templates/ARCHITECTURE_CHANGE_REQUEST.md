@@ -22,6 +22,9 @@ Choose one:
 
 ## Reuse Assessment
 
+Conform to `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`. Do not
+duplicate the canonical field schema in this template.
+
 ## Impacted Docs
 
 ## Impacted Features

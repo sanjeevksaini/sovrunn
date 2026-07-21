@@ -1,0 +1,30 @@
+# Expected diagnostics for Task 15 harness
+# format: fixture|expected_rule_id|expected_exit
+
+invalid/ra-s01-missing-section.md|RA-S01|1
+invalid/ra-s01-missing-identity-section.md|RA-S01|1
+invalid/ra-s02-missing-field.md|RA-S02|1
+invalid/ra-s02-prose-only-field.md|RA-S02|1
+invalid/ra-s02-empty-field.md|RA-S02|1
+invalid/ra-s02-empty-assessment-owner.md|RA-S02|1
+invalid/ra-s03-disposition.md|RA-S03|1
+invalid/ra-s04-decision-status.md|RA-S04|1
+invalid/ra-s05-adapter.md|RA-S05|1
+invalid/ra-s06-phase.md|RA-S06|1
+invalid/ra-s07-vendor-native.md|RA-S07|1
+invalid/ra-s08-replacement-risk.md|RA-S08|1
+invalid/ra-s09-missing-risk-control.md|RA-S09|1
+invalid/ra-s10-missing-traceability.md|RA-S10|1
+invalid/ra-s10-empty-traceability.md|RA-S10|1
+invalid/ra-c01-missing-adapter-rationale.md|RA-C01|1
+invalid/ra-c02-missing-dec0036.md|RA-C02|1
+invalid/ra-c04-bad-label.md|RA-C04|1
+invalid/ra-c05-missing-ref.md|RA-C05|1
+invalid/ra-c06-empty-adapter-id.md|RA-C06|1
+invalid/ra-c07-build-missing-rationale.md|RA-C07|1
+invalid/ra-c08-missing-corrective.md|RA-C08|1
+invalid/ra-c08-empty-risk-matrix.md|RA-C08|1
+invalid/ra-c09-version-mismatch.md|RA-C09|1
+invalid/ra-c09-version-missing.md|RA-C09|1
+invalid/ra-c11-missing-ack.md|RA-C11|1
+valid/complete-assessment.md||0

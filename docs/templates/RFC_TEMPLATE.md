@@ -18,6 +18,9 @@ Draft / Review / Approved / Superseded / Deprecated
 
 ## Reuse Assessment
 
+Conform to `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`. Do not
+duplicate the canonical field schema in this template.
+
 ## Adapter Boundaries
 
 ## Security Considerations
