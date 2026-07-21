@@ -1,10 +1,10 @@
 # Sovrunn Phase 2 Architecture Spine
 
-**Status:** Approved  
-**Phase:** Phase 2 — Reuse-First PaaS Fabric Foundation  
-**Approved date:** 2026-07-21  
-**Immediate feature:** FEATURE-0011 — Reuse Assessment Standard  
-**Scope:** Architecture and decision preparation only  
+**Status:** Approved
+**Phase:** Phase 2 — Reuse-First PaaS Fabric Foundation
+**Approved date:** 2026-07-21
+**Immediate feature:** FEATURE-0011 — Reuse Assessment Standard
+**Scope:** Architecture and decision preparation only
 **Controlling strategy:** `docs/phase2/PHASE2_EXECUTION_STRATEGY.md`
 
 ---
