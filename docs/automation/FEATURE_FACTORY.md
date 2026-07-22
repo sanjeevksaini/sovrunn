@@ -17,6 +17,30 @@ NEW → BRANCH_CREATED → REQUIREMENTS_GENERATED → REQUIREMENTS_APPROVED → 
 - Tasks approval
 - PR merge approval
 
+### Governed specification workflow
+
+Sovrunn feature-factory work must use stage-by-stage Kiro specification
+generation:
+
+1. Generate `requirements.md`.
+2. Obtain `APPROVED_FOR_DESIGN`.
+3. Generate `design.md`.
+4. Obtain `APPROVED_FOR_TASKS`.
+5. Generate `tasks.md`.
+6. Obtain `APPROVED_FOR_CURSOR`.
+
+Kiro Quick Plan must not be used for governed Sovrunn features because it
+generates requirements, design, and tasks without preserving the mandatory
+human approval boundary between stages.
+
+Use:
+
+```bash
+make -f Makefile.feature-factory \
+  ff-kiro-stage \
+  FEATURE=<FEATURE-ID> \
+  STAGE=requirements
+
 ## Level 1
 
 Scripts now run Kiro CLI and Cursor CLI headlessly by default, while still generating prompts/logs for auditability. Manual prompt mode remains available as an explicit fallback.
