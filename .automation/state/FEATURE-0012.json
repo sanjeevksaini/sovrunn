@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-07-22T15:03:30.420309+00:00",
+  "current_stage": "requirements",
+  "current_task": null,
+  "feature_branch": "feature-0012-api-resource-naming-status-and-validation-standard",
+  "feature_id": "FEATURE-0012",
+  "generated_prompt_path": "docs/generated-prompts/FEATURE-0012",
+  "human_gate_required": true,
+  "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+  "slug": "api-resource-naming-status-and-validation-standard",
+  "spec_path": ".kiro/specs/api-resource-naming-status-and-validation-standard",
+  "status": "branch_created",
+  "title": "API, Resource Naming, Status, and Validation Standard",
+  "updated_at": "2026-07-22T15:03:30.420503+00:00"
+}
