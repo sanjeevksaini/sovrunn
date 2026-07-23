@@ -334,7 +334,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-004, F12-SCOPE-002_
     - _Verification: unit tests — Platform scope normalized; non-platform scope unchanged; no-op for unknown kind; internal fault → error_
 
-  - [ ] 6.5c Implement semantic-validation stage (`internal/apivalid/stage_semantic.go`)
+  - [x] 6.5c Implement semantic-validation stage (`internal/apivalid/stage_semantic.go`)
     - Implements ValidationStage interface for the Semantic slot in StageSet
     - Receives the defaulted object from DefaultingStage
     - Common semantic validation includes: grammar-level naming rules
