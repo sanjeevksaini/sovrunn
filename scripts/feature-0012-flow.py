@@ -397,6 +397,21 @@ def allowed_rules(task_id: str) -> list[str]:
             "api/schemas/_common/",
             "internal/apiconform/common_schemas_test.go",
         ]
+    if task_id == "10.2":
+        # Task 10.2 creates the eight canonical resource schemas and may add
+        # the focused executable conformance test that verifies their
+        # annotations, field policies, registry loading, and structure.
+        return common + [
+            "api/schemas/project.json",
+            "api/schemas/resource-pool.json",
+            "api/schemas/discovered-database.json",
+            "api/schemas/plugin-definition.json",
+            "api/schemas/adapter-configuration.json",
+            "api/schemas/placement-evaluation-request.json",
+            "api/schemas/operation.json",
+            "api/schemas/audit-event.json",
+            "internal/apiconform/canonical_schemas_test.go",
+        ]
     if group == "10":
         return common + ["api/schemas/"]
     if group == "11":
