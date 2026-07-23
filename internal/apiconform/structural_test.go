@@ -1,11 +1,222 @@
 package apiconform
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 	"github.com/sanjeevksaini/sovrunn/internal/apischema"
 )
+
+const (
+	testSchemaID       = "api/schemas/example.json"
+	testCommonTypeMeta = "api/schemas/_common/type-meta.json"
+)
+
+func testStructuralValidator(t *testing.T, schemas map[string][]byte) *StructuralValidator {
+	t.Helper()
+	reg, err := NewMemorySchemaRegistry(schemas)
+	if err != nil {
+		t.Fatalf("NewMemorySchemaRegistry: %v", err)
+	}
+	resolver, err := NewLocalRefResolver(reg, DefaultMaxRefDepth)
+	if err != nil {
+		t.Fatalf("NewLocalRefResolver: %v", err)
+	}
+	cfg, err := NewStructuralValidatorConfig(reg, resolver)
+	if err != nil {
+		t.Fatalf("NewStructuralValidatorConfig: %v", err)
+	}
+	v, err := NewStructuralValidator(cfg)
+	if err != nil {
+		t.Fatalf("NewStructuralValidator: %v", err)
+	}
+	return v
+}
+
+func testExampleSchemas() map[string][]byte {
+	return map[string][]byte{
+		testSchemaID: []byte(`{
+			"type": "object",
+			"properties": {
+				"name": { "type": "string", "minLength": 1 },
+				"meta": { "$ref": "_common/type-meta.json" }
+			},
+			"required": ["name", "meta"],
+			"additionalProperties": false
+		}`),
+		testCommonTypeMeta: []byte(`{
+			"type": "object",
+			"properties": {
+				"apiVersion": { "type": "string", "minLength": 1 },
+				"kind": { "type": "string", "minLength": 1 }
+			},
+			"required": ["apiVersion", "kind"],
+			"additionalProperties": false
+		}`),
+	}
+}
+
+func hasViolation(vs []apiproblem.Violation, code, field string) bool {
+	for _, v := range vs {
+		if string(v.Code) == code && v.Field == field {
+			return true
+		}
+	}
+	return false
+}
+
+func TestNewStructuralValidator_NilRegistryRejected(t *testing.T) {
+	t.Parallel()
+
+	_, err := NewStructuralValidator(StructuralValidatorConfig{})
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("zero config: err=%v, want ErrStructuralValidator", err)
+	}
+}
+
+func TestNewStructuralValidator_NilResolverRejected(t *testing.T) {
+	t.Parallel()
+
+	reg, err := NewMemorySchemaRegistry(map[string][]byte{
+		testCommonTypeMeta: []byte(`{"type":"object"}`),
+	})
+	if err != nil {
+		t.Fatalf("NewMemorySchemaRegistry: %v", err)
+	}
+	// Bypass NewStructuralValidatorConfig so we can isolate nil-resolver
+	// rejection on the adapter constructor itself.
+	cfg := StructuralValidatorConfig{registry: reg, resolver: nil}
+	_, err = NewStructuralValidator(cfg)
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("nil resolver: err=%v, want ErrStructuralValidator", err)
+	}
+}
+
+func TestStructuralValidator_AcceptsValidInstance(t *testing.T) {
+	t.Parallel()
+
+	v := testStructuralValidator(t, testExampleSchemas())
+	instance := map[string]any{
+		"name": "demo",
+		"meta": map[string]any{
+			"apiVersion": "platform.sovrunn.io/v1",
+			"kind":       "Project",
+		},
+	}
+
+	violations, err := v.Validate(instance, testSchemaID)
+	if err != nil {
+		t.Fatalf("Validate: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Fatalf("valid instance: violations=%#v, want none", violations)
+	}
+}
+
+func TestStructuralValidator_RejectsInvalidInstanceWithViolations(t *testing.T) {
+	t.Parallel()
+
+	v := testStructuralValidator(t, testExampleSchemas())
+	instance := map[string]any{
+		"meta": map[string]any{
+			"apiVersion": "platform.sovrunn.io/v1",
+			"kind":       "Project",
+		},
+	}
+
+	violations, err := v.Validate(instance, testSchemaID)
+	if err != nil {
+		t.Fatalf("Validate: %v", err)
+	}
+	if !hasViolation(violations, apischema.CodeRequiredField, "/name") {
+		t.Fatalf("want %s at /name, got %#v", apischema.CodeRequiredField, violations)
+	}
+}
+
+func TestStructuralValidator_MissingSchemaReturnsError(t *testing.T) {
+	t.Parallel()
+
+	v := testStructuralValidator(t, testExampleSchemas())
+	violations, err := v.Validate(map[string]any{"name": "demo"}, "api/schemas/missing.json")
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("missing schema: err=%v, want ErrStructuralValidator", err)
+	}
+	if !errors.Is(err, ErrSchemaNotFound) {
+		t.Fatalf("missing schema: err=%v, want ErrSchemaNotFound cause", err)
+	}
+	if violations != nil {
+		t.Fatalf("missing schema: violations=%#v, want nil", violations)
+	}
+}
+
+func TestStructuralValidator_NilRegistryOnValidateReturnsError(t *testing.T) {
+	t.Parallel()
+
+	// Zero-value adapter (not constructed via NewStructuralValidator) must
+	// fail closed rather than panic or silently skip structural checks.
+	var v StructuralValidator
+	violations, err := v.Validate(map[string]any{"name": "demo"}, testSchemaID)
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("nil registry validate: err=%v, want ErrStructuralValidator", err)
+	}
+	if violations != nil {
+		t.Fatalf("nil registry validate: violations=%#v, want nil", violations)
+	}
+}
+
+func TestStructuralValidator_RefResolutionFailureReturnsError(t *testing.T) {
+	t.Parallel()
+
+	schemas := map[string][]byte{
+		testSchemaID: []byte(`{
+			"type": "object",
+			"properties": {
+				"meta": { "$ref": "_common/missing.json" }
+			}
+		}`),
+	}
+	v := testStructuralValidator(t, schemas)
+	violations, err := v.Validate(map[string]any{"meta": map[string]any{}}, testSchemaID)
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("ref failure: err=%v, want ErrStructuralValidator", err)
+	}
+	if !errors.Is(err, ErrSchemaNotFound) && !errors.Is(err, ErrRefRejected) {
+		t.Fatalf("ref failure: err=%v, want ErrSchemaNotFound or ErrRefRejected cause", err)
+	}
+	if violations != nil {
+		t.Fatalf("ref failure: violations=%#v, want nil", violations)
+	}
+}
+
+func TestStructuralValidator_UnsupportedSchemaReturnsViolations(t *testing.T) {
+	t.Parallel()
+
+	schemas := map[string][]byte{
+		testSchemaID: []byte(`{"oneOf":[{"type":"string"}]}`),
+	}
+	v := testStructuralValidator(t, schemas)
+	violations, err := v.Validate("x", testSchemaID)
+	if err != nil {
+		t.Fatalf("unsupported schema must be ordinary violations, err=%v", err)
+	}
+	if !hasViolation(violations, apischema.CodeUnsupportedKeyword, "/oneOf") {
+		t.Fatalf("want %s at /oneOf, got %#v", apischema.CodeUnsupportedKeyword, violations)
+	}
+}
+
+func TestStructuralValidator_NilReceiverReturnsError(t *testing.T) {
+	t.Parallel()
+
+	var v *StructuralValidator
+	violations, err := v.Validate(map[string]any{}, testSchemaID)
+	if !errors.Is(err, ErrStructuralValidator) {
+		t.Fatalf("nil receiver: err=%v, want ErrStructuralValidator", err)
+	}
+	if violations != nil {
+		t.Fatalf("nil receiver: violations=%#v, want nil", violations)
+	}
+}
 
 func TestSchemaIssuesToViolationsMapsPathCodeMessage(t *testing.T) {
 	issues := []apischema.SchemaIssue{

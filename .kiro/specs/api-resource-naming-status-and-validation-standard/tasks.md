@@ -518,7 +518,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-006_
     - _Verification: unit test — SchemaIssue with path/code maps to equivalent Violation_
 
-  - [ ] 8.2 Implement StructuralValidator adapter in apiconform (`internal/apiconform/structural.go`)
+  - [x] 8.2 Implement StructuralValidator adapter in apiconform (`internal/apiconform/structural.go`)
     - Implements the `apivalid.StructuralValidator` interface: `Validate(instance any, schemaID string) ([]apiproblem.Violation, error)`
     - Constructor receives StructuralValidatorConfig from task 7a.3
       explicitly
