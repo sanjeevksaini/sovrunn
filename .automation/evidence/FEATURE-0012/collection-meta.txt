@@ -1,0 +1,6 @@
+head=3cb1dd7f9d4884a674f1592f5cf99babee512357
+head_short=3cb1dd7
+task_17_2_commit=3cb1dd7f9d4884a674f1592f5cf99babee512357
+collected_at_utc=2026-07-23T16:53:31Z
+branch=feature-0012-api-resource-naming-status-and-validation-standard
+go_docker_image=golang:1.22

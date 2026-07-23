@@ -848,7 +848,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-002_
     - _Verification: `make ff-feature-gate FEATURE=FEATURE-0012` passes_
 
-- [ ] 17. Baseline protected-review governance and full verification
+- [x] 17. Baseline protected-review governance and full verification
   - [x] 17.1 Configure CODEOWNERS for baseline protected review
     - Inspect existing CODEOWNERS for the repository owner pattern already in use
     - Update CODEOWNERS to include `api/schemas/baseline/**` using the existing owner identity; do NOT invent an owner
@@ -864,7 +864,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-002, F12-IMPL-001_
     - _Verification: all commands exit 0_
 
-  - [ ] 17.3 Collect human-review evidence and mark PENDING_HUMAN_REVIEW
+  - [x] 17.3 Collect human-review evidence and mark PENDING_HUMAN_REVIEW
     - Collect and stage for human review: test and feature-gate output, changed-file inventory, compatibility-report evidence, boundary-ledger evidence, Matrix E residual-risk review inputs
     - Mark the result PENDING_HUMAN_REVIEW and stop
     - The coding agent MUST NOT: write an approval token, mark the implementation approved, invent a reviewer, invent a review date, or accept residual risk on behalf of a human
