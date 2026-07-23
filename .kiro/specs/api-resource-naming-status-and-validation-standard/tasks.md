@@ -823,7 +823,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-IMPL-002, F12-VERIFY-001(14,15)_
     - _Verification: `go test ./internal/apiconform/...` — checks 14, 15 pass_
 
-  - [ ] 16.5 Implement fitness function aggregation and boundary-ledger check (`internal/apiconform/fitness.go`)
+  - [x] 16.5 Implement fitness function aggregation and boundary-ledger check (`internal/apiconform/fitness.go`)
     - Aggregation: prove all checks 1–15 are registered and executed in a single test
     - Boundary-ledger: parse `docs/api/boundary-ledger.yaml` strictly; assert every declared boundary carries all F12-LEDGER-001 categories; assert every boundary present in canonical schemas has a ledger entry
     - _Design: D-12; architecture §8.2_

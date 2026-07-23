@@ -124,39 +124,8 @@ func TestBoundaryLedgerMarkdownGenerator(t *testing.T) {
 }
 
 func assertLedgerCategoriesPresent(entry BoundaryLedgerEntry) error {
-	checks := map[string]bool{
-		"purpose":              strings.TrimSpace(entry.Purpose) != "",
-		"owner":                strings.TrimSpace(entry.Owner) != "",
-		"producers":            len(entry.Producers) > 0 && allNonEmpty(entry.Producers),
-		"consumers":            len(entry.Consumers) > 0 && allNonEmpty(entry.Consumers),
-		"allowed_data":         len(entry.AllowedData) > 0 && allNonEmpty(entry.AllowedData),
-		"prohibited_data":      len(entry.ProhibitedData) > 0 && allNonEmpty(entry.ProhibitedData),
-		"authorization":        strings.TrimSpace(entry.Authorization) != "",
-		"audit":                strings.TrimSpace(entry.Audit) != "",
-		"observability":        strings.TrimSpace(entry.Observability) != "",
-		"failure_behavior":     strings.TrimSpace(entry.FailureBehavior) != "",
-		"versioning":           strings.TrimSpace(entry.Versioning) != "",
-		"replacement_path":     strings.TrimSpace(entry.ReplacementPath) != "",
-		"migration_path":       strings.TrimSpace(entry.MigrationPath) != "",
-		"reassessment_trigger": strings.TrimSpace(entry.ReassessmentTrigger) != "",
-	}
-	for _, cat := range requiredLedgerCategories {
-		ok, present := checks[cat]
-		if !present {
-			return fmt.Errorf("internal test bug: missing check for category %q", cat)
-		}
-		if !ok {
-			return fmt.Errorf("F12-LEDGER-001 category %q is missing or empty", cat)
-		}
+	if missing := LedgerEntryCategoryGaps(entry); len(missing) > 0 {
+		return fmt.Errorf("F12-LEDGER-001 category %q is missing or empty", missing[0])
 	}
 	return nil
-}
-
-func allNonEmpty(values []string) bool {
-	for _, v := range values {
-		if strings.TrimSpace(v) == "" {
-			return false
-		}
-	}
-	return true
 }
