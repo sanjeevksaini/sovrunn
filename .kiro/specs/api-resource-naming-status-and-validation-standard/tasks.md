@@ -670,7 +670,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-FIXTURE-001, F12-FIXTURE-002, F12-NAMING-005_
     - _Verification: `go build ./internal/apiconform` compiles; types match canonical schema structure_
 
-  - [ ] 12.2 Register TypeBindings in apiconform (`internal/apiconform/bindings.go`)
+  - [x] 12.2 Register TypeBindings in apiconform (`internal/apiconform/bindings.go`)
     - Populate concrete TypeBinding slice mapping each canonical schema and _common sub-schema to its corresponding Go type
     - Tests call apischema.VerifyGoTypeAgainstSchema for each binding
     - Keeps concrete bindings in apiconform so apischema does not import apiconform (no cycle)
