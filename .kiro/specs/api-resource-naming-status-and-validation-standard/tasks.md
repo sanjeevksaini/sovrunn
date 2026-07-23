@@ -228,7 +228,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.1, 4.9 (F12-NAMING-005, F12-VALIDATION-001(4))**
     - _Verification: `go test ./internal/apischema/...` passes with -count=1_
 
-- [ ] 6. Validation pipeline, limits, concurrency, and layer-8 authorization infrastructure
+- [x] 6. Validation pipeline, limits, concurrency, and layer-8 authorization infrastructure
   - [x] 6.1 Implement Limits struct with reviewed defaults (`internal/apivalid/limits.go`)
     - Limits struct with all fields per design (MaxObjectBytes 1MiB, MaxNestingDepth 32, MaxLabels 64, MaxLabelKeyChars 63, MaxLabelValueChars 253, MaxAnnotationsBytes 256KiB, MaxConditions 32, MaxReferencesPerField 64, MaxViolations 100, DefaultPageSize 50, MaxPageSize 200)
     - _Design: D-06_
@@ -454,7 +454,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.4, 7.4 (F12-SEC-004, F12-SCOPE-002)**
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
-  - [ ] 6.11 Write property test for Operation target-scope equality (Property 11)
+  - [x] 6.11 Write property test for Operation target-scope equality (Property 11)
     - **Property 11: Operation target-scope equality**
     - For any Operation, scopeRef MUST equal the resolved canonical governance scope of targetRef
     - Generated positive tests: each of six scopes with matching target; platform nil scope with platform target; matching non-platform UID
