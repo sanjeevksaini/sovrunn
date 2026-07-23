@@ -872,7 +872,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-003, F12-RISK-001_
     - _Verification: evidence collected; status marked PENDING_HUMAN_REVIEW; no approval token written by agent_
 
-- [ ] 18. Final checkpoint — feature gate passes
+- [x] 18. Final checkpoint — feature gate passes
   - Run: `make fmt`; `git diff --check`; `go test ./...`; `go test -race ./...`; `go vet ./...`; `make ff-feature-gate FEATURE=FEATURE-0012`
   - Confirm: no runtime routes added; no domain services created; requirements.md and design.md unchanged
   - All tests must pass; the feature gate must exit 0
