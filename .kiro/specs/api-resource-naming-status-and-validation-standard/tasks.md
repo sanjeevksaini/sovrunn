@@ -467,7 +467,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.4, 4.5 (F12-SCOPE-002, F12-REF-001; D-17)**
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
-- [ ] 7. Checkpoint — validation infrastructure compiles and passes
+- [x] 7. Checkpoint — validation infrastructure compiles and passes
   - Run: `make fmt`; `git diff --check`; `go test ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`; `go test -race ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`; `go vet ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`
   - Covers: all primitive packages (tasks 2.1–2.8), apivalid pipeline + stages + authz (tasks 4–6), apischema subset validation (task 5), apiconform import-boundary test (task 1.3), structural fail-closed tests (task 6.6), layer 5–7 tests (task 6.7a), layer-8 configuration tests (task 6.7)
   - All tests must pass before proceeding to task group 7a
