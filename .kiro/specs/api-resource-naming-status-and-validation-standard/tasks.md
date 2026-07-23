@@ -102,7 +102,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-STATUS-002, F12-STATUS-003_
     - _Verification: `go test ./internal/apicond/...` — transition time invariant; conditions-not-history_
 
-  - [ ] 2.6 Implement RFC 9457 Problem, Violation, stable codes, and generic HTTP status mapping (`internal/apiproblem`)
+  - [x] 2.6 Implement RFC 9457 Problem, Violation, stable codes, and generic HTTP status mapping (`internal/apiproblem`)
     - `problem.go`: Problem struct with type/title/status/detail/instance/code/requestId/violations
     - `codes.go`: stable ErrorCode constants + violation-code registry (including OPERATION_TARGET_SCOPE_MISMATCH)
     - `httpmap.go`: failure-class to HTTP status mapping per F12-ERROR-002 baseline (generic mapping only; no Decision/SafeDenial here)
