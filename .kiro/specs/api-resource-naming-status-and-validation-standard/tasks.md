@@ -355,7 +355,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
       authorization never substitutes ownerRef for scopeRef; over-limit →
       violation; internal fault → error_
 
-  - [ ] 6.5d Implement structural reference/kind/scope-validation stage (`internal/apivalid/stage_reference.go`)
+  - [x] 6.5d Implement structural reference/kind/scope-validation stage (`internal/apivalid/stage_reference.go`)
     - Implements ValidationStage interface for the Reference slot in StageSet
     - Receives the defaulted object from DefaultingStage
     - Construction receives trusted reference constraints and allowed scopes; these are not accepted as arbitrary caller input
