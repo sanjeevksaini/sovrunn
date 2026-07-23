@@ -661,7 +661,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: unit test with a deliberately mismatched Go type fails; correct type passes_
 
 - [ ] 12. Conformance-only Go contract types, boundary ledger, and TypeBinding registry
-  - [ ] 12.1 Implement conformance-only Go contract types (`internal/apiconform/contracts.go`)
+  - [x] 12.1 Implement conformance-only Go contract types (`internal/apiconform/contracts.go`)
     - Concrete Go structs for all eight canonical schemas: Project, ResourcePool, DiscoveredDatabase, PluginDefinition, AdapterConfiguration, PlacementEvaluationRequest, Operation, AuditEvent
     - Each struct uses apimeta types (TypeMeta, ObjectMeta, ScopeRef, etc.) and explicit JSON tags
     - Operation type includes fields for targetRef, scopeRef (per D-17), ownerRef
