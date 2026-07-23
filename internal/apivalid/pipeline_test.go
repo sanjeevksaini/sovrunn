@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -21,8 +23,10 @@ var (
 	_ ScopeAuthorizer               = trackingScopeAuthorizer{}
 	_ AuthorizedTargetScopeResolver = trackingTargetScopeResolver{}
 	_ DefaultingStage               = trackingDefaultingStage{}
+	_ DefaultingStage               = orderingDefaultingStage{}
 	_ ValidationStage               = trackingValidationStage{}
 	_ ValidationStage               = capturingValidationStage{}
+	_ ValidationStage               = orderingValidationStage{}
 )
 
 // trackingDefaultingStage is a deterministic stage stub for pipeline tests.
@@ -724,7 +728,8 @@ func TestValidateLayer8GenericNonOperationStopsAfterLayer7(t *testing.T) {
 	}
 }
 
-// --- Task 6.5e: layers 5–7 stage invocation ---
+// --- Task 6.7a: layer 5–7 ordering and fail-closed ---
+// (Also covers Task 6.5e stage-invocation verification.)
 
 func TestValidateNilRequiredDefaultingStage(t *testing.T) {
 	t.Parallel()
@@ -1029,6 +1034,68 @@ func TestValidateReferenceStageError(t *testing.T) {
 	if authCalls.Load() != 0 {
 		t.Fatalf("layer-8 ran after reference error")
 	}
+}
+
+// TestValidateLayers57StrictSideEffectOrder proves layers 5→6→7 run in
+// strict sequential order via recorded side effects (task 6.7a).
+func TestValidateLayers57StrictSideEffectOrder(t *testing.T) {
+	t.Parallel()
+
+	var (
+		mu    sync.Mutex
+		order []string
+	)
+	record := func(label string) {
+		mu.Lock()
+		defer mu.Unlock()
+		order = append(order, label)
+	}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: orderingDefaultingStage{record: record},
+			Semantic:   orderingValidationStage{label: "6-semantic", record: record},
+			Reference:  orderingValidationStage{label: "7-reference", record: record},
+		},
+	}, DefaultLimits())
+
+	if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
+		t.Fatalf("unexpected failure: %#v", res)
+	}
+	want := []string{"5-defaulting", "6-semantic", "7-reference"}
+	mu.Lock()
+	got := append([]string(nil), order...)
+	mu.Unlock()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("layer side-effect order = %v, want %v", got, want)
+	}
+}
+
+// orderingDefaultingStage records a side-effect label when Apply runs.
+type orderingDefaultingStage struct {
+	record func(string)
+}
+
+func (s orderingDefaultingStage) Apply(_ context.Context, object any) (any, error) {
+	if s.record != nil {
+		s.record("5-defaulting")
+	}
+	return object, nil
+}
+
+// orderingValidationStage records a side-effect label when Validate runs.
+type orderingValidationStage struct {
+	label  string
+	record func(string)
+}
+
+func (s orderingValidationStage) Validate(_ context.Context, _ any) ([]apiproblem.Violation, error) {
+	if s.record != nil {
+		s.record(s.label)
+	}
+	return nil, nil
 }
 
 // capturingValidationStage records the object passed to Validate so tests

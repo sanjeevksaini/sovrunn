@@ -413,7 +413,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-SCOPE-002, F12-SEC-004_
     - _Verification: `go test ./internal/apivalid/...` passes_
 
-  - [ ] 6.7a Write layer 5–7 ordering and fail-closed tests (`internal/apivalid/pipeline_test.go`)
+  - [x] 6.7a Write layer 5–7 ordering and fail-closed tests (`internal/apivalid/pipeline_test.go`)
     - Test: nil required defaulting stage → 500 INTERNAL_ERROR at LayerDefaulting, no later layers
     - Test: defaulting stage returns error → 500 at LayerDefaulting, no semantic or reference layer runs
     - Test: nil required semantic stage → 500 INTERNAL_ERROR at LayerSemantic, no reference layer
