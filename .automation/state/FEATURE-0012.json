@@ -1,7 +1,7 @@
 {
   "architecture_clarification_id": "ADH-2026-013",
   "created_at": "2026-07-22T15:03:30.420309+00:00",
-  "current_stage": "tasks",
+  "current_stage": "cursor",
   "current_task": null,
   "design_approval_superseded_by": "ADH-2026-013",
   "design_approval_token": "APPROVED_FOR_TASKS",
@@ -18,7 +18,10 @@
   "requirements_approved_by": "Sanjeev Kumar",
   "slug": "api-resource-naming-status-and-validation-standard",
   "spec_path": ".kiro/specs/api-resource-naming-status-and-validation-standard",
-  "status": "design_approved",
+  "status": "tasks_approved",
+  "tasks_approval_token": "APPROVED_FOR_CURSOR",
+  "tasks_approved_at": "2026-07-23T04:02:29.394184+00:00",
+  "tasks_approved_by": "Sanjeev Kumar",
   "title": "API, Resource Naming, Status, and Validation Standard",
-  "updated_at": "2026-07-23T02:39:43.178011+00:00"
+  "updated_at": "2026-07-23T04:02:29.394184+00:00"
 }
