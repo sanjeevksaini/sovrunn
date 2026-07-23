@@ -12,13 +12,71 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/apiref"
 )
 
-// Compile-time StructuralValidator conformance for pipeline stubs.
+// Compile-time StructuralValidator / stage conformance for pipeline stubs.
 var (
 	_ StructuralValidator           = stubStructuralValidator{}
 	_ StructuralValidator           = trackingStructuralValidator{}
 	_ ScopeAuthorizer               = trackingScopeAuthorizer{}
 	_ AuthorizedTargetScopeResolver = trackingTargetScopeResolver{}
+	_ DefaultingStage               = trackingDefaultingStage{}
+	_ ValidationStage               = trackingValidationStage{}
+	_ ValidationStage               = capturingValidationStage{}
 )
+
+// trackingDefaultingStage is a deterministic stage stub for pipeline tests.
+// A zero value is an explicit no-op that returns the input object unchanged.
+type trackingDefaultingStage struct {
+	calls *atomic.Int32
+	err   error
+	out   any // when non-nil, returned instead of the input object
+}
+
+func (s trackingDefaultingStage) Apply(_ context.Context, object any) (any, error) {
+	if s.calls != nil {
+		s.calls.Add(1)
+	}
+	if s.err != nil {
+		return nil, s.err
+	}
+	if s.out != nil {
+		return s.out, nil
+	}
+	return object, nil
+}
+
+// trackingValidationStage is a deterministic semantic/reference stage stub.
+// A zero value is an explicit no-op that returns no violations.
+type trackingValidationStage struct {
+	calls      *atomic.Int32
+	err        error
+	violations []apiproblem.Violation
+}
+
+func (s trackingValidationStage) Validate(_ context.Context, _ any) ([]apiproblem.Violation, error) {
+	if s.calls != nil {
+		s.calls.Add(1)
+	}
+	if s.err != nil {
+		return nil, s.err
+	}
+	if len(s.violations) == 0 {
+		return nil, nil
+	}
+	out := make([]apiproblem.Violation, len(s.violations))
+	copy(out, s.violations)
+	return out, nil
+}
+
+// passThroughStages returns an explicit StageSet of deterministic no-op
+// stages so layer-8 and structural-pass tests can reach later layers
+// without silently omitting stages 5–7.
+func passThroughStages() StageSet {
+	return StageSet{
+		Defaulting: trackingDefaultingStage{},
+		Semantic:   trackingValidationStage{},
+		Reference:  trackingValidationStage{},
+	}
+}
 
 type stubStructuralValidator struct {
 	violations []apiproblem.Violation
@@ -228,7 +286,8 @@ func TestValidateStructuralPassGenericStopsAfterLayer7(t *testing.T) {
 			inner: stubStructuralValidator{},
 			calls: calls,
 		},
-		Dst: map[string]any{"ok": true},
+		Dst:    map[string]any{"ok": true},
+		Stages: passThroughStages(),
 		// OperationScope nil → generic non-Operation path.
 	}, DefaultLimits())
 
@@ -263,6 +322,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "neither TargetScope nor TargetScopeResolver",
 			in: Input{
 				Validator:      passing,
+				Stages:         passThroughStages(),
 				OperationScope: &op,
 				TargetRef:      &target,
 				Caller:         caller,
@@ -272,6 +332,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "both TargetScope and TargetScopeResolver",
 			in: Input{
 				Validator:           passing,
+				Stages:              passThroughStages(),
 				OperationScope:      &op,
 				TargetRef:           &target,
 				TargetScope:         &ts,
@@ -284,6 +345,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "missing Caller",
 			in: Input{
 				Validator:      passing,
+				Stages:         passThroughStages(),
 				OperationScope: &op,
 				TargetRef:      &target,
 				TargetScope:    &ts,
@@ -294,6 +356,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "missing TargetRef",
 			in: Input{
 				Validator:      passing,
+				Stages:         passThroughStages(),
 				OperationScope: &op,
 				TargetScope:    &ts,
 				Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
@@ -304,6 +367,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "incomplete Path A Authorizer nil",
 			in: Input{
 				Validator:      passing,
+				Stages:         passThroughStages(),
 				OperationScope: &op,
 				TargetRef:      &target,
 				TargetScope:    &ts,
@@ -314,6 +378,7 @@ func TestValidateLayer8InvalidConfigs(t *testing.T) {
 			name: "incomplete Path B Caller nil",
 			in: Input{
 				Validator:           passing,
+				Stages:              passThroughStages(),
 				OperationScope:      &op,
 				TargetRef:           &target,
 				TargetScopeResolver: trackingTargetScopeResolver{scope: ts, available: true, calls: resolverCalls},
@@ -351,6 +416,7 @@ func TestValidateLayer8PathAAllowMatch(t *testing.T) {
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
+		Stages:         passThroughStages(),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -375,6 +441,7 @@ func TestValidateLayer8PathAAllowMismatch(t *testing.T) {
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
+		Stages:         passThroughStages(),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -408,6 +475,7 @@ func TestValidateLayer8PathADenyNotDisclosed(t *testing.T) {
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
+		Stages:         passThroughStages(),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -439,6 +507,7 @@ func TestValidateLayer8PathBAvailableMatch(t *testing.T) {
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
+		Stages:         passThroughStages(),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScopeResolver: trackingTargetScopeResolver{
@@ -465,6 +534,7 @@ func TestValidateLayer8PathBUnavailableSafeDenial(t *testing.T) {
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
+		Stages:         passThroughStages(),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScopeResolver: stubAuthorizedTargetScopeResolver{
@@ -482,4 +552,332 @@ func TestValidateLayer8PathBUnavailableSafeDenial(t *testing.T) {
 	if len(res.Violations) != 0 {
 		t.Fatalf("Violations must be empty; mismatch must not be disclosed, got %#v", res.Violations)
 	}
+}
+
+// --- Task 6.5e: layers 5–7 stage invocation ---
+
+func TestValidateNilRequiredDefaultingStage(t *testing.T) {
+	t.Parallel()
+
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: nil,
+			Semantic:   trackingValidationStage{calls: semCalls},
+			Reference:  trackingValidationStage{calls: refCalls},
+		},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerDefaulting)
+	if res.Err.Error() != "nil defaulting stage" {
+		t.Fatalf("Err = %v, want nil defaulting stage", res.Err)
+	}
+	if semCalls.Load() != 0 || refCalls.Load() != 0 {
+		t.Fatalf("later stages ran: semantic=%d reference=%d", semCalls.Load(), refCalls.Load())
+	}
+}
+
+func TestValidateNilRequiredSemanticStage(t *testing.T) {
+	t.Parallel()
+
+	defCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{calls: defCalls},
+			Semantic:   nil,
+			Reference:  trackingValidationStage{calls: refCalls},
+		},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerSemantic)
+	if res.Err.Error() != "nil semantic stage" {
+		t.Fatalf("Err = %v, want nil semantic stage", res.Err)
+	}
+	if defCalls.Load() != 1 {
+		t.Fatalf("defaulting calls = %d, want 1", defCalls.Load())
+	}
+	if refCalls.Load() != 0 {
+		t.Fatalf("reference called %d times after nil semantic", refCalls.Load())
+	}
+}
+
+func TestValidateNilRequiredReferenceStage(t *testing.T) {
+	t.Parallel()
+
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{calls: defCalls},
+			Semantic:   trackingValidationStage{calls: semCalls},
+			Reference:  nil,
+		},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerReference)
+	if res.Err.Error() != "nil reference stage" {
+		t.Fatalf("Err = %v, want nil reference stage", res.Err)
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 {
+		t.Fatalf("earlier stage calls: defaulting=%d semantic=%d", defCalls.Load(), semCalls.Load())
+	}
+}
+
+func TestValidateDefaultingStageErrorStopsLaterLayers(t *testing.T) {
+	t.Parallel()
+
+	cause := errors.New("defaulting fault")
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{err: cause},
+			Semantic:   trackingValidationStage{calls: semCalls},
+			Reference:  trackingValidationStage{calls: refCalls},
+		},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerDefaulting)
+	if !errors.Is(res.Err, cause) {
+		t.Fatalf("Err = %v, want %v", res.Err, cause)
+	}
+	if semCalls.Load() != 0 || refCalls.Load() != 0 {
+		t.Fatalf("later stages ran after defaulting error: semantic=%d reference=%d", semCalls.Load(), refCalls.Load())
+	}
+}
+
+func TestValidateSemanticViolationsStopBeforeReference(t *testing.T) {
+	t.Parallel()
+
+	v := apiproblem.Violation{
+		Field:   "/metadata/name",
+		Code:    ViolationInvalidResourceName,
+		Message: "invalid name",
+	}
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+	authCalls := &atomic.Int32{}
+	op := platformScope()
+	target := sampleTargetRef()
+	ts := platformScope()
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{calls: defCalls},
+			Semantic: trackingValidationStage{
+				calls:      semCalls,
+				violations: []apiproblem.Violation{v},
+			},
+			Reference: trackingValidationStage{calls: refCalls},
+		},
+		OperationScope: &op,
+		TargetRef:      &target,
+		TargetScope:    &ts,
+		Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+		Caller:         &CallerContext{},
+	}, DefaultLimits())
+
+	if res.FailedAt != LayerSemantic {
+		t.Fatalf("FailedAt = %v, want %v", res.FailedAt, LayerSemantic)
+	}
+	if res.Problem != nil || res.Err != nil {
+		t.Fatalf("Problem/Err must be nil for ordinary violations: Problem=%v Err=%v", res.Problem, res.Err)
+	}
+	if len(res.Violations) != 1 || res.Violations[0] != v {
+		t.Fatalf("Violations = %#v, want %#v", res.Violations, []apiproblem.Violation{v})
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 {
+		t.Fatalf("calls: defaulting=%d semantic=%d", defCalls.Load(), semCalls.Load())
+	}
+	if refCalls.Load() != 0 {
+		t.Fatalf("reference called %d times; must stop at LayerSemantic", refCalls.Load())
+	}
+	if authCalls.Load() != 0 {
+		t.Fatalf("layer-8 Authorizer called %d times after semantic violations", authCalls.Load())
+	}
+}
+
+func TestValidateReferenceViolationsStopAtLayerReference(t *testing.T) {
+	t.Parallel()
+
+	v := apiproblem.Violation{
+		Field:   "/spec/targetRef",
+		Code:    apiproblem.ViolationCode(apiref.CodeKindNotAllowed),
+		Message: "kind not allowed",
+	}
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+	authCalls := &atomic.Int32{}
+	op := platformScope()
+	target := sampleTargetRef()
+	ts := platformScope()
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{calls: defCalls},
+			Semantic:   trackingValidationStage{calls: semCalls},
+			Reference: trackingValidationStage{
+				calls:      refCalls,
+				violations: []apiproblem.Violation{v},
+			},
+		},
+		OperationScope: &op,
+		TargetRef:      &target,
+		TargetScope:    &ts,
+		Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+		Caller:         &CallerContext{},
+	}, DefaultLimits())
+
+	if res.FailedAt != LayerReference {
+		t.Fatalf("FailedAt = %v, want %v", res.FailedAt, LayerReference)
+	}
+	if res.Problem != nil || res.Err != nil {
+		t.Fatalf("Problem/Err must be nil for ordinary violations: Problem=%v Err=%v", res.Problem, res.Err)
+	}
+	if len(res.Violations) != 1 || res.Violations[0] != v {
+		t.Fatalf("Violations = %#v, want %#v", res.Violations, []apiproblem.Violation{v})
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 || refCalls.Load() != 1 {
+		t.Fatalf("calls: defaulting=%d semantic=%d reference=%d", defCalls.Load(), semCalls.Load(), refCalls.Load())
+	}
+	if authCalls.Load() != 0 {
+		t.Fatalf("layer-8 Authorizer called %d times after reference violations", authCalls.Load())
+	}
+}
+
+func TestValidateNoOpStagesPassThroughAndAreInvoked(t *testing.T) {
+	t.Parallel()
+
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+	defaultedMarker := &struct{ label string }{label: "defaulted"}
+	var gotSemantic any
+	var gotReference any
+
+	sem := capturingValidationStage{calls: semCalls, capture: &gotSemantic}
+	ref := capturingValidationStage{calls: refCalls, capture: &gotReference}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"raw": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{calls: defCalls, out: defaultedMarker},
+			Semantic:   sem,
+			Reference:  ref,
+		},
+	}, DefaultLimits())
+
+	if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
+		t.Fatalf("unexpected failure: %#v", res)
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 || refCalls.Load() != 1 {
+		t.Fatalf("no-op stages must still be invoked: defaulting=%d semantic=%d reference=%d",
+			defCalls.Load(), semCalls.Load(), refCalls.Load())
+	}
+	if gotSemantic != defaultedMarker {
+		t.Fatalf("semantic received %#v, want defaulted object", gotSemantic)
+	}
+	if gotReference != defaultedMarker {
+		t.Fatalf("reference received %#v, want defaulted object", gotReference)
+	}
+}
+
+func TestValidateSemanticStageErrorStopsBeforeReference(t *testing.T) {
+	t.Parallel()
+
+	cause := errors.New("semantic fault")
+	refCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{},
+			Semantic:   trackingValidationStage{err: cause},
+			Reference:  trackingValidationStage{calls: refCalls},
+		},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerSemantic)
+	if !errors.Is(res.Err, cause) {
+		t.Fatalf("Err = %v, want %v", res.Err, cause)
+	}
+	if refCalls.Load() != 0 {
+		t.Fatalf("reference called %d times after semantic error", refCalls.Load())
+	}
+}
+
+func TestValidateReferenceStageError(t *testing.T) {
+	t.Parallel()
+
+	cause := errors.New("reference fault")
+	authCalls := &atomic.Int32{}
+	op := platformScope()
+	target := sampleTargetRef()
+	ts := platformScope()
+
+	res := Validate(context.Background(), Input{
+		Validator: stubStructuralValidator{},
+		Dst:       map[string]any{"ok": true},
+		Stages: StageSet{
+			Defaulting: trackingDefaultingStage{},
+			Semantic:   trackingValidationStage{},
+			Reference:  trackingValidationStage{err: cause},
+		},
+		OperationScope: &op,
+		TargetRef:      &target,
+		TargetScope:    &ts,
+		Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+		Caller:         &CallerContext{},
+	}, DefaultLimits())
+
+	assertInternalErrorAt(t, res, LayerReference)
+	if !errors.Is(res.Err, cause) {
+		t.Fatalf("Err = %v, want %v", res.Err, cause)
+	}
+	if authCalls.Load() != 0 {
+		t.Fatalf("layer-8 ran after reference error")
+	}
+}
+
+// capturingValidationStage records the object passed to Validate so tests
+// can assert Defaulting output is forwarded to Semantic and Reference.
+type capturingValidationStage struct {
+	calls   *atomic.Int32
+	capture *any
+	err     error
+}
+
+func (s capturingValidationStage) Validate(_ context.Context, object any) ([]apiproblem.Violation, error) {
+	if s.calls != nil {
+		s.calls.Add(1)
+	}
+	if s.capture != nil {
+		*s.capture = object
+	}
+	if s.err != nil {
+		return nil, s.err
+	}
+	return nil, nil
 }

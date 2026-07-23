@@ -370,7 +370,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-004, F12-REF-001, F12-REF-002, F12-SCOPE-002_
     - _Verification: unit tests — disallowed kind → violation; scope not in allowed set → violation; valid ref passes; missing constraint config → error_
 
-  - [ ] 6.5e Integrate stage invocation into pipeline.go layers 5–7
+  - [x] 6.5e Integrate stage invocation into pipeline.go layers 5–7
     - Pipeline.Run reads Input.Stages (StageSet) and invokes Defaulting (layer 5), Semantic (layer 6), Reference (layer 7) in order after structural validation passes
     - Defaulting.Apply returns the defaulted object; Semantic.Validate and Reference.Validate receive that defaulted object
     - A nil stage in StageSet where the contract requires one: fail closed at that layer (500 INTERNAL_ERROR)

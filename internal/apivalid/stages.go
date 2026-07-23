@@ -77,9 +77,9 @@ type ValidationStage interface {
 // implementations may live in apivalid or apiconform. apivalid MUST NOT
 // import apischema.
 //
-// Input (including Stages) and Layer/Result wiring live in pipeline.go
-// (task 6.4). Stage invocation into layers 5–7 is owned by task 6.5e;
-// ordering/fail-closed tests are tasks 6.7a.
+// Input (including Stages) and Layer/Result wiring live in pipeline.go.
+// Validate invokes Stages at layers 5–7 via runStages. Expanded
+// ordering/fail-closed coverage is tasks 6.7a.
 type StageSet struct {
 	Defaulting DefaultingStage
 	Semantic   ValidationStage

@@ -82,10 +82,13 @@ type Result struct {
 // with Result.Problem set to 500 INTERNAL_ERROR and Result.Err recording
 // the internal cause.
 //
-// Layers 5–7 stage implementations are carried in Stages. Stage invocation
-// wiring is owned by task 6.5e; until that lands, Validate treats layers
-// 5–7 as successful pass-through after structural success so layer-8 and
-// structural fail-closed behavior remain testable in isolation.
+// Stages holds Defaulting (layer 5), Semantic (layer 6), and Reference
+// (layer 7). After structural success, Validate invokes each stage in
+// order. A nil required stage or stage-internal error fails closed at that
+// layer with 500 INTERNAL_ERROR. Ordinary semantic/reference violations
+// populate Result.Violations, set FailedAt, leave Problem/Err nil, and
+// stop before later layers. Deterministic no-op stages are still invoked
+// and must not be silently skipped (D-04; task 6.5e).
 //
 // LAYER-8 CONFIGURATION MATRIX:
 //
@@ -122,7 +125,8 @@ type Input struct {
 	Dst        any                 // decode target / structural instance
 
 	// Stages holds Defaulting (layer 5), Semantic (layer 6), and Reference
-	// (layer 7). Invocation is owned by task 6.5e.
+	// (layer 7). Required for full external-object validation after
+	// structural success; nil slots fail closed at the corresponding layer.
 	Stages StageSet
 
 	// Operation target-scope equality (layer 8).
@@ -142,7 +146,9 @@ type Input struct {
 //	   treated as an already-decoded instance (offline / stub path).
 //	4: StructuralValidator fail-closed (nil/error → 500; ordinary
 //	   violations → FailedAt LayerStructural; success continues).
-//	5–7: Pass-through until stage wiring (task 6.5e).
+//	5–7: Input.Stages — Defaulting, Semantic, Reference in order; nil
+//	   required stage or stage error → 500 at that layer; ordinary
+//	   violations stop before later layers; no-op stages are invoked.
 //	8: Operation target-scope equality via the configuration matrix.
 //	9: Reserved; never executed.
 //
@@ -178,8 +184,10 @@ func Validate(ctx context.Context, in Input, lim Limits) Result {
 		return res
 	}
 
-	// Layers 5–7: stage invocation is owned by task 6.5e. Until then,
-	// structural success continues so layer-8 matrix behavior is reachable.
+	// Layers 5–7: defaulting → semantic → reference (D-04; task 6.5e).
+	if res, stop := runStages(ctx, in); stop {
+		return res
+	}
 
 	// Layer 8: Operation target-scope equality (configuration matrix).
 	if in.OperationScope != nil {
@@ -189,6 +197,57 @@ func Validate(ctx context.Context, in Input, lim Limits) Result {
 	// Generic non-Operation validation stops successfully after layer 7.
 	// Layer 9 is reserved.
 	return Result{}
+}
+
+// runStages invokes layers 5–7 from Input.Stages after structural success.
+// Defaulting.Apply returns the object passed to Semantic and Reference.
+// A nil required stage or stage error fails closed (500). Ordinary
+// violations stop before later layers. Stages are never silently skipped.
+func runStages(ctx context.Context, in Input) (Result, bool) {
+	if err := ctx.Err(); err != nil {
+		return internalFailure(LayerDefaulting, err), true
+	}
+
+	// Layer 5: deterministic defaulting.
+	if in.Stages.Defaulting == nil {
+		return internalFailure(LayerDefaulting, errors.New("nil defaulting stage")), true
+	}
+	defaulted, err := in.Stages.Defaulting.Apply(ctx, in.Dst)
+	if err != nil {
+		return internalFailure(LayerDefaulting, err), true
+	}
+
+	// Layer 6: semantic validation on the defaulted object.
+	if in.Stages.Semantic == nil {
+		return internalFailure(LayerSemantic, errors.New("nil semantic stage")), true
+	}
+	violations, err := in.Stages.Semantic.Validate(ctx, defaulted)
+	if err != nil {
+		return internalFailure(LayerSemantic, err), true
+	}
+	if len(violations) > 0 {
+		return Result{
+			Violations: append([]apiproblem.Violation(nil), violations...),
+			FailedAt:   LayerSemantic,
+		}, true
+	}
+
+	// Layer 7: structural reference/kind/scope validation on the defaulted object.
+	if in.Stages.Reference == nil {
+		return internalFailure(LayerReference, errors.New("nil reference stage")), true
+	}
+	violations, err = in.Stages.Reference.Validate(ctx, defaulted)
+	if err != nil {
+		return internalFailure(LayerReference, err), true
+	}
+	if len(violations) > 0 {
+		return Result{
+			Violations: append([]apiproblem.Violation(nil), violations...),
+			FailedAt:   LayerReference,
+		}, true
+	}
+
+	return Result{}, false
 }
 
 func runStructural(in Input) (Result, bool) {
