@@ -560,7 +560,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apiconform/...` passes with -count=1_
 
 - [ ] 9. Schema annotations, extensions, route validation, and schema-diff gate
-  - [ ] 9.1 Implement x-sovrunn-* extension parsing and vocabulary checks (`internal/apischema/annotations.go`)
+  - [x] 9.1 Implement x-sovrunn-* extension parsing and vocabulary checks (`internal/apischema/annotations.go`)
     - ReadAnnotations: parses exactly these five registered extensions:
       - x-sovrunn-profile
       - x-sovrunn-boundary

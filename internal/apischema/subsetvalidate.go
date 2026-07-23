@@ -62,8 +62,8 @@ var CoreSupportedKeywords = []string{
 
 // RegisteredExtensionKeywords are the five x-sovrunn-* extension keywords
 // registered by D-08. Unknown x-sovrunn-* names are unsupported and fail closed.
-// Full vocabulary validation of extension values is owned by task 9.1
-// (ReadAnnotations); this package only treats registered names as supported
+// Full vocabulary validation of extension values is owned by ReadAnnotations
+// (task 9.1); this package only treats registered names as supported
 // keywords and does not treat extension-object fields as schema keywords.
 var RegisteredExtensionKeywords = []string{
 	"x-sovrunn-profile",
@@ -207,8 +207,8 @@ func walkSchema(node any, path string, issues *[]SchemaIssue) {
 			walkSchema(val, childPath, issues)
 		case IsRegisteredExtension(key):
 			// Extension-object fields are not schema keywords. Do not recurse
-			// into extension values as schema documents (task 9.1 owns value
-			// shape/vocabulary checks).
+			// into extension values as schema documents (ReadAnnotations owns
+			// value shape/vocabulary checks).
 			continue
 		default:
 			// Leaf supported keywords (type, required, enum, $ref, metadata,
