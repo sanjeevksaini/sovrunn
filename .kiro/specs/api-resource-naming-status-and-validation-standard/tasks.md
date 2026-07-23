@@ -61,7 +61,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-IMPL-001, F12-VERIFY-001(2,14)_
     - _Verification: `go test ./internal/apiconform/...` passes_
 
-- [ ] 2. Shared metadata, reference, condition, and problem primitives
+- [x] 2. Shared metadata, reference, condition, and problem primitives
   - [x] 2.1 Implement TypeMeta, ObjectMeta, and profile/boundary/stability/data-classification enums (`internal/apimeta`)
     - `typemeta.go`: TypeMeta struct with `apiVersion`/`kind`; group/version parsing helpers
     - `objectmeta.go`: ObjectMeta struct with all fields per design; ownership/mutability doc comments
@@ -116,7 +116,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-006_
     - _Verification: unit test — RefIssue with path/code maps to equivalent Violation_
 
-  - [ ] 2.8 Write property test for condition transition semantics (Property 8)
+  - [x] 2.8 Write property test for condition transition semantics (Property 8)
     - **Property 8: Condition transition semantics**
     - For any sequence of condition upserts, SetCondition advances lastTransitionTime iff status changed; status always True/False/Unknown; type/reason stable PascalCase
     - Minimum 100 generated iterations; deterministic seed or report failing seed
