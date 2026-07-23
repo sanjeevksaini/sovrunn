@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/placement-evaluation-request.json",
+  "title": "PlacementEvaluationRequest",
+  "description": "Internal-engine TransientRequestResult under Project scope (Matrix D). Typed request/result without forced persistence.",
+  "type": "object",
+  "x-sovrunn-profile": "TransientRequestResult",
+  "x-sovrunn-boundary": "internal-engine-facing",
+  "x-sovrunn-allowed-scopes": ["Project"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["placement.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["internal", "operator", "governance"],
+        "mutability": "immutable",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["PlacementEvaluationRequest"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["internal", "operator", "governance"],
+        "mutability": "immutable",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Optional correlation metadata; persistence is not required by this profile.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["internal", "operator", "governance"],
+        "mutability": "mutable",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "request": {
+      "type": "object",
+      "description": "Typed placement evaluation input.",
+      "properties": {
+        "subjectRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Workload or service subject being evaluated for placement.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["internal", "operator", "governance"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "requiredCapabilityClass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+          "description": "Provider-neutral required capability class.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["internal", "operator"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "jurisdictionCode": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 16,
+          "pattern": "^[A-Z0-9_-]+$",
+          "description": "Optional residency constraint for evaluation.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["internal", "operator", "governance"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "restricted",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["subjectRef", "requiredCapabilityClass"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["internal", "operator", "governance"],
+        "mutability": "immutable",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "result": {
+      "type": "object",
+      "description": "Typed evaluation result; explainable without executing placement.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["Allow", "Deny", "ReviewRequired"],
+          "description": "Closed evaluation outcome vocabulary.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["internal", "operator", "governance"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable machine reason code for the outcome.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["internal", "operator", "governance"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "selectedPoolRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Optional selected ResourcePool reference when outcome is Allow.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["internal", "operator", "governance"],
+            "mutability": "immutable",
+            "retention": "none",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["outcome", "reasonCode"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["internal", "operator", "governance"],
+        "mutability": "immutable",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "request"],
+  "additionalProperties": false
+}

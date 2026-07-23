@@ -604,7 +604,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.14, 4.16 (F12-EVOLVE-002, F12-VERIFY-001(10))**
     - _Verification: `go test ./internal/apischema/...` passes with -count=1_
 
-- [ ] 10. Canonical schemas and _common schemas
+- [x] 10. Canonical schemas and _common schemas
   - [x] 10.1 Create _common sub-schemas (`api/schemas/_common/`)
     - `type-meta.json`, `object-meta.json`, `typed-ref.json`, `scope-ref.json`, `owner-ref.json`, `condition.json`, `problem.json`, `violation.json`, `page.json`
     - Each declares JSON Schema 2020-12 with only the approved bounded vocabulary
@@ -642,7 +642,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-005, F12-NAMING-006, F12-FIXTURE-002, F12-PROFILE-001, F12-SCOPE-002, F12-SEC-001_
     - _Verification: ValidateSchemaSupport passes for all eight; ReadAnnotations extracts valid metadata; Operation schema has exactly six scopes; every applicable property has complete explicit x-sovrunn-field-policy_
 
-  - [ ] 10.3 Create baseline snapshots and BASELINE_MANIFEST.json (`api/schemas/baseline/`)
+  - [x] 10.3 Create baseline snapshots and BASELINE_MANIFEST.json (`api/schemas/baseline/`)
     - Copy initial schemas to baseline directory
     - Generate BASELINE_MANIFEST.json with SHA-256 digests
     - Create empty BASELINE_APPROVALS.json (initial baseline needs no prior-approval evidence)
