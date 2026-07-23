@@ -12,16 +12,7 @@ import (
 
 // Task 10.2 canonical contract schemas (D-01, D-08, D-17; F12-NAMING-005/006,
 // F12-FIXTURE-002, F12-PROFILE-001, F12-SCOPE-002, F12-SEC-001).
-var canonicalSchemaFiles = []string{
-	"project.json",
-	"resource-pool.json",
-	"discovered-database.json",
-	"plugin-definition.json",
-	"adapter-configuration.json",
-	"placement-evaluation-request.json",
-	"operation.json",
-	"audit-event.json",
-}
+var canonicalSchemaFiles = externalCanonicalSchemaFiles
 
 // expectedCanonicalAnnotations maps each canonical schema file to its Matrix D
 // profile / boundary / allowed-scopes / stability contract.
@@ -170,7 +161,7 @@ func TestCanonicalSchemasFieldPolicyCompleteness(t *testing.T) {
 		name := name
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			issues := checkFieldPolicyCompleteness(loadCanonicalSchema(t, name))
+			issues := CheckFieldPolicyCompleteness(loadCanonicalSchema(t, name))
 			if len(issues) != 0 {
 				t.Fatalf("field-policy completeness failed for %s: %#v", name, issues)
 			}
@@ -236,8 +227,8 @@ func TestCanonicalSchemasMissingFieldPolicyFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
-	issues := checkFieldPolicyCompleteness(raw)
-	if !hasSchemaIssue(issues, "FIELD_POLICY_MISSING", "/properties/kind") {
+	issues := CheckFieldPolicyCompleteness(raw)
+	if !hasSchemaIssue(issues, CodeFitnessFieldPolicyMissing, "/properties/kind") {
 		t.Fatalf("expected FIELD_POLICY_MISSING at /properties/kind, got %#v", issues)
 	}
 }

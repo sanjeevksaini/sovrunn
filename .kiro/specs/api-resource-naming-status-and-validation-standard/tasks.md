@@ -787,7 +787,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apiconform/...` passes the coverage check_
 
 - [ ] 16. Fitness functions and feature-gate integration
-  - [ ] 16.1 Implement schema, metadata, ownership, and field-policy fitness functions (`internal/apiconform/fitness_schema.go`)
+  - [x] 16.1 Implement schema, metadata, ownership, and field-policy fitness functions (`internal/apiconform/fitness_schema.go`)
     - Check 1: Every external schema declares profile/boundary/stability/allowed-scopes
     - Check 1a (field-policy coverage): Every property crossing an API boundary explicitly declares x-sovrunn-field-policy with exactly: classification, authorizedWriter, authorizedReaders, mutability, retention, redaction, residency, auditRequired; no unknown policy field accepted; controlled values are valid; unknown x-sovrunn-* extensions fail closed; verifies the explicit declarations used by FEATURE-0012 schemas (no inheritance algorithm)
     - Check 3: Every mutable field and condition has one owner
