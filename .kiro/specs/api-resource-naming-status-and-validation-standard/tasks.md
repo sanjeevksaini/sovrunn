@@ -386,7 +386,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
       Reference; reference violations stop at LayerReference; no-op stage
       passes through_
 
-  - [ ] 6.6 Write structural fail-closed tests (`internal/apivalid/pipeline_test.go`)
+  - [x] 6.6 Write structural fail-closed tests (`internal/apivalid/pipeline_test.go`)
     - Test: nil StructuralValidator → Result.Problem = 500 INTERNAL_ERROR, Result.Err set, FailedAt = LayerStructural, Violations empty, layers 5–7 not executed
     - Test: StructuralValidator returns non-nil error → same behavior
     - Test: deterministic stub validator returning violations →

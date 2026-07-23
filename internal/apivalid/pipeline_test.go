@@ -180,9 +180,30 @@ func assertInternalErrorAt(t *testing.T, res Result, want Layer) {
 	}
 }
 
+// trackingStages returns a StageSet with call counters for layers 5–7 so
+// structural fail-closed tests can prove those layers were not executed.
+func trackingStages(def, sem, ref *atomic.Int32) StageSet {
+	return StageSet{
+		Defaulting: trackingDefaultingStage{calls: def},
+		Semantic:   trackingValidationStage{calls: sem},
+		Reference:  trackingValidationStage{calls: ref},
+	}
+}
+
+func assertLayers57NotExecuted(t *testing.T, def, sem, ref *atomic.Int32) {
+	t.Helper()
+	if def.Load() != 0 || sem.Load() != 0 || ref.Load() != 0 {
+		t.Fatalf("layers 5–7 must not execute after structural fail-closed: defaulting=%d semantic=%d reference=%d",
+			def.Load(), sem.Load(), ref.Load())
+	}
+}
+
 func TestValidateStructuralNilValidator(t *testing.T) {
 	t.Parallel()
 
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
 	authCalls := &atomic.Int32{}
 	op := platformScope()
 	target := sampleTargetRef()
@@ -192,6 +213,7 @@ func TestValidateStructuralNilValidator(t *testing.T) {
 	res := Validate(context.Background(), Input{
 		Validator:      nil,
 		Dst:            map[string]any{"kind": "Project"},
+		Stages:         trackingStages(defCalls, semCalls, refCalls),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -203,14 +225,18 @@ func TestValidateStructuralNilValidator(t *testing.T) {
 	if res.Err.Error() != "nil validator" {
 		t.Fatalf("Err = %v, want nil validator", res.Err)
 	}
+	assertLayers57NotExecuted(t, defCalls, semCalls, refCalls)
 	if authCalls.Load() != 0 {
-		t.Fatalf("Authorizer called %d times; layers 5–8 must not run after structural fail-closed", authCalls.Load())
+		t.Fatalf("Authorizer called %d times; layer 8 must not run after structural fail-closed", authCalls.Load())
 	}
 }
 
 func TestValidateStructuralValidatorError(t *testing.T) {
 	t.Parallel()
 
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
 	authCalls := &atomic.Int32{}
 	cause := errors.New("schema registry unavailable")
 	op := platformScope()
@@ -221,6 +247,7 @@ func TestValidateStructuralValidatorError(t *testing.T) {
 		Validator:      stubStructuralValidator{err: cause},
 		SchemaID:       "project.json",
 		Dst:            map[string]any{"kind": "Project"},
+		Stages:         trackingStages(defCalls, semCalls, refCalls),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -232,6 +259,7 @@ func TestValidateStructuralValidatorError(t *testing.T) {
 	if !errors.Is(res.Err, cause) {
 		t.Fatalf("Err = %v, want %v", res.Err, cause)
 	}
+	assertLayers57NotExecuted(t, defCalls, semCalls, refCalls)
 	if authCalls.Load() != 0 {
 		t.Fatalf("Authorizer called %d times after structural error", authCalls.Load())
 	}
@@ -240,6 +268,9 @@ func TestValidateStructuralValidatorError(t *testing.T) {
 func TestValidateStructuralOrdinaryViolations(t *testing.T) {
 	t.Parallel()
 
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
 	authCalls := &atomic.Int32{}
 	v := apiproblem.Violation{
 		Field:   "/metadata/name",
@@ -253,6 +284,7 @@ func TestValidateStructuralOrdinaryViolations(t *testing.T) {
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{violations: []apiproblem.Violation{v}},
 		Dst:            map[string]any{},
+		Stages:         trackingStages(defCalls, semCalls, refCalls),
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
@@ -272,6 +304,7 @@ func TestValidateStructuralOrdinaryViolations(t *testing.T) {
 	if len(res.Violations) != 1 || res.Violations[0] != v {
 		t.Fatalf("Violations = %#v, want %#v", res.Violations, []apiproblem.Violation{v})
 	}
+	assertLayers57NotExecuted(t, defCalls, semCalls, refCalls)
 	if authCalls.Load() != 0 {
 		t.Fatalf("Authorizer called %d times; layers 5–8 must not run on structural violations", authCalls.Load())
 	}
@@ -280,19 +313,27 @@ func TestValidateStructuralOrdinaryViolations(t *testing.T) {
 func TestValidateStructuralPassGenericStopsAfterLayer7(t *testing.T) {
 	t.Parallel()
 
-	calls := &atomic.Int32{}
+	structCalls := &atomic.Int32{}
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+
 	res := Validate(context.Background(), Input{
 		Validator: trackingStructuralValidator{
 			inner: stubStructuralValidator{},
-			calls: calls,
+			calls: structCalls,
 		},
 		Dst:    map[string]any{"ok": true},
-		Stages: passThroughStages(),
+		Stages: trackingStages(defCalls, semCalls, refCalls),
 		// OperationScope nil → generic non-Operation path.
 	}, DefaultLimits())
 
-	if calls.Load() != 1 {
-		t.Fatalf("structural Validate calls = %d, want 1", calls.Load())
+	if structCalls.Load() != 1 {
+		t.Fatalf("structural Validate calls = %d, want 1", structCalls.Load())
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 || refCalls.Load() != 1 {
+		t.Fatalf("clean structural pass must invoke layers 5–7: defaulting=%d semantic=%d reference=%d",
+			defCalls.Load(), semCalls.Load(), refCalls.Load())
 	}
 	if res.FailedAt != 0 {
 		t.Fatalf("FailedAt = %v, want 0 (success)", res.FailedAt)
