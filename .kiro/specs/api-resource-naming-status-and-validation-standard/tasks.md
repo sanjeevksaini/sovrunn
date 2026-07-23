@@ -473,7 +473,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - All tests must pass before proceeding to task group 7a
 
 - [ ] 7a. Immutable schema registry and safe local $ref resolution
-  - [ ] 7a.1 Implement immutable SchemaRegistry interface and in-memory implementation (`internal/apiconform/schemaregistry.go`)
+  - [x] 7a.1 Implement immutable SchemaRegistry interface and in-memory implementation (`internal/apiconform/schemaregistry.go`)
     - SchemaRegistry interface: `Load(schemaID string) (schema []byte, err error)`
     - In-memory implementation for tests: accepts pre-loaded schemas by stable schema ID
     - Repository canonical implementation: loads from `api/schemas/` and `api/schemas/_common/` paths
