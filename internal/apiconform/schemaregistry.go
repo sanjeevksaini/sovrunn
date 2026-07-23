@@ -155,20 +155,26 @@ func loadJSONFiles(dir, idPrefix string, out map[string][]byte) error {
 			return err
 		}
 		path := filepath.Join(dir, name)
-		// Resolve symlinks and ensure the file remains under dir (no escape).
-		resolved, err := filepath.EvalSymlinks(path)
-		if err != nil {
-			return fmt.Errorf("apiconform: resolve schema %s: %w", path, err)
-		}
+		// Resolve symlinks on both the schemas directory and the file so
+		// containment checks remain correct when the OS temp root is itself
+		// a symlink (e.g. /var → /private/var on macOS).
 		absDir, err := filepath.Abs(dir)
 		if err != nil {
 			return fmt.Errorf("apiconform: abs schemas directory: %w", err)
+		}
+		resolvedDir, err := filepath.EvalSymlinks(absDir)
+		if err != nil {
+			return fmt.Errorf("apiconform: resolve schemas directory: %w", err)
+		}
+		resolved, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return fmt.Errorf("apiconform: resolve schema %s: %w", path, err)
 		}
 		absResolved, err := filepath.Abs(resolved)
 		if err != nil {
 			return fmt.Errorf("apiconform: abs schema path: %w", err)
 		}
-		rel, err := filepath.Rel(absDir, absResolved)
+		rel, err := filepath.Rel(resolvedDir, absResolved)
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 			return fmt.Errorf("%w: schema path escapes directory: %s", ErrSchemaIDRejected, path)
 		}

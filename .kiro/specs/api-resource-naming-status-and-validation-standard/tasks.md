@@ -483,7 +483,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-IMPL-001_
     - _Verification: unit tests — load known ID returns schema; load unknown ID returns error; registry is immutable after construction_
 
-  - [ ] 7a.2 Implement safe local $ref resolver (`internal/apiconform/refresolver.go`)
+  - [x] 7a.2 Implement safe local $ref resolver (`internal/apiconform/refresolver.go`)
     - Resolves only approved relative $ref values under `api/schemas/_common`
     - Rejects remote URI references (http://, https://, ftp://, etc.)
     - Rejects absolute filesystem paths (leading /)
