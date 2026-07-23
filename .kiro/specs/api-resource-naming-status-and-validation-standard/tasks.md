@@ -715,7 +715,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - All tests must pass before proceeding to task group 14
 
 - [ ] 14. Eight conformance fixture families and Matrix D coverage
-  - [ ] 14.1 Create valid JSON fixtures for all eight contracts (`tests/conformance/fixtures/`)
+  - [x] 14.1 Create valid JSON fixtures for all eight contracts (`tests/conformance/fixtures/`)
     - One valid JSON file per non-Operation contract: project.json, resource-pool.json, discovered-database.json, plugin-definition.json, adapter-configuration.json, placement-evaluation-request.json, audit-event.json
     - Operation fixture family:
       - One canonical representative fixture (operation.json) using Platform scope (nil scopeRef, platform target)
