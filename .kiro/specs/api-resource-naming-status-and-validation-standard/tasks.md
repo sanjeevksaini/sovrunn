@@ -709,7 +709,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-LEDGER-001_
     - _Verification: `go test ./internal/apiconform/...` — sync test passes; deliberately stale file fails_
 
-- [ ] 13. Checkpoint — schemas, contract types, ledger, type bindings, and validation infrastructure validated
+- [x] 13. Checkpoint — schemas, contract types, ledger, type bindings, and validation infrastructure validated
   - Run: `make fmt`; `git diff --check`; `go test ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`; `go test -race ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`; `go vet ./internal/apivalid/... ./internal/apischema/... ./internal/apiconform/...`
   - Includes: apivalid, apischema, apiconform, package import-boundary tests (task 1.3), structural fail-closed tests (task 6.6), layer-8 configuration tests (task 6.7), JSON/YAML equivalence tests (tasks 8.3, 8.4)
   - All tests must pass before proceeding to task group 14
