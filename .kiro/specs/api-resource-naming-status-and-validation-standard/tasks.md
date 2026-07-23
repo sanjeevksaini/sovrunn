@@ -714,7 +714,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - Includes: apivalid, apischema, apiconform, package import-boundary tests (task 1.3), structural fail-closed tests (task 6.6), layer-8 configuration tests (task 6.7), JSON/YAML equivalence tests (tasks 8.3, 8.4)
   - All tests must pass before proceeding to task group 14
 
-- [ ] 14. Eight conformance fixture families and Matrix D coverage
+- [x] 14. Eight conformance fixture families and Matrix D coverage
   - [x] 14.1 Create valid JSON fixtures for all eight contracts (`tests/conformance/fixtures/`)
     - One valid JSON file per non-Operation contract: project.json, resource-pool.json, discovered-database.json, plugin-definition.json, adapter-configuration.json, placement-evaluation-request.json, audit-event.json
     - Operation fixture family:
@@ -763,7 +763,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-FIXTURE-002, F12-VALIDATION-002, F12-SEC-003, F12-SEC-004, F12-SCOPE-002_
     - _Verification: `go test ./internal/apiconform/...` passes_
 
-  - [ ] 14.6 Write property test for provider neutrality of core (Property 7)
+  - [x] 14.6 Write property test for provider neutrality of core (Property 7)
     - **Property 7: Provider neutrality of core**
     - For any core/customer-facing schema and any grammar primitive, no provider-native identifier/SDK type/provider-specific field is present; provider-native data only behind adapter-facing/plugin-facing schemas
     - Minimum 100 generated iterations; deterministic seed or report failing seed
