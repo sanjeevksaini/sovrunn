@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
+	"gopkg.in/yaml.v3"
 )
 
 // systemOwnedMetadataKeys are Matrix C2 system-only ObjectMeta fields
@@ -58,6 +59,291 @@ func DecodeJSON(data []byte, lim Limits, pol FieldPolicy, dst any) *apiproblem.P
 		}
 	}
 	return nil
+}
+
+// DecodeYAML is a pure YAML decoder that accepts only a strict JSON-compatible
+// YAML subset (D-03a). It never performs direct yaml.v3 typed decoding into the
+// destination, never depends on YAML struct tags, and never enables
+// KnownFields(true). The ordered pipeline is:
+//
+//  1. yaml.Node safety parsing (syntax tree only)
+//  2. Reject YAML-only constructs (aliases, anchors, merge keys, custom/explicit
+//     tags, non-finite numbers, timestamp/binary coercions, multiple documents,
+//     non-string mapping keys)
+//  3. Explicit yaml.Node duplicate-key detection
+//  4. Normalize the accepted YAML node to a JSON-compatible value
+//  5. Marshal that value to JSON bytes
+//  6. Decode those bytes through DecodeJSON (unknown-field rejection,
+//     FieldPolicy, same destination type, same stable codes and JSON Pointers)
+//
+// Request bodies and field values are not logged (F12-SEC-003).
+func DecodeYAML(data []byte, lim Limits, pol FieldPolicy, dst any) *apiproblem.Problem {
+	if len(data) == 0 {
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "request body is required")
+	}
+	if lim.MaxObjectBytes > 0 && len(data) > lim.MaxObjectBytes {
+		return decodeProblem(apiproblem.CodeRequestTooLarge, "/", "request body exceeds MaxObjectBytes")
+	}
+
+	// 1. yaml.Node safety parsing (syntax tree only); require exactly one document.
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	var doc yaml.Node
+	if err := dec.Decode(&doc); err != nil {
+		if errors.Is(err, io.EOF) {
+			return decodeProblem(apiproblem.CodeMalformedRequest, "/", "YAML document is required")
+		}
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "malformed YAML")
+	}
+	var trailing yaml.Node
+	if err := dec.Decode(&trailing); err == nil {
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "multiple YAML documents are not permitted")
+	} else if !errors.Is(err, io.EOF) {
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "malformed YAML after document")
+	}
+
+	root := yamlDocumentRoot(&doc)
+	if root == nil {
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "YAML document is required")
+	}
+
+	// 2. Reject YAML-only constructs.
+	if prob := rejectYAMLOnlyConstructs(root, ""); prob != nil {
+		return prob
+	}
+
+	// 3. Explicit yaml.Node duplicate-key detection pass.
+	if prob := rejectYAMLDuplicateKeys(root, ""); prob != nil {
+		return prob
+	}
+
+	// 4. Normalize the accepted YAML node to a JSON-compatible value.
+	normalized, prob := normalizeYAMLNode(root)
+	if prob != nil {
+		return prob
+	}
+
+	// 5. Marshal that normalized value to JSON bytes.
+	jsonBytes, err := json.Marshal(normalized)
+	if err != nil {
+		return decodeProblem(apiproblem.CodeMalformedRequest, "/", "YAML could not be normalized to JSON")
+	}
+
+	// 6. Pass those JSON bytes through the same DecodeJSON path.
+	return DecodeJSON(jsonBytes, lim, pol, dst)
+}
+
+func yamlDocumentRoot(doc *yaml.Node) *yaml.Node {
+	if doc == nil {
+		return nil
+	}
+	if doc.Kind == yaml.DocumentNode {
+		if len(doc.Content) != 1 {
+			return nil
+		}
+		return doc.Content[0]
+	}
+	return doc
+}
+
+// rejectYAMLOnlyConstructs rejects aliases, anchors, merge keys, custom/explicit
+// tags, non-finite numbers, YAML-only timestamp/binary coercions, and non-string
+// mapping keys (D-03a step 2).
+func rejectYAMLOnlyConstructs(n *yaml.Node, path string) *apiproblem.Problem {
+	if n == nil {
+		return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "malformed YAML node")
+	}
+	if n.Kind == yaml.AliasNode || n.Alias != nil {
+		return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML aliases are not permitted")
+	}
+	if n.Anchor != "" {
+		return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML anchors are not permitted")
+	}
+	if n.Style&yaml.TaggedStyle != 0 {
+		return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML explicit tags are not permitted")
+	}
+
+	short := n.ShortTag()
+	switch n.Kind {
+	case yaml.DocumentNode:
+		if len(n.Content) != 1 {
+			return decodeProblem(apiproblem.CodeMalformedRequest, "/", "YAML document is required")
+		}
+		return rejectYAMLOnlyConstructs(n.Content[0], path)
+	case yaml.MappingNode:
+		if short != "!!map" {
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "unsupported YAML mapping tag")
+		}
+		if len(n.Content)%2 != 0 {
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "malformed YAML mapping")
+		}
+		for i := 0; i < len(n.Content); i += 2 {
+			key := n.Content[i]
+			val := n.Content[i+1]
+			if key == nil {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "malformed YAML mapping key")
+			}
+			if key.Kind == yaml.AliasNode || key.Alias != nil {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML aliases are not permitted")
+			}
+			if key.Anchor != "" {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML anchors are not permitted")
+			}
+			if key.Style&yaml.TaggedStyle != 0 {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML explicit tags are not permitted")
+			}
+			keyTag := key.ShortTag()
+			if keyTag == "!!merge" || (key.Kind == yaml.ScalarNode && key.Value == "<<" && keyTag != "!!str") {
+				childPath := path + "/" + escapeJSONPointer("<<")
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(childPath), "YAML merge keys are not permitted")
+			}
+			if key.Kind != yaml.ScalarNode || keyTag != "!!str" {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML mapping keys must be strings")
+			}
+			childPath := path + "/" + escapeJSONPointer(key.Value)
+			if prob := rejectYAMLOnlyConstructs(val, childPath); prob != nil {
+				return prob
+			}
+		}
+		return nil
+	case yaml.SequenceNode:
+		if short != "!!seq" {
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "unsupported YAML sequence tag")
+		}
+		for i, child := range n.Content {
+			childPath := fmt.Sprintf("%s/%d", path, i)
+			if prob := rejectYAMLOnlyConstructs(child, childPath); prob != nil {
+				return prob
+			}
+		}
+		return nil
+	case yaml.ScalarNode:
+		switch short {
+		case "!!null", "!!bool", "!!int", "!!str":
+			return nil
+		case "!!float":
+			if isNonFiniteYAMLFloat(n.Value) {
+				return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "non-finite YAML numbers are not permitted")
+			}
+			return nil
+		case "!!timestamp":
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML timestamp coercions are not permitted")
+		case "!!binary":
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML binary coercions are not permitted")
+		case "!!merge":
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML merge keys are not permitted")
+		default:
+			return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "YAML custom tags are not permitted")
+		}
+	default:
+		return decodeProblem(apiproblem.CodeMalformedRequest, pathOrRoot(path), "unsupported YAML node kind")
+	}
+}
+
+func isNonFiniteYAMLFloat(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case ".nan", ".inf", "+.inf", "-.inf":
+		return true
+	default:
+		return false
+	}
+}
+
+// rejectYAMLDuplicateKeys walks mappings and rejects duplicate string keys
+// with DUPLICATE_FIELD and an RFC 6901 JSON Pointer (D-03a step 3).
+func rejectYAMLDuplicateKeys(n *yaml.Node, path string) *apiproblem.Problem {
+	if n == nil {
+		return nil
+	}
+	switch n.Kind {
+	case yaml.DocumentNode:
+		if len(n.Content) == 1 {
+			return rejectYAMLDuplicateKeys(n.Content[0], path)
+		}
+		return nil
+	case yaml.MappingNode:
+		seen := make(map[string]struct{}, len(n.Content)/2)
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			key := n.Content[i]
+			val := n.Content[i+1]
+			childPath := path + "/" + escapeJSONPointer(key.Value)
+			if _, dup := seen[key.Value]; dup {
+				return decodeProblem(apiproblem.CodeDuplicateField, childPath, "duplicate field")
+			}
+			seen[key.Value] = struct{}{}
+			if prob := rejectYAMLDuplicateKeys(val, childPath); prob != nil {
+				return prob
+			}
+		}
+		return nil
+	case yaml.SequenceNode:
+		for i, child := range n.Content {
+			childPath := fmt.Sprintf("%s/%d", path, i)
+			if prob := rejectYAMLDuplicateKeys(child, childPath); prob != nil {
+				return prob
+			}
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
+// normalizeYAMLNode converts an accepted YAML node into a JSON-compatible
+// Go value (maps with string keys, slices, strings, bools, nil, json.Number).
+func normalizeYAMLNode(n *yaml.Node) (any, *apiproblem.Problem) {
+	if n == nil {
+		return nil, decodeProblem(apiproblem.CodeMalformedRequest, "/", "malformed YAML node")
+	}
+	switch n.Kind {
+	case yaml.DocumentNode:
+		if len(n.Content) != 1 {
+			return nil, decodeProblem(apiproblem.CodeMalformedRequest, "/", "YAML document is required")
+		}
+		return normalizeYAMLNode(n.Content[0])
+	case yaml.MappingNode:
+		out := make(map[string]any, len(n.Content)/2)
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			key := n.Content[i]
+			val, prob := normalizeYAMLNode(n.Content[i+1])
+			if prob != nil {
+				return nil, prob
+			}
+			out[key.Value] = val
+		}
+		return out, nil
+	case yaml.SequenceNode:
+		out := make([]any, 0, len(n.Content))
+		for _, child := range n.Content {
+			val, prob := normalizeYAMLNode(child)
+			if prob != nil {
+				return nil, prob
+			}
+			out = append(out, val)
+		}
+		return out, nil
+	case yaml.ScalarNode:
+		switch n.ShortTag() {
+		case "!!null":
+			return nil, nil
+		case "!!bool":
+			switch strings.ToLower(n.Value) {
+			case "true":
+				return true, nil
+			case "false":
+				return false, nil
+			default:
+				return nil, decodeProblem(apiproblem.CodeMalformedRequest, "/", "malformed YAML bool")
+			}
+		case "!!int", "!!float":
+			return json.Number(n.Value), nil
+		case "!!str":
+			return n.Value, nil
+		default:
+			return nil, decodeProblem(apiproblem.CodeMalformedRequest, "/", "unsupported YAML scalar during normalize")
+		}
+	default:
+		return nil, decodeProblem(apiproblem.CodeMalformedRequest, "/", "unsupported YAML node during normalize")
+	}
 }
 
 func scanJSONDuplicatesAndPolicy(data []byte, lim Limits, pol FieldPolicy) *apiproblem.Problem {

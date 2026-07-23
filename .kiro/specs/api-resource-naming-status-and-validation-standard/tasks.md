@@ -137,7 +137,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(2), F12-VALIDATION-002, F12-VALIDATION-006_
     - _Verification: unit tests — duplicate key rejected; unknown field rejected; stable code + JSON Pointer in error_
 
-  - [ ] 4.2 Implement strict JSON-compatible DecodeYAML (`internal/apivalid/decode.go`)
+  - [x] 4.2 Implement strict JSON-compatible DecodeYAML (`internal/apivalid/decode.go`)
     - Using gopkg.in/yaml.v3 with this exact ordered pipeline:
       1. yaml.Node safety parsing (syntax tree only)
       2. Reject YAML-only constructs: aliases, anchors, merge keys (<<), custom/explicit tags, non-finite numbers (.nan/.inf), YAML-only timestamp/binary coercions, multiple documents, non-string mapping keys
