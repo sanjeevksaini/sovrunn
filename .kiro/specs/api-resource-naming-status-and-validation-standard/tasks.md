@@ -436,7 +436,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.11 (F12-UPDATE-002)**
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
-  - [ ] 6.9 Write property test for canonical platform scope (Property 4 — partial)
+  - [x] 6.9 Write property test for canonical platform scope (Property 4 — partial)
     - **Property 4 (partial): Canonical platform scope normalization and identity**
     - For any ScopeRef, NormalizeScope maps explicit Platform to nil; CanonicalScopeIdentity(nil) → {Platform, PlatformScopeUID}; CanonicalScopeIdentity(non-platform) → {ref.Kind, ref.UID}; normalization is idempotent
     - Uses a test-local allowed-scope contract ([]ScopeKind parameter) to validate: Platform allowed → nil accepted; Platform not allowed → violation
