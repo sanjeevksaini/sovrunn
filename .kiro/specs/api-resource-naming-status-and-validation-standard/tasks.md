@@ -741,7 +741,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-002, F12-VALIDATION-006, F12-OWNER-001, F12-REF-002, F12-SCOPE-002_
     - _Verification: each negative fixture rejected with expected stable code and JSON Pointer_
 
-  - [ ] 14.4 Implement fixture loader and Matrix D scenario assertions (`internal/apiconform/fixtures.go`)
+  - [x] 14.4 Implement fixture loader and Matrix D scenario assertions (`internal/apiconform/fixtures.go`)
     - Fixture loader reads JSON/YAML fixtures from `tests/conformance/fixtures/`
     - Matrix D scenario table maps all seventeen scenarios to a fixture + required-proof assertion
     - The "Future provisioning executes" scenario uses Operation scope variants (one per scope) and asserts target-scope equality per D-17 for each

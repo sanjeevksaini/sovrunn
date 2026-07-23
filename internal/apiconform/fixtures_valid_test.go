@@ -9,10 +9,6 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/apivalid"
 )
 
-// ConformanceFixturesDir is the repository-relative directory for FEATURE-0012
-// canonical contract fixtures (task 14.1; F12-FIXTURE-001, F12-FIXTURE-002).
-const ConformanceFixturesDir = "tests/conformance/fixtures"
-
 // validFixtureCase is one Task 14.1 positive fixture: ModeReadRepresentation
 // decode into the conformance contract type, then StructuralValidator against
 // the canonical schema. Operation variants also assert D-17 scope shape.

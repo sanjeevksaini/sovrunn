@@ -18,10 +18,6 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/apivalid"
 )
 
-// ConformanceNegativeFixturesDir holds Task 14.3 invalid fixtures
-// (F12-VALIDATION-002/006, F12-OWNER-001, F12-REF-002, F12-SCOPE-002, D-17).
-const ConformanceNegativeFixturesDir = "tests/conformance/fixtures/negative"
-
 // negativeSemanticCarrier adapts fixture identity fields to CommonSemantic
 // without requiring domain types to implement SemanticCarrier (task 14.3 only).
 type negativeSemanticCarrier struct {
