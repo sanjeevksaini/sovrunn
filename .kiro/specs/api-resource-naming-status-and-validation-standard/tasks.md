@@ -807,7 +807,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-001(2,5,6,7,8)_
     - _Verification: `go test ./internal/apiconform/...` — checks 2, 5, 6, 7, 8 pass_
 
-  - [ ] 16.3 Implement compatibility, schema evolution, and limits fitness functions (`internal/apiconform/fitness_compat.go`)
+  - [x] 16.3 Implement compatibility, schema evolution, and limits fitness functions (`internal/apiconform/fitness_compat.go`)
     - Check 10: Schema compatibility detects breaking changes (uses schema-diff gate + VerifyBaselineIntegrity + VerifyBaselineApproval)
     - Check 11: Object/metadata/condition/violation/reference/page sizes bounded
     - Check 12: Errors use stable codes and JSON Pointer paths
