@@ -66,14 +66,31 @@ fi
 CURSOR_BIN="${CURSOR_AGENT_BIN:-}"
 if [[ -z "$CURSOR_BIN" ]]; then
   if command -v cursor-agent >/dev/null 2>&1; then
-    CURSOR_BIN="cursor-agent"
-  elif command -v cursor >/dev/null 2>&1; then
-    CURSOR_BIN="cursor"
+    CURSOR_BIN="$(command -v cursor-agent)"
+  elif command -v agent >/dev/null 2>&1; then
+    CURSOR_BIN="$(command -v agent)"
   else
-    fail "Cursor CLI not found in PATH. Install Cursor CLI/headless agent or set CURSOR_AGENT_BIN."
+    fail "Cursor Agent CLI not found. Install cursor-agent or set CURSOR_AGENT_BIN to its absolute path."
   fi
+elif [[ "$CURSOR_BIN" != */* ]]; then
+  CURSOR_BIN="$(command -v "$CURSOR_BIN")" ||
+    fail "Cursor Agent CLI command not found: $CURSOR_BIN"
 fi
-command -v "$CURSOR_BIN" >/dev/null 2>&1 || fail "Cursor CLI command not found: $CURSOR_BIN"
+
+[[ -x "$CURSOR_BIN" ]] ||
+  fail "Cursor Agent CLI is not executable: $CURSOR_BIN"
+
+case "$(basename "$CURSOR_BIN")" in
+  cursor|Cursor)
+    fail "refusing desktop Cursor launcher; use cursor-agent or set CURSOR_AGENT_BIN"
+    ;;
+esac
+
+CURSOR_HELP="$("$CURSOR_BIN" --help 2>&1 || true)"
+for required_option in --output-format --model --force; do
+  grep -q -- "$required_option" <<<"$CURSOR_HELP" ||
+    fail "$CURSOR_BIN is not a compatible Cursor Agent CLI: missing $required_option"
+done
 
 mkdir -p ".automation/logs/$FEATURE"
 LOG_FILE=".automation/logs/$FEATURE/cursor-task-${TASK}.log"
