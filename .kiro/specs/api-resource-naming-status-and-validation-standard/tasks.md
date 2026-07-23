@@ -39,7 +39,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-IMPL-001, F12-VERIFY-002_
     - _Verification: `go build ./...` succeeds; `go.mod` declares 1.22_
 
-  - [ ] 1.2 Create package directories for new grammar primitives
+  - [x] 1.2 Create package directories for new grammar primitives
     - Create `internal/apimeta`, `internal/apiref`, `internal/apicond`, `internal/apiproblem`, `internal/apivalid`, `internal/apischema`, `internal/apiconform`
     - Add a `doc.go` with package doc comment in each
     - _Design: D-02_
