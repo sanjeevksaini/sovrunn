@@ -735,7 +735,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(2)_
     - _Verification: YAML decode produces equivalent output to JSON decode for each fixture_
 
-  - [ ] 14.3 Create negative/invalid fixtures (`tests/conformance/fixtures/`)
+  - [x] 14.3 Create negative/invalid fixtures (`tests/conformance/fixtures/`)
     - Invalid fixtures covering: unknown field, duplicate key (JSON + YAML), unauthorized status in create mode, name/uid mismatch, invalid scope kind, ownerRef-as-scopeRef, nil scopeRef on non-Platform resource, oversized body, over-nested doc, unsupported media type, unversioned route, YAML aliases/anchors/merge keys/custom tags/multiple docs/non-string keys/non-finite numbers, Operation with scope/target mismatch
     - _Design: testing strategy section (negative tests); D-17_
     - _Requirements: F12-VALIDATION-002, F12-VALIDATION-006, F12-OWNER-001, F12-REF-002, F12-SCOPE-002_
