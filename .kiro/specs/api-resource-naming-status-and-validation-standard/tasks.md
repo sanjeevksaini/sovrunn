@@ -771,7 +771,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apiconform/...` passes with -count=1_
 
 - [ ] 15. Phase 1 compatibility report and coverage checks
-  - [ ] 15.1 Create Phase 1 compatibility report (`docs/api/PHASE1_COMPATIBILITY_REPORT.md`)
+  - [x] 15.1 Create Phase 1 compatibility report (`docs/api/PHASE1_COMPATIBILITY_REPORT.md`)
     - Cover all Phase 1 resources: Organization, OrganizationUnit, Tenant, Project, Operation, ServiceClass, ServicePlan, Plugin, Capability, ServiceInstance, ServiceBinding, health/readiness, demo-flow
     - Per contract: record conforming behavior, explicit exceptions, and migration candidates
     - Note Phase 1 routes retained unchanged; no rewrite triggered
