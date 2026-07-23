@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/typed-ref.json",
+  "title": "TypedRef",
+  "description": "Common typed-reference base: apiVersion, kind, name, and optional immutable uid (F12-REF-001).",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?/(v1alpha1|v1beta1|v1)$",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Za-z0-9]*$",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+      "description": "Lowercase kebab-case DNS-label resource name within the target scope.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "uid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional immutable opaque uid; when present must agree with name (F12-REF-001).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "name"],
+  "additionalProperties": false
+}

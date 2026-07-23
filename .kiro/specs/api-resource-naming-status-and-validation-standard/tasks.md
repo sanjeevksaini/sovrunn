@@ -605,7 +605,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apischema/...` passes with -count=1_
 
 - [ ] 10. Canonical schemas and _common schemas
-  - [ ] 10.1 Create _common sub-schemas (`api/schemas/_common/`)
+  - [x] 10.1 Create _common sub-schemas (`api/schemas/_common/`)
     - `type-meta.json`, `object-meta.json`, `typed-ref.json`, `scope-ref.json`, `owner-ref.json`, `condition.json`, `problem.json`, `violation.json`, `page.json`
     - Each declares JSON Schema 2020-12 with only the approved bounded vocabulary
     - No $defs; shared definitions use $ref to _common files only

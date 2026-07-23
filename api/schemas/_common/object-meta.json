@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/object-meta.json",
+  "title": "ObjectMeta",
+  "description": "Common metadata for persistent resources (F12-META-001, F12-META-002). Ownership and mutability follow Matrix C2; field policies are explicit with no inheritance.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+      "description": "Creator-authored immutable lowercase kebab-case identity within scope.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "uid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sovrunn-authored opaque globally unique immutable uid.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Human-readable display name; not identity.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "scopeRef": {
+      "$ref": "scope-ref.json",
+      "description": "Primary security/governance ownership scope. Canonical platform form is absent/nil (D-16).",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 253
+      },
+      "description": "Bounded indexed classification labels; MUST NOT contain secrets (F12-SEC-003).",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Namespaced bounded metadata; MUST NOT contain secrets or ungoverned API contracts.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "System-only desired-state generation counter.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "resourceVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "System-only opaque concurrency token (F12-UPDATE-002).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "none",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "System-only UTC RFC 3339 creation timestamp.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "System-only UTC RFC 3339 last-update timestamp.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}
