@@ -512,7 +512,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
       registry and nil resolver are rejected_
 
 - [ ] 8. StructuralValidator adapter, schema-to-violation translation, and JSON/YAML equivalence
-  - [ ] 8.1 Add apischema SchemaIssue-to-Violation translator in apiconform (`internal/apiconform/structural.go`)
+  - [x] 8.1 Add apischema SchemaIssue-to-Violation translator in apiconform (`internal/apiconform/structural.go`)
     - Function `SchemaIssuesToViolations([]apischema.SchemaIssue) []apiproblem.Violation` translating package-local apischema results into apiproblem violations
     - _Design: D-02 (import direction); D-01a_
     - _Requirements: F12-VALIDATION-006_
