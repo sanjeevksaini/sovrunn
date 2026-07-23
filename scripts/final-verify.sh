@@ -5,8 +5,9 @@ FEATURE=""
 while [[ $# -gt 0 ]]; do case "$1" in --feature) FEATURE="$2"; shift 2;; *) fail "unknown arg: $1";; esac; done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 cd "$(repo_root)"
-echo "==> Running final Docker verification"
-docker run --rm -v "$PWD":/src -w /src golang:1.21 sh -c 'test -z "$(gofmt -l .)" && go vet ./... && go test ./... && go test -race ./... && go build ./cmd/sovrunn-api'
+GO_DOCKER_IMAGE="${GO_DOCKER_IMAGE:-golang:1.22}"
+echo "==> Running final Docker verification with ${GO_DOCKER_IMAGE}"
+docker run --rm -v "$PWD":/src -w /src "$GO_DOCKER_IMAGE" sh -c 'test -z "$(gofmt -l .)" && go vet ./... && go test ./... && go test -race ./... && go build ./cmd/sovrunn-api'
 rm -f sovrunn-api; rm -rf bin
 ./scripts/guardrails.sh --feature "$FEATURE"
 git status --short

@@ -168,3 +168,27 @@ structurizr-check:
 .PHONY: structurizr-push
 structurizr-push:
 	./scripts/structurizr-push.sh
+
+# FEATURE-0012 exact leaf-task orchestrator.
+# Plan is safe/read-only. Run requires CONFIRM_FEATURE_0012_AUTORUN=YES.
+.PHONY: ff-feature-0012-plan ff-feature-0012-run ff-feature-0012-final-checkpoint ff-feature-0012-flow-self-test
+ff-feature-0012-plan:
+	./scripts/feature-0012-flow.py --feature FEATURE-0012 --plan
+
+ff-feature-0012-run:
+	./scripts/feature-0012-flow.py \
+		--feature FEATURE-0012 \
+		--run \
+		--start-task "$${START_TASK:-}" \
+		--stop-after "$${STOP_AFTER:-}" \
+		--max-steps "$${MAX_STEPS:-0}" \
+		--image "$${GO_DOCKER_IMAGE:-golang:1.22}"
+
+ff-feature-0012-final-checkpoint:
+	./scripts/feature-0012-flow.py \
+		--feature FEATURE-0012 \
+		--final-checkpoint \
+		--image "$${GO_DOCKER_IMAGE:-golang:1.22}"
+
+ff-feature-0012-flow-self-test:
+	./scripts/feature-0012-flow.py --feature FEATURE-0012 --self-test
