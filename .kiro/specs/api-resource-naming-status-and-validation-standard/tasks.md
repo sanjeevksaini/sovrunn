@@ -660,7 +660,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-005, F12-VALIDATION-001(4), F12-VERIFY-001(13)_
     - _Verification: unit test with a deliberately mismatched Go type fails; correct type passes_
 
-- [ ] 12. Conformance-only Go contract types, boundary ledger, and TypeBinding registry
+- [x] 12. Conformance-only Go contract types, boundary ledger, and TypeBinding registry
   - [x] 12.1 Implement conformance-only Go contract types (`internal/apiconform/contracts.go`)
     - Concrete Go structs for all eight canonical schemas: Project, ResourcePool, DiscoveredDatabase, PluginDefinition, AdapterConfiguration, PlacementEvaluationRequest, Operation, AuditEvent
     - Each struct uses apimeta types (TypeMeta, ObjectMeta, ScopeRef, etc.) and explicit JSON tags
@@ -701,7 +701,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-LEDGER-001_
     - _Verification: `go build ./internal/apiconform` compiles; generator produces Markdown from YAML_
 
-  - [ ] 12.6 Generate initial BOUNDARY_LEDGER.md and add synchronization test (`internal/apiconform/ledgergen_test.go`)
+  - [x] 12.6 Generate initial BOUNDARY_LEDGER.md and add synchronization test (`internal/apiconform/ledgergen_test.go`)
     - Run generator to produce `docs/api/BOUNDARY_LEDGER.md`
     - Synchronization test: parses `docs/api/boundary-ledger.yaml`, generates expected Markdown, compares byte-for-byte with `docs/api/BOUNDARY_LEDGER.md`, fails when the derivative file is stale
     - The YAML remains the sole source of truth; the Markdown is always regenerable

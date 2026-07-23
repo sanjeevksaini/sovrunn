@@ -157,10 +157,10 @@ func RenderBoundaryLedgerMarkdown(doc BoundaryLedger) []byte {
 		}
 	}
 
-	out := b.String()
-	if !strings.HasSuffix(out, "\n") {
-		out += "\n"
-	}
+	// Canonical generated Markdown ends with exactly one LF, without a
+	// trailing blank line. This keeps generated files compatible with
+	// git diff --check while preserving deterministic output.
+	out := strings.TrimRight(b.String(), "\r\n") + "\n"
 	return []byte(out)
 }
 

@@ -83,6 +83,9 @@ func TestBoundaryLedgerMarkdownGenerator(t *testing.T) {
 	if !bytes.HasSuffix(md1, []byte("\n")) {
 		t.Fatalf("generated Markdown must end with a trailing newline")
 	}
+	if bytes.HasSuffix(md1, []byte("\n\n")) {
+		t.Fatalf("generated Markdown must end with exactly one trailing newline")
+	}
 	if bytes.Contains(md1, []byte("\r")) {
 		t.Fatalf("generated Markdown must use LF endings only")
 	}
