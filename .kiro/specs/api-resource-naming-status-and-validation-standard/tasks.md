@@ -70,7 +70,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-001, F12-NAMING-002, F12-META-001, F12-META-002, F12-PROFILE-001, F12-BOUNDARY-001, F12-SEC-002_
     - _Verification: `go build ./internal/apimeta` compiles; enum constants match architecture matrices A, C1_
 
-  - [ ] 2.2 Implement TypedRef base, ScopeRef, OwnerRef, scope-kind constants, ScopeIdentity, CanonicalScopeIdentity, canonical platform scope, PlatformScopeUID, and UID generation (`internal/apimeta`)
+  - [x] 2.2 Implement TypedRef base, ScopeRef, OwnerRef, scope-kind constants, ScopeIdentity, CanonicalScopeIdentity, canonical platform scope, PlatformScopeUID, and UID generation (`internal/apimeta`)
     - `reference.go`: TypedRef struct (apiVersion/kind/name/uid) stdlib-only
     - `scope.go`: ScopeRef (embeds TypedRef), OwnerRef (embeds TypedRef), ScopeKind consts for exactly six values: Platform, Organization, OrganizationUnit, Tenant, Project, Provider
     - `scope.go`: PlatformScopeUID constant ("platform"); NormalizeScope function (explicit Platform → nil canonical form)

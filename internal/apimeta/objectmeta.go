@@ -27,12 +27,3 @@ type ObjectMeta struct {
 	CreatedAt       string            `json:"createdAt,omitempty"`
 	UpdatedAt       string            `json:"updatedAt,omitempty"`
 }
-
-// ScopeRef is the immutable primary security/governance ownership reference
-// (F12-META-001, F12-SCOPE-002). It is not a location and not a
-// lifecycle-containment reference.
-//
-// The complete typed-reference embedding (apiVersion/kind/name/uid), Matrix B
-// ScopeKind constraints, platform-scope normalization, and identity helpers
-// are defined in scope.go.
-type ScopeRef struct{}

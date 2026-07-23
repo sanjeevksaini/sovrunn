@@ -114,16 +114,21 @@ func TestObjectMetaFieldPresence(t *testing.T) {
 	t.Parallel()
 
 	// Compile-time / structural smoke: ObjectMeta carries the F12-META-001 subset
-	// including a ScopeRef pointer slot completed in task 2.2.
+	// with a typed ScopeRef (apiVersion/kind/name/uid).
 	meta := ObjectMeta{
 		Name:        "payments-production",
 		DisplayName: "Payments Production",
-		ScopeRef:    &ScopeRef{},
+		ScopeRef: &ScopeRef{TypedRef: TypedRef{
+			APIVersion: "core.sovrunn.io/v1alpha1",
+			Kind:       string(ScopeTenant),
+			Name:       "acme",
+			UID:        "dddddddddddddddddddddddddddddddd",
+		}},
 		Labels:      map[string]string{"env": "prod"},
 		Annotations: map[string]string{"sovrunn.io/note": "demo"},
 		Generation:  1,
 	}
-	if meta.Name == "" || meta.ScopeRef == nil {
-		t.Fatal("ObjectMeta smoke fields must be set")
+	if meta.Name == "" || meta.ScopeRef == nil || meta.ScopeRef.Kind != string(ScopeTenant) {
+		t.Fatal("ObjectMeta smoke fields must be set with typed ScopeRef")
 	}
 }
