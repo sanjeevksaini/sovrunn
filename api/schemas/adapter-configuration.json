@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/adapter-configuration.json",
+  "title": "AdapterConfiguration",
+  "description": "Adapter-facing ManagedResource under Provider scope (Matrix D). Secret values only via Secret-reference-only fields; native config stays isolated.",
+  "type": "object",
+  "x-sovrunn-profile": "ManagedResource",
+  "x-sovrunn-boundary": "adapter-facing",
+  "x-sovrunn-allowed-scopes": ["Provider"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["adapter.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["AdapterConfiguration"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Common ObjectMeta including immutable Provider scopeRef.",
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Desired adapter configuration with secret-reference isolation.",
+      "properties": {
+        "adapterClass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+          "description": "Provider-neutral adapter class identifier.",
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "credentialsSecretRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Typed Secret reference only; raw credentials MUST NOT appear here (F12-SEC-003).",
+          "x-sovrunn-field-policy": {
+            "classification": "Secret-reference-only",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["adapter", "operator", "internal"],
+            "mutability": "mutable",
+            "retention": "standard",
+            "redaction": "omit",
+            "residency": "restricted",
+            "auditRequired": true
+          }
+        },
+        "nativeConfigRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Opaque reference to adapter-isolated native configuration; not embedded provider SDK types.",
+          "x-sovrunn-field-policy": {
+            "classification": "Sensitive",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["adapter", "operator", "internal"],
+            "mutability": "mutable",
+            "retention": "standard",
+            "redaction": "omit",
+            "residency": "restricted",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["adapterClass", "credentialsSecretRef"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "omit",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "System-owned adapter configuration observation.",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Pending", "Ready", "Degraded", "Failed", "Deleting"],
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "observedGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["adapter", "operator", "internal"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}

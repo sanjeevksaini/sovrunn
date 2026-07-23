@@ -620,7 +620,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
       checks pass for every _common schema; missing or unknown policy fields
       fail_
 
-  - [ ] 10.2 Create eight canonical schemas (`api/schemas/`)
+  - [x] 10.2 Create eight canonical schemas (`api/schemas/`)
     - `project.json` (ManagedResource / customer-facing / Tenant)
     - `resource-pool.json` (ManagedResource / operator-facing / Provider)
     - `discovered-database.json` (ObservedExternalResource / adapter-facing / Provider)

@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/operation.json",
+  "title": "Operation",
+  "description": "Plugin-facing LongRunningOperation (Matrix D, D-17). Exactly six allowed scopes; scopeRef must equal targetRef governance scope (semantic rule).",
+  "type": "object",
+  "x-sovrunn-profile": "LongRunningOperation",
+  "x-sovrunn-boundary": "plugin-facing",
+  "x-sovrunn-allowed-scopes": [
+    "Platform",
+    "Organization",
+    "OrganizationUnit",
+    "Tenant",
+    "Project",
+    "Provider"
+  ],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["ops.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Operation"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Operation metadata including scopeRef (canonical nil for Platform targets).",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "ownerRef": {
+      "$ref": "_common/owner-ref.json",
+      "description": "Optional lifecycle containment only; MUST NOT replace scopeRef (D-17, F12-OWNER-001).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Immutable request payload after acceptance (target, action, requester, correlation).",
+      "properties": {
+        "targetRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Operation target; governance scope must match metadata.scopeRef (D-17).",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[A-Z][A-Za-z0-9]*$",
+          "description": "Stable PascalCase action identifier (for example Provision, Delete).",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "requesterRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Typed requester identity for audit correlation.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Caller-supplied idempotency key for safe replay.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Opaque request correlation identifier; MUST NOT embed secrets.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["targetRef", "action"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "Executor-owned progress, retryability, and terminal result.",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Pending", "Running", "Succeeded", "Failed", "Cancelled"],
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "progressPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Optional coarse progress indicator.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "retryable": {
+          "type": "string",
+          "enum": ["True", "False", "Unknown"],
+          "description": "Whether a failed operation may be safely retried.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "cancelRequested": {
+          "type": "string",
+          "enum": ["True", "False"],
+          "description": "Whether cancellation has been requested.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "terminalCode": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable terminal result code when phase is terminal.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "terminalMessage": {
+          "type": "string",
+          "description": "Human-readable terminal message; MUST NOT carry secrets.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "observedGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "internal"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}
