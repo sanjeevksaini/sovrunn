@@ -291,7 +291,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-UPDATE-002_
     - _Verification: unit tests — stale returns 412; match returns nil; absent returns nil_
 
-  - [ ] 6.5a Define pipeline stage interfaces and invocation contract (`internal/apivalid/stages.go`)
+  - [x] 6.5a Define pipeline stage interfaces and invocation contract (`internal/apivalid/stages.go`)
     - Illustrative stage contracts:
       ```
       type DefaultingStage interface {
