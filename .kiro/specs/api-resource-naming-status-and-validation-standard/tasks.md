@@ -429,7 +429,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-004, F12-VALIDATION-005_
     - _Verification: `go test ./internal/apivalid/...` passes_
 
-  - [ ] 6.8 Write property test for concurrency staleness (Property 10)
+  - [x] 6.8 Write property test for concurrency staleness (Property 10)
     - **Property 10: Concurrency staleness**
     - For any pair of resource versions, CheckIfMatch returns 412 exactly when If-Match != current resourceVersion; nil when they match or no protection required
     - Minimum 100 generated iterations; deterministic seed or report failing seed
