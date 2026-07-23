@@ -685,7 +685,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.1, 4.9, 4.16 (F12-NAMING-005, F12-VERIFY-001(13))**
     - _Verification: `go test ./internal/apiconform/...` passes with -count=1_
 
-  - [ ] 12.4 Create machine-readable boundary ledger (`docs/api/boundary-ledger.yaml`)
+  - [x] 12.4 Create machine-readable boundary ledger (`docs/api/boundary-ledger.yaml`)
     - YAML document with entries for each boundary: customer-facing, operator-facing, internal-engine-facing, adapter-facing, plugin-facing, governance-only
     - Each entry records: purpose, owner, producers, consumers, allowed/prohibited data, authorization, audit, observability, failure behavior, versioning, replacement path, migration path, reassessment trigger
     - _Design: D-12_

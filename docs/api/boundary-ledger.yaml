@@ -1,0 +1,355 @@
+# FEATURE-0012 boundary ledger (D-12, F12-LEDGER-001).
+# Machine-readable source of truth for Matrix C1 API boundaries.
+# docs/api/BOUNDARY_LEDGER.md is a derivative human view (task 12.5+).
+#
+# Required categories per boundary entry:
+#   purpose, owner, producers, consumers, allowed_data, prohibited_data,
+#   authorization, audit, observability, failure_behavior, versioning,
+#   replacement_path, migration_path, reassessment_trigger
+#
+# allowed_data + prohibited_data together satisfy the F12-LEDGER-001
+# "allowed/prohibited data" category.
+
+apiVersion: sovrunn.io/v1alpha1
+kind: BoundaryLedger
+metadata:
+  name: feature-0012-matrix-c1
+  feature: FEATURE-0012
+  description: >
+    Trust and API boundary ledger for FEATURE-0012 canonical schemas.
+    Records purpose, ownership, producers/consumers, data controls,
+    authorization, audit, observability, failure behavior, versioning,
+    and evolution paths for each Matrix C1 boundary.
+boundaries:
+  - id: customer-facing
+    purpose: >
+      Expose product intent, safe observed status, and actionable errors to
+      tenant-facing clients without revealing provider internals or
+      inaccessible tenant data.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/project.json
+      - Sovrunn core control-plane (desired-state validation and status ownership)
+    consumers:
+      - Portal
+      - CLI
+      - SDK
+      - GitOps
+      - Tenant automation
+    allowed_data:
+      - Product intent and customer-authored desired state (spec)
+      - Safe customer-visible status and conditions
+      - Actionable RFC 9457 problems with stable codes and JSON Pointers
+      - Typed references using Sovrunn kinds and scopes only
+    prohibited_data:
+      - Provider-native identifiers, SDK types, and substrate handles
+      - Raw secrets, credentials, tokens, private keys, and connection strings
+      - Existence or detail of inaccessible cross-tenant objects
+      - Operator-confidential diagnostics not authorized for the tenant
+    authorization: >
+      Scope-aware authorization against the resource scopeRef; cross-scope
+      denial uses SafeDenial (404 RESOURCE_NOT_FOUND) without existence
+      disclosure. Customer mutation modes reject system-owned and status fields.
+    audit: >
+      Mutating customer-facing operations must be auditable with actor, action,
+      resource identity, scope, request_id, and outcome. Audit payloads must
+      not contain raw secrets.
+    observability: >
+      Structured logs and traces carry request_id and, when applicable,
+      operation_id. Latency and error_code may be recorded. Secrets,
+      credentials, tokens, private keys, and connection strings are never logged.
+    failure_behavior: >
+      Validation and decode failures return stable problem codes with JSON
+      Pointer field paths. Authorization denials that must not disclose
+      existence return byte-identical 404 SafeDenial responses. Oversized or
+      unsupported media inputs fail closed at the boundary.
+    versioning: >
+      Contracts version via apiVersion group/maturity (for example
+      core.sovrunn.io/v1alpha1). Breaking schema changes require a new version
+      or approved baseline evidence under the schema-diff gate.
+    replacement_path: >
+      Replace a customer-facing contract by introducing a new versioned schema
+      and TypeBinding, migrating clients deliberately, and retiring the prior
+      version through the maturity and compatibility policy.
+    migration_path: >
+      Phase 1 customer resources coexist unchanged; migration candidates are
+      recorded in the Phase 1 compatibility report and executed only through
+      separately approved features.
+    reassessment_trigger: >
+      Reassess before stable API promotion, cross-organization sharing, a new
+      privileged customer view, regulated/classified customer workloads, or any
+      object that cannot select an approved profile at this boundary.
+
+  - id: operator-facing
+    purpose: >
+      Provide administrative and normalized infrastructure contracts for
+      platform, MSP, and provider operators without exposing raw secrets or
+      unrestricted customer data.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/resource-pool.json
+      - Sovrunn operator control surfaces and pool lifecycle controllers
+    consumers:
+      - Platform operators
+      - MSP operators
+      - Provider operators
+    allowed_data:
+      - Administrative desired state and normalized infrastructure descriptors
+      - Operator-visible diagnostics and pool readiness conditions
+      - Provider-neutral capability class and jurisdiction metadata
+    prohibited_data:
+      - Raw secrets and unrestricted customer confidential payloads
+      - Provider SDK types as shared core models
+      - Customer-facing product contracts served from this boundary
+    authorization: >
+      Operator principals are authorized within Provider (or declared operator)
+      scope. Access to customer-confidential data requires an explicit approved
+      boundary view; SafeDenial applies for unauthorized cross-scope access.
+    audit: >
+      Operator mutations and privileged reads that affect pools or operator
+      state must emit audit records with actor, scope, request_id, and outcome
+      without logging secret material.
+    observability: >
+      Operator-facing operations propagate request_id and operation_id where
+      applicable. Diagnostics may include normalized error codes; raw
+      credentials and connection strings remain redacted.
+    failure_behavior: >
+      Fail closed on unknown fields, duplicate keys, unsupported schema
+      keywords, and missing required stages. Stale concurrent writes return
+      412 STALE_RESOURCE_VERSION when If-Match protection is required.
+    versioning: >
+      Operator contracts follow the same apiVersion maturity ladder as other
+      FEATURE-0012 schemas; breaking changes are gated by baseline approval
+      evidence.
+    replacement_path: >
+      Introduce a replacement operator schema/version, update operator tooling
+      bindings, and remove the prior contract only after compatibility review.
+    migration_path: >
+      Existing Phase 1 operator-adjacent resources remain; operator-facing
+      grammar adoption proceeds via explicit compatibility exceptions and
+      later approved migrations.
+    reassessment_trigger: >
+      Reassess at the first non-Kubernetes provider integration, the first
+      real provider adapter exposing new operator views, or when operator
+      diagnostics would otherwise require unrestricted customer data.
+
+  - id: internal-engine-facing
+    purpose: >
+      Carry normalized internal decision and evaluation contracts for policy,
+      placement, entitlement, and orchestration engines without embedding
+      vendor SDK types as shared models.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/placement-evaluation-request.json
+      - Internal engines that emit TransientRequestResult profiles
+    consumers:
+      - Policy evaluation
+      - Placement evaluation
+      - Entitlement evaluation
+      - Orchestration engines
+    allowed_data:
+      - Normalized internal request/result contracts
+      - Explainable decision inputs using Sovrunn kinds and scopes
+      - Finite evaluation metadata required for engine coordination
+    prohibited_data:
+      - Vendor SDK types as shared platform models
+      - Customer portal schemas reused as engine contracts
+      - Raw secrets in evaluation payloads
+    authorization: >
+      Internal-engine contracts are not a customer or operator public surface.
+      Callers must be platform-authorized engine components; cross-tenant
+      evaluation must still respect scope equality and SafeDenial rules for
+      unauthorized targets.
+    audit: >
+      Engine evaluations that affect placement or entitlement decisions should
+      correlate via request_id/operation_id and leave an auditable decision
+      trail in later FEATURE-0013 records without storing secrets.
+    observability: >
+      Engine-facing calls use structured logs with request_id and operation_id
+      correlation. Evaluation latency and stable error codes are permitted;
+      secret-bearing fields are never logged.
+    failure_behavior: >
+      Structural or semantic validation failures stop the pipeline at the
+      failing layer with stable codes. Misconfigured authorization layers fail
+      closed with 500 INTERNAL_ERROR and no silent skip.
+    versioning: >
+      Internal-engine schemas are versioned independently of customer-facing
+      contracts so engine evolution does not force portal/SDK breakage.
+    replacement_path: >
+      Replace an engine contract by publishing a new versioned schema, updating
+      engine adapters, and retiring the prior contract after dual-read or
+      dual-write migration as approved.
+    migration_path: >
+      FEATURE-0012 defines grammar only; live placement/policy execution
+      migrates in later features while preserving these contract boundaries.
+    reassessment_trigger: >
+      Reassess when an object cannot select an approved profile, when an
+      extension becomes required by core decisions or multiple engines, or
+      before high-frequency status updates that stress evaluation contracts.
+
+  - id: adapter-facing
+    purpose: >
+      Isolate external-system translation contracts, provider handles, and
+      observation provenance so provider-native data cannot leak into
+      customer or core schemas.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/discovered-database.json
+      - api/schemas/adapter-configuration.json
+      - External-system adapters (future FEATURE-0016+)
+    consumers:
+      - External-system adapters
+      - Adapter configuration and discovery controllers
+    allowed_data:
+      - Translation contracts between Sovrunn models and external systems
+      - Provider handles and adapter-local identifiers
+      - Provenance, observed time, and freshness for external observations
+    prohibited_data:
+      - Leakage of provider-native fields into customer-facing or core schemas
+      - Treating adapter handles as customer product identity
+      - Unredacted runtime credentials in metadata, status, or errors
+    authorization: >
+      Adapter-facing resources are authorized in Provider scope for adapter
+      and operator principals. Customer callers must not consume adapter-native
+      contracts directly.
+    audit: >
+      Adapter configuration changes and discovery ingest events must be
+      auditable with actor, provider scope, request_id, and outcome. Secret
+      values remain externalized via secret references only.
+    observability: >
+      Adapter operations correlate with request_id/operation_id. Provenance
+      and freshness fields support accuracy; credentials and connection
+      strings are never written to logs.
+    failure_behavior: >
+      Missing provenance/freshness on observed external resources fails
+      validation. Stale observations must surface as degraded/unknown rather
+      than silent success. Unauthorized customer access to adapter objects
+      uses SafeDenial.
+    versioning: >
+      Adapter contracts version separately from customer APIs so provider
+      replacement does not require customer-contract changes.
+    replacement_path: >
+      Replace an adapter contract by introducing a new adapter schema version
+      and migrating the adapter implementation behind the same customer/core
+      facade.
+    migration_path: >
+      Provider-native data stays behind this boundary; core/customer migration
+      never imports adapter SDK types. Later adapter features adopt these
+      schemas without rewriting customer contracts.
+    reassessment_trigger: >
+      Reassess at the first real provider adapter, the first external discovery
+      source, the first disconnected/federated control plane, or any proposal
+      to expose provider-native identifiers on customer-facing contracts.
+
+  - id: plugin-facing
+    purpose: >
+      Define plugin capability catalogs and long-running operation contracts
+      for the plugin manager and implementations without granting unrestricted
+      control-plane access or policy bypass.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/plugin-definition.json
+      - api/schemas/operation.json
+      - Plugin manager and validated plugin result publishers
+    consumers:
+      - Plugin manager
+      - Plugin implementations
+      - Operation lifecycle observers authorized for the operation scope
+    allowed_data:
+      - Versioned plugin capability definitions
+      - Operation targetRef/scopeRef contracts with six allowed scopes
+      - Validated plugin results expressed through Sovrunn status grammar
+    prohibited_data:
+      - Unrestricted control-plane access or authorization bypass
+      - Policy-engine substitution through plugin payloads
+      - Provider SDK types smuggled as plugin-facing core models
+    authorization: >
+      Plugin-facing operations require an authorized caller for the operation
+      scope. Operation.targetRef governance scope must equal Operation.scopeRef
+      (D-17); unauthorized or unavailable targets use SafeDenial without
+      disclosing mismatch details.
+    audit: >
+      Plugin definition publication and operation lifecycle transitions must
+      emit audit records with actor, plugin/operation identity, scope,
+      request_id, operation_id, and outcome. Result messages must not embed
+      secrets.
+    observability: >
+      Operation and plugin flows propagate request_id and operation_id.
+      Structured status/conditions communicate progress; secret material is
+      excluded from logs and problem details.
+    failure_behavior: >
+      Scope/target mismatch yields OPERATION_TARGET_SCOPE_MISMATCH at
+      /metadata/scopeRef when the target is authorized and available.
+      Absent or unauthorized targets return identical 404 SafeDenial.
+      Plugin results cannot redefine core status grammar.
+    versioning: >
+      PluginDefinition and Operation schemas use explicit apiVersion maturity.
+      Capability additions that break consumers require review-classified or
+      breaking change handling under the schema-diff gate.
+    replacement_path: >
+      Replace plugin-facing contracts by versioning PluginDefinition/Operation,
+      dual-supporting during migration, then removing the prior version after
+      plugin-manager readiness.
+    migration_path: >
+      FEATURE-0012 ships grammar and fixtures only; plugin execution arrives in
+      later features while preserving these contracts and six Operation scopes.
+    reassessment_trigger: >
+      Reassess at the first remotely executed or data-path plugin, before
+      plugin taxonomy expansion that changes trust assumptions, or when a
+      plugin result would need to redefine core status ownership.
+
+  - id: governance-only
+    purpose: >
+      Record immutable decisions, assessments, approvals, and traceability for
+      architecture and review workflows without carrying runtime credentials
+      or customer secrets.
+    owner: Sovrunn Platform API Architecture
+    producers:
+      - api/schemas/audit-event.json
+      - Architecture and governance review workflows
+      - Future decision/audit record publishers (FEATURE-0013+)
+    consumers:
+      - Architecture review
+      - Compliance and audit review
+      - Governance workflow tooling
+    allowed_data:
+      - Immutable audit and decision records
+      - Assessment and approval evidence
+      - Traceability identifiers (request_id, operation_id, actor, scope)
+    prohibited_data:
+      - Runtime credentials and customer secrets
+      - Mutable desired-state specs treated as governance truth
+      - Provider-native payloads as governance evidence without redaction
+    authorization: >
+      Governance-only records are readable by authorized governance and audit
+      roles within the declared Organization (or tighter) scope. Writers are
+      restricted to approved governance producers; normal customers cannot
+      mutate immutable records.
+    audit: >
+      The ledger entry itself is an audit boundary: append-only immutable
+      records capture who decided what, with correlation IDs. Nested secret
+      values are forbidden; references only.
+    observability: >
+      Governance ingest correlates via request_id/operation_id when produced
+      from a platform action. Observability fields remain structured and
+      non-secret; evidence bodies follow data-classification and redaction
+      policies.
+    failure_behavior: >
+      Attempts to mutate immutable governance records fail closed. Missing
+      required audit metadata or secret-like values in record payloads are
+      rejected with stable validation codes.
+    versioning: >
+      AuditEvent and related governance schemas version independently so
+      evidence format evolution does not break customer APIs.
+    replacement_path: >
+      Introduce a new governance record version, backfill or dual-write as
+      approved, and retain prior evidence formats for retention-policy
+      duration before retirement.
+    migration_path: >
+      FEATURE-0012 defines the AuditEvent grammar contract; FEATURE-0013 and
+      later own durable audit/decision services while preserving this
+      boundary's immutability and redaction rules.
+    reassessment_trigger: >
+      Reassess for regulated/classified workloads, when retention or residency
+      rules change, when a new privileged governance consumer appears, or
+      before promoting governance evidence formats to a stable API.
