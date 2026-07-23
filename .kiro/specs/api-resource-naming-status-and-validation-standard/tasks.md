@@ -750,7 +750,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-FIXTURE-001, F12-FIXTURE-002, F12-VERIFY-001_
     - _Verification: `go test ./internal/apiconform/...` — all 17 scenarios pass_
 
-  - [ ] 14.5 Implement conformance test suite (`internal/apiconform/fixtures_test.go`)
+  - [x] 14.5 Implement conformance test suite (`internal/apiconform/fixtures_test.go`)
     - Positive: each fixture decodes (JSON + YAML), validates against its schema via StructuralValidator adapter (task 8.2), annotations valid
     - Operation-aware: same object accepted under internal/read but rejected under create/replace
     - Platform-scope canonical form (complete Property 4): explicit Platform normalizes to nil; identity tuple uses PlatformScopeUID via CanonicalScopeIdentity; "Platform allowed by schema" annotation verified; nil scopeRef rejected when Platform is not in x-sovrunn-allowed-scopes
