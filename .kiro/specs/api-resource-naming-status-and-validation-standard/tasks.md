@@ -446,7 +446,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.4, 4.5 (F12-SCOPE-002, F12-REF-001)**
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
-  - [ ] 6.10 Write property test for safe-denial path/response equivalence (Property 5)
+  - [x] 6.10 Write property test for safe-denial path/response equivalence (Property 5)
     - **Property 5: Safe-denial path and response equivalence**
     - For any denied cross-scope access, exists-but-inaccessible and absent produce byte-identical SafeDenial responses (404) and take the same control-flow path; no existence-dependent fast path permitted
     - Does NOT claim perfect constant-time execution
