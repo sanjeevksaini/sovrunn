@@ -576,7 +576,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-006, F12-VERIFY-001(1), F12-SEC-001_
     - _Verification: unit tests — valid annotations pass; missing annotation fails; invalid vocabulary fails; unknown x-sovrunn-foo fails closed_
 
-  - [ ] 9.2 Implement route-form validator (`internal/apischema/route.go`)
+  - [x] 9.2 Implement route-form validator (`internal/apischema/route.go`)
     - ValidateRoute enforces `/apis/<group>/<version>/<plural-kebab>` pattern
     - Rejects unversioned public endpoints
     - _Design: D-09_
