@@ -128,7 +128,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - Covers: apimeta, apiref, apicond, apiproblem (tasks 2.1–2.6), apivalid task 2.7 (RefIssuesToViolations), apiconform task 1.3 (import-boundary test)
   - All tests must pass before proceeding to task group 4
 
-- [ ] 4. Strict JSON/YAML decoding and operation-aware field policies
+- [x] 4. Strict JSON/YAML decoding and operation-aware field policies
   - [x] 4.1 Implement pure DecodeJSON with duplicate-key detection (`internal/apivalid/decode.go`)
     - encoding/json with DisallowUnknownFields + token-scan duplicate-key detector
     - Returns `*apiproblem.Problem` with stable code and JSON Pointer on failure
@@ -169,7 +169,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(1), F12-ERROR-002_
     - _Verification: unit tests — 415 for unsupported type; 400 for oversized; correct decoder selected_
 
-  - [ ] 4.5 Write property test for operation-aware field ownership (Property 3)
+  - [x] 4.5 Write property test for operation-aware field ownership (Property 3)
     - **Property 3: Operation-aware field ownership**
     - For any object with status/system fields, customer mutation modes reject while status-update/internal/read modes accept; field acceptance is a deterministic function of DecodeMode
     - Minimum 100 generated iterations; deterministic seed or report failing seed
