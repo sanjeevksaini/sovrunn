@@ -8,66 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 )
-
-// BoundaryLedgerPath is the repository-relative machine-readable ledger
-// (D-12, F12-LEDGER-001). BOUNDARY_LEDGER.md is a later derivative view.
-const BoundaryLedgerPath = "docs/api/boundary-ledger.yaml"
-
-// F12-LEDGER-001 categories. allowed_data and prohibited_data together
-// represent the "allowed/prohibited data" category.
-var requiredLedgerCategories = []string{
-	"purpose",
-	"owner",
-	"producers",
-	"consumers",
-	"allowed_data",
-	"prohibited_data",
-	"authorization",
-	"audit",
-	"observability",
-	"failure_behavior",
-	"versioning",
-	"replacement_path",
-	"migration_path",
-	"reassessment_trigger",
-}
-
-// ledgerDoc is the strict typed shape for docs/api/boundary-ledger.yaml.
-// Unknown top-level or entry fields fail KnownFields decoding.
-type ledgerDoc struct {
-	APIVersion string           `yaml:"apiVersion"`
-	Kind       string           `yaml:"kind"`
-	Metadata   ledgerMetadata   `yaml:"metadata"`
-	Boundaries []ledgerBoundary `yaml:"boundaries"`
-}
-
-type ledgerMetadata struct {
-	Name        string `yaml:"name"`
-	Feature     string `yaml:"feature"`
-	Description string `yaml:"description"`
-}
-
-type ledgerBoundary struct {
-	ID                  string   `yaml:"id"`
-	Purpose             string   `yaml:"purpose"`
-	Owner               string   `yaml:"owner"`
-	Producers           []string `yaml:"producers"`
-	Consumers           []string `yaml:"consumers"`
-	AllowedData         []string `yaml:"allowed_data"`
-	ProhibitedData      []string `yaml:"prohibited_data"`
-	Authorization       string   `yaml:"authorization"`
-	Audit               string   `yaml:"audit"`
-	Observability       string   `yaml:"observability"`
-	FailureBehavior     string   `yaml:"failure_behavior"`
-	Versioning          string   `yaml:"versioning"`
-	ReplacementPath     string   `yaml:"replacement_path"`
-	MigrationPath       string   `yaml:"migration_path"`
-	ReassessmentTrigger string   `yaml:"reassessment_trigger"`
-}
 
 func TestBoundaryLedgerStrictParseAndCategories(t *testing.T) {
 	t.Parallel()
@@ -78,16 +20,9 @@ func TestBoundaryLedgerStrictParseAndCategories(t *testing.T) {
 		t.Fatalf("read %s: %v", BoundaryLedgerPath, err)
 	}
 
-	var doc ledgerDoc
-	dec := yaml.NewDecoder(bytes.NewReader(raw))
-	dec.KnownFields(true)
-	if err := dec.Decode(&doc); err != nil {
+	doc, err := ParseBoundaryLedgerYAML(raw)
+	if err != nil {
 		t.Fatalf("strict YAML decode of %s: %v", BoundaryLedgerPath, err)
-	}
-	// Single-document ledger: a second decode must hit EOF.
-	var extra any
-	if err := dec.Decode(&extra); err == nil {
-		t.Fatalf("%s: expected single YAML document, found additional document", BoundaryLedgerPath)
 	}
 
 	if doc.APIVersion == "" || doc.Kind == "" {
@@ -122,8 +57,70 @@ func TestBoundaryLedgerStrictParseAndCategories(t *testing.T) {
 	}
 }
 
-func assertLedgerCategoriesPresent(entry ledgerBoundary) error {
-	// Map category name → non-empty check for F12-LEDGER-001.
+func TestBoundaryLedgerMarkdownGenerator(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(moduleRoot(t), BoundaryLedgerPath)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", BoundaryLedgerPath, err)
+	}
+
+	md1, err := GenerateBoundaryLedgerMarkdown(raw)
+	if err != nil {
+		t.Fatalf("GenerateBoundaryLedgerMarkdown: %v", err)
+	}
+	md2, err := GenerateBoundaryLedgerMarkdown(raw)
+	if err != nil {
+		t.Fatalf("GenerateBoundaryLedgerMarkdown second call: %v", err)
+	}
+	if !bytes.Equal(md1, md2) {
+		t.Fatalf("Markdown generation is not deterministic: outputs differ")
+	}
+	if len(md1) == 0 {
+		t.Fatalf("generated Markdown is empty")
+	}
+	if !bytes.HasSuffix(md1, []byte("\n")) {
+		t.Fatalf("generated Markdown must end with a trailing newline")
+	}
+	if bytes.Contains(md1, []byte("\r")) {
+		t.Fatalf("generated Markdown must use LF endings only")
+	}
+
+	text := string(md1)
+	if !strings.HasPrefix(text, "# Boundary Ledger\n") {
+		t.Fatalf("Markdown missing H1 title")
+	}
+	if !strings.Contains(text, BoundaryLedgerPath) {
+		t.Fatalf("Markdown must reference source path %s", BoundaryLedgerPath)
+	}
+	for _, b := range apimeta.AllBoundaries() {
+		heading := "### " + string(b)
+		if !strings.Contains(text, heading) {
+			t.Errorf("Markdown missing boundary heading %q", heading)
+		}
+	}
+	for _, cat := range requiredLedgerCategories {
+		title := categoryTitle[cat]
+		if title == "" {
+			t.Fatalf("missing categoryTitle for %q", cat)
+		}
+		if !strings.Contains(text, "#### "+title) {
+			t.Errorf("Markdown missing category heading %q", title)
+		}
+	}
+
+	// Render via parsed document must match GenerateBoundaryLedgerMarkdown.
+	doc, err := ParseBoundaryLedgerYAML(raw)
+	if err != nil {
+		t.Fatalf("ParseBoundaryLedgerYAML: %v", err)
+	}
+	if got := RenderBoundaryLedgerMarkdown(doc); !bytes.Equal(got, md1) {
+		t.Fatalf("RenderBoundaryLedgerMarkdown diverged from GenerateBoundaryLedgerMarkdown")
+	}
+}
+
+func assertLedgerCategoriesPresent(entry BoundaryLedgerEntry) error {
 	checks := map[string]bool{
 		"purpose":              strings.TrimSpace(entry.Purpose) != "",
 		"owner":                strings.TrimSpace(entry.Owner) != "",

@@ -692,7 +692,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-LEDGER-001_
     - _Verification: strict YAML parse; all F12-LEDGER-001 categories present per boundary_
 
-  - [ ] 12.5 Implement deterministic boundary-ledger Markdown generator (`internal/apiconform/ledgergen.go`)
+  - [x] 12.5 Implement deterministic boundary-ledger Markdown generator (`internal/apiconform/ledgergen.go`)
     - Reads `docs/api/boundary-ledger.yaml` (YAML source of truth)
     - Generates deterministic Markdown output for `docs/api/BOUNDARY_LEDGER.md`
     - Generator is owned under `internal/apiconform` (or a bounded script callable from Go tests)
