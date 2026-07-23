@@ -389,6 +389,14 @@ def allowed_rules(task_id: str) -> list[str]:
         return common + ["internal/apiconform/", "internal/apivalid/"]
     if group == "9":
         return common + ["internal/apischema/"]
+    if task_id == "10.1":
+        # Task 10.1 creates shared schemas and may add the focused
+        # executable conformance test that validates schema support and
+        # field-policy completeness for those schemas.
+        return common + [
+            "api/schemas/_common/",
+            "internal/apiconform/common_schemas_test.go",
+        ]
     if group == "10":
         return common + ["api/schemas/"]
     if group == "11":
