@@ -95,7 +95,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-REF-001, F12-REF-002, F12-REF-003, F12-REF-004_
     - _Verification: `go test ./internal/apiref/...` — allowed/disallowed kinds, name/uid mismatch, provider-native rejection_
 
-  - [ ] 2.5 Implement Condition type, SetCondition, and status enum (`internal/apicond`)
+  - [x] 2.5 Implement Condition type, SetCondition, and status enum (`internal/apicond`)
     - `condition.go`: Condition struct, ConditionStatus consts (True/False/Unknown), SetCondition (upsert; LastTransitionTime changes only on status change), Get helper
     - Enforce: type/reason are PascalCase; message is informational
     - _Design: D-04; data models section (apicond)_
