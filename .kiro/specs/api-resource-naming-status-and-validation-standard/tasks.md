@@ -678,7 +678,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-005, F12-VERIFY-001(13)_
     - _Verification: `go test ./internal/apiconform/...` — VerifyGoTypeAgainstSchema passes for all bindings_
 
-  - [ ] 12.3 Write property test for derivative Go-type/schema consistency (Property 9)
+  - [x] 12.3 Write property test for derivative Go-type/schema consistency (Property 9)
     - **Property 9: Derivative Go-type / schema consistency**
     - For any registered TypeBinding, VerifyGoTypeAgainstSchema accepts iff the Go type matches the schema across the supported subset; deliberate mismatches are rejected
     - Minimum 100 generated iterations; deterministic seed or report failing seed
