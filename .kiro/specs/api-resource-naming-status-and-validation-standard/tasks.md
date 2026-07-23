@@ -541,7 +541,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(2), F12-VALIDATION-002_
     - _Verification: table-driven test passes for all representative objects_
 
-  - [ ] 8.4 Implement full-pipeline JSON/YAML equivalence tests with test-local schemas (`internal/apiconform/yaml_equiv_test.go`)
+  - [x] 8.4 Implement full-pipeline JSON/YAML equivalence tests with test-local schemas (`internal/apiconform/yaml_equiv_test.go`)
     - Uses test-local in-memory schemas (loaded via SchemaRegistry from 7a.1) and test-local objects — NOT canonical fixtures from task 14
     - For each test-local object, JSON and strict-YAML forms decode AND validate (through the StructuralValidator adapter from 8.2) to equivalent results
     - Tests cover: typed values, unknown fields, FieldPolicy, stable codes, JSON Pointer paths
