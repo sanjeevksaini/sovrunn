@@ -583,7 +583,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-NAMING-004_
     - _Verification: unit tests — valid routes pass; unversioned route rejected; malformed group rejected_
 
-  - [ ] 9.3 Implement schema-diff change classifier (`internal/apischema/diff.go`)
+  - [x] 9.3 Implement schema-diff change classifier (`internal/apischema/diff.go`)
     - ClassifyChange: compares old/new schemas and returns change classification (Compatible, Breaking, ReviewRequired) per the change-classification table
     - _Design: D-11_
     - _Requirements: F12-EVOLVE-002_
