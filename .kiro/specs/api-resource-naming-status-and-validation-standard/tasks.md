@@ -209,7 +209,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-VALIDATION-006_
     - _Verification: unit tests — valid instance passes; missing required field fails; wrong type fails; enum mismatch fails_
 
-  - [ ] 5.3 Define StructuralValidator interface in apivalid (`internal/apivalid/structural.go`)
+  - [x] 5.3 Define StructuralValidator interface in apivalid (`internal/apivalid/structural.go`)
     - Interface signature: `Validate(instance any, schemaID string) ([]apiproblem.Violation, error)`
     - Returns BOTH violations AND an error:
       - `err != nil`: structural validation UNAVAILABLE; pipeline MUST stop at LayerStructural with Result.Problem = 500 INTERNAL_ERROR, Result.Err = internal cause, layers 5–7 MUST NOT execute
