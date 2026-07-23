@@ -1,0 +1,46 @@
+apiVersion: ops.sovrunn.io/v1alpha1
+kind: Operation
+metadata:
+    createdAt: "2026-07-08T18:00:00Z"
+    displayName: Project Scale Operation
+    generation: 1
+    labels:
+        sovrunn.io/operation-scope: project
+    name: op-scale-project-001
+    resourceVersion: rv-op-project-1
+    scopeRef:
+        apiVersion: core.sovrunn.io/v1alpha1
+        kind: Project
+        name: payments-production
+        uid: a1b2c3d4e5f60718293a4b5c6d7e8f90
+    uid: d45e6f708192a3b4c5d6e7f8091a2b3c
+    updatedAt: "2026-07-08T18:08:00Z"
+spec:
+    action: Scale
+    idempotencyKey: idem-project-scale-001
+    requestId: req-project-scale-001
+    requesterRef:
+        apiVersion: identity.sovrunn.io/v1alpha1
+        kind: Principal
+        name: operator-alice
+        uid: 7e8f901a2b3c4d5e6f708192a3b4c5d6
+    targetRef:
+        apiVersion: core.sovrunn.io/v1alpha1
+        kind: Project
+        name: payments-production
+        uid: a1b2c3d4e5f60718293a4b5c6d7e8f90
+status:
+    cancelRequested: "True"
+    conditions:
+        - lastTransitionTime: "2026-07-08T18:08:00Z"
+          message: Project-scoped operation cancelled.
+          observedGeneration: 1
+          reason: CancelHonored
+          status: "True"
+          type: Cancelled
+    observedGeneration: 1
+    phase: Cancelled
+    progressPercent: 20
+    retryable: "False"
+    terminalCode: CANCELLED
+    terminalMessage: Project-scoped operation cancelled by requester.

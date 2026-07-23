@@ -729,7 +729,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-FIXTURE-001, F12-FIXTURE-002, F12-SCOPE-002_
     - _Verification: each fixture decodes under ModeReadRepresentation and validates against its canonical schema; Operation variants each pass with their declared scope_
 
-  - [ ] 14.2 Create valid YAML equivalents for each fixture (`tests/conformance/fixtures/`)
+  - [x] 14.2 Create valid YAML equivalents for each fixture (`tests/conformance/fixtures/`)
     - Strict JSON-compatible YAML form of each fixture for JSON/YAML equivalence testing
     - _Design: D-03a; testing strategy section_
     - _Requirements: F12-VALIDATION-001(2)_
