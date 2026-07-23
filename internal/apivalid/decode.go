@@ -11,23 +11,6 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 )
 
-// Limits bounds decode-time size and nesting checks (F12-VALIDATION-007, D-06).
-// Reviewed default values are owned by task 6.1; zero means "not enforced"
-// for the corresponding check so callers can pass partial Limits in tests.
-type Limits struct {
-	MaxObjectBytes        int // 1_048_576 (1 MiB)
-	MaxNestingDepth       int // 32
-	MaxLabels             int // 64
-	MaxLabelKeyChars      int // 63
-	MaxLabelValueChars    int // 253
-	MaxAnnotationsBytes   int // 262_144 (256 KiB)
-	MaxConditions         int // 32
-	MaxReferencesPerField int // 64
-	MaxViolations         int // 100
-	DefaultPageSize       int // 50
-	MaxPageSize           int // 200
-}
-
 // systemOwnedMetadataKeys are Matrix C2 system-only ObjectMeta fields
 // rejected when AllowSystemOwned is false (D-15, F12-META-002).
 var systemOwnedMetadataKeys = map[string]struct{}{

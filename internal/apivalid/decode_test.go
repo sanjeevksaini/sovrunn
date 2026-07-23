@@ -11,10 +11,7 @@ import (
 // duplicate/unknown-field tests are not confounded by FieldPolicy.
 var permissivePolicy = PolicyFor(ModeReadRepresentation)
 
-var testLimits = Limits{
-	MaxObjectBytes:  1 << 20,
-	MaxNestingDepth: 32,
-}
+var testLimits = DefaultLimits()
 
 type decodeSample struct {
 	APIVersion string         `json:"apiVersion"`

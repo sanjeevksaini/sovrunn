@@ -229,7 +229,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apischema/...` passes with -count=1_
 
 - [ ] 6. Validation pipeline, limits, concurrency, and layer-8 authorization infrastructure
-  - [ ] 6.1 Implement Limits struct with reviewed defaults (`internal/apivalid/limits.go`)
+  - [x] 6.1 Implement Limits struct with reviewed defaults (`internal/apivalid/limits.go`)
     - Limits struct with all fields per design (MaxObjectBytes 1MiB, MaxNestingDepth 32, MaxLabels 64, MaxLabelKeyChars 63, MaxLabelValueChars 253, MaxAnnotationsBytes 256KiB, MaxConditions 32, MaxReferencesPerField 64, MaxViolations 100, DefaultPageSize 50, MaxPageSize 200)
     - _Design: D-06_
     - _Requirements: F12-VALIDATION-007, F12-LIST-002_
