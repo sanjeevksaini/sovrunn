@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/project.json",
+  "title": "Project",
+  "description": "Customer-facing ManagedResource under Tenant scope (Matrix D). Conformance-only grammar contract; no domain execution.",
+  "type": "object",
+  "x-sovrunn-profile": "ManagedResource",
+  "x-sovrunn-boundary": "customer-facing",
+  "x-sovrunn-allowed-scopes": ["Tenant"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["core.sovrunn.io/v1alpha1"],
+      "description": "Contract group and maturity version for Project.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Project"],
+      "description": "Singular PascalCase resource kind.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Common ObjectMeta including immutable Tenant scopeRef.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Desired state for the Project (customer-authored).",
+      "properties": {
+        "description": {
+          "type": "string",
+          "maxLength": 1024,
+          "description": "Optional human-readable project description; not identity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["customer", "operator", "internal", "governance"],
+            "mutability": "mutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "System-owned observed state for the Project.",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Pending", "Active", "Inactive", "Deleting", "Failed"],
+          "description": "Optional coarse lifecycle summary.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["customer", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "observedGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Desired-state generation last observed by the status owner.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["customer", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "description": "Current-fact conditions; not event history.",
+          "x-sovrunn-field-policy": {
+            "classification": "Customer-visible",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["customer", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}

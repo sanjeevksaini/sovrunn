@@ -1,0 +1,44 @@
+apiVersion: ops.sovrunn.io/v1alpha1
+kind: Operation
+metadata:
+    createdAt: "2026-07-08T15:00:00Z"
+    displayName: Organization Update Operation
+    generation: 1
+    labels:
+        sovrunn.io/operation-scope: organization
+    name: op-update-organization-001
+    resourceVersion: rv-op-org-1
+    scopeRef:
+        apiVersion: tenancy.sovrunn.io/v1alpha1
+        kind: Organization
+        name: acme-org
+        uid: 6d7e8f901a2b3c4d5e6f708192a3b4c5
+    uid: 901a2b3c4d5e6f708192a3b4c5d6e7f8
+    updatedAt: "2026-07-08T15:05:00Z"
+spec:
+    action: Update
+    idempotencyKey: idem-org-update-001
+    requestId: req-org-update-001
+    requesterRef:
+        apiVersion: identity.sovrunn.io/v1alpha1
+        kind: Principal
+        name: operator-alice
+        uid: 7e8f901a2b3c4d5e6f708192a3b4c5d6
+    targetRef:
+        apiVersion: tenancy.sovrunn.io/v1alpha1
+        kind: Organization
+        name: acme-org
+        uid: 6d7e8f901a2b3c4d5e6f708192a3b4c5
+status:
+    cancelRequested: "False"
+    conditions:
+        - lastTransitionTime: "2026-07-08T15:05:00Z"
+          message: Organization-scoped operation in progress.
+          observedGeneration: 1
+          reason: ExecutorActive
+          status: "True"
+          type: Progressing
+    observedGeneration: 1
+    phase: Running
+    progressPercent: 40
+    retryable: Unknown

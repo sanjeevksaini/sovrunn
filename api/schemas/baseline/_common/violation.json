@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/violation.json",
+  "title": "Violation",
+  "description": "Single field-level validation finding with RFC 6901 JSON Pointer (F12-ERROR-001, F12-VALIDATION-006).",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "minLength": 1,
+      "description": "RFC 6901 JSON Pointer to the invalid field (for example /metadata/name).",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "description": "Stable machine-readable violation code.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable informational message; MUST be redacted of secrets and inaccessible details (F12-ERROR-004).",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": false
+      }
+    }
+  },
+  "required": ["field", "code", "message"],
+  "additionalProperties": false
+}

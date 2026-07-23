@@ -1,0 +1,6 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  name: &anchor payments-production
+spec:
+  description: YAML anchors are not permitted.

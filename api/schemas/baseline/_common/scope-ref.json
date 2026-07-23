@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/scope-ref.json",
+  "title": "ScopeRef",
+  "description": "Immutable primary security/governance ownership reference (F12-SCOPE-002, F12-REF-001). Kind is constrained to Matrix B. Field policies are declared explicitly; FEATURE-0012 uses no inheritance from typed-ref.json.",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?/(v1alpha1|v1beta1|v1)$",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "Platform",
+        "Organization",
+        "OrganizationUnit",
+        "Tenant",
+        "Project",
+        "Provider"
+      ],
+      "description": "Matrix B scope kind (F12-SCOPE-002).",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "uid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Authorization resolves scope by uid, not name (F12-SCOPE-002).",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "name"],
+  "additionalProperties": false
+}

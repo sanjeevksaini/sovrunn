@@ -1,0 +1,4 @@
+# FEATURE-0012 (D-11, F12-EVOLVE-002): schema baseline and approval-record
+# protected review. Owner identity is the existing GitHub repository owner
+# for sanjeevksaini/sovrunn; no new owner identity was invented.
+api/schemas/baseline/** @sanjeevksaini

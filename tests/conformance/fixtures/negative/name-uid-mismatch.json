@@ -1,0 +1,6 @@
+{
+  "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+  "kind": "Tenant",
+  "name": "acme-tenant",
+  "uid": "deadbeefdeadbeefdeadbeefdeadbeef"
+}

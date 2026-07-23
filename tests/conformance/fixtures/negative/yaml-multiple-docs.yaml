@@ -1,0 +1,13 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  name: payments-production
+spec:
+  description: first
+---
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  name: other-project
+spec:
+  description: second

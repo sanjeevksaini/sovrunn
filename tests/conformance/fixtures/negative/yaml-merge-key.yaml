@@ -1,0 +1,7 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  <<:
+    name: payments-production
+spec:
+  description: YAML merge keys are not permitted.

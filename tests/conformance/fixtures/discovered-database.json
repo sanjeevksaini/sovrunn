@@ -1,0 +1,46 @@
+{
+  "apiVersion": "adapter.sovrunn.io/v1alpha1",
+  "kind": "DiscoveredDatabase",
+  "metadata": {
+    "name": "orders-db-observation",
+    "uid": "e5f60718293a4b5c6d7e8f901a2b3c4d",
+    "displayName": "Orders Database Observation",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "sovereign-provider",
+      "uid": "d4e5f60718293a4b5c6d7e8f901a2b3c"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-discovered-1",
+    "createdAt": "2026-07-03T09:00:00Z",
+    "updatedAt": "2026-07-03T09:01:00Z"
+  },
+  "status": {
+    "observationState": "Current",
+    "externalName": "orders-primary",
+    "conditions": [
+      {
+        "type": "Observed",
+        "status": "True",
+        "reason": "AdapterReported",
+        "message": "Observation is current.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-03T09:01:00Z"
+      }
+    ]
+  },
+  "provenance": {
+    "sourceRef": {
+      "apiVersion": "adapter.sovrunn.io/v1alpha1",
+      "kind": "AdapterConfiguration",
+      "name": "postgres-discovery-adapter",
+      "uid": "f60718293a4b5c6d7e8f901a2b3c4d5e"
+    },
+    "observedAt": "2026-07-03T09:01:00Z"
+  },
+  "freshness": {
+    "ttlSeconds": 300,
+    "freshnessState": "Fresh"
+  }
+}

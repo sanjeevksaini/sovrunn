@@ -1,0 +1,507 @@
+./scripts/feature-gate.sh FEATURE-0012
+==> Sovrunn Feature Gate: FEATURE-0012
+INFO: FEATURE-0012 is Phase 2+; using strict AOS validation mode
+PASS: Found docs/context/CURRENT_ARCHITECTURE_BASELINE.md
+PASS: Found docs/context/ARCHITECTURE_VERSION.md
+PASS: Found docs/governance/REVIEW_GATES.md
+PASS: Found docs/engineering/go-version-standard.md
+PASS: Found docs/engineering/go-observability-standard.md
+PASS: Found docs/diagrams/structurizr/workspace.dsl
+PASS: Found docs/features/FEATURE_INDEX.md
+==> Resolving feature paths from docs/features/FEATURE_INDEX.md
+INFO: Kiro slug=api-resource-naming-status-and-validation-standard
+INFO: assessment=docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+INFO: kiro=.kiro/specs/api-resource-naming-status-and-validation-standard
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/tasks.md
+PASS: Active feature identity present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Requirements stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Design stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Tasks stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/tasks.md
+PASS: Reuse Assessment present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Acceptance Criteria present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Non-goals present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Feature-level reuse summary present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Controlling ADH reference present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Architecture Drift Checks present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Observability present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Security present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Non-goals present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+==> Collecting authoritative changed-file list
+PASS: Changed-file list collected (240 files)
+==> Running reuse-assessment validator (strict)
+PASS: reuse assessment validation for FEATURE-0012
+PASS: reuse-assessment validator
+==> Checking generated artifacts are not staged
+PASS: Generated artifacts are not staged
+==> Running Structurizr workspace check
+PASS: Structurizr workspace exists: docs/diagrams/structurizr/workspace.dsl
+WARN: Structurizr CLI not installed; syntax validation skipped
+      Use 'make structurizr-lite' for local visual validation via Docker.
+PASS: Structurizr workspace check
+==> Running gofmt check
+PASS: gofmt check
+==> Running go test ./...
+?   	github.com/sanjeevksaini/sovrunn/cmd/sovrunn-api	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/api	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apicond	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiconform	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apimeta	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiproblem	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiref	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apischema	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apivalid	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/config	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/health	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/registry	(cached)
+?   	github.com/sanjeevksaini/sovrunn/internal/requestctx	[no test files]
+?   	github.com/sanjeevksaini/sovrunn/internal/resources	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/server	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/validation	(cached)
+PASS: go test ./...
+==> Running go test -race ./...
+?   	github.com/sanjeevksaini/sovrunn/cmd/sovrunn-api	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/api	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apicond	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiconform	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apimeta	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiproblem	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiref	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apischema	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apivalid	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/config	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/health	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/registry	(cached)
+?   	github.com/sanjeevksaini/sovrunn/internal/requestctx	[no test files]
+?   	github.com/sanjeevksaini/sovrunn/internal/resources	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/server	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/validation	(cached)
+PASS: go test -race ./...
+==> Running golangci-lint
+0 issues.
+PASS: golangci-lint
+==> Running gosec
+[gosec] 2026/07/23 22:23:45 Including rules: default
+[gosec] 2026/07/23 22:23:45 Excluding rules: default
+[gosec] 2026/07/23 22:23:45 Including analyzers: default
+[gosec] 2026/07/23 22:23:45 Excluding analyzers: default
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/config
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/health
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/cmd/sovrunn-api
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/requestctx
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server
+[gosec] 2026/07/23 22:23:45 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem
+[gosec] 2026/07/23 22:23:45 Checking package: health
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/health/readiness.go
+[gosec] 2026/07/23 22:23:45 Checking package: resources
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/capability.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/errors.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/operation.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/organization.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/organizationunit.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/plugin.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/project.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/servicebinding.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceclass.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceinstance.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceplan.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/tenant.go
+[gosec] 2026/07/23 22:23:45 Checking package: apicond
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond/condition.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond/doc.go
+[gosec] 2026/07/23 22:23:45 Checking package: requestctx
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/requestctx/requestctx.go
+[gosec] 2026/07/23 22:23:45 Checking package: validation
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/capability.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/organization.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/organizationunit.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/plugin.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/project.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/servicebinding.go
+[gosec] 2026/07/23 22:23:45 Checking package: registry
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/capability_lookup.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/capability_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/operation_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/org_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/ou_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/ou_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceclass.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/plugin_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/plugin_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceinstance.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_instance_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/servicebinding_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceclass_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceclass_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceinstance_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceplan_instance_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceplan_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/tenant_blocker.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/tenant_registry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceplan.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/tenant.go
+[gosec] 2026/07/23 22:23:45 Checking package: config
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/config/config.go
+[gosec] 2026/07/23 22:23:45 Checking package: main
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/cmd/sovrunn-api/main.go
+[gosec] 2026/07/23 22:23:45 Checking package: apiref
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/constraints.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/reference.go
+[gosec] 2026/07/23 22:23:45 Checking package: apimeta
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/list.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/objectmeta.go
+[gosec] 2026/07/23 22:23:45 Checking package: apischema
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/profile.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/annotations.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/reference.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/scope.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/typemeta.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/uid.go
+[gosec] 2026/07/23 22:23:45 Checking package: apiproblem
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/codes.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/diff.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/httpmap.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/problem.go
+[gosec] 2026/07/23 22:23:45 Checking package: server
+[gosec] 2026/07/23 22:23:45 Checking package: apivalid
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server/middleware.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/authz.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/concurrency.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server/server.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/fieldpolicy.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/httpdecode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/limits.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/pipeline.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_defaulting.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_reference.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_semantic.go
+[gosec] 2026/07/23 22:23:45 Checking package: api
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/bootstrap_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/capability_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/capability_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/operation_emitter.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/route.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/operation_handler.go
+[gosec] 2026/07/23 22:23:45 Checking package: apiconform
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/org_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/bindings.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/ou_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/ou_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/plugin_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/plugin_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/subsetvalidate.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/compat.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/project_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/project_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/contracts.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/response.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/servicebinding_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/servicebinding_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceclass_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceclass_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/doc.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stages.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/structural.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/translate.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceinstance_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceinstance_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceplan_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceplan_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/tenant_decode.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/tenant_handler.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_compat.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/typebinding.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_ref.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_runtime.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_schema.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fixtures.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/ledgergen.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/readfile.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/refresolver.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/schemaregistry.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/structural.go
+[gosec] 2026/07/23 22:23:45 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/structural_config.go
+Results:
+
+
+Summary:
+  Gosec  : dev
+  Files  : 126
+  Lines  : 21383
+  Nosec  : 9
+  Issues : 0
+
+PASS: gosec
+==> Running phase1 consistency check
+==> Phase 1 Consistency Check
+==> Checking resource model files
+==> Checking validation files
+==> Checking API handler/decode files
+OK: organization API handler -> internal/api/org_handler.go
+WARN: missing optional organization API decode
+  expected one of:
+  - internal/api/organization_decode.go
+  - internal/api/org_decode.go
+OK: organizationunit API handler -> internal/api/ou_handler.go
+OK: organizationunit API decode -> internal/api/ou_decode.go
+OK: tenant API decode -> internal/api/tenant_decode.go
+OK: project API decode -> internal/api/project_decode.go
+OK: serviceclass API decode -> internal/api/serviceclass_decode.go
+OK: serviceplan API decode -> internal/api/serviceplan_decode.go
+OK: plugin API decode -> internal/api/plugin_decode.go
+OK: capability API decode -> internal/api/capability_decode.go
+OK: serviceinstance API decode -> internal/api/serviceinstance_decode.go
+OK: servicebinding API decode -> internal/api/servicebinding_decode.go
+==> Checking registry files
+OK: organization registry -> internal/registry/org_registry.go
+OK: organizationunit registry -> internal/registry/ou_registry.go
+==> Checking gofmt
+==> Checking tests
+?   	github.com/sanjeevksaini/sovrunn/cmd/sovrunn-api	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/api	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apicond	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiconform	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apimeta	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiproblem	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiref	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apischema	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apivalid	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/config	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/health	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/registry	(cached)
+?   	github.com/sanjeevksaini/sovrunn/internal/requestctx	[no test files]
+?   	github.com/sanjeevksaini/sovrunn/internal/resources	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/server	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/validation	(cached)
+==> Checking race safety
+?   	github.com/sanjeevksaini/sovrunn/cmd/sovrunn-api	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/api	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apicond	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiconform	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apimeta	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiproblem	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiref	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apischema	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/apivalid	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/config	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/health	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/registry	(cached)
+?   	github.com/sanjeevksaini/sovrunn/internal/requestctx	[no test files]
+?   	github.com/sanjeevksaini/sovrunn/internal/resources	[no test files]
+ok  	github.com/sanjeevksaini/sovrunn/internal/server	(cached)
+ok  	github.com/sanjeevksaini/sovrunn/internal/validation	(cached)
+==> Checking lint
+0 issues.
+==> Checking security
+[gosec] 2026/07/23 22:23:46 Including rules: default
+[gosec] 2026/07/23 22:23:46 Excluding rules: default
+[gosec] 2026/07/23 22:23:46 Including analyzers: default
+[gosec] 2026/07/23 22:23:46 Excluding analyzers: default
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/cmd/sovrunn-api
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/config
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/health
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/requestctx
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api
+[gosec] 2026/07/23 22:23:46 Import directory: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid
+[gosec] 2026/07/23 22:23:46 Checking package: resources
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/capability.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/errors.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/operation.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/organization.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/organizationunit.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/plugin.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/project.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/servicebinding.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceclass.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceinstance.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/serviceplan.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/resources/tenant.go
+[gosec] 2026/07/23 22:23:46 Checking package: health
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/health/readiness.go
+[gosec] 2026/07/23 22:23:46 Checking package: apicond
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond/condition.go
+[gosec] 2026/07/23 22:23:46 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apicond/doc.go
+[gosec] 2026/07/23 22:23:47 Checking package: validation
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/capability.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/organization.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/organizationunit.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/plugin.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/project.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/servicebinding.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceclass.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceinstance.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/serviceplan.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/validation/tenant.go
+[gosec] 2026/07/23 22:23:47 Checking package: apiref
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/constraints.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiref/reference.go
+[gosec] 2026/07/23 22:23:47 Checking package: config
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/config/config.go
+[gosec] 2026/07/23 22:23:47 Checking package: registry
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/capability_lookup.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/capability_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/operation_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/org_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/ou_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/ou_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/plugin_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/plugin_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_instance_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/project_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/servicebinding_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceclass_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceclass_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceinstance_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceplan_instance_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/serviceplan_registry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/tenant_blocker.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/registry/tenant_registry.go
+[gosec] 2026/07/23 22:23:47 Checking package: requestctx
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/requestctx/requestctx.go
+[gosec] 2026/07/23 22:23:47 Checking package: apischema
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/annotations.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/diff.go
+[gosec] 2026/07/23 22:23:47 Checking package: apimeta
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/list.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/objectmeta.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/profile.go
+[gosec] 2026/07/23 22:23:47 Checking package: apiproblem
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/codes.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/reference.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/scope.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/typemeta.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apimeta/uid.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/httpmap.go
+[gosec] 2026/07/23 22:23:47 Checking package: main
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/cmd/sovrunn-api/main.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiproblem/problem.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/route.go
+[gosec] 2026/07/23 22:23:47 Checking package: apivalid
+[gosec] 2026/07/23 22:23:47 Checking package: server
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/authz.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server/middleware.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/concurrency.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/server/server.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/subsetvalidate.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/fieldpolicy.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/httpdecode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/limits.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/pipeline.go
+[gosec] 2026/07/23 22:23:47 Checking package: api
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/bootstrap_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/capability_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/capability_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_defaulting.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_reference.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/operation_emitter.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/operation_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stage_semantic.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/org_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/ou_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/ou_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/plugin_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/plugin_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/project_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/project_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/response.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/servicebinding_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/servicebinding_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceclass_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceclass_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apischema/typebinding.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceinstance_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceinstance_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceplan_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/serviceplan_handler.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/stages.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/structural.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apivalid/translate.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/tenant_decode.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/api/tenant_handler.go
+[gosec] 2026/07/23 22:23:47 Checking package: apiconform
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/bindings.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/compat.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/contracts.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/doc.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_compat.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_ref.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_runtime.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fitness_schema.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/fixtures.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/ledgergen.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/readfile.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/refresolver.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/schemaregistry.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/structural.go
+[gosec] 2026/07/23 22:23:47 Checking file: /Users/sanjeevkumar/SoftwareDevelopment/sovrunn/internal/apiconform/structural_config.go
+Results:
+
+
+Summary:
+  Gosec  : dev
+  Files  : 126
+  Lines  : 21383
+  Nosec  : 9
+  Issues : 0
+
+==> Phase 1 Consistency Check passed
+PASS: phase1 consistency check
+==> Running phase2 scope check
+==> Checking Phase 2 scope boundaries for FEATURE-0012
+PASS: Phase 2 scope boundaries
+PASS: phase2 scope check
+==> Running FEATURE-0012 API conformance check
+==> FEATURE-0012 API conformance check
+==> Running: go test ./internal/apiconform/...
+ok  	github.com/sanjeevksaini/sovrunn/internal/apiconform	(cached)
+PASS: API conformance checks passed
+PASS: FEATURE-0012 API conformance check
+WARN: docs/reviews/feature-gates/FEATURE-0012-approval-review.md not found
+WARN: automated checks may pass, but final merge approval requires Final feature-review status: Approved
+
+SUCCESS: FEATURE-0012 passed Sovrunn feature gate
+feature_gate_exit=0

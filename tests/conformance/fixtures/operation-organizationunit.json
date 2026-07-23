@@ -1,0 +1,56 @@
+{
+  "apiVersion": "ops.sovrunn.io/v1alpha1",
+  "kind": "Operation",
+  "metadata": {
+    "name": "op-reconcile-organizationunit-001",
+    "uid": "a12b3c4d5e6f708192a3b4c5d6e7f809",
+    "displayName": "OrganizationUnit Reconcile Operation",
+    "scopeRef": {
+      "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+      "kind": "OrganizationUnit",
+      "name": "acme-engineering",
+      "uid": "b23c4d5e6f708192a3b4c5d6e7f8091a"
+    },
+    "labels": {
+      "sovrunn.io/operation-scope": "organizationunit"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-op-ou-1",
+    "createdAt": "2026-07-08T16:00:00Z",
+    "updatedAt": "2026-07-08T16:02:00Z"
+  },
+  "spec": {
+    "targetRef": {
+      "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+      "kind": "OrganizationUnit",
+      "name": "acme-engineering",
+      "uid": "b23c4d5e6f708192a3b4c5d6e7f8091a"
+    },
+    "action": "Reconcile",
+    "requesterRef": {
+      "apiVersion": "identity.sovrunn.io/v1alpha1",
+      "kind": "Principal",
+      "name": "operator-alice",
+      "uid": "7e8f901a2b3c4d5e6f708192a3b4c5d6"
+    },
+    "idempotencyKey": "idem-ou-reconcile-001",
+    "requestId": "req-ou-reconcile-001"
+  },
+  "status": {
+    "phase": "Pending",
+    "progressPercent": 0,
+    "retryable": "Unknown",
+    "cancelRequested": "False",
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Accepted",
+        "status": "True",
+        "reason": "Queued",
+        "message": "OrganizationUnit-scoped operation accepted.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-08T16:02:00Z"
+      }
+    ]
+  }
+}

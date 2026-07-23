@@ -27,6 +27,10 @@ done
 
 [[ -n "$FEATURE" ]] || fail "--feature is required"
 
+if [[ "$FEATURE" == "FEATURE-0012" ]]; then
+  fail "FEATURE-0012 uses exact leaf IDs and checkpoint waves; use make ff-feature-0012-plan / ff-feature-0012-run"
+fi
+
 FEATURE_FILE=".automation/features/${FEATURE}.yaml"
 STATE_FILE=".automation/state/${FEATURE}.json"
 

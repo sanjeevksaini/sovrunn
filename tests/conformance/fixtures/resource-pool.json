@@ -1,0 +1,40 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ResourcePool",
+  "metadata": {
+    "name": "postgres-shared-pool",
+    "uid": "c3d4e5f60718293a4b5c6d7e8f901a2b",
+    "displayName": "Postgres Shared Pool",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "sovereign-provider",
+      "uid": "d4e5f60718293a4b5c6d7e8f901a2b3c"
+    },
+    "labels": {
+      "sovrunn.io/capability": "relational-database"
+    },
+    "generation": 2,
+    "resourceVersion": "rv-pool-2",
+    "createdAt": "2026-07-02T08:00:00Z",
+    "updatedAt": "2026-07-02T08:10:00Z"
+  },
+  "spec": {
+    "capabilityClass": "relational-database",
+    "jurisdictionCode": "IN-MH"
+  },
+  "status": {
+    "phase": "Ready",
+    "observedGeneration": 2,
+    "conditions": [
+      {
+        "type": "Available",
+        "status": "True",
+        "reason": "CapacityReady",
+        "message": "Pool has available capacity.",
+        "observedGeneration": 2,
+        "lastTransitionTime": "2026-07-02T08:10:00Z"
+      }
+    ]
+  }
+}

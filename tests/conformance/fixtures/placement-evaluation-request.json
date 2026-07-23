@@ -1,0 +1,39 @@
+{
+  "apiVersion": "placement.sovrunn.io/v1alpha1",
+  "kind": "PlacementEvaluationRequest",
+  "metadata": {
+    "name": "place-orders-workload",
+    "uid": "3a4b5c6d7e8f901a2b3c4d5e6f708192",
+    "displayName": "Place Orders Workload",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-placement-1",
+    "createdAt": "2026-07-06T12:00:00Z",
+    "updatedAt": "2026-07-06T12:00:01Z"
+  },
+  "request": {
+    "subjectRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "ServiceInstance",
+      "name": "orders-api",
+      "uid": "4b5c6d7e8f901a2b3c4d5e6f708192a3"
+    },
+    "requiredCapabilityClass": "relational-database",
+    "jurisdictionCode": "IN-MH"
+  },
+  "result": {
+    "outcome": "Allow",
+    "reasonCode": "POOL_CAPACITY_AVAILABLE",
+    "selectedPoolRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "ResourcePool",
+      "name": "postgres-shared-pool",
+      "uid": "c3d4e5f60718293a4b5c6d7e8f901a2b"
+    }
+  }
+}
