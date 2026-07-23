@@ -849,7 +849,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `make ff-feature-gate FEATURE=FEATURE-0012` passes_
 
 - [ ] 17. Baseline protected-review governance and full verification
-  - [ ] 17.1 Configure CODEOWNERS for baseline protected review
+  - [x] 17.1 Configure CODEOWNERS for baseline protected review
     - Inspect existing CODEOWNERS for the repository owner pattern already in use
     - Update CODEOWNERS to include `api/schemas/baseline/**` using the existing owner identity; do NOT invent an owner
     - Branch-protection configuration is external evidence: collect or document available evidence; do not claim that repository code configured branch protection; if required evidence is unavailable, preserve PENDING_HUMAN_REVIEW
