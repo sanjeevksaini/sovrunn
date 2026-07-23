@@ -129,7 +129,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - All tests must pass before proceeding to task group 4
 
 - [ ] 4. Strict JSON/YAML decoding and operation-aware field policies
-  - [ ] 4.1 Implement pure DecodeJSON with duplicate-key detection (`internal/apivalid/decode.go`)
+  - [x] 4.1 Implement pure DecodeJSON with duplicate-key detection (`internal/apivalid/decode.go`)
     - encoding/json with DisallowUnknownFields + token-scan duplicate-key detector
     - Returns `*apiproblem.Problem` with stable code and JSON Pointer on failure
     - Accepts Limits and FieldPolicy parameters; no HTTP dependency
