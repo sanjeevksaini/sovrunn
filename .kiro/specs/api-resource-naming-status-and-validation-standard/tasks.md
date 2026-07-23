@@ -255,7 +255,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-SCOPE-002, F12-REF-001_
     - _Verification: unit tests — matching scopes (all six kinds including platform) → nil; kind mismatch → violation with correct code and path; UID mismatch → violation_
 
-  - [ ] 6.4 Implement nine-layer validation pipeline with structural fail-closed and layer-8 configuration matrix (`internal/apivalid/pipeline.go`)
+  - [x] 6.4 Implement nine-layer validation pipeline with structural fail-closed and layer-8 configuration matrix (`internal/apivalid/pipeline.go`)
     - Layer enum (1..9), Result struct:
       - `Violations []apiproblem.Violation`
       - `FailedAt Layer`

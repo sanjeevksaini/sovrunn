@@ -77,24 +77,11 @@ type ValidationStage interface {
 // implementations may live in apivalid or apiconform. apivalid MUST NOT
 // import apischema.
 //
-// Pipeline Result/Layer wiring and Run integration are owned by later
-// tasks (6.4, 6.5e, 6.7a); this file defines the stage contracts and the
-// Input.Stages carrier field (task 6.5a).
+// Input (including Stages) and Layer/Result wiring live in pipeline.go
+// (task 6.4). Stage invocation into layers 5–7 is owned by task 6.5e;
+// ordering/fail-closed tests are tasks 6.7a.
 type StageSet struct {
 	Defaulting DefaultingStage
 	Semantic   ValidationStage
 	Reference  ValidationStage
-}
-
-// Input is the pipeline invocation envelope. Stages carries the layer 5–7
-// stage set required by the invocation contract above.
-//
-// Additional fields (decode payload, StructuralValidator, layer-8 matrix,
-// and related parameters) and the Validate/Run implementation are owned by
-// task 6.4 (pipeline.go). Stages is declared here so the stage contract is
-// explicit and importable before the nine-layer pipeline lands.
-type Input struct {
-	// Stages holds Defaulting (layer 5), Semantic (layer 6), and Reference
-	// (layer 7). Nil required slots fail closed at the corresponding layer.
-	Stages StageSet
 }

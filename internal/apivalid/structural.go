@@ -28,8 +28,8 @@ import "github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 // inject a deterministic stub StructuralValidator. No full pipeline
 // invocation for an external object may omit the validator.
 //
-// Pipeline Result/Problem wiring is owned by later tasks (6.4, 6.6);
-// this file defines only the interface contract (D-01a, D-04).
+// Pipeline Result/Problem wiring lives in pipeline.go (task 6.4).
+// Expanded structural fail-closed tests are task 6.6.
 type StructuralValidator interface {
 	Validate(instance any, schemaID string) ([]apiproblem.Violation, error)
 }
