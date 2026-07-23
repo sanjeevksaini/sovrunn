@@ -17,8 +17,8 @@ The flow:
 - rejects changes outside a task-family allowlist;
 - rejects changes to approved requirements, design, and architecture;
 - rejects dependency changes after Task 1.1;
-- allows only the current task checkbox to change, then rolls up the parent
-  checkbox when all children are complete;
+- allows the current task checkbox plus a valid completed-parent roll-up;
+  otherwise it performs the parent roll-up itself when all children are complete;
 - runs Go 1.22 Docker verification and repository guardrails before every task
   commit;
 - commits one validated task at a time using an exact staged path set;

@@ -469,21 +469,55 @@ def validate_tasks_file_change(
         raise FlowError(
             "Cursor changed tasks.md content beyond checkbox state; review required"
         )
+
     before_states = checkbox_states(before)
     after_states = checkbox_states(after)
+
     changed = {
         task_id
         for task_id in before_states.keys() | after_states.keys()
         if before_states.get(task_id) != after_states.get(task_id)
     }
-    if not changed.issubset({current_task}):
+
+    allowed = {current_task}
+
+    # Cursor may roll up the current task's parent itself. Accept that only
+    # when the parent changes from unchecked to checked and every child of
+    # that parent is checked in the resulting tasks file.
+    if current_task not in CHECKPOINTS and "." in current_task:
+        parent = task_group(current_task)
+
+        if before_states.get(parent) != after_states.get(parent):
+            children = sorted(
+                task_id
+                for task_id in after_states
+                if task_id.startswith(parent + ".")
+            )
+
+            valid_parent_rollup = (
+                before_states.get(parent) is False
+                and after_states.get(parent) is True
+                and bool(children)
+                and all(after_states[child] for child in children)
+            )
+
+            if not valid_parent_rollup:
+                raise FlowError(
+                    f"Cursor changed parent checkbox {parent} without a valid "
+                    "all-children-complete roll-up"
+                )
+
+            allowed.add(parent)
+
+    if not changed.issubset(allowed):
         raise FlowError(
-            "Cursor changed checkbox(es) other than the current task: "
+            "Cursor changed checkbox(es) other than the current task or its "
+            "valid completed parent: "
             + ", ".join(sorted(changed))
         )
+
     if before_states.get(current_task):
         raise FlowError(f"task {current_task} was already checked before execution")
-
 
 def validate_precompleted_waves(plan: Plan) -> None:
     previous_complete = True
