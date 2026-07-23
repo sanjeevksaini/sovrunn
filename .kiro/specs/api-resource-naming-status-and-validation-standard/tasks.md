@@ -830,7 +830,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-LEDGER-001, F12-VERIFY-001(1–15)_
     - _Verification: `go test ./internal/apiconform/...` — all fifteen pass; a boundary missing a category fails_
 
-  - [ ] 16.6 Create api-conformance-check.sh script (`scripts/api-conformance-check.sh`)
+  - [x] 16.6 Create api-conformance-check.sh script (`scripts/api-conformance-check.sh`)
     - Invokes `go test ./internal/apiconform/...` (fitness functions + schema-diff + coverage + baseline integrity + baseline approval + ledger)
     - Exit 0 on pass; exit 1 on failure
     - _Design: files section (scripts)_
