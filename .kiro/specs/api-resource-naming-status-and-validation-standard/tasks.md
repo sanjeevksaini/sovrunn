@@ -177,7 +177,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
 - [ ] 5. Bounded JSON Schema supported-subset validation and StructuralValidator interface
-  - [ ] 5.1 Implement SupportedKeywords set, context-aware schema walker, and ValidateSchemaSupport (`internal/apischema/subsetvalidate.go`)
+  - [x] 5.1 Implement SupportedKeywords set, context-aware schema walker, and ValidateSchemaSupport (`internal/apischema/subsetvalidate.go`)
     - Define the exact bounded vocabulary — these keywords only:
       $schema, $id, $ref, title, description, type, properties, required,
       enum, items, additionalProperties, minLength, maxLength, minimum,
