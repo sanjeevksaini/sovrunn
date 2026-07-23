@@ -472,7 +472,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
   - Covers: all primitive packages (tasks 2.1–2.8), apivalid pipeline + stages + authz (tasks 4–6), apischema subset validation (task 5), apiconform import-boundary test (task 1.3), structural fail-closed tests (task 6.6), layer 5–7 tests (task 6.7a), layer-8 configuration tests (task 6.7)
   - All tests must pass before proceeding to task group 7a
 
-- [ ] 7a. Immutable schema registry and safe local $ref resolution
+- [x] 7a. Immutable schema registry and safe local $ref resolution
   - [x] 7a.1 Implement immutable SchemaRegistry interface and in-memory implementation (`internal/apiconform/schemaregistry.go`)
     - SchemaRegistry interface: `Load(schemaID string) (schema []byte, err error)`
     - In-memory implementation for tests: accepts pre-loaded schemas by stable schema ID
@@ -496,7 +496,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-IMPL-001_
     - _Verification: unit tests — valid local ref resolves; missing ref → error; remote URI → error; absolute path → error; traversal → error; cycle → error; depth overflow → error_
 
-  - [ ] 7a.3 Implement immutable StructuralValidatorConfig (`internal/apiconform/structural_config.go`)
+  - [x] 7a.3 Implement immutable StructuralValidatorConfig (`internal/apiconform/structural_config.go`)
     - Define an immutable configuration value containing SchemaRegistry and
       RefResolver
     - Its constructor rejects a nil SchemaRegistry or nil RefResolver
