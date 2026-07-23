@@ -325,7 +325,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001, F12-VALIDATION-004, F12-VALIDATION-005_
     - _Verification: `go build ./internal/apivalid` compiles; stage interfaces importable_
 
-  - [ ] 6.5b Implement deterministic defaulting stage (`internal/apivalid/stage_defaulting.go`)
+  - [x] 6.5b Implement deterministic defaulting stage (`internal/apivalid/stage_defaulting.go`)
     - Implements DefaultingStage interface (Apply returns the defaulted object used by all later layers)
     - Common defaulting: canonical Platform scope normalization via NormalizeScope (explicit Platform → nil)
     - Deterministic explicit no-op when no applicable defaulting rules exist for the input kind
