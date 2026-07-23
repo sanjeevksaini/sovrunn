@@ -88,7 +88,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-LIST-001, F12-LIST-002, F12-NAMING-002_
     - _Verification: JSON marshal of ListEnvelope produces flat apiVersion/kind at top level (no nesting)_
 
-  - [ ] 2.4 Implement TypedRef re-export and reference constraint helpers (`internal/apiref`)
+  - [x] 2.4 Implement TypedRef re-export and reference constraint helpers (`internal/apiref`)
     - `reference.go`: type alias `TypedRef = apimeta.TypedRef`; `Refs` collection type
     - `constraints.go`: Constraint struct (AllowedKinds, AllowedScopes, Direction); `ValidateRef` method returning package-local `RefIssue` slice (field path + stable code + message); does NOT import `apiproblem`
     - _Design: data models section (apiref)_
