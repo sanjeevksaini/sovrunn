@@ -176,7 +176,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.3, 4.7, 4.9 (F12-VALIDATION-002, F12-META-002, F12-OWNER-002)**
     - _Verification: `go test ./internal/apivalid/...` passes with -count=1_
 
-- [ ] 5. Bounded JSON Schema supported-subset validation and StructuralValidator interface
+- [x] 5. Bounded JSON Schema supported-subset validation and StructuralValidator interface
   - [x] 5.1 Implement SupportedKeywords set, context-aware schema walker, and ValidateSchemaSupport (`internal/apischema/subsetvalidate.go`)
     - Define the exact bounded vocabulary — these keywords only:
       $schema, $id, $ref, title, description, type, properties, required,
@@ -221,7 +221,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-IMPL-001_
     - _Verification: `go build ./internal/apivalid` compiles; interface is importable from apiconform without cycle; no Result/Problem/pipeline behavior tested here (see tasks 6.6, 6.7)_
 
-  - [ ] 5.4 Write property test for fail-closed schema support (Property 1)
+  - [x] 5.4 Write property test for fail-closed schema support (Property 1)
     - **Property 1: Fail-closed schema support**
     - For any schema document, if it contains a keyword outside the supported subset, ValidateSchemaSupport rejects it; a schema passes iff every keyword is in the set
     - Minimum 100 generated iterations; deterministic seed or report failing seed
