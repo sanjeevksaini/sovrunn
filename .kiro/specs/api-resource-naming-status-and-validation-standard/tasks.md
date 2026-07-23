@@ -857,7 +857,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-EVOLVE-002, F12-VERIFY-001(10)_
     - _Verification: CODEOWNERS lists baseline paths with existing owner; branch-protection evidence collected or marked PENDING_HUMAN_REVIEW_
 
-  - [ ] 17.2 Run full automated verification suite
+  - [x] 17.2 Run full automated verification suite
     - Execute: `make fmt`; `git diff --check`; `go test ./...`; `go test -race ./...`; `go vet ./...`; `make ff-feature-gate FEATURE=FEATURE-0012`
     - Fix any failures discovered
     - _Design: verification section (F12-VERIFY-002)_

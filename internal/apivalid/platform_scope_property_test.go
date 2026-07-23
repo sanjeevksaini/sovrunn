@@ -234,7 +234,7 @@ func checkProperty4Case(c property4Case, iteration int) error {
 	again := apimeta.NormalizeScope(normalized)
 	if again != normalized {
 		// For nil both are nil (equal). For non-platform, same pointer.
-		if !(again == nil && normalized == nil) {
+		if again != nil || normalized != nil {
 			return fmt.Errorf("iteration %d: NormalizeScope not idempotent: first=%#v second=%#v",
 				iteration, normalized, again)
 		}

@@ -340,7 +340,7 @@ func checkGrammarHTTPRouteRegistration(moduleRoot string) []FitnessFinding {
 
 func checkServerNoFeature0012APIsRoutes(moduleRoot string) []FitnessFinding {
 	serverPath := filepath.Join(moduleRoot, "internal", "server", "server.go")
-	raw, err := os.ReadFile(serverPath)
+	raw, err := readRepoFile(serverPath)
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckLaterFeatureRuntimeAbsent,
@@ -364,7 +364,7 @@ func checkServerNoFeature0012APIsRoutes(moduleRoot string) []FitnessFinding {
 
 func checkFeatureDocHandoffTraceability(moduleRoot string) []FitnessFinding {
 	path := filepath.Join(moduleRoot, Feature0012FeatureDocPath)
-	raw, err := os.ReadFile(path)
+	raw, err := readRepoFile(path)
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckExceptionsRequireApprovedHandoff,
@@ -390,7 +390,7 @@ func checkFeatureDocHandoffTraceability(moduleRoot string) []FitnessFinding {
 
 func checkCompatibilityExceptionsHaveHandoffs(moduleRoot string, handoffs map[string]string) []FitnessFinding {
 	reportPath := filepath.Join(moduleRoot, Phase1CompatibilityReportPath)
-	raw, err := os.ReadFile(reportPath)
+	raw, err := readRepoFile(reportPath)
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckExceptionsRequireApprovedHandoff,
@@ -492,7 +492,7 @@ func loadApprovedHandoffs(moduleRoot string) (map[string]string, error) {
 			continue
 		}
 		id := m[1]
-		raw, err := os.ReadFile(filepath.Join(dir, name))
+		raw, err := readRepoFile(filepath.Join(dir, name))
 		if err != nil {
 			return nil, err
 		}

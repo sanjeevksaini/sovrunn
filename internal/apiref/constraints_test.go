@@ -15,7 +15,7 @@ func TestTypedRefAlias(t *testing.T) {
 		Name:       "sovereign-pool-a",
 		UID:        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
-	var base apimeta.TypedRef = ref
+	base := apimeta.TypedRef(ref)
 	if base.Name != ref.Name {
 		t.Fatalf("TypedRef alias must be identical to apimeta.TypedRef")
 	}

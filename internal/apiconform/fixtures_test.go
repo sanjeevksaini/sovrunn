@@ -24,10 +24,8 @@ import (
 // Task 14.5 conformance suite (F12-FIXTURE-002, F12-VALIDATION-002,
 // F12-SEC-003/004, F12-SCOPE-002; D-03a, D-15, D-16, D-17).
 
-const (
-	property4CompleteSeed       int64 = 20260723145
-	property4CompleteIterations       = 100
-)
+const property4CompleteSeed int64 = 20260723145
+const property4CompleteIterations = 100
 
 // conformanceFixtureCase binds one canonical fixture family to its schema and
 // Go contract type for positive decode/validate/annotation proofs.

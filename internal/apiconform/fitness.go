@@ -2,7 +2,6 @@ package apiconform
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -239,7 +238,7 @@ func CheckBoundaryLedger(moduleRoot string) []FitnessFinding {
 func checkBoundaryLedgerAt(ledgerPath, schemasRoot string) []FitnessFinding {
 	var findings []FitnessFinding
 
-	raw, err := os.ReadFile(ledgerPath)
+	raw, err := readRepoFile(ledgerPath)
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckBoundaryLedger,
@@ -347,7 +346,7 @@ func collectCanonicalSchemaBoundaries(schemasRoot string) (map[string][]string, 
 	var findings []FitnessFinding
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckBoundaryLedger,

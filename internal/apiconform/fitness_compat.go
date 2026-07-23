@@ -275,7 +275,7 @@ func CheckGeneratedArtifactsMatchCanonicalSchema(moduleRoot string) []FitnessFin
 		seen[b.SchemaPath] = struct{}{}
 
 		schemaPath := filepath.Join(moduleRoot, filepath.FromSlash(b.SchemaPath))
-		schema, err := os.ReadFile(schemaPath)
+		schema, err := readRepoFile(schemaPath)
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckGeneratedArtifactsMatchSchema,
@@ -309,7 +309,7 @@ func CheckGeneratedArtifactsMatchCanonicalSchema(moduleRoot string) []FitnessFin
 	}
 
 	// Deliberate mismatch probe against page.json (D-01b supporting proof).
-	pageSchema, err := os.ReadFile(filepath.Join(moduleRoot, "api/schemas/_common/page.json"))
+	pageSchema, err := readRepoFile(filepath.Join(moduleRoot, "api/schemas/_common/page.json"))
 	if err != nil {
 		findings = append(findings, FitnessFinding{
 			Check:   FitnessCheckGeneratedArtifactsMatchSchema,
@@ -353,7 +353,7 @@ func baselineCurrentDiffFindings(moduleRoot string) []FitnessFinding {
 	}
 
 	for _, rel := range entries {
-		oldRaw, err := os.ReadFile(filepath.Join(baselineDir, filepath.FromSlash(rel)))
+		oldRaw, err := readRepoFile(filepath.Join(baselineDir, filepath.FromSlash(rel)))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckSchemaCompatibility,
@@ -364,7 +364,7 @@ func baselineCurrentDiffFindings(moduleRoot string) []FitnessFinding {
 			})
 			continue
 		}
-		newRaw, err := os.ReadFile(filepath.Join(schemasRoot, filepath.FromSlash(rel)))
+		newRaw, err := readRepoFile(filepath.Join(schemasRoot, filepath.FromSlash(rel)))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckSchemaCompatibility,

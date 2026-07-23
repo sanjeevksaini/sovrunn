@@ -178,7 +178,7 @@ func loadJSONFiles(dir, idPrefix string, out map[string][]byte) error {
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 			return fmt.Errorf("%w: schema path escapes directory: %s", ErrSchemaIDRejected, path)
 		}
-		body, err := os.ReadFile(resolved)
+		body, err := os.ReadFile(resolved) // #nosec G304 -- path constrained under schemasDir via EvalSymlinks and Rel escape checks.
 		if err != nil {
 			return fmt.Errorf("apiconform: read schema %s: %w", path, err)
 		}

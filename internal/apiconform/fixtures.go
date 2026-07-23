@@ -68,7 +68,7 @@ func (l *FixtureLoader) Read(name string) ([]byte, error) {
 	if l == nil {
 		return nil, fmt.Errorf("fixture loader: nil loader")
 	}
-	raw, err := os.ReadFile(l.Path(name))
+	raw, err := readRepoFile(l.Path(name))
 	if err != nil {
 		return nil, fmt.Errorf("read fixture %s: %w", name, err)
 	}
@@ -313,12 +313,12 @@ func AssertAllMatrixDScenarios(l *FixtureLoader) error {
 	}
 	scenarios := MatrixDScenarios()
 	if len(scenarios) != MatrixDScenarioCount {
-		return fmt.Errorf("Matrix D table length = %d, want %d", len(scenarios), MatrixDScenarioCount)
+		return fmt.Errorf("matrix D table length = %d, want %d", len(scenarios), MatrixDScenarioCount)
 	}
 	seen := make(map[string]struct{}, len(scenarios))
 	for _, sc := range scenarios {
 		if sc.Name == "" {
-			return fmt.Errorf("Matrix D scenario has empty name")
+			return fmt.Errorf("matrix D scenario has empty name")
 		}
 		if _, dup := seen[sc.Name]; dup {
 			return fmt.Errorf("duplicate Matrix D scenario %q", sc.Name)
@@ -356,7 +356,7 @@ func proveCustomerCreatesProject(l *FixtureLoader) error {
 		return fmt.Errorf("stable identity missing: name=%q uid=%q", p.Metadata.Name, p.Metadata.UID)
 	}
 	if p.Metadata.ScopeRef == nil || apimeta.ScopeKind(p.Metadata.ScopeRef.Kind) != apimeta.ScopeTenant {
-		return fmt.Errorf("Tenant scopeRef required, got %+v", p.Metadata.ScopeRef)
+		return fmt.Errorf("tenant scopeRef required, got %+v", p.Metadata.ScopeRef)
 	}
 	if p.Spec.Description == "" {
 		return fmt.Errorf("spec must carry desired-state fields")
@@ -393,7 +393,7 @@ func proveOperatorRegistersResourcePool(l *FixtureLoader) error {
 		return fmt.Errorf("resource-pool fixture: %w", err)
 	}
 	if pool.Metadata.ScopeRef == nil || apimeta.ScopeKind(pool.Metadata.ScopeRef.Kind) != apimeta.ScopeProvider {
-		return fmt.Errorf("Provider scopeRef required, got %+v", pool.Metadata.ScopeRef)
+		return fmt.Errorf("provider scopeRef required, got %+v", pool.Metadata.ScopeRef)
 	}
 	return nil
 }
@@ -634,7 +634,7 @@ func provePortalListsLargeCollections(l *FixtureLoader) error {
 		},
 		Items: []Project{item},
 		Page: apimeta.Page{
-			NextPageToken: "opaque-page-token-conformance-001",
+			NextPageToken: "opaque-page-token-conformance-001", // #nosec G101 -- opaque pagination token for conformance fixture, not a credential.
 		},
 	}
 	if len(list.Items) > lim.MaxPageSize {
@@ -815,7 +815,7 @@ func proveAIExplainsDenial(l *FixtureLoader) error {
 	}
 	denied := apivalid.SafeDenial(apivalid.DenyNotDisclosed)
 	if denied.Code == "" || denied.Title == "" {
-		return fmt.Errorf("Problem must expose stable code/title for explainability")
+		return fmt.Errorf("problem must expose stable code/title for explainability")
 	}
 	if denied.Code != apiproblem.CodeResourceNotFound {
 		return fmt.Errorf("SafeDenial code=%q, want RESOURCE_NOT_FOUND", denied.Code)

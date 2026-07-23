@@ -80,7 +80,7 @@ func ClassifyChange(oldSchema, newSchema []byte) []Change {
 	oldRoot, errOld := parseSchemaObject(oldSchema)
 	newRoot, errNew := parseSchemaObject(newSchema)
 	if errOld != nil || errNew != nil {
-		msg := "schema document is not valid JSON object"
+		var msg string
 		if errOld != nil && errNew != nil {
 			msg = fmt.Sprintf("old and new schemas are not valid JSON objects: old=%v; new=%v", errOld, errNew)
 		} else if errOld != nil {
@@ -956,7 +956,7 @@ func validateApprovalEvidenceFields(e baselineApproval) error {
 }
 
 func loadBaselineManifest(path string) (baselineManifest, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- trusted baseline governance path constructed by VerifyBaseline* callers.
 	if err != nil {
 		return baselineManifest{}, fmt.Errorf("baseline manifest: read %s: %w", path, err)
 	}
@@ -984,7 +984,7 @@ func loadBaselineManifest(path string) (baselineManifest, error) {
 }
 
 func loadBaselineApprovals(path string) (baselineApprovalsFile, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- trusted baseline governance path constructed by VerifyBaseline* callers.
 	if err != nil {
 		return baselineApprovalsFile{}, fmt.Errorf("baseline approvals: read %s: %w", path, err)
 	}
@@ -1085,7 +1085,7 @@ func compareBaselineDigests(manifest, actual map[string]string) error {
 }
 
 func sha256FileHex(path string) (string, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- trusted baseline file path from verified manifest entries under api/schemas/baseline.
 	if err != nil {
 		return "", err
 	}

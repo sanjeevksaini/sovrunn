@@ -3,7 +3,6 @@ package apiconform
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -106,7 +105,7 @@ func CheckExternalSchemaAnnotations(schemasRoot string) []FitnessFinding {
 	var findings []FitnessFinding
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckExternalSchemaAnnotations,
@@ -157,7 +156,7 @@ func CheckFieldPolicyCoverage(schemasRoot string) []FitnessFinding {
 
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckFieldPolicyCoverage,
@@ -190,7 +189,7 @@ func CheckFieldPolicyCoverage(schemasRoot string) []FitnessFinding {
 	commonRoot := filepath.Join(schemasRoot, "_common")
 	for _, name := range commonSubSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/_common/" + name
-		body, err := os.ReadFile(filepath.Join(commonRoot, name))
+		body, err := readRepoFile(filepath.Join(commonRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckFieldPolicyCoverage,
@@ -254,7 +253,7 @@ func CheckMutableFieldOwnership(schemasRoot string) []FitnessFinding {
 
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckMutableFieldOwnership,
@@ -270,7 +269,7 @@ func CheckMutableFieldOwnership(schemasRoot string) []FitnessFinding {
 	commonRoot := filepath.Join(schemasRoot, "_common")
 	for _, name := range commonSubSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/_common/" + name
-		body, err := os.ReadFile(filepath.Join(commonRoot, name))
+		body, err := readRepoFile(filepath.Join(commonRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckMutableFieldOwnership,
@@ -390,7 +389,7 @@ func CheckPublishedDefinitionsImmutable(schemasRoot string) []FitnessFinding {
 	var findings []FitnessFinding
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckPublishedDefinitionsImmutable,

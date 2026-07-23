@@ -179,7 +179,7 @@ func CheckNoProviderSDKInCoreCustomer(moduleRoot string) []FitnessFinding {
 
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckNoProviderSDKInCoreCustomer,
@@ -213,7 +213,7 @@ func CheckNoProviderSDKInCoreCustomer(moduleRoot string) []FitnessFinding {
 	commonRoot := filepath.Join(schemasRoot, "_common")
 	for _, name := range commonSubSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/_common/" + name
-		body, err := os.ReadFile(filepath.Join(commonRoot, name))
+		body, err := readRepoFile(filepath.Join(commonRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckNoProviderSDKInCoreCustomer,
@@ -407,7 +407,7 @@ func CheckNoRawSecretLikeValues(moduleRoot string) []FitnessFinding {
 		if !strings.HasSuffix(name, ".json") {
 			continue
 		}
-		raw, err := os.ReadFile(filepath.Join(fixturesDir, name))
+		raw, err := readRepoFile(filepath.Join(fixturesDir, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckNoRawSecretLikeValues,
@@ -432,7 +432,7 @@ func CheckNoRawSecretLikeValues(moduleRoot string) []FitnessFinding {
 	schemasRoot := filepath.Join(moduleRoot, CanonicalSchemasDir)
 	for _, name := range []string{"_common/object-meta.json", "_common/problem.json", "_common/condition.json"} {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, filepath.FromSlash(name)))
+		body, err := readRepoFile(filepath.Join(schemasRoot, filepath.FromSlash(name)))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckNoRawSecretLikeValues,
@@ -468,7 +468,7 @@ func CheckObservationProvenanceAndFreshness(schemasRoot string) []FitnessFinding
 
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckObservationProvenanceAndFreshness,
@@ -616,7 +616,7 @@ func observationProvenanceFreshnessFindings(schemaID string, body []byte) []Fitn
 
 func checkScopeRefKindEnum(schemasRoot string) []FitnessFinding {
 	schemaID := CanonicalSchemasDir + "/_common/scope-ref.json"
-	body, err := os.ReadFile(filepath.Join(schemasRoot, "_common", "scope-ref.json"))
+	body, err := readRepoFile(filepath.Join(schemasRoot, "_common", "scope-ref.json"))
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -666,7 +666,7 @@ func checkScopeRefKindEnum(schemasRoot string) []FitnessFinding {
 
 func checkTypedRefRequiredFields(schemasRoot string) []FitnessFinding {
 	schemaID := CanonicalSchemasDir + "/_common/typed-ref.json"
-	body, err := os.ReadFile(filepath.Join(schemasRoot, "_common", "typed-ref.json"))
+	body, err := readRepoFile(filepath.Join(schemasRoot, "_common", "typed-ref.json"))
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -717,7 +717,7 @@ func checkTypedRefRequiredFields(schemasRoot string) []FitnessFinding {
 
 func checkObjectMetaScopeRefTarget(schemasRoot string) []FitnessFinding {
 	schemaID := CanonicalSchemasDir + "/_common/object-meta.json"
-	body, err := os.ReadFile(filepath.Join(schemasRoot, "_common", "object-meta.json"))
+	body, err := readRepoFile(filepath.Join(schemasRoot, "_common", "object-meta.json"))
 	if err != nil {
 		return []FitnessFinding{{
 			Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -755,7 +755,7 @@ func checkExternalSchemaAllowedScopes(schemasRoot string) []FitnessFinding {
 	var findings []FitnessFinding
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -814,7 +814,7 @@ func checkSchemaReferenceFieldTargets(schemasRoot string) []FitnessFinding {
 
 	for _, name := range externalCanonicalSchemaFiles {
 		schemaID := CanonicalSchemasDir + "/" + name
-		body, err := os.ReadFile(filepath.Join(schemasRoot, name))
+		body, err := readRepoFile(filepath.Join(schemasRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -830,7 +830,7 @@ func checkSchemaReferenceFieldTargets(schemasRoot string) []FitnessFinding {
 	commonRoot := filepath.Join(schemasRoot, "_common")
 	for _, name := range []string{"object-meta.json", "owner-ref.json", "scope-ref.json"} {
 		schemaID := CanonicalSchemasDir + "/_common/" + name
-		body, err := os.ReadFile(filepath.Join(commonRoot, name))
+		body, err := readRepoFile(filepath.Join(commonRoot, name))
 		if err != nil {
 			findings = append(findings, FitnessFinding{
 				Check:   FitnessCheckReferencesConstrainKindsAndScopes,
@@ -1111,7 +1111,7 @@ func checkGoTypeNoProviderSDK(t reflect.Type) error {
 		}
 		seen[tt] = struct{}{}
 		if pkg := tt.PkgPath(); pkg != "" && isFitnessProviderSDK(pkg) {
-			return fmt.Errorf("Go type %s embeds provider SDK package %q", tt.String(), pkg)
+			return fmt.Errorf("go type %s embeds provider SDK package %q", tt.String(), pkg)
 		}
 		switch tt.Kind() {
 		case reflect.Struct:

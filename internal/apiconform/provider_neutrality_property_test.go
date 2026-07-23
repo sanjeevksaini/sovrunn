@@ -386,7 +386,7 @@ func checkProperty7GoTypeNoSDK(t reflect.Type) error {
 		seen[tt] = struct{}{}
 
 		if pkg := tt.PkgPath(); pkg != "" && isProviderSDK(pkg) {
-			return fmt.Errorf("Go type %s embeds provider SDK package %q", tt.String(), pkg)
+			return fmt.Errorf("go type %s embeds provider SDK package %q", tt.String(), pkg)
 		}
 
 		switch tt.Kind() {

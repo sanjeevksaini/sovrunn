@@ -278,7 +278,7 @@ func verifyArrayGoType(schema map[string]any, goType reflect.Type, path string, 
 func verifyPrimitiveGoType(schema map[string]any, goType reflect.Type, path, schemaType string, hasEnum bool, issues *[]SchemaIssue) {
 	goType = unwrapType(goType)
 	underlying := goType
-	for underlying.Kind() == reflect.Ptr {
+	for underlying.Kind() == reflect.Pointer {
 		underlying = underlying.Elem()
 	}
 
@@ -311,7 +311,7 @@ func verifyPrimitiveGoType(schema map[string]any, goType reflect.Type, path, sch
 }
 
 func verifyRequiredOptional(field goJSONField, required bool, path string, issues *[]SchemaIssue) {
-	isPointer := field.typ.Kind() == reflect.Ptr
+	isPointer := field.typ.Kind() == reflect.Pointer
 
 	if required {
 		if field.omitempty || isPointer {
@@ -453,14 +453,14 @@ func primitiveCompatible(t reflect.Type, schemaType string) bool {
 			return false
 		}
 	case "null":
-		return t.Kind() == reflect.Ptr || t.Kind() == reflect.Interface || t.Kind() == reflect.Map || t.Kind() == reflect.Slice
+		return t.Kind() == reflect.Pointer || t.Kind() == reflect.Interface || t.Kind() == reflect.Map || t.Kind() == reflect.Slice
 	default:
 		return false
 	}
 }
 
 func unwrapType(t reflect.Type) reflect.Type {
-	for t != nil && t.Kind() == reflect.Ptr {
+	for t != nil && t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	return t

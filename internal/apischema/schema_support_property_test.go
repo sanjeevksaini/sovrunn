@@ -292,7 +292,7 @@ func addPropertyNameTraps(rng *rand.Rand, root map[string]any) {
 func addExtensionFieldTraps(rng *rand.Rand, root map[string]any) {
 	props, _ := root["properties"].(map[string]any)
 	target := root
-	if props != nil && len(props) > 0 && rng.Intn(2) == 0 {
+	if len(props) > 0 && rng.Intn(2) == 0 {
 		// Attach to a random property schema when available.
 		keys := make([]string, 0, len(props))
 		for k := range props {
