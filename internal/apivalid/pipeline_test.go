@@ -1,7 +1,9 @@
 package apivalid
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"sync/atomic"
@@ -343,153 +345,32 @@ func TestValidateStructuralPassGenericStopsAfterLayer7(t *testing.T) {
 	}
 }
 
-func TestValidateLayer8InvalidConfigs(t *testing.T) {
-	t.Parallel()
+// --- Task 6.7: layer-8 configuration matrix ---
 
-	op := platformScope()
-	target := sampleTargetRef()
-	ts := platformScope()
-	caller := &CallerContext{}
-	resolverCalls := &atomic.Int32{}
-	authCalls := &atomic.Int32{}
-
-	passing := stubStructuralValidator{}
-
-	tests := []struct {
-		name string
-		in   Input
-	}{
-		{
-			name: "neither TargetScope nor TargetScopeResolver",
-			in: Input{
-				Validator:      passing,
-				Stages:         passThroughStages(),
-				OperationScope: &op,
-				TargetRef:      &target,
-				Caller:         caller,
-			},
-		},
-		{
-			name: "both TargetScope and TargetScopeResolver",
-			in: Input{
-				Validator:           passing,
-				Stages:              passThroughStages(),
-				OperationScope:      &op,
-				TargetRef:           &target,
-				TargetScope:         &ts,
-				TargetScopeResolver: trackingTargetScopeResolver{scope: ts, available: true, calls: resolverCalls},
-				Authorizer:          trackingScopeAuthorizer{decision: Allow, calls: authCalls},
-				Caller:              caller,
-			},
-		},
-		{
-			name: "missing Caller",
-			in: Input{
-				Validator:      passing,
-				Stages:         passThroughStages(),
-				OperationScope: &op,
-				TargetRef:      &target,
-				TargetScope:    &ts,
-				Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
-			},
-		},
-		{
-			name: "missing TargetRef",
-			in: Input{
-				Validator:      passing,
-				Stages:         passThroughStages(),
-				OperationScope: &op,
-				TargetScope:    &ts,
-				Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
-				Caller:         caller,
-			},
-		},
-		{
-			name: "incomplete Path A Authorizer nil",
-			in: Input{
-				Validator:      passing,
-				Stages:         passThroughStages(),
-				OperationScope: &op,
-				TargetRef:      &target,
-				TargetScope:    &ts,
-				Caller:         caller,
-			},
-		},
-		{
-			name: "incomplete Path B Caller nil",
-			in: Input{
-				Validator:           passing,
-				Stages:              passThroughStages(),
-				OperationScope:      &op,
-				TargetRef:           &target,
-				TargetScopeResolver: trackingTargetScopeResolver{scope: ts, available: true, calls: resolverCalls},
-			},
-		},
+func assertSafeDenial404(t *testing.T, got *apiproblem.Problem) {
+	t.Helper()
+	want := SafeDenial(DenyNotDisclosed)
+	if got == nil {
+		t.Fatal("Problem is nil, want SafeDenial 404 RESOURCE_NOT_FOUND")
 	}
-
-	for _, tc := range tests {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			beforeAuth := authCalls.Load()
-			beforeResolver := resolverCalls.Load()
-
-			res := Validate(context.Background(), tc.in, DefaultLimits())
-			assertInternalErrorAt(t, res, LayerAuthorization)
-
-			if authCalls.Load() != beforeAuth {
-				t.Fatalf("Authorizer was called on invalid config %q", tc.name)
-			}
-			if resolverCalls.Load() != beforeResolver {
-				t.Fatalf("TargetScopeResolver was called on invalid config %q", tc.name)
-			}
-		})
+	gotJSON, err := json.Marshal(got)
+	if err != nil {
+		t.Fatalf("marshal got: %v", err)
+	}
+	wantJSON, err := json.Marshal(want)
+	if err != nil {
+		t.Fatalf("marshal want: %v", err)
+	}
+	if !bytes.Equal(gotJSON, wantJSON) {
+		t.Fatalf("SafeDenial mismatch:\ngot=%s\nwant=%s", gotJSON, wantJSON)
+	}
+	if got.Status != http.StatusNotFound || got.Code != apiproblem.CodeResourceNotFound {
+		t.Fatalf("Problem = status %d code %q, want 404 RESOURCE_NOT_FOUND", got.Status, got.Code)
 	}
 }
 
-func TestValidateLayer8PathAAllowMatch(t *testing.T) {
-	t.Parallel()
-
-	op := tenantScope("tenant-1")
-	target := sampleTargetRef()
-	ts := tenantScope("tenant-1")
-	authCalls := &atomic.Int32{}
-
-	res := Validate(context.Background(), Input{
-		Validator:      stubStructuralValidator{},
-		Stages:         passThroughStages(),
-		OperationScope: &op,
-		TargetRef:      &target,
-		TargetScope:    &ts,
-		Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
-		Caller:         &CallerContext{Scopes: []apimeta.ScopeIdentity{ts}},
-	}, DefaultLimits())
-
-	if authCalls.Load() != 1 {
-		t.Fatalf("Authorizer calls = %d, want 1", authCalls.Load())
-	}
-	if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
-		t.Fatalf("unexpected result: %#v", res)
-	}
-}
-
-func TestValidateLayer8PathAAllowMismatch(t *testing.T) {
-	t.Parallel()
-
-	op := tenantScope("tenant-1")
-	target := sampleTargetRef()
-	ts := tenantScope("tenant-2")
-
-	res := Validate(context.Background(), Input{
-		Validator:      stubStructuralValidator{},
-		Stages:         passThroughStages(),
-		OperationScope: &op,
-		TargetRef:      &target,
-		TargetScope:    &ts,
-		Authorizer:     stubScopeAuthorizer{decision: Allow},
-		Caller:         &CallerContext{},
-	}, DefaultLimits())
-
+func assertLayer8TargetScopeMismatchResult(t *testing.T, res Result) {
+	t.Helper()
 	if res.FailedAt != LayerAuthorization {
 		t.Fatalf("FailedAt = %v, want %v", res.FailedAt, LayerAuthorization)
 	}
@@ -507,12 +388,182 @@ func TestValidateLayer8PathAAllowMismatch(t *testing.T) {
 	}
 }
 
+func TestValidateLayer8InvalidConfigs(t *testing.T) {
+	t.Parallel()
+
+	op := platformScope()
+	target := sampleTargetRef()
+	ts := platformScope()
+	caller := &CallerContext{}
+	passing := stubStructuralValidator{}
+
+	tests := []struct {
+		name string
+		in   func(authCalls, resolverCalls *atomic.Int32) Input
+	}{
+		{
+			name: "neither TargetScope nor TargetScopeResolver",
+			in: func(_, _ *atomic.Int32) Input {
+				return Input{
+					Validator:      passing,
+					Stages:         passThroughStages(),
+					OperationScope: &op,
+					TargetRef:      &target,
+					Caller:         caller,
+				}
+			},
+		},
+		{
+			name: "both TargetScope and TargetScopeResolver",
+			in: func(authCalls, resolverCalls *atomic.Int32) Input {
+				return Input{
+					Validator:           passing,
+					Stages:              passThroughStages(),
+					OperationScope:      &op,
+					TargetRef:           &target,
+					TargetScope:         &ts,
+					TargetScopeResolver: trackingTargetScopeResolver{scope: ts, available: true, calls: resolverCalls},
+					Authorizer:          trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+					Caller:              caller,
+				}
+			},
+		},
+		{
+			name: "missing Caller",
+			in: func(authCalls, _ *atomic.Int32) Input {
+				return Input{
+					Validator:      passing,
+					Stages:         passThroughStages(),
+					OperationScope: &op,
+					TargetRef:      &target,
+					TargetScope:    &ts,
+					Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+				}
+			},
+		},
+		{
+			name: "missing TargetRef",
+			in: func(authCalls, _ *atomic.Int32) Input {
+				return Input{
+					Validator:      passing,
+					Stages:         passThroughStages(),
+					OperationScope: &op,
+					TargetScope:    &ts,
+					Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+					Caller:         caller,
+				}
+			},
+		},
+		{
+			name: "incomplete Path A Authorizer nil",
+			in: func(_, _ *atomic.Int32) Input {
+				return Input{
+					Validator:      passing,
+					Stages:         passThroughStages(),
+					OperationScope: &op,
+					TargetRef:      &target,
+					TargetScope:    &ts,
+					Caller:         caller,
+				}
+			},
+		},
+		{
+			name: "incomplete Path B Caller nil",
+			in: func(_, resolverCalls *atomic.Int32) Input {
+				return Input{
+					Validator:           passing,
+					Stages:              passThroughStages(),
+					OperationScope:      &op,
+					TargetRef:           &target,
+					TargetScopeResolver: trackingTargetScopeResolver{scope: ts, available: true, calls: resolverCalls},
+				}
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			authCalls := &atomic.Int32{}
+			resolverCalls := &atomic.Int32{}
+
+			res := Validate(context.Background(), tc.in(authCalls, resolverCalls), DefaultLimits())
+			assertInternalErrorAt(t, res, LayerAuthorization)
+
+			// Invalid configs must not perform target lookup / authorize work.
+			if authCalls.Load() != 0 {
+				t.Fatalf("Authorizer was called on invalid config %q", tc.name)
+			}
+			if resolverCalls.Load() != 0 {
+				t.Fatalf("TargetScopeResolver was called on invalid config %q (no target lookup)", tc.name)
+			}
+		})
+	}
+}
+
+func TestValidateLayer8PathAAllowRunsTargetScopeMatch(t *testing.T) {
+	t.Parallel()
+
+	target := sampleTargetRef()
+	caller := &CallerContext{}
+
+	t.Run("match succeeds after Allow", func(t *testing.T) {
+		t.Parallel()
+		op := tenantScope("tenant-1")
+		ts := tenantScope("tenant-1")
+		authCalls := &atomic.Int32{}
+
+		res := Validate(context.Background(), Input{
+			Validator:      stubStructuralValidator{},
+			Stages:         passThroughStages(),
+			OperationScope: &op,
+			TargetRef:      &target,
+			TargetScope:    &ts,
+			Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+			Caller:         &CallerContext{Scopes: []apimeta.ScopeIdentity{ts}},
+		}, DefaultLimits())
+
+		if authCalls.Load() != 1 {
+			t.Fatalf("Authorizer calls = %d, want 1 (Authorize before match)", authCalls.Load())
+		}
+		if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
+			t.Fatalf("unexpected result: %#v", res)
+		}
+	})
+
+	t.Run("mismatch proves CheckOperationTargetScopeMatch ran", func(t *testing.T) {
+		t.Parallel()
+		op := tenantScope("tenant-1")
+		ts := tenantScope("tenant-2")
+		authCalls := &atomic.Int32{}
+
+		res := Validate(context.Background(), Input{
+			Validator:      stubStructuralValidator{},
+			Stages:         passThroughStages(),
+			OperationScope: &op,
+			TargetRef:      &target,
+			TargetScope:    &ts,
+			Authorizer:     trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+			Caller:         caller,
+		}, DefaultLimits())
+
+		if authCalls.Load() != 1 {
+			t.Fatalf("Authorizer calls = %d, want 1 before match", authCalls.Load())
+		}
+		assertLayer8TargetScopeMismatchResult(t, res)
+	})
+}
+
 func TestValidateLayer8PathADenyNotDisclosed(t *testing.T) {
 	t.Parallel()
 
+	// Use mismatched scopes so a buggy path that still ran
+	// CheckOperationTargetScopeMatch would disclose OPERATION_TARGET_SCOPE_MISMATCH.
 	op := tenantScope("tenant-1")
 	target := sampleTargetRef()
-	ts := tenantScope("tenant-1")
+	ts := tenantScope("tenant-2")
+	authCalls := &atomic.Int32{}
 
 	res := Validate(context.Background(), Input{
 		Validator:      stubStructuralValidator{},
@@ -520,30 +571,91 @@ func TestValidateLayer8PathADenyNotDisclosed(t *testing.T) {
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScope:    &ts,
-		Authorizer:     stubScopeAuthorizer{decision: DenyNotDisclosed},
+		Authorizer:     trackingScopeAuthorizer{decision: DenyNotDisclosed, calls: authCalls},
 		Caller:         &CallerContext{},
 	}, DefaultLimits())
 
+	if authCalls.Load() != 1 {
+		t.Fatalf("Authorizer calls = %d, want 1", authCalls.Load())
+	}
 	if res.FailedAt != LayerAuthorization {
 		t.Fatalf("FailedAt = %v, want %v", res.FailedAt, LayerAuthorization)
 	}
-	if res.Problem == nil {
-		t.Fatal("Problem is nil, want SafeDenial 404")
-	}
-	if res.Problem.Status != http.StatusNotFound || res.Problem.Code != apiproblem.CodeResourceNotFound {
-		t.Fatalf("Problem = status %d code %q, want 404 RESOURCE_NOT_FOUND", res.Problem.Status, res.Problem.Code)
+	assertSafeDenial404(t, res.Problem)
+	if res.Err != nil {
+		t.Fatalf("Err = %v, want nil on SafeDenial", res.Err)
 	}
 	if len(res.Violations) != 0 {
-		t.Fatalf("Violations must be empty on SafeDenial, got %#v", res.Violations)
+		t.Fatalf("Violations must be empty on SafeDenial (no mismatch disclosed), got %#v", res.Violations)
 	}
 }
 
-func TestValidateLayer8PathBAvailableMatch(t *testing.T) {
+func TestValidateLayer8PathBAvailableRunsTargetScopeMatch(t *testing.T) {
 	t.Parallel()
 
-	op := platformScope()
 	target := sampleTargetRef()
-	ts := platformScope()
+	caller := &CallerContext{}
+
+	t.Run("available true match succeeds", func(t *testing.T) {
+		t.Parallel()
+		op := platformScope()
+		ts := platformScope()
+		resolverCalls := &atomic.Int32{}
+
+		res := Validate(context.Background(), Input{
+			Validator:      stubStructuralValidator{},
+			Stages:         passThroughStages(),
+			OperationScope: &op,
+			TargetRef:      &target,
+			TargetScopeResolver: trackingTargetScopeResolver{
+				scope:     ts,
+				available: true,
+				calls:     resolverCalls,
+			},
+			Caller: caller,
+		}, DefaultLimits())
+
+		if resolverCalls.Load() != 1 {
+			t.Fatalf("resolver calls = %d, want 1", resolverCalls.Load())
+		}
+		if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
+			t.Fatalf("unexpected result: %#v", res)
+		}
+	})
+
+	t.Run("available true mismatch proves CheckOperationTargetScopeMatch ran", func(t *testing.T) {
+		t.Parallel()
+		op := tenantScope("tenant-1")
+		ts := tenantScope("tenant-2")
+		resolverCalls := &atomic.Int32{}
+
+		res := Validate(context.Background(), Input{
+			Validator:      stubStructuralValidator{},
+			Stages:         passThroughStages(),
+			OperationScope: &op,
+			TargetRef:      &target,
+			TargetScopeResolver: trackingTargetScopeResolver{
+				scope:     ts,
+				available: true,
+				calls:     resolverCalls,
+			},
+			Caller: caller,
+		}, DefaultLimits())
+
+		if resolverCalls.Load() != 1 {
+			t.Fatalf("resolver calls = %d, want 1 before match", resolverCalls.Load())
+		}
+		assertLayer8TargetScopeMismatchResult(t, res)
+	})
+}
+
+func TestValidateLayer8PathBUnavailableSafeDenial(t *testing.T) {
+	t.Parallel()
+
+	// Operation scope differs from a hypothetical target; available=false must
+	// still SafeDenial without disclosing OPERATION_TARGET_SCOPE_MISMATCH.
+	op := tenantScope("tenant-1")
+	target := sampleTargetRef()
 	resolverCalls := &atomic.Int32{}
 
 	res := Validate(context.Background(), Input{
@@ -552,8 +664,8 @@ func TestValidateLayer8PathBAvailableMatch(t *testing.T) {
 		OperationScope: &op,
 		TargetRef:      &target,
 		TargetScopeResolver: trackingTargetScopeResolver{
-			scope:     ts,
-			available: true,
+			scope:     tenantScope("tenant-2"),
+			available: false,
 			calls:     resolverCalls,
 		},
 		Caller: &CallerContext{},
@@ -562,36 +674,53 @@ func TestValidateLayer8PathBAvailableMatch(t *testing.T) {
 	if resolverCalls.Load() != 1 {
 		t.Fatalf("resolver calls = %d, want 1", resolverCalls.Load())
 	}
-	if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
-		t.Fatalf("unexpected result: %#v", res)
-	}
-}
-
-func TestValidateLayer8PathBUnavailableSafeDenial(t *testing.T) {
-	t.Parallel()
-
-	op := platformScope()
-	target := sampleTargetRef()
-
-	res := Validate(context.Background(), Input{
-		Validator:      stubStructuralValidator{},
-		Stages:         passThroughStages(),
-		OperationScope: &op,
-		TargetRef:      &target,
-		TargetScopeResolver: stubAuthorizedTargetScopeResolver{
-			available: false,
-		},
-		Caller: &CallerContext{},
-	}, DefaultLimits())
-
 	if res.FailedAt != LayerAuthorization {
 		t.Fatalf("FailedAt = %v, want %v", res.FailedAt, LayerAuthorization)
 	}
-	if res.Problem == nil || res.Problem.Status != http.StatusNotFound || res.Problem.Code != apiproblem.CodeResourceNotFound {
-		t.Fatalf("Problem = %#v, want SafeDenial 404 RESOURCE_NOT_FOUND", res.Problem)
+	assertSafeDenial404(t, res.Problem)
+	if res.Err != nil {
+		t.Fatalf("Err = %v, want nil on SafeDenial", res.Err)
 	}
 	if len(res.Violations) != 0 {
 		t.Fatalf("Violations must be empty; mismatch must not be disclosed, got %#v", res.Violations)
+	}
+}
+
+func TestValidateLayer8GenericNonOperationStopsAfterLayer7(t *testing.T) {
+	t.Parallel()
+
+	structCalls := &atomic.Int32{}
+	defCalls := &atomic.Int32{}
+	semCalls := &atomic.Int32{}
+	refCalls := &atomic.Int32{}
+	authCalls := &atomic.Int32{}
+	resolverCalls := &atomic.Int32{}
+
+	res := Validate(context.Background(), Input{
+		Validator: trackingStructuralValidator{
+			inner: stubStructuralValidator{},
+			calls: structCalls,
+		},
+		Dst:    map[string]any{"ok": true},
+		Stages: trackingStages(defCalls, semCalls, refCalls),
+		// OperationScope nil → generic non-Operation; layer 8 must not run.
+		Authorizer:          trackingScopeAuthorizer{decision: Allow, calls: authCalls},
+		TargetScopeResolver: trackingTargetScopeResolver{available: true, calls: resolverCalls},
+	}, DefaultLimits())
+
+	if structCalls.Load() != 1 {
+		t.Fatalf("structural Validate calls = %d, want 1", structCalls.Load())
+	}
+	if defCalls.Load() != 1 || semCalls.Load() != 1 || refCalls.Load() != 1 {
+		t.Fatalf("generic path must complete layers 5–7: defaulting=%d semantic=%d reference=%d",
+			defCalls.Load(), semCalls.Load(), refCalls.Load())
+	}
+	if authCalls.Load() != 0 || resolverCalls.Load() != 0 {
+		t.Fatalf("layer 8 must not run when OperationScope is nil: auth=%d resolver=%d",
+			authCalls.Load(), resolverCalls.Load())
+	}
+	if res.FailedAt != 0 || res.Problem != nil || res.Err != nil || len(res.Violations) != 0 {
+		t.Fatalf("unexpected failure result: %#v", res)
 	}
 }
 

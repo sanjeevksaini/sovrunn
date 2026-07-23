@@ -397,7 +397,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-VALIDATION-004_
     - _Verification: `go test ./internal/apivalid/...` passes_
 
-  - [ ] 6.7 Write layer-8 configuration matrix tests (`internal/apivalid/pipeline_test.go`)
+  - [x] 6.7 Write layer-8 configuration matrix tests (`internal/apivalid/pipeline_test.go`)
     - Test: OperationScope non-nil, neither TargetScope nor TargetScopeResolver → 500 INTERNAL_ERROR at LayerAuthorization, no target lookup
     - Test: OperationScope non-nil, BOTH TargetScope AND TargetScopeResolver set → 500 INTERNAL_ERROR at LayerAuthorization, no target lookup
     - Test: OperationScope non-nil, missing Caller → 500 INTERNAL_ERROR at LayerAuthorization
