@@ -32,7 +32,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
 ## Tasks
 
 - [ ] 1. Repository and Go 1.22 alignment
-  - [ ] 1.1 Update go.mod to declare `go 1.22` minimum
+  - [x] 1.1 Update go.mod to declare `go 1.22` minimum
     - Change `go 1.21` directive to `go 1.22` in `go.mod`
     - Run `go mod tidy` to verify no breakage
     - _Design: D-14_
