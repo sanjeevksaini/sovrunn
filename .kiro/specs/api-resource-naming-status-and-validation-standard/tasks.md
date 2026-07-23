@@ -532,7 +532,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(4), F12-VALIDATION-006_
     - _Verification: unit test — adapter rejects invalid instance and returns violations; adapter accepts valid instance; missing schema returns error; nil registry → error; ref-resolution failure → error_
 
-  - [ ] 8.3 Implement JSON/YAML decode-only equivalence tests (`internal/apivalid/decode_equiv_test.go`)
+  - [x] 8.3 Implement JSON/YAML decode-only equivalence tests (`internal/apivalid/decode_equiv_test.go`)
     - For a set of representative objects, assert that JSON and strict-YAML forms produce equivalent decoded output
     - Tests validate: identical typed values, identical error codes and JSON Pointers, identical unknown-field rejection, identical FieldPolicy enforcement
     - Confirm YAML-only constructs are rejected BEFORE JSON normalization
