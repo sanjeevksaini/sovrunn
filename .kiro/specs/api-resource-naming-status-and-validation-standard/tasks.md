@@ -511,7 +511,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: unit tests — valid dependencies create a config; nil
       registry and nil resolver are rejected_
 
-- [ ] 8. StructuralValidator adapter, schema-to-violation translation, and JSON/YAML equivalence
+- [x] 8. StructuralValidator adapter, schema-to-violation translation, and JSON/YAML equivalence
   - [x] 8.1 Add apischema SchemaIssue-to-Violation translator in apiconform (`internal/apiconform/structural.go`)
     - Function `SchemaIssuesToViolations([]apischema.SchemaIssue) []apiproblem.Violation` translating package-local apischema results into apiproblem violations
     - _Design: D-02 (import direction); D-01a_
@@ -551,7 +551,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(2), F12-VALIDATION-002_
     - _Verification: `go test ./internal/apiconform/...` passes_
 
-  - [ ] 8.5 Write property test for JSON/YAML validation equivalence (Property 2)
+  - [x] 8.5 Write property test for JSON/YAML validation equivalence (Property 2)
     - **Property 2: JSON/YAML validation equivalence**
     - For any object expressible in the strict JSON-compatible subset, JSON and YAML decode/validate produce equivalent results; YAML with aliases/anchors/merge keys/custom tags/multiple docs/non-string keys/non-finite numbers is rejected
     - Depends on: tasks 4.1, 4.2, 8.2 (decoders + StructuralValidator adapter)
