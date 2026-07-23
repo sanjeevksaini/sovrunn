@@ -247,7 +247,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-SEC-004, F12-SCOPE-002, F12-IMPL-002_
     - _Verification: unit tests — SafeDenial produces byte-identical Problem for DenyNotDisclosed vs "absent"; DenyKnown → 403_
 
-  - [ ] 6.3 Implement CheckOperationTargetScopeMatch (`internal/apivalid/authz.go`)
+  - [x] 6.3 Implement CheckOperationTargetScopeMatch (`internal/apivalid/authz.go`)
     - Pure function: `CheckOperationTargetScopeMatch(opScope ScopeIdentity, targetScope ScopeIdentity) *apiproblem.Violation`
     - If scopes match → nil (no violation)
     - If scopes differ → Violation with code `OPERATION_TARGET_SCOPE_MISMATCH` and field `/metadata/scopeRef`

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
@@ -243,5 +244,94 @@ func TestScopeAuthorizerStubDecisions(t *testing.T) {
 	}
 	if got := (stubScopeAuthorizer{decision: DenyKnown}).Authorize(ctx, caller, target, scope); got != DenyKnown {
 		t.Fatalf("DenyKnown stub = %v, want DenyKnown", got)
+	}
+}
+
+func TestCheckOperationTargetScopeMatchMatchingScopes(t *testing.T) {
+	t.Parallel()
+
+	// All six Matrix B / D-17 scope kinds, including platform via PlatformScopeUID.
+	cases := []apimeta.ScopeIdentity{
+		{Kind: apimeta.ScopePlatform, UID: apimeta.PlatformScopeUID},
+		{Kind: apimeta.ScopeOrganization, UID: "org-1"},
+		{Kind: apimeta.ScopeOrganizationUnit, UID: "ou-1"},
+		{Kind: apimeta.ScopeTenant, UID: "tenant-1"},
+		{Kind: apimeta.ScopeProject, UID: "project-1"},
+		{Kind: apimeta.ScopeProvider, UID: "provider-1"},
+	}
+	if len(cases) != len(apimeta.AllScopeKinds()) {
+		t.Fatalf("test must cover all six scope kinds; got %d cases for %d kinds",
+			len(cases), len(apimeta.AllScopeKinds()))
+	}
+
+	for _, scope := range cases {
+		scope := scope
+		t.Run(string(scope.Kind), func(t *testing.T) {
+			t.Parallel()
+			if got := CheckOperationTargetScopeMatch(scope, scope); got != nil {
+				t.Fatalf("matching %s scopes must return nil; got %#v", scope.Kind, got)
+			}
+		})
+	}
+
+	// Platform identity via CanonicalScopeIdentity(nil) must also match.
+	platform := apimeta.CanonicalScopeIdentity(nil)
+	if got := CheckOperationTargetScopeMatch(platform, platform); got != nil {
+		t.Fatalf("canonical platform match must return nil; got %#v", got)
+	}
+}
+
+func TestCheckOperationTargetScopeMatchKindMismatch(t *testing.T) {
+	t.Parallel()
+
+	op := apimeta.ScopeIdentity{Kind: apimeta.ScopeTenant, UID: "same-uid"}
+	target := apimeta.ScopeIdentity{Kind: apimeta.ScopeProject, UID: "same-uid"}
+
+	got := CheckOperationTargetScopeMatch(op, target)
+	assertOperationTargetScopeMismatch(t, got)
+}
+
+func TestCheckOperationTargetScopeMatchUIDMismatch(t *testing.T) {
+	t.Parallel()
+
+	op := apimeta.ScopeIdentity{Kind: apimeta.ScopeTenant, UID: "tenant-a"}
+	target := apimeta.ScopeIdentity{Kind: apimeta.ScopeTenant, UID: "tenant-b"}
+
+	got := CheckOperationTargetScopeMatch(op, target)
+	assertOperationTargetScopeMismatch(t, got)
+}
+
+func TestCheckOperationTargetScopeMatchPlatformVersusNonPlatform(t *testing.T) {
+	t.Parallel()
+
+	platform := apimeta.ScopeIdentity{Kind: apimeta.ScopePlatform, UID: apimeta.PlatformScopeUID}
+	tenant := apimeta.ScopeIdentity{Kind: apimeta.ScopeTenant, UID: "tenant-1"}
+
+	got := CheckOperationTargetScopeMatch(platform, tenant)
+	assertOperationTargetScopeMismatch(t, got)
+
+	got = CheckOperationTargetScopeMatch(tenant, platform)
+	assertOperationTargetScopeMismatch(t, got)
+}
+
+func assertOperationTargetScopeMismatch(t *testing.T, got *apiproblem.Violation) {
+	t.Helper()
+	if got == nil {
+		t.Fatal("expected OPERATION_TARGET_SCOPE_MISMATCH violation, got nil")
+	}
+	if got.Field != "/metadata/scopeRef" {
+		t.Fatalf("field = %q, want /metadata/scopeRef", got.Field)
+	}
+	if got.Code != apiproblem.ViolationOperationTargetScopeMismatch {
+		t.Fatalf("code = %q, want %q", got.Code, apiproblem.ViolationOperationTargetScopeMismatch)
+	}
+	if got.Message == "" {
+		t.Fatal("message must be non-empty for human-readable diagnostics")
+	}
+	// Message must not embed concrete scope identity values.
+	if strings.Contains(got.Message, "tenant-") ||
+		strings.Contains(got.Message, "project-") ||
+		strings.Contains(got.Message, apimeta.PlatformScopeUID) {
+		t.Fatalf("message must not leak scope identity values; got %q", got.Message)
 	}
 }

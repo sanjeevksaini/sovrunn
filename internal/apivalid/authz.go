@@ -102,3 +102,33 @@ func SafeDenial(d Decision) *apiproblem.Problem {
 		return apiproblem.New(apiproblem.CodeResourceNotFound)
 	}
 }
+
+const operationTargetScopeRefPointer = "/metadata/scopeRef"
+
+// CheckOperationTargetScopeMatch compares the Operation's canonical
+// ScopeIdentity with the resolved target's canonical ScopeIdentity
+// (D-17, F12-SCOPE-002, F12-REF-001).
+//
+// Returns nil when scopes match. When they differ (kind or UID), returns a
+// Violation with code OPERATION_TARGET_SCOPE_MISMATCH and JSON Pointer
+// /metadata/scopeRef.
+//
+// Callers MUST invoke this only after authorized target-scope resolution
+// succeeds. Unauthorized or unavailable targets MUST use SafeDenial and MUST
+// NOT reach this comparator (no existence or mismatch disclosure).
+//
+// The Message is intentionally generic: it does not embed scope kind/UID
+// values, secrets, or inaccessible-resource detail.
+func CheckOperationTargetScopeMatch(
+	opScope apimeta.ScopeIdentity,
+	targetScope apimeta.ScopeIdentity,
+) *apiproblem.Violation {
+	if opScope == targetScope {
+		return nil
+	}
+	return &apiproblem.Violation{
+		Field:   operationTargetScopeRefPointer,
+		Code:    apiproblem.ViolationOperationTargetScopeMismatch,
+		Message: "operation scopeRef does not match the target governance scope",
+	}
+}
