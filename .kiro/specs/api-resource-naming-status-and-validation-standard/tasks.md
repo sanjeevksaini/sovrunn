@@ -235,7 +235,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-007, F12-LIST-002_
     - _Verification: compiles; defaults match design table_
 
-  - [ ] 6.2 Implement CallerContext, Decision, ScopeAuthorizer, AuthorizedResolver, AuthorizedTargetScopeResolver, and SafeDenial (`internal/apivalid/authz.go`)
+  - [x] 6.2 Implement CallerContext, Decision, ScopeAuthorizer, AuthorizedResolver, AuthorizedTargetScopeResolver, and SafeDenial (`internal/apivalid/authz.go`)
     - CallerContext struct with `Scopes []ScopeIdentity`
     - Decision enum: Allow, DenyNotDisclosed, DenyKnown
     - ScopeAuthorizer interface: `Authorize(ctx, CallerContext, apiref.TypedRef, ScopeIdentity) Decision`
