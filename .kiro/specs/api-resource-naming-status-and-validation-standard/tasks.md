@@ -162,7 +162,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-002, F12-META-002, F12-OWNER-002_
     - _Verification: unit tests — customer modes reject status/system; internal/read modes accept them_
 
-  - [ ] 4.4 Implement HTTP decode adapter (`internal/apivalid/httpdecode.go`)
+  - [x] 4.4 Implement HTTP decode adapter (`internal/apivalid/httpdecode.go`)
     - StrictDecode: MaxBytesReader, media-type selection (application/json, application/yaml accepted; application/x-yaml and text/yaml treated as yaml; all others → 415), delegates to DecodeJSON/DecodeYAML
     - Oversized body → 400 REQUEST_TOO_LARGE
     - _Design: D-03; validation section layer 1_
