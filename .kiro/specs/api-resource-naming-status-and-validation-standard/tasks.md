@@ -154,7 +154,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001(2), F12-VALIDATION-002_
     - _Verification: unit tests — each rejected YAML feature fails; valid YAML decodes equivalently to JSON_
 
-  - [ ] 4.3 Implement DecodeMode, FieldPolicy, and PolicyFor (`internal/apivalid/fieldpolicy.go`)
+  - [x] 4.3 Implement DecodeMode, FieldPolicy, and PolicyFor (`internal/apivalid/fieldpolicy.go`)
     - DecodeMode consts: ModeCreateRequest, ModeReplaceRequest, ModeStatusUpdate, ModeInternalObject, ModeReadRepresentation
     - FieldPolicy struct: Mode, AllowStatus, AllowSystemOwned, AllowSpecMutation
     - PolicyFor(mode) returns the correct policy per Matrix C2 ownership rules

@@ -28,31 +28,6 @@ type Limits struct {
 	MaxPageSize           int // 200
 }
 
-// DecodeMode selects operation-aware FieldPolicy behavior (D-15).
-// PolicyFor(mode) is implemented in task 4.3.
-type DecodeMode int
-
-const (
-	ModeCreateRequest      DecodeMode = iota // customer/operator create: reject system-owned + status
-	ModeReplaceRequest                       // full replacement: reject status + immutable system fields
-	ModeStatusUpdate                         // authorized controller: accept status, reject spec mutation
-	ModeInternalObject                       // internal/system producer: accept system-owned fields
-	ModeReadRepresentation                   // decode a stored/response object: accept all fields
-)
-
-// FieldPolicy resolves which ownership classes are permitted for a DecodeMode
-// (F12-VALIDATION-002, F12-META-002, F12-OWNER-002, D-15).
-//
-// DecodeJSON honors the boolean flags as supplied by the caller. Construct
-// policies via PolicyFor (task 4.3); a zero FieldPolicy rejects status,
-// system-owned metadata, and spec (all Allow* false).
-type FieldPolicy struct {
-	Mode              DecodeMode
-	AllowStatus       bool
-	AllowSystemOwned  bool // uid, generation, resourceVersion, timestamps
-	AllowSpecMutation bool
-}
-
 // systemOwnedMetadataKeys are Matrix C2 system-only ObjectMeta fields
 // rejected when AllowSystemOwned is false (D-15, F12-META-002).
 var systemOwnedMetadataKeys = map[string]struct{}{

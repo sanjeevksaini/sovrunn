@@ -9,12 +9,7 @@ import (
 
 // permissivePolicy accepts status, system-owned metadata, and spec so
 // duplicate/unknown-field tests are not confounded by FieldPolicy.
-var permissivePolicy = FieldPolicy{
-	Mode:              ModeReadRepresentation,
-	AllowStatus:       true,
-	AllowSystemOwned:  true,
-	AllowSpecMutation: true,
-}
+var permissivePolicy = PolicyFor(ModeReadRepresentation)
 
 var testLimits = Limits{
 	MaxObjectBytes:  1 << 20,
