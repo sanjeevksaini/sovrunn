@@ -3,7 +3,7 @@
 Feature: FEATURE-0012 — API, Resource Naming, Status, and Validation Standard
 Phase: Phase 2 — Reuse-First PaaS Fabric Foundation (initial adoption phase; the standard applies across phases)
 Stage: Design
-Controlling handoff: ADH-2026-012 (Approved)
+Controlling handoff: ADH-2026-012 (Approved), ADH-2026-013 (Approved)
 Canonical architecture: docs/architecture/api-resource-standard.md
 Canonical reuse standard: docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
 Depends on: FEATURE-0011 (Reuse Assessment Standard)
@@ -48,18 +48,23 @@ grammar is delivered as documentation plus a route-form validation helper.
 This design resolves the twelve deferred design questions in requirements
 section 9 within the approved contracts. Where a required semantic decision
 were unavailable from approved sources, this design would halt and report
-`ARCHITECTURE_DECISION_REQUIRED` (F12-GOV-001); no such halt was required.
+`ARCHITECTURE_DECISION_REQUIRED` (F12-GOV-001); ADH-2026-013 resolved the
+previously missing exact Operation scope enumeration; no other halt was
+required.
 
 ## Controlling inputs
 
 This design is derived only from the approved controlling inputs and
-introduces no new architecture decision.
+introduces no new architecture decision. ADH-2026-013 resolved the
+previously missing exact Operation scope enumeration as a bounded
+clarification.
 
 | Input | Role in this design |
 |---|---|
 | requirements.md (Approved for design) | Normative acceptance criteria (`F12-*`). |
 | docs/architecture/api-resource-standard.md | Approved architecture baseline; matrices A–E and fitness functions. |
 | ADH-2026-012 (Approved) | Controlling handoff; approves the Extend disposition and standard scope. |
+| ADH-2026-013 (Approved) | Controlling handoff; resolves the canonical Operation allowed-scope enumeration and target-scope equality invariant. |
 | RFC-0022 (DEC-0026, DEC-0027, DEC-0036) | Reuse-first and adapter-boundary basis. |
 | docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md | Canonical reuse assessment schema (fields not redefined here). |
 | docs/engineering/go-coding-guardrails.md | Go implementation guardrails. |
@@ -102,13 +107,13 @@ architecture decision; none expands FEATURE-0012 implementation scope.
 | D-01b | Derivative Go-type consistency with the canonical schemas is executable. A `TypeBinding` registry (`internal/apischema`) maps each canonical schema to its derivative Go type, and a reflection-based `VerifyGoTypeAgainstSchema` check verifies, for the supported schema subset, that the Go type matches the schema: property names, JSON tags, required-versus-optional (`omitempty`/pointer) fields, primitive types, arrays/maps, embedded (promoted) fields, enum-backed named types, and `additionalProperties` behavior. A mismatch fails the feature gate. Fixture round-tripping remains useful supporting evidence but is NOT complete proof that derivative Go types match the canonical schemas. | F12-NAMING-005; F12-VALIDATION-001(4); F12-VERIFY-001(13) |
 | D-01a | Structural schema validation uses a Sovrunn-owned, explicitly bounded JSON Schema 2020-12 **supported subset** validator built on the standard library. Every canonical schema is scanned before use and any keyword outside the declared supported subset is **executably rejected (fail-closed)** with a stable code, so no schema constraint is ever silently unenforced. This is a deliberate, bounded Build (not a partial generic engine); a full generic JSON Schema engine for arbitrary documents remains deferred and, if later required, needs an approved dependency decision. The Reuse/Wrap/Extend/Build assessment for this choice is in the Validation section. | F12-NAMING-005; F12-VALIDATION-001(4); F12-VERIFY-001(13) |
 | D-02 | Shared grammar lives in small, single-responsibility packages under `internal/` (`apimeta`, `apiref`, `apicond`, `apiproblem`, `apivalid`, `apischema`, `apiconform`); none imports `internal/api` or `internal/server`. | F12-IMPL-001; go-coding-guardrails §4 |
-| D-03 | Decoding is provided as **pure functions separated from the HTTP adapter**: `DecodeJSON` (stdlib `encoding/json`, `DisallowUnknownFields` + token-scan duplicate-key detector) and `DecodeYAML`. YAML is treated as a **strict JSON-compatible input representation only** (D-03a), never as full YAML; it is normalized to the same JSON-compatible representation the canonical-schema validator consumes before typed decoding and structural validation. The HTTP adapter selects a decoder by media type; accepted request media types are exactly `application/json` and `application/yaml` (with `application/x-yaml` and `text/yaml` treated as `application/yaml`); all other media types map to 415. | F12-VALIDATION-001(2)/002; F12-ERROR-002 |
-| D-03a | YAML input is a **strict JSON-compatible subset**. Before typed decoding and structural validation the YAML path MUST: (1) require exactly one YAML document (zero or multiple documents rejected); (2) require string mapping keys; (3) reject aliases, anchors, merge keys (`<<`), custom/explicit tags, non-finite numbers (`.nan`, `.inf`), and YAML-only timestamp/binary coercions; (4) perform an explicit `yaml.Node` safety and duplicate-key pass; (5) normalize to the same JSON-compatible representation used by the canonical-schema validator; (6) perform known-field typed decoding. JSON and YAML representations of the same object MUST produce **equivalent validation results**. | F12-VALIDATION-001(2)/(4); F12-VALIDATION-002 |
+| D-03 | Decoding is provided as **pure functions separated from the HTTP adapter**: `DecodeJSON` (stdlib `encoding/json`, `DisallowUnknownFields` + token-scan duplicate-key detector) and `DecodeYAML`. YAML is treated as a **strict JSON-compatible input representation only** (D-03a), never as full YAML; it is normalized to a JSON-compatible value and then decoded through the same `DecodeJSON` path used for JSON input, ensuring identical unknown-field rejection, FieldPolicy enforcement, and stable error-code mapping. The HTTP adapter selects a decoder by media type; accepted request media types are exactly `application/json` and `application/yaml` (with `application/x-yaml` and `text/yaml` treated as `application/yaml`); all other media types map to 415. | F12-VALIDATION-001(2)/002; F12-ERROR-002 |
+| D-03a | YAML input is a **strict JSON-compatible subset**. Before structural validation the YAML path MUST: (1) require exactly one YAML document (zero or multiple documents rejected); (2) require string mapping keys; (3) reject aliases, anchors, merge keys (`<<`), custom/explicit tags, non-finite numbers (`.nan`, `.inf`), and YAML-only timestamp/binary coercions; (4) perform an explicit `yaml.Node` safety and duplicate-key pass; (5) normalize the accepted YAML node to a JSON-compatible value; (6) marshal that normalized value to JSON bytes; (7) pass those JSON bytes through the same `DecodeJSON` path (unknown-field rejection, FieldPolicy enforcement, same destination Go type, same stable error-code and JSON Pointer mapping). No direct yaml.v3 typed decoding is performed after normalization. YAML struct tags are not required for validation equivalence because the normalized representation is decoded through the JSON path. JSON and YAML representations of the same object MUST produce **equivalent validation results**. | F12-VALIDATION-001(2)/(4); F12-VALIDATION-002 |
 | D-04 | Validation is a nine-layer ordered pipeline. Layer 7 performs **structural** reference/kind/scope checks only; **caller-specific** cross-tenant/cross-organization authorization and no-existence-disclosure move to layer 8, which is defined as a small adopter-owned authorization interface plus a uniform safe-denial mapping (no policy engine is implemented here). Layer 9 (later-feature capability/runtime) is reserved. | F12-VALIDATION-001/004; F12-SCOPE-002; F12-SEC-004; F12-IMPL-002 |
 | D-05 | Errors use RFC 9457 Problem Details with Sovrunn extensions (`code`, `requestId`, `violations[]`); violation `field` is an RFC 6901 JSON Pointer. | F12-ERROR-001/002/003 |
 | D-06 | Finite platform limits are set as reviewed configuration defaults in an `apivalid.Limits` struct (values in the Data models section). | F12-VALIDATION-007; F12-LIST-002 |
 | D-07 | `uid` is generated from `crypto/rand` as an opaque 128-bit value that is **collision-resistant, not collision-proof**; adopting storage MUST perform a uniqueness/collision check on persist and reject or regenerate on the (astronomically unlikely) collision. `resourceVersion` is an opaque string; both are treated as opaque by clients. No external UUID library. | F12-META-004; F12-UPDATE-002 |
-| D-08 | `x-sovrunn-profile`, `x-sovrunn-boundary`, `x-sovrunn-allowed-scopes`, `x-sovrunn-stability` are JSON Schema extension keywords validated by a fitness function against controlled vocabularies. | F12-NAMING-006; F12-VERIFY-001(1) |
+| D-08 | The Sovrunn extension registry contains exactly five registered extensions: `x-sovrunn-profile`, `x-sovrunn-boundary`, `x-sovrunn-allowed-scopes`, `x-sovrunn-stability`, and `x-sovrunn-field-policy`. These are JSON Schema extension keywords validated by a fitness function against controlled vocabularies. No wildcard `x-sovrunn-*` namespace is allowed; unknown `x-sovrunn-*` extensions fail closed. `x-sovrunn-field-policy` is a strictly validated property-level object carrying or inheriting exactly: classification, authorizedWriter, authorizedReaders, mutability, retention, redaction, residency, auditRequired. | F12-NAMING-006; F12-VERIFY-001(1); F12-SEC-001 |
 | D-09 | New adopting APIs use `/apis/<group>/<version>/<plural-kebab>` routes; Phase 1 routes are retained unchanged; FEATURE-0012 adds no runtime routes, only a route-form validator. | F12-NAMING-004; F12-COMPAT-003 |
 | D-10 | Optimistic concurrency is a reusable `If-Match`/`resourceVersion` comparison helper mapping stale writes to 412; enforcement belongs to adopting features. | F12-UPDATE-002 |
 | D-11 | A schema-diff gate classifies changes between a stored baseline snapshot and the current schema per the change-classification table, wired into the feature gate. The baseline is **immutable except through an approval-controlled workflow**. `BASELINE_MANIFEST.json` records integrity digests and detects silent baseline edits, but it is an **integrity mechanism, not an independently unforgeable approval mechanism**: because a committer can edit a baseline file and its manifest digest together, changing both in the same commit MUST NOT be sufficient to approve a baseline change. A baseline change **fails unless accompanied by recorded approval evidence** (`api/schemas/baseline/BASELINE_APPROVALS.json` or equivalent) that contains the exact old and new digests, the approving ADH or approval token, the reviewer, and the date; the gate recomputes digests and matches them to this evidence. The actual human governance boundary is **protected review / CODEOWNERS (or equivalent)** on the baseline and its approval record, which is where a human authorizes the change. | F12-EVOLVE-002; F12-VERIFY-001(10) |
@@ -117,6 +122,7 @@ architecture decision; none expands FEATURE-0012 implementation scope.
 | D-14 | Target Go version is 1.22 per the version standard; only the standard library and the already-present `gopkg.in/yaml.v3` are used. | Hard constraint; go-version-standard |
 | D-15 | Strict decoding is **operation-aware** via a `DecodeMode`/`FieldPolicy` covering at least create request, full replacement, status update, internal object, and read representation. Customer mutation requests (create, replace) reject unauthorized system-owned and `status` fields; status-update, internal-object, read-representation, and fixture decoding accept them under the Matrix C2 ownership rules. Unconditional status/system-field rejection is removed. | F12-VALIDATION-002; F12-META-002; F12-OWNER-002 |
 | D-16 | `ScopeRef` conforms to the common typed-reference contract by carrying `apiVersion`, `kind`, `name`, and optional `uid` through the shared typed-reference base (`apimeta.TypedRef`, re-exported as `apiref.TypedRef`), with `kind` constrained to the Matrix B scope kinds. To preserve the documented package layering (`apimeta` is stdlib-only; `apiref` -> `apimeta`), the base lives in `apimeta` so `ScopeRef`/`OwnerRef` embed it without an import cycle. **Canonical platform-scope representation (resolves the absent-vs-explicit ambiguity):** the single canonical stored and emitted form of platform scope is an **absent (nil) `scopeRef`**. An explicit `ScopeRef` with `Kind == "Platform"` is an accepted *input alternate* but is **normalized to nil during layer-5 defaulting, before identity, authorization, concurrency, persistence, and output processing**, so downstream stages and emitted representations only ever see the canonical nil form. A nil/normalized platform scope is valid only for resources whose `x-sovrunn-allowed-scopes` includes `Platform`. For the `API group + kind + scope UID + name` uniqueness rule (F12-SCOPE-002), platform-scoped resources use a reserved **platform-scope identity sentinel** `apimeta.PlatformScopeUID` (constant value `"platform"`, which is not a valid generated `uid`), so their identity tuple is well-defined without a scope object. This aligns `scopeRef` to F12-REF-001 and introduces no architecture exception. | F12-REF-001; F12-SCOPE-002 |
+| D-17 | **Operation allowed scopes (ADH-2026-013).** The canonical generic Operation contract declares exactly six allowed scopes: Platform, Organization, OrganizationUnit, Tenant, Project, Provider. Operation.scopeRef MUST equal the resolved canonical governance scope of Operation.targetRef. For a platform-scoped target, Operation.scopeRef is canonically nil. For a non-platform target, Operation.scopeRef identifies the target's governance scope by UID. Operation.ownerRef MAY represent lifecycle containment but MUST NOT replace scopeRef or act as a governance or security scope. A target/scope mismatch is rejected with a stable validation code and an RFC 6901 JSON Pointer path. The six-value allowed-scope list does not grant authorization; target-kind constraints, caller authorization, and no-existence-disclosure rules remain mandatory. | F12-SCOPE-002; F12-REF-001; F12-FIXTURE-001; F12-FIXTURE-002 |
 
 ## Architecture
 
@@ -196,15 +202,19 @@ internal/apiproblem/codes.go       # stable ErrorCode + violation-code registry
 internal/apiproblem/httpmap.go     # failure-class -> HTTP status mapping
 internal/apivalid/decode.go        # pure DecodeJSON (encoding/json, DisallowUnknownFields,
                                    #   duplicate-key token scan) + DecodeYAML (yaml.v3 node parse,
-                                   #   KnownFields, duplicate-key rejection); no HTTP dependency
+                                   #   YAML-safety rejection, normalize to JSON, then DecodeJSON);
+                                   #   no HTTP dependency
 internal/apivalid/httpdecode.go    # HTTP adapter: MaxBytes, media-type selection -> DecodeJSON/DecodeYAML
 internal/apivalid/fieldpolicy.go   # DecodeMode + FieldPolicy (create/replace/status/internal/read)
 internal/apivalid/pipeline.go      # nine-layer ordered validation pipeline + Result
+internal/apivalid/structural.go    # StructuralValidator interface (apivalid MUST NOT import apischema)
 internal/apivalid/limits.go        # Limits config struct + reviewed defaults
 internal/apivalid/concurrency.go   # If-Match/resourceVersion comparison -> 412 helper
 internal/apivalid/authz.go         # layer-8 adopter-owned ScopeAuthorizer +
-                                   #   AuthorizedResolver interfaces + safe-denial map
-                                   #   (authorize-before-lookup / combined-resolver contract)
+                                   #   AuthorizedResolver + AuthorizedTargetScopeResolver
+                                   #   interfaces + safe-denial map
+                                   #   (authorize-before-lookup / combined-resolver /
+                                   #   target-scope-resolver contract)
 internal/apischema/annotations.go  # x-sovrunn-* keyword parsing + vocabulary checks
 internal/apischema/subsetvalidate.go # bounded JSON Schema 2020-12 subset validator; rejects
                                    #   unsupported keywords fail-closed (D-01a)
@@ -212,6 +222,7 @@ internal/apischema/typebinding.go  # TypeBinding registry + reflection-based
                                    #   VerifyGoTypeAgainstSchema Go-type consistency check (D-01b)
 internal/apischema/route.go        # /apis/<group>/<version>/<plural-kebab> route-form validator
 internal/apischema/diff.go         # schema-diff change classifier + baseline-integrity check
+internal/apiconform/structural.go  # StructuralValidator adapter: apischema -> apiproblem.Violation translation
 internal/apiconform/fitness.go     # executable fitness functions (F12-VERIFY-001 checks)
 internal/apiconform/fixtures.go    # fixture loader + Matrix D scenario assertions
 internal/apiconform/compat.go      # Phase 1 coverage assertion for the report
@@ -226,7 +237,7 @@ api/schemas/discovered-database.json        # ObservedExternalResource / adapter
 api/schemas/plugin-definition.json          # VersionedDefinition / plugin-facing / Platform
 api/schemas/adapter-configuration.json      # ManagedResource / adapter-facing / Provider
 api/schemas/placement-evaluation-request.json # TransientRequestResult / internal-engine
-api/schemas/operation.json                  # LongRunningOperation / plugin/operator
+api/schemas/operation.json                  # LongRunningOperation / plugin/operator / Platform,Organization,OrganizationUnit,Tenant,Project,Provider
 api/schemas/audit-event.json                # ImmutableRecord / governance-only
 api/schemas/_common/*.json                  # shared metadata/reference/condition/problem sub-schemas
 api/schemas/baseline/*.json                 # frozen snapshots for the schema-diff gate
@@ -292,10 +303,10 @@ the constraint/collection helpers; no cycle is introduced.
 // kind, name, and optional immutable uid. It is stdlib-only and lives in
 // apimeta so both scope/owner references and apiref aliases embed it.
 type TypedRef struct {
-    APIVersion string `json:"apiVersion" yaml:"apiVersion"`
-    Kind       string `json:"kind" yaml:"kind"`
-    Name       string `json:"name" yaml:"name"`
-    UID        string `json:"uid,omitempty" yaml:"uid,omitempty"` // optional immutable; must agree with name
+    APIVersion string `json:"apiVersion"`
+    Kind       string `json:"kind"`
+    Name       string `json:"name"`
+    UID        string `json:"uid,omitempty"` // optional immutable; must agree with name
 }
 
 type ScopeKind string // Matrix B — the only valid scopeRef.kind values
@@ -318,11 +329,11 @@ const (
 // scope kinds by validation (see below); embedding the shared base keeps
 // scopeRef a first-class typed reference rather than an architecture exception.
 type ScopeRef struct {
-    // Anonymous embedding: encoding/json PROMOTES the embedded fields
-    // (apiVersion, kind, name, uid) with no tag. yaml.v3 requires an explicit
-    // ",inline" to match, so only a yaml tag is used; there is no unsupported
-    // json:",inline" tag (see the embedding note under List envelope).
-    TypedRef `yaml:",inline"`
+    // Anonymous embedding: encoding/json promotes the embedded fields
+    // (apiVersion, kind, name, uid) with no tag. DecodeYAML normalizes
+    // accepted YAML to JSON and then uses DecodeJSON, so no YAML inline
+    // tag participates in typed decoding.
+    TypedRef
     // Kind MUST be one of the Matrix B ScopeKind values; enforced in validation.
     // authorization resolves by uid, not name.
 }
@@ -353,7 +364,7 @@ func NormalizeScope(s *ScopeRef) *ScopeRef
 // It MUST NOT be used as a scopeRef.kind or as a security/governance scope.
 // Like all references it uses the shared typed-reference base.
 type OwnerRef struct {
-    TypedRef `yaml:",inline"` // apiVersion, kind, name, optional uid; json promotes embedded fields
+    TypedRef // apiVersion, kind, name, optional uid; JSON promotes embedded fields
 }
 ```
 
@@ -470,15 +481,15 @@ type Violation struct {
 //
 // Embedding note (F12-NAMING-005 correctness): the standard library
 // encoding/json does NOT honor a `json:",inline"` tag. An anonymous embedded
-// struct WITHOUT a json tag already has its fields (apiVersion, kind)
-// promoted to the enclosing JSON object, which is the intended flat
-// representation. yaml.v3 does not promote by default, so an explicit
-// `yaml:",inline"` is used for the YAML decoder only. No unsupported
-// `json:",inline"` tag is used anywhere in the grammar.
+// struct without a JSON tag already promotes its fields (apiVersion, kind)
+// to the enclosing JSON object, which is the intended flat representation.
+// DecodeYAML does not perform direct yaml.v3 typed decoding: accepted YAML
+// is normalized to JSON and decoded through DecodeJSON, so YAML struct tags
+// are neither required nor used by the typed decoder.
 type ListEnvelope[T any] struct {
-    TypeMeta `yaml:",inline"` // json: fields promoted via anonymous embedding; yaml: explicit inline
-    Items    []T  `json:"items" yaml:"items"`
-    Page     Page `json:"page" yaml:"page"`
+    TypeMeta // JSON fields promoted through anonymous embedding
+    Items    []T  `json:"items"`
+    Page     Page `json:"page"`
 }
 
 type Page struct {
@@ -527,8 +538,10 @@ Pointer path (F12-VALIDATION-006/007, F12-LIST-002).
 ## Components and Interfaces
 
 Interfaces are small and context-aware where request-scoped
-(go-coding-guardrails §6). Layers 8–9 are reserved (declared, not
-implemented) to keep later-feature runtime absent (F12-IMPL-002).
+(go-coding-guardrails §6). Layer 8 implements only the shared orchestration,
+interfaces, configuration checks, and safe-denial mapping; adopter-specific
+authorization and resolution behavior remains out of scope. Layer 9 is
+reserved for later-feature runtime (F12-IMPL-002).
 
 ### Strict decoding (internal/apivalid)
 
@@ -568,17 +581,21 @@ func PolicyFor(mode DecodeMode) FieldPolicy
 func DecodeJSON(data []byte, lim Limits, pol FieldPolicy, dst any) *apiproblem.Problem
 
 // DecodeYAML is pure and treats YAML as a STRICT JSON-COMPATIBLE input
-// representation only (D-03a). Using gopkg.in/yaml.v3 yaml.Node parsing it,
-// in order: (1) requires exactly one YAML document; (2) requires string
-// mapping keys; (3) rejects aliases, anchors, merge keys (<<), custom/
-// explicit tags, non-finite numbers (.nan/.inf), and YAML-only timestamp/
-// binary coercions; (4) runs an explicit yaml.Node safety + duplicate-key
-// pass; (5) normalizes to the same JSON-compatible representation the
-// canonical-schema validator consumes; (6) performs known-field typed
-// decoding (KnownFields(true)) applying the same FieldPolicy. Because the
-// normalized representation is identical to the JSON path, JSON and YAML
-// forms of the same object produce EQUIVALENT validation results. No HTTP
-// dependency. Errors carry a stable code + JSON Pointer.
+// representation only (D-03a). Using gopkg.in/yaml.v3 for safe syntax-tree
+// parsing and normalization only, it, in order: (1) requires exactly one YAML
+// document; (2) requires string mapping keys; (3) rejects aliases, anchors,
+// merge keys (<<), custom/explicit tags, non-finite numbers (.nan/.inf), and
+// YAML-only timestamp/binary coercions; (4) runs an explicit yaml.Node safety
+// + duplicate-key pass; (5) normalizes the accepted YAML node to a
+// JSON-compatible value; (6) marshals that normalized value to JSON bytes;
+// (7) passes those JSON bytes through the same DecodeJSON path (unknown-field
+// rejection, FieldPolicy enforcement, same destination Go type, same stable
+// error-code and JSON Pointer mapping). No direct yaml.v3 typed decoding is
+// performed after normalization. YAML struct tags are not required for
+// validation equivalence because the normalized representation is decoded
+// through the JSON path. JSON and YAML forms of the same object produce
+// EQUIVALENT validation results. No HTTP dependency. Errors carry a stable
+// code + JSON Pointer.
 func DecodeYAML(data []byte, lim Limits, pol FieldPolicy, dst any) *apiproblem.Problem
 
 // StrictDecode is the HTTP adapter (internal/apivalid/httpdecode.go). It
@@ -607,17 +624,104 @@ const (
 )
 
 // Result keeps failure classes distinguishable (F12-VALIDATION-004).
+//
+// Problem is the safe client-facing failure contract (e.g. 500 INTERNAL_ERROR
+// when a StructuralValidator is nil or returns an error). Err is internal
+// diagnostic context and MUST NOT be serialized or exposed to callers.
+//
+// Binding rules:
+//   - On a nil StructuralValidator or validator error at layer 4:
+//       FailedAt = LayerStructural;
+//       Problem  = a 500 INTERNAL_ERROR Problem;
+//       Err      = the internal cause (nil validator or validator error);
+//       no success result is returned;
+//       layers 5 through 7 do not execute.
+//   - Ordinary structural violations populate Violations and the normal 422
+//     VALIDATION_FAILED mapping; Problem and Err are nil.
+//   - Successful validation: Violations is empty, Problem is nil, Err is nil.
 type Result struct {
     Violations []apiproblem.Violation
     FailedAt   Layer
+    Problem    *apiproblem.Problem // safe client-facing failure; nil on success or ordinary violations
+    Err        error               // internal diagnostic; MUST NOT be serialized or exposed
+}
+
+// Input carries everything the pipeline requires for a single validation
+// invocation. StructuralValidator MUST be non-nil for any pipeline run that
+// processes an external object; a nil validator at layer 4 causes the
+// pipeline to stop with Result.Problem set to 500 INTERNAL_ERROR and
+// Result.Err recording the internal cause.
+//
+// LAYER-8 CONFIGURATION MATRIX:
+//
+// When OperationScope is non-nil, exactly one of Path A or Path B MUST be
+// completely configured. Configuring both TargetScope and TargetScopeResolver
+// is invalid. Configuring neither is invalid. Missing TargetRef is invalid.
+// Missing Caller is invalid. An incomplete path configuration is invalid.
+// Every invalid layer-8 configuration stops at LayerAuthorization with
+// Result.FailedAt = LayerAuthorization, Result.Problem = 500 INTERNAL_ERROR,
+// Result.Err = internal configuration cause, no target lookup, no success
+// result, and no silent skip.
+//
+// Path A — authoritative target scope derivable without lookup:
+//   Required: OperationScope, TargetRef, TargetScope, Authorizer, Caller.
+//   TargetScope MUST come from an authoritative route binding or previously
+//   validated trusted context, not an arbitrary unverified caller value.
+//   ScopeAuthorizer runs before any target lookup. Denial maps through
+//   SafeDenial. Allow permits CheckOperationTargetScopeMatch.
+//
+// Path B — target scope requires authorized lookup:
+//   Required: OperationScope, TargetRef, TargetScopeResolver, Caller.
+//   A separate ScopeAuthorizer is not required because
+//   AuthorizedTargetScopeResolver performs combined authorized resolution.
+//   available=false maps through SafeDenial. available=true permits
+//   CheckOperationTargetScopeMatch.
+//
+// Generic non-Operation validation (OperationScope is nil and no layer-8
+// capability was requested) MAY stop successfully after layer 7.
+type Input struct {
+    Data        []byte
+    Mode        DecodeMode
+    SchemaID    string
+    Validator   StructuralValidator // required; nil = unavailable = 500
+    Authorizer  ScopeAuthorizer     // required for Path A; nil when using Path B only
+    Caller      *CallerContext      // required when OperationScope is non-nil
+    Dst         any                 // decode target
+
+    // Operation target-scope equality (layer 8). These fields are governed
+    // by the layer-8 configuration matrix above. When OperationScope is
+    // non-nil, exactly one of Path A (TargetScope set) or Path B
+    // (TargetScopeResolver set) MUST be completely configured; incomplete or
+    // contradictory configuration is a 500 INTERNAL_ERROR at
+    // LayerAuthorization (no silent skip, no target lookup).
+    OperationScope      *ScopeIdentity                // Operation's canonical scope for the equality check
+    TargetRef           *apiref.TypedRef              // Operation.targetRef; required when OperationScope is non-nil
+    TargetScope         *ScopeIdentity                // pre-derived authoritative target scope (Path A)
+    TargetScopeResolver AuthorizedTargetScopeResolver // combined authorized resolver (Path B)
 }
 
 // Validate runs layers 1..7 deterministically and safely offline
 // (F12-VALIDATION-005). Layer 7 is STRUCTURAL only (well-formed references,
-// allowed kinds/scopes/direction, name/uid agreement). Layer 8 requires a
-// caller context and an adopter-supplied ScopeAuthorizer; when none is
-// supplied Validate stops after layer 7 and reports layers 8..9 as the
-// responsibility of adopting features. Layer 9 is reserved.
+// allowed kinds/scopes/direction, name/uid agreement). At layer 4, if
+// Input.Validator is nil OR if Validator.Validate returns a non-nil error,
+// the pipeline MUST stop at LayerStructural, set Result.Problem to a 500
+// INTERNAL_ERROR Problem, set Result.Err to the internal cause, and MUST NOT
+// execute layers 5 through 7.
+//
+// Layer 8 behavior is governed by the layer-8 configuration matrix (see
+// Input). When OperationScope is non-nil, exactly one of Path A or Path B
+// MUST be completely configured; an invalid configuration stops at
+// LayerAuthorization with Result.Problem = 500 INTERNAL_ERROR,
+// Result.Err = internal configuration cause, no target lookup, no success
+// result, and no silent skip. A valid Path A runs ScopeAuthorizer before
+// lookup; denial maps through SafeDenial; Allow permits
+// CheckOperationTargetScopeMatch. A valid Path B uses
+// AuthorizedTargetScopeResolver; available=false maps through SafeDenial;
+// available=true permits CheckOperationTargetScopeMatch.
+//
+// Generic non-Operation validation (OperationScope is nil and no layer-8
+// capability was requested) MAY stop successfully after layer 7.
+// Layer 9 is reserved.
 func Validate(ctx context.Context, in Input, lim Limits) Result
 ```
 
@@ -663,10 +767,24 @@ statistical timing proofs. `SafeDenial` supplies the uniform response; the
 ordering contract above supplies the equivalent control flow.
 
 ```go
+// ScopeIdentity is a canonical value representation of a governance scope,
+// usable for authorization comparison without requiring a full ScopeRef
+// pointer. It avoids the nil-vs-non-nil ambiguity of *ScopeRef for
+// platform scope and enables direct equality comparison.
+type ScopeIdentity struct {
+    Kind apimeta.ScopeKind
+    UID  string // PlatformScopeUID for platform; target scope UID otherwise
+}
+
+// CanonicalScopeIdentity converts a *ScopeRef to a ScopeIdentity:
+//   - nil scopeRef -> ScopeIdentity{Kind: ScopePlatform, UID: PlatformScopeUID}
+//   - non-platform scopeRef -> ScopeIdentity{Kind: ref.Kind, UID: ref.UID}
+func CanonicalScopeIdentity(s *apimeta.ScopeRef) ScopeIdentity
+
 // CallerContext is the minimal request-scoped identity/scope the authorizer
 // needs. It is provided by the adopting feature, not resolved here.
 type CallerContext struct {
-    ScopeRefs []apimeta.ScopeRef // scopes the caller is entitled to
+    Scopes []ScopeIdentity // scopes the caller is entitled to
 }
 
 // Decision is the outcome of an authorization check. Denials are mapped
@@ -684,7 +802,7 @@ const (
 // adopters MUST call Authorize BEFORE lookup so a cross-scope denial performs
 // no existence-dependent work.
 type ScopeAuthorizer interface {
-    Authorize(ctx context.Context, caller CallerContext, target apiref.TypedRef, targetScope apimeta.ScopeRef) Decision
+    Authorize(ctx context.Context, caller CallerContext, target apiref.TypedRef, targetScope ScopeIdentity) Decision
 }
 
 // AuthorizedResolver is the required contract when the target scope is only
@@ -708,28 +826,195 @@ type AuthorizedResolver interface {
 // responsibility via authorize-before-lookup or AuthorizedResolver (see the
 // adopter contract above). This is a path/response-equivalence guarantee, not
 // a perfect constant-time guarantee.
+//
+// SafeDenial is owned and tested under internal/apivalid/authz.go, not
+// internal/apiproblem.
 func SafeDenial(d Decision) *apiproblem.Problem
+```
+
+#### Operation target-scope equality (layer 8, adopter-owned)
+
+Layers 1 through 7 are offline: layer 7 validates Operation scope syntax,
+allowed-scope membership, targetRef shape, and UID requirements. It does NOT
+resolve the target from external state and does NOT claim to perform
+target-scope equality as an offline check.
+
+An adopter-owned **authorized target-scope resolver** operates at layer 8.
+It MUST preserve the authorize-before-lookup / combined-resolver
+no-existence-disclosure contract defined above: unauthorized or unavailable
+targets use `SafeDenial` and MUST NOT disclose a scope mismatch.
+
+```go
+// AuthorizedTargetScopeResolver resolves the canonical governance scope of
+// an Operation's target reference WITH authorization. It is the adopter-owned
+// contract that layer 8 uses for Operation target-scope equality when the
+// target scope requires lookup (path B).
+//
+// Binding semantics:
+//   - available=false is the single uniform result for BOTH:
+//       (a) target absent;
+//       (b) target present but unauthorized.
+//     Those two cases MUST follow the same path and map through SafeDenial.
+//     No target scope or mismatch detail is returned when available=false.
+//   - available=true means an authorized canonical ScopeIdentity is
+//     available and the caller may proceed to CheckOperationTargetScopeMatch.
+//
+// Implementations MUST NOT branch observably (timing, side effects, logs,
+// audit) between the absent and unauthorized cases.
+//
+// Owned by internal/apivalid/authz.go. FEATURE-0012 defines the interface;
+// adopters supply the implementation (no policy engine here).
+type AuthorizedTargetScopeResolver interface {
+    ResolveAuthorizedTargetScope(
+        ctx context.Context,
+        caller CallerContext,
+        target apiref.TypedRef,
+    ) (scope ScopeIdentity, available bool)
+}
+```
+
+Two approved no-existence-disclosure paths for Operation target-scope
+equality:
+
+**Path A — authoritative target scope derivable without lookup:**
+
+Required Input fields: OperationScope, TargetRef, TargetScope, Authorizer,
+Caller.
+
+1. TargetScope MUST come from an authoritative route binding or previously
+   validated trusted context, not an arbitrary unverified caller value.
+2. Run `ScopeAuthorizer.Authorize` before any target lookup; a
+   `DenyNotDisclosed` maps through `SafeDenial`.
+3. After `Allow`, compare using `CheckOperationTargetScopeMatch`.
+
+**Path B — target scope requires authorized lookup:**
+
+Required Input fields: OperationScope, TargetRef, TargetScopeResolver,
+Caller.
+
+1. A separate ScopeAuthorizer is not required because
+   `AuthorizedTargetScopeResolver` performs combined authorized resolution.
+2. Use `AuthorizedTargetScopeResolver.ResolveAuthorizedTargetScope`.
+3. `available=false` maps through `SafeDenial`; no mismatch is disclosed.
+4. `available=true` permits the pure comparison via
+   `CheckOperationTargetScopeMatch`.
+
+**Fail-closed configuration rules:**
+
+When OperationScope is non-nil, exactly one of Path A or Path B MUST be
+completely configured. Configuring both TargetScope and TargetScopeResolver
+is invalid. Configuring neither is invalid. Missing TargetRef is invalid.
+Missing Caller is invalid. An incomplete Path A or Path B configuration is
+invalid. Every invalid layer-8 configuration stops at LayerAuthorization
+with: Result.FailedAt = LayerAuthorization, Result.Problem = 500
+INTERNAL_ERROR, Result.Err = internal configuration cause, no target lookup,
+no success result, no silent skip.
+
+Generic non-Operation validation (OperationScope is nil and no layer-8
+capability was requested) MAY stop successfully after layer 7.
+
+After an authorized target scope is available, a pure helper compares the
+Operation's canonical `ScopeIdentity` with the target's canonical
+`ScopeIdentity`:
+
+```go
+// CheckOperationTargetScopeMatch compares the Operation's canonical scope
+// with the resolved target's canonical scope. If they differ, it returns a
+// violation with code OPERATION_TARGET_SCOPE_MISMATCH and JSON Pointer
+// /metadata/scopeRef. Returns nil when scopes match.
+func CheckOperationTargetScopeMatch(
+    opScope ScopeIdentity,
+    targetScope ScopeIdentity,
+) *apiproblem.Violation
+```
+
+Invariants:
+
+- Unauthorized or unavailable targets MUST use SafeDenial and MUST NOT
+  disclose a scope mismatch.
+- Only after authorized target resolution succeeds does the pure comparator
+  execute.
+- The mismatch violation uses code `OPERATION_TARGET_SCOPE_MISMATCH` and
+  JSON Pointer `/metadata/scopeRef`.
+
+### Structural validation bridge (internal/apivalid, internal/apiconform)
+
+The package import direction requires that `apivalid` MUST NOT import
+`apischema`. Layer 4 (structural schema validation) therefore uses a
+`StructuralValidator` interface owned by `apivalid`; `apiconform` implements
+the adapter that delegates to `apischema` and translates package-local
+`apischema.SchemaIssue` values to `apiproblem.Violation` values.
+
+```go
+// StructuralValidator is the layer-4 structural validation contract owned
+// by apivalid. Implementations live in apiconform (using apischema) so
+// apivalid never imports apischema directly.
+//
+// The Validate method returns both violations and an error. The error
+// signals validator unavailability or configuration failure (e.g. schema
+// not found, registry misconfiguration). Violations represent ordinary
+// schema-mismatch findings. This separation makes failure distinguishable
+// from clean validation:
+//
+//   - err != nil: structural validation was UNAVAILABLE; the pipeline MUST
+//     stop at LayerStructural, set Result.Problem to a 500 INTERNAL_ERROR
+//     Problem, set Result.Err to the internal cause, return no success
+//     result, and MUST NOT execute layers 5 through 7.
+//   - err == nil, len(violations) > 0: ordinary schema violations.
+//   - err == nil, len(violations) == 0: instance is structurally valid.
+//
+// A nil StructuralValidator in Input at layer 4 is treated identically to
+// a non-nil validator returning an error: the pipeline stops, sets
+// Result.Problem to 500 INTERNAL_ERROR, sets Result.Err, and never
+// executes layers 5 through 7.
+//
+// Primitive unit tests MAY call individual primitive functions directly or
+// inject a deterministic stub StructuralValidator. No full pipeline
+// invocation for an external object may omit the validator.
+type StructuralValidator interface {
+    Validate(instance any, schemaID string) ([]apiproblem.Violation, error)
+}
 ```
 
 ### Bounded schema-subset validation (internal/apischema)
 
 ```go
+// SchemaIssue is a package-local diagnostic value representing a schema or
+// instance validation finding. apischema MUST NOT import apiproblem; the
+// translation from SchemaIssue to apiproblem.Violation is owned by
+// apiconform.
+type SchemaIssue struct {
+    Path    string // RFC 6901 JSON Pointer
+    Code    string // stable machine-readable code
+    Message string // human-readable detail
+}
+```
+
+```go
 // SupportedKeywords is the explicit, bounded JSON Schema 2020-12 subset the
-// Sovrunn validator supports (e.g. type, properties, required, enum, items,
-// additionalProperties, minLength/maxLength, minimum/maximum, pattern, $ref
-// to _common sub-schemas, and the x-sovrunn-* extension keywords).
+// Sovrunn validator supports. FEATURE-0012 supports exactly:
+//   $schema, $id, $ref, title, description, type, properties, required,
+//   enum, items, additionalProperties, minLength, maxLength, minimum,
+//   maximum, pattern, default, examples
+// plus the registered x-sovrunn-* extension keywords.
+// $defs is explicitly prohibited in FEATURE-0012. Shared schemas use
+// approved relative $ref values targeting api/schemas/_common only.
+// The schema walker is context-aware: property names under properties are
+// identifiers, not keywords; extension-object fields are validated by the
+// registered extension contract; unsupported actual schema keywords fail
+// closed; no unsupported constraint is silently ignored.
 var SupportedKeywords map[string]struct{}
 
-// ValidateSchemaSupport scans a canonical schema and returns violations for
+// ValidateSchemaSupport scans a canonical schema and returns issues for
 // ANY keyword outside SupportedKeywords. It is FAIL-CLOSED: an unsupported
 // keyword is rejected, never ignored, so no constraint is silently unenforced
 // (D-01a, F12-NAMING-005).
-func ValidateSchemaSupport(schema []byte) []apiproblem.Violation
+func ValidateSchemaSupport(schema []byte) []SchemaIssue
 
 // ValidateInstance structurally validates a decoded instance against a
 // canonical schema using only the supported subset. Callers MUST first pass
 // ValidateSchemaSupport. This is layer 4 (structural) of the pipeline.
-func ValidateInstance(schema []byte, instance any) []apiproblem.Violation
+func ValidateInstance(schema []byte, instance any) []SchemaIssue
 
 // VerifyBaselineIntegrity checks each api/schemas/baseline/* file against the
 // digests in BASELINE_MANIFEST.json; a mismatch fails the schema-diff gate so
@@ -786,7 +1071,7 @@ var TypeBindings []TypeBinding
 // but is explicitly NOT treated as complete proof that the Go type matches
 // the schema; VerifyGoTypeAgainstSchema is the authoritative consistency
 // check (D-01b, F12-NAMING-005).
-func VerifyGoTypeAgainstSchema(schema []byte, goType reflect.Type) []apiproblem.Violation
+func VerifyGoTypeAgainstSchema(schema []byte, goType reflect.Type) []SchemaIssue
 ```
 
 ### Concurrency, references, conditions, schema
@@ -803,8 +1088,11 @@ func (c Constraint) ValidateRef(ref apiref.TypedRef, path string) []apiproblem.V
 // status change (F12-STATUS-003).
 func SetCondition(conds []apicond.Condition, cond apicond.Condition, now time.Time) []apicond.Condition
 
-// Annotations reads and validates x-sovrunn-* schema keywords.
-func ReadAnnotations(schema []byte) (SchemaMeta, []apiproblem.Violation)
+// Annotations reads and validates the five registered x-sovrunn-* schema
+// keywords (x-sovrunn-profile, x-sovrunn-boundary, x-sovrunn-allowed-scopes,
+// x-sovrunn-stability, x-sovrunn-field-policy). Unknown x-sovrunn-* extensions
+// fail closed. No wildcard x-sovrunn-* namespace is allowed.
+func ReadAnnotations(schema []byte) (SchemaMeta, []SchemaIssue)
 
 // ClassifyChange returns Compatible | Breaking | ReviewRequired for a diff.
 func ClassifyChange(oldSchema, newSchema []byte) []Change
@@ -832,17 +1120,22 @@ and their behavior:
    with a single body read. JSON uses `json.Unmarshal` into
    `map[string]json.RawMessage` for pre-checks then `json.Decoder` with
    `DisallowUnknownFields`. YAML is treated as a **strict JSON-compatible
-   input representation only** (D-03a): using `gopkg.in/yaml.v3` `yaml.Node`
-   parsing it requires exactly one YAML document, requires string mapping
-   keys, rejects aliases, anchors, merge keys (`<<`), custom/explicit tags,
-   non-finite numbers (`.nan`/`.inf`), and YAML-only timestamp/binary
-   coercions, runs an explicit `yaml.Node` safety and duplicate-key pass,
-   normalizes to the same JSON-compatible representation the canonical-schema
-   validator consumes, then performs known-field typed decoding
-   (`KnownFields(true)`). Because the normalized representation is identical,
-   **JSON and YAML representations of the same object MUST produce equivalent
-   validation results**. This extends the existing `internal/api/decode.go`
-   pattern and adds the YAML path required by F12-VALIDATION-001(2).
+   input representation only** (D-03a): using `gopkg.in/yaml.v3` for safe
+   syntax-tree parsing and normalization only, it requires exactly one YAML
+   document, requires string mapping keys, rejects aliases, anchors, merge
+   keys (`<<`), custom/explicit tags, non-finite numbers (`.nan`/`.inf`),
+   and YAML-only timestamp/binary coercions, runs an explicit `yaml.Node`
+   safety and duplicate-key pass, normalizes the accepted node to a
+   JSON-compatible value, marshals that value to JSON bytes, then passes
+   those bytes through the same `DecodeJSON` path (unknown-field rejection,
+   FieldPolicy enforcement, same destination Go type, same stable error-code
+   and JSON Pointer mapping). No direct yaml.v3 typed decoding is performed
+   after normalization. YAML struct tags are not required for validation
+   equivalence because the normalized representation is decoded through the
+   JSON path. Because the final typed decoding is identical, **JSON and YAML
+   representations of the same object MUST produce equivalent validation
+   results**. This extends the existing `internal/api/decode.go` pattern and
+   adds the YAML path required by F12-VALIDATION-001(2).
 3. **Field hygiene (operation-aware)** — reject unknown fields and duplicate
    keys with `UNKNOWN_FIELD` / `DUPLICATE_FIELD` codes. Acceptance of
    `status` and system-owned fields is governed by the `FieldPolicy` for the
@@ -853,13 +1146,18 @@ and their behavior:
    no unconditional status/system-field rejection (F12-VALIDATION-002,
    F12-META-002, F12-OWNER-002).
 4. **Structural** — validate the decoded instance against its canonical JSON
-   Schema 2020-12 document using the **bounded-subset validator**
-   (`apischema.ValidateInstance`, D-01a): required shape for the object's
+   Schema 2020-12 document using the **bounded-subset validator** (via the
+   `StructuralValidator` interface; `apiconform` delegates to
+   `apischema.ValidateInstance`, D-01a): required shape for the object's
    profile (Matrix A invariants), finite structural limits (nesting, counts).
    Before any schema is used, `apischema.ValidateSchemaSupport` rejects any
    keyword outside the supported subset (fail-closed), so structural
    validation genuinely enforces the canonical schema rather than relying on
    fixture round-tripping alone (F12-NAMING-005, F12-VALIDATION-001(4)).
+   If `Input.Validator` is nil or returns a non-nil error, the pipeline
+   stops at `LayerStructural`, sets `Result.Problem` to a 500
+   `INTERNAL_ERROR` Problem, sets `Result.Err` to the internal cause,
+   returns no success result, and MUST NOT execute layers 5 through 7.
 5. **Defaulting** — apply documented, versioned, deterministic defaults
    only (F12-VALIDATION-003); defaulting never depends on external state.
    This layer also **normalizes scope to the canonical form** via
@@ -876,15 +1174,28 @@ and their behavior:
    absent (nil) platform form in layer 5, so this layer validates a single
    canonical representation and applies the platform-scope identity sentinel
    (`apimeta.PlatformScopeUID`) for the uniqueness tuple
-   (F12-REF-002/003, F12-SCOPE-002). This layer performs no caller-specific
-   authorization and makes no cross-tenant access decision.
+   (F12-REF-002/003, F12-SCOPE-002). For Operation, this layer validates
+   scope syntax, allowed-scope membership (six values), targetRef shape,
+   and UID requirements; it does NOT resolve the target from external state
+   and does NOT perform target-scope equality comparison. This layer performs
+   no caller-specific authorization and makes no cross-tenant access decision.
 8. **Authorization / no-existence-disclosure (adopter-owned interface)** —
    caller-specific cross-tenant and cross-organization decisions run here via
    the adopter-supplied `ScopeAuthorizer`; denials use the uniform
    `SafeDenial` mapping so inaccessible targets are indistinguishable from
-   absent ones (F12-SCOPE-002, F12-SEC-004). FEATURE-0012 provides the
-   interface and mapping only and implements no policy engine (F12-IMPL-002).
-   When no authorizer is supplied, validation stops after layer 7.
+   absent ones (F12-SCOPE-002, F12-SEC-004). For Operation, layer-8
+   behavior is governed by the layer-8 configuration matrix (see Input):
+   when OperationScope is non-nil, exactly one of Path A (ScopeAuthorizer +
+   pre-derived TargetScope) or Path B (AuthorizedTargetScopeResolver) MUST
+   be completely configured; an invalid configuration stops at
+   LayerAuthorization with Result.Problem = 500 INTERNAL_ERROR. A valid
+   path resolves the target scope and invokes
+   `CheckOperationTargetScopeMatch`; unauthorized or unavailable targets use
+   SafeDenial and MUST NOT disclose a scope mismatch. FEATURE-0012 provides
+   the interface and mapping only and implements no policy engine
+   (F12-IMPL-002). Generic non-Operation validation (OperationScope is nil
+   and no layer-8 capability was requested) MAY stop successfully after
+   layer 7.
 9. **Later-feature capability/runtime** — RESERVED; declared so adopting
    features slot in without reordering.
 
@@ -996,7 +1307,12 @@ correlation data those features require:
 - The `Operation` fixture uses the `LongRunningOperation` profile and can
   represent target, action, requester, idempotency/correlation, progress,
   retryability, and terminal result — without executing anything
-  (F12-PROFILE-002, Matrix D).
+  (F12-PROFILE-002, Matrix D). The Operation schema declares exactly six
+  allowed scopes (Platform, Organization, OrganizationUnit, Tenant, Project,
+  Provider) per D-17. Operation.scopeRef MUST equal the resolved canonical
+  governance scope of Operation.targetRef; for a platform-scoped target,
+  scopeRef is canonically nil; a target/scope mismatch is rejected with a
+  stable validation code and JSON Pointer path.
 - The `AuditEvent` fixture uses the `ImmutableRecord` profile (append-only,
   linked corrections) and can carry actor, request, operation, subject, and
   version references, so auditing links these without storing history in
@@ -1150,6 +1466,58 @@ Traceability: F12-UPDATE-002; D-10.
 
 **Validates: Requirements 4.11**
 
+### Property 11: Operation target-scope equality
+
+*For any* Operation, its `scopeRef` MUST equal the resolved canonical
+governance scope of its `targetRef`. For a platform-scoped target,
+Operation.scopeRef is canonically nil (ScopeIdentity{Platform, PlatformScopeUID}).
+For a non-platform target, Operation.scopeRef identifies the target's
+governance scope by UID. An Operation whose scope differs from its target's
+resolved scope is rejected with violation code `OPERATION_TARGET_SCOPE_MISMATCH`
+and JSON Pointer `/metadata/scopeRef`. Unauthorized or unavailable targets
+use SafeDenial and MUST NOT disclose a scope mismatch. The six-value
+allowed-scope list (Platform, Organization, OrganizationUnit, Tenant, Project,
+Provider) does not grant authorization. Layer 7 validates scope syntax,
+allowed-scope membership, targetRef shape, and UID requirements offline;
+target-scope resolution and equality comparison execute at layer 8 via an
+adopter-owned authorized target-scope resolver.
+
+Generated positive and negative tests for Property 11:
+
+- each of the six scopes with matching target (positive);
+- platform nil scope with a platform-scoped target (positive);
+- matching non-platform UID (positive);
+- kind mismatch (negative: OPERATION_TARGET_SCOPE_MISMATCH, /metadata/scopeRef);
+- UID mismatch (negative: OPERATION_TARGET_SCOPE_MISMATCH, /metadata/scopeRef);
+- unavailable target (negative: SafeDenial 404, no mismatch disclosed);
+- unauthorized target (negative: SafeDenial 404, no mismatch disclosed);
+- path A: complete configuration (OperationScope, TargetRef, TargetScope,
+  Authorizer, Caller) with ScopeAuthorizer Allow then match (positive);
+- path A: pre-derived TargetScope with ScopeAuthorizer DenyNotDisclosed (SafeDenial);
+- path B: complete configuration (OperationScope, TargetRef,
+  TargetScopeResolver, Caller) with available=true then match (positive);
+- path B: AuthorizedTargetScopeResolver available=false (SafeDenial, no mismatch);
+- OperationScope non-nil with neither TargetScope nor TargetScopeResolver
+  configured (500 INTERNAL_ERROR at LayerAuthorization, no target lookup);
+- both TargetScope and TargetScopeResolver configured (500 INTERNAL_ERROR
+  at LayerAuthorization, no target lookup);
+- missing Caller when OperationScope is non-nil (500 INTERNAL_ERROR at
+  LayerAuthorization);
+- missing TargetRef when OperationScope is non-nil (500 INTERNAL_ERROR at
+  LayerAuthorization);
+- incomplete Path A: TargetScope set but Authorizer nil (500 INTERNAL_ERROR
+  at LayerAuthorization);
+- incomplete Path B: TargetScopeResolver set but Caller nil (500
+  INTERNAL_ERROR at LayerAuthorization);
+- generic non-Operation validation (OperationScope nil) stops successfully
+  after layer 7 (positive);
+- exact OPERATION_TARGET_SCOPE_MISMATCH code assertion;
+- exact /metadata/scopeRef path assertion.
+
+Traceability: F12-SCOPE-002, F12-REF-001, F12-FIXTURE-001; D-17.
+
+**Validates: Requirements 4.4, 4.5**
+
 ## Error Handling
 
 Errors use RFC 9457 Problem Details with Sovrunn extensions
@@ -1277,29 +1645,55 @@ internal/apiref    — allowed kind/scope/direction; name/uid agreement and mism
 internal/apicond   — status enum; PascalCase type/reason; LastTransitionTime only
                      changes on status change; conditions-not-history.
 internal/apiproblem— Problem shape; stable codes; violation JSON Pointer; httpmap
-                     incl. oversize -> 400 REQUEST_TOO_LARGE; SafeDenial uniform 404.
+                     incl. oversize -> 400 REQUEST_TOO_LARGE.
 internal/apivalid  — pure DecodeJSON and DecodeYAML (unknown/duplicate rejection,
-                     yaml.v3 KnownFields + duplicate-key rejection, size); YAML strict
+                     yaml.v3 safety + normalize-to-JSON + DecodeJSON reuse,
+                     duplicate-key rejection, size); YAML strict
                      JSON-compatible rules (single document, string keys, reject
                      aliases/anchors/merge keys/custom tags/non-finite numbers/YAML-only
                      timestamp+binary coercions) and JSON/YAML validation equivalence for
-                     the same object; media-type selection incl. 415 for unsupported
+                     the same object (identical typed values, identical error codes and
+                     JSON Pointers, identical unknown-field rejection, identical
+                     operation-aware FieldPolicy, YAML-only constructs rejected before
+                     JSON normalization); media-type selection incl. 415 for unsupported
                      types; DecodeMode/FieldPolicy
                      (create/replace reject status+system; status-update/internal/read/
                      fixture accept under ownership rules); nine-layer ordering with
-                     layer 7 structural vs layer 8 authorization split; ScopeAuthorizer
-                     + SafeDenial no-existence-disclosure; limits; CheckIfMatch 412;
-                     offline safety.
+                     layer 7 structural vs layer 8 authorization split;
+                     StructuralValidator unavailability (nil validator or error) stops
+                     pipeline at LayerStructural with Result.Problem=500 INTERNAL_ERROR,
+                     Result.Err=internal cause, and never executes layers 5–7;
+                     layer-8 configuration matrix tests (complete Path A, complete
+                     Path B, OperationScope with neither path configured, both paths
+                     configured, missing Caller, missing TargetRef, incomplete Path A,
+                     incomplete Path B — each invalid configuration stops at
+                     LayerAuthorization with 500 INTERNAL_ERROR; generic non-Operation
+                     validation with nil OperationScope stops successfully after
+                     layer 7);
+                     ScopeAuthorizer + SafeDenial (owned here in
+                     authz.go) no-existence-disclosure uniform 404; ScopeIdentity +
+                     CanonicalScopeIdentity (nil -> Platform/PlatformScopeUID);
+                     CheckOperationTargetScopeMatch (positive: each of six scopes,
+                     platform nil, matching non-platform UID; negative: kind mismatch,
+                     UID mismatch -> OPERATION_TARGET_SCOPE_MISMATCH /metadata/scopeRef;
+                     unavailable target -> SafeDenial; unauthorized target -> SafeDenial);
+                     AuthorizedTargetScopeResolver contract (stub: available=false for
+                     absent and unauthorized both map through SafeDenial identically;
+                     available=true feeds CheckOperationTargetScopeMatch; path A via
+                     pre-derived TargetScope; path B via resolver);
+                     limits; CheckIfMatch 412; offline safety.
 internal/apischema — x-sovrunn-* presence/vocabulary; ValidateSchemaSupport
-                     fail-closed rejection of unsupported keywords; ValidateInstance
-                     structural validation against the bounded subset;
-                     VerifyGoTypeAgainstSchema Go-type consistency across the
-                     supported subset (property names, JSON tags, required vs
-                     optional, primitives, arrays/maps, embedded fields, enum-backed
-                     types, additionalProperties) with mismatches failing; route-form;
-                     schema-diff classification (add optional/required, remove/rename,
-                     narrow enum, add enum value, target kind/scope change);
-                     VerifyBaselineIntegrity against BASELINE_MANIFEST.json;
+                     fail-closed rejection of unsupported keywords (returns
+                     []SchemaIssue, not apiproblem.Violation); ValidateInstance
+                     structural validation against the bounded subset (returns
+                     []SchemaIssue); VerifyGoTypeAgainstSchema Go-type consistency
+                     across the supported subset (property names, JSON tags,
+                     required vs optional, primitives, arrays/maps, embedded fields,
+                     enum-backed types, additionalProperties) with mismatches
+                     returning SchemaIssue; ReadAnnotations returns SchemaIssue;
+                     route-form; schema-diff classification (add optional/required,
+                     remove/rename, narrow enum, add enum value, target kind/scope
+                     change); VerifyBaselineIntegrity against BASELINE_MANIFEST.json;
                      VerifyBaselineApproval requiring recorded approval evidence
                      (old/new digests, ADH/token, reviewer, date) so co-editing
                      baseline + manifest alone is not sufficient to approve.
@@ -1376,7 +1770,15 @@ internal/apischema — x-sovrunn-* presence/vocabulary; ValidateSchemaSupport
 
 The `internal/apiconform` scenario table maps all seventeen Matrix D
 scenarios to a fixture + required-proof assertion, so the conformance suite
-fails if any scenario becomes unrepresentable.
+fails if any scenario becomes unrepresentable. The "Future provisioning
+executes" scenario uses the Operation fixture with all six allowed scopes
+(Platform, Organization, OrganizationUnit, Tenant, Project, Provider) and
+asserts target-scope equality per D-17, including generated positive and
+negative tests: each of the six scopes with matching target; platform nil
+scope; matching non-platform UID; kind mismatch
+(OPERATION_TARGET_SCOPE_MISMATCH, /metadata/scopeRef); UID mismatch;
+unavailable target (SafeDenial, no mismatch disclosed); unauthorized target
+(SafeDenial, no mismatch disclosed).
 
 ## Verification
 
@@ -1498,12 +1900,15 @@ each within the approved contracts. None required an
    JSON-compatible input representation only** (D-03a): exactly one document,
    string keys, no aliases/anchors/merge keys/custom tags/non-finite numbers/
    YAML-only timestamp or binary coercions, an explicit `yaml.Node` safety +
-   duplicate-key pass, normalization to the same JSON-compatible
-   representation the canonical-schema validator consumes, then known-field
-   typed decoding — so JSON and YAML forms of the same object produce
-   equivalent validation results. Both are separated from the `StrictDecode`
-   HTTP adapter which selects a decoder by media type
-   (`application/json`/`application/yaml` only, else 415). Decoding is operation-aware via `DecodeMode`/`FieldPolicy`
+   duplicate-key pass, normalization to a JSON-compatible value, marshaling
+   to JSON bytes, then passing those bytes through the same `DecodeJSON` path
+   (unknown-field rejection, FieldPolicy enforcement, same destination Go
+   type, same stable error-code and JSON Pointer mapping) — so JSON and YAML
+   forms of the same object produce equivalent validation results. No direct
+   yaml.v3 typed decoding is performed after normalization. Both are
+   separated from the `StrictDecode` HTTP adapter which selects a decoder by
+   media type (`application/json`/`application/yaml` only, else 415).
+   Decoding is operation-aware via `DecodeMode`/`FieldPolicy`
    (D-15). The nine-layer `Validate` pipeline keeps layer 7 structural and
    moves caller-specific authorization + no-existence-disclosure to the
    adopter-owned layer-8 `ScopeAuthorizer` + `SafeDenial` (D-04). Error
@@ -1520,10 +1925,16 @@ each within the approved contracts. None required an
    reject or regenerate on collision. `resourceVersion` is an opaque string
    whose concrete generation is the adopting storage's responsibility.
    Clients treat both as opaque (D-07, F12-META-004).
-6. **Machine-readable annotations + fitness validation** — `x-sovrunn-profile`,
-   `x-sovrunn-boundary`, `x-sovrunn-allowed-scopes`, `x-sovrunn-stability`
-   are JSON Schema extension keywords parsed by `apischema.ReadAnnotations`
-   and asserted by fitness function check 1 (D-08).
+6. **Machine-readable annotations + fitness validation** — the Sovrunn
+   extension registry contains exactly five extensions: `x-sovrunn-profile`,
+   `x-sovrunn-boundary`, `x-sovrunn-allowed-scopes`, `x-sovrunn-stability`,
+   and `x-sovrunn-field-policy`. These are JSON Schema extension keywords
+   parsed by `apischema.ReadAnnotations` and asserted by fitness function
+   check 1. No wildcard `x-sovrunn-*` namespace is allowed; unknown
+   `x-sovrunn-*` extensions fail closed. `x-sovrunn-field-policy` is a
+   strictly validated property-level object carrying or inheriting exactly:
+   classification, authorizedWriter, authorizedReaders, mutability,
+   retention, redaction, residency, auditRequired (D-08).
 7. **HTTP route form + Phase 1 coexistence** —
    `/apis/<group>/<version>/<plural-kebab>` with nested scope for scoped
    collections, validated by `ValidateRoute`; Phase 1 routes retained
@@ -1689,8 +2100,9 @@ significant decision unit.
 
 ### Traceability
 
-- Related DEC / RFC / ADH references: ADH-2026-012; RFC-0022; DEC-0026,
-  DEC-0027, DEC-0036; RFC-0021 and DEC-0026/DEC-0036 via FEATURE-0011.
+- Related DEC / RFC / ADH references: ADH-2026-012; ADH-2026-013; RFC-0022;
+  DEC-0026, DEC-0027, DEC-0036; RFC-0021 and DEC-0026/DEC-0036 via
+  FEATURE-0011.
 - Linked acceptance criteria: all `F12-*` requirements; the fitness-function
   → requirement map in `internal/apiconform/fitness.go`.
 - Validation and review evidence: `make fmt`/`test`/`vet`, the FEATURE-0012
@@ -1705,6 +2117,11 @@ significant decision unit.
 - Scope of approval: applies to the recorded Extend disposition and the
   responsibility boundary above. This approval authorizes the design stage;
   tasks and implementation retain their separate approval gates.
+- Amendment reference: ADH-2026-013 (Approved, 2026-07-23); resolves the
+  canonical Operation allowed-scope enumeration and target-scope equality
+  invariant as a bounded clarification.
+- Amendment note: ADH-2026-013 does not constitute reapproval of the
+  amended design itself; design reapproval retains its own gate.
 
 ### Nested capability assessment: Bounded JSON Schema 2020-12 structural validator
 
@@ -1820,8 +2237,10 @@ Each Phase 2 drift gate is addressed by this design:
   and Verification sections collectively cite the `F12-*` identifiers they
   satisfy; requirements section 10's coverage matrix remains the
   authoritative index.
-- No new architecture decision is introduced; no canonical term is renamed;
-  the feature sequence is unchanged; no future-phase feature is implemented.
+- No new architecture decision is introduced; ADH-2026-013 resolved the
+  previously missing exact Operation scope enumeration as a bounded
+  clarification (D-17). No canonical term is renamed; the feature sequence
+  is unchanged; no future-phase feature is implemented.
 
 This document is the Design stage for FEATURE-0012. Tasks and implementation
 remain unauthorized until their separate human approval tokens are issued.

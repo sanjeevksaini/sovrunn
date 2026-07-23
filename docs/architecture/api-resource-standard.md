@@ -13,7 +13,9 @@ controlling_documents:
   - docs/phase2/PHASE2_SCOPE.md
   - docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
   - docs/context/CURRENT_ARCHITECTURE_BASELINE.md
-required_handoff: ADH-2026-012
+required_handoff:
+  - ADH-2026-012
+  - ADH-2026-013
 standard_maturity: draft
 approval_date: 2026-07-22
 approving_role: Sovrunn Architecture Owner
@@ -287,6 +289,30 @@ Rules:
 9. Denied cross-scope resolution MUST NOT disclose whether an inaccessible target exists.
 10. Provider/resource-pool selection by customer-facing requests MUST occur through approved domain contracts rather than provider-native identifiers.
 
+#### Operation allowed scopes (ADH-2026-013)
+
+The canonical generic Operation contract declares exactly:
+
+```yaml
+x-sovrunn-allowed-scopes:
+  - Platform
+  - Organization
+  - OrganizationUnit
+  - Tenant
+  - Project
+  - Provider
+```
+
+Operation scope invariants:
+
+1. Operation.scopeRef MUST equal the resolved canonical governance scope of Operation.targetRef.
+2. For a platform-scoped target, Operation.scopeRef is canonically nil.
+3. For a non-platform target, Operation.scopeRef identifies the target's governance scope by UID.
+4. Operation.ownerRef MAY represent lifecycle containment but MUST NOT replace scopeRef or act as a governance or security scope.
+5. A target/scope mismatch is rejected with a stable validation code and an RFC 6901 JSON Pointer path.
+6. The six-value allowed-scope list does not grant authorization.
+7. Target-kind constraints, caller authorization, and no-existence-disclosure rules remain mandatory.
+
 ### 6.6 References
 
 References use a common typed base and domain-specific constrained aliases.
@@ -537,7 +563,7 @@ FEATURE-0012 MUST demonstrate that its grammar can represent the following witho
 | Operator configures adapter | ManagedResource | Provider / adapter | Secret references and native configuration isolation. |
 | Placement engine evaluates request | TransientRequestResult | Project context / internal | Typed request/result without forced persistence. |
 | Decision becomes auditable | ImmutableRecord | Project / governance | Immutable subject/actor/input references for FEATURE-0013. |
-| Future provisioning executes | LongRunningOperation | Target scope / plugin | Idempotency, progress, retry, cancellation, terminal result. |
+| Future provisioning executes | LongRunningOperation | Platform, Organization, OrganizationUnit, Tenant, Project, Provider / plugin | Idempotency, progress, retry, cancellation, terminal result; Operation.scopeRef equals the resolved canonical governance scope of Operation.targetRef. |
 | Portal lists large collections | ListEnvelope | Customer/operator | Bounded opaque pagination and deterministic ordering. |
 | Provider disconnects | ObservedExternalResource | Provider / adapter | Current, stale, unknown, and absent remain distinct. |
 | External object is recreated under same name | ObservedExternalResource | Provider / adapter | UID prevents stale-reference rebinding. |
@@ -693,7 +719,7 @@ The implementation MUST NOT create functional provider, plugin, policy, placemen
 
 ## 12. Kiro generation contract
 
-After `ADH-2026-012` receives human approval, Kiro MUST treat this document as the architecture baseline.
+After `ADH-2026-012` and `ADH-2026-013` receive human approval, Kiro MUST treat this document as the architecture baseline.
 
 ### Requirements must
 
@@ -758,3 +784,11 @@ The architecture owner approved this baseline after confirming that:
 Approved statement:
 
 > The FEATURE-0012 architecture has no identified unmitigated conflict with Sovrunn foundation principles or evaluated growth scenarios. Its intentional boundaries are explicit, owned, versioned, observable, auditable, replaceable, and testable. Remaining uncertainties have documented migration paths and reassessment triggers. Approved as the baseline for Kiro requirements, design, and tasks.
+
+### Amendment record — ADH-2026-013
+
+- Handoff: ADH-2026-013
+- Classification: Clarification
+- Approved by: Sanjeev Kumar
+- Date: 2026-07-23
+- Scope: Resolves the canonical Operation allowed-scope enumeration (all six Matrix B scopes) and the Operation-to-target scope equality invariant. No new architecture decision; no runtime behavior added.
