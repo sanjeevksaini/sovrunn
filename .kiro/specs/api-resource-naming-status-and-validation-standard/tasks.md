@@ -797,7 +797,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-001(1,3,4,9), F12-SEC-001, F12-SEC-002_
     - _Verification: `go test ./internal/apiconform/...` — checks 1, 1a, 3, 4, 9 pass; missing policy field fails; unknown policy field fails; unknown x-sovrunn-* fails_
 
-  - [ ] 16.2 Implement reference, scope, boundary, and security fitness functions (`internal/apiconform/fitness_ref.go`)
+  - [x] 16.2 Implement reference, scope, boundary, and security fitness functions (`internal/apiconform/fitness_ref.go`)
     - Check 2: No core/customer schema imports provider SDK/native types
     - Check 5: References constrain kinds and scopes
     - Check 6: Cross-tenant access fails without existence disclosure (using SafeDenial from apivalid/authz.go)
