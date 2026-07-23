@@ -589,7 +589,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-EVOLVE-002_
     - _Verification: unit tests — add optional field = compatible; remove field = breaking; add enum value = review required_
 
-  - [ ] 9.4 Implement VerifyBaselineIntegrity and VerifyBaselineApproval (`internal/apischema/diff.go`)
+  - [x] 9.4 Implement VerifyBaselineIntegrity and VerifyBaselineApproval (`internal/apischema/diff.go`)
     - VerifyBaselineIntegrity: recomputes SHA-256 digests of baseline files and compares to BASELINE_MANIFEST.json
     - VerifyBaselineApproval: baseline changes MUST fail unless accompanied by recorded approval evidence in BASELINE_APPROVALS.json containing: exact old digest, exact new digest, approving ADH or approval token, reviewer identity, and date
     - Co-editing baseline + manifest in the same commit without recorded approval evidence is NOT sufficient

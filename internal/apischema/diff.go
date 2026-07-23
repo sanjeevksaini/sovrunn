@@ -1,11 +1,17 @@
 package apischema
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"math"
+	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 // ChangeClass is the closed set of schema-evolution classifications applied by
@@ -68,9 +74,8 @@ type Change struct {
 //	add registered extension                   → Compatible
 //
 // Identical schemas return an empty slice. Results are sorted by Path, Kind,
-// then Class for deterministic gate output. This task does not implement
-// baseline integrity or approval checks (see VerifyBaselineIntegrity /
-// VerifyBaselineApproval in a later task).
+// then Class for deterministic gate output. Baseline integrity and approval
+// gates are VerifyBaselineIntegrity and VerifyBaselineApproval (D-11).
 func ClassifyChange(oldSchema, newSchema []byte) []Change {
 	oldRoot, errOld := parseSchemaObject(oldSchema)
 	newRoot, errNew := parseSchemaObject(newSchema)
@@ -783,4 +788,331 @@ func sortChanges(changes []Change) {
 		}
 		return changes[i].Message < changes[j].Message
 	})
+}
+
+// Baseline governance filenames under api/schemas/baseline/ (D-11).
+const (
+	BaselineManifestFileName  = "BASELINE_MANIFEST.json"
+	BaselineApprovalsFileName = "BASELINE_APPROVALS.json"
+)
+
+// baselineManifest is the on-disk shape of BASELINE_MANIFEST.json.
+// Digests are lowercase hex-encoded SHA-256 of the baseline file bytes
+// (optionally prefixed with "sha256:" in the file; comparisons normalize).
+type baselineManifest struct {
+	Files map[string]string `json:"files"`
+}
+
+// baselineApprovalsFile is the on-disk shape of BASELINE_APPROVALS.json.
+//
+// RecordedDigests holds the last approved digest per baseline-relative path.
+// An absent/empty map is the initial-bootstrap case: no prior-approval
+// evidence is required (task 10.3). When RecordedDigests is populated,
+// any current digest that differs from the recorded value is a baseline
+// change and MUST have matching approval evidence — co-editing the baseline
+// file and BASELINE_MANIFEST.json alone is never sufficient (D-11).
+type baselineApprovalsFile struct {
+	RecordedDigests map[string]string  `json:"recordedDigests"`
+	Approvals       []baselineApproval `json:"approvals"`
+}
+
+// baselineApproval is one recorded baseline-change approval evidence entry.
+// Exactly one of ADH or ApprovalToken must be non-empty, together with
+// Path, OldDigest, NewDigest, Reviewer, and Date.
+type baselineApproval struct {
+	Path          string `json:"path"`
+	OldDigest     string `json:"oldDigest"`
+	NewDigest     string `json:"newDigest"`
+	ADH           string `json:"adh"`
+	ApprovalToken string `json:"approvalToken"`
+	Reviewer      string `json:"reviewer"`
+	Date          string `json:"date"`
+}
+
+// VerifyBaselineIntegrity recomputes SHA-256 digests of every baseline schema
+// file under baselineDir and compares them to BASELINE_MANIFEST.json.
+// A mismatch fails so a silent baseline edit is detected. This is an
+// INTEGRITY check only — the manifest is not an independently unforgeable
+// approval, since a committer can change a baseline and its digest together
+// (D-11, F12-EVOLVE-002, F12-VERIFY-001(10)).
+func VerifyBaselineIntegrity(manifestPath, baselineDir string) error {
+	manifest, err := loadBaselineManifest(manifestPath)
+	if err != nil {
+		return err
+	}
+	actual, err := computeBaselineDigests(baselineDir)
+	if err != nil {
+		return err
+	}
+	return compareBaselineDigests(manifest.Files, actual)
+}
+
+// VerifyBaselineApproval enforces that any baseline change is APPROVED, not
+// merely digest-consistent. When a baseline file's digest differs from the
+// prior recorded digest in BASELINE_APPROVALS.json, it requires matching
+// approval evidence containing the exact old/new digests, the approving ADH
+// or approval token, the reviewer, and the date. Changing the baseline and
+// its manifest in one commit without that evidence is NOT sufficient.
+// The human governance boundary remains protected review / CODEOWNERS on the
+// baseline and its approval record (D-11, F12-EVOLVE-002, F12-VERIFY-001(10)).
+func VerifyBaselineApproval(approvalsPath, manifestPath, baselineDir string) error {
+	if err := VerifyBaselineIntegrity(manifestPath, baselineDir); err != nil {
+		return fmt.Errorf("baseline integrity prerequisite failed: %w", err)
+	}
+
+	approvals, err := loadBaselineApprovals(approvalsPath)
+	if err != nil {
+		return err
+	}
+
+	actual, err := computeBaselineDigests(baselineDir)
+	if err != nil {
+		return err
+	}
+
+	recorded := approvals.RecordedDigests
+	if len(recorded) == 0 {
+		// Initial baseline bootstrap: no prior-approval evidence required.
+		return nil
+	}
+
+	// Every recorded path that disappeared, and every current path whose
+	// digest differs from the recorded value, needs matching evidence.
+	paths := make(map[string]struct{}, len(recorded)+len(actual))
+	for p := range recorded {
+		paths[p] = struct{}{}
+	}
+	for p := range actual {
+		paths[p] = struct{}{}
+	}
+
+	for _, path := range sortedKeys(paths) {
+		oldDigest, hadOld := recorded[path]
+		newDigest, hasNew := actual[path]
+		oldDigest = normalizeDigest(oldDigest)
+		newDigest = normalizeDigest(newDigest)
+
+		switch {
+		case hadOld && hasNew && oldDigest == newDigest:
+			continue // unchanged
+		case !hadOld && hasNew:
+			// New baseline file relative to recorded set.
+			if err := requireApprovalEvidence(approvals.Approvals, path, "", newDigest); err != nil {
+				return err
+			}
+		case hadOld && !hasNew:
+			return fmt.Errorf("baseline approval: path %q was recorded but is missing from baseline directory (deletion requires approval evidence workflow)", path)
+		default:
+			// Digest changed: require evidence with exact old and new digests.
+			if err := requireApprovalEvidence(approvals.Approvals, path, oldDigest, newDigest); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func requireApprovalEvidence(entries []baselineApproval, path, oldDigest, newDigest string) error {
+	oldDigest = normalizeDigest(oldDigest)
+	newDigest = normalizeDigest(newDigest)
+	for _, e := range entries {
+		if e.Path != path {
+			continue
+		}
+		if normalizeDigest(e.OldDigest) != oldDigest {
+			continue
+		}
+		if normalizeDigest(e.NewDigest) != newDigest {
+			continue
+		}
+		if err := validateApprovalEvidenceFields(e); err != nil {
+			return fmt.Errorf("baseline approval: path %q: %w", path, err)
+		}
+		return nil
+	}
+	return fmt.Errorf("baseline approval: path %q changed from digest %q to %q without recorded approval evidence (oldDigest/newDigest/adh-or-token/reviewer/date); co-editing baseline and manifest is not sufficient", path, oldDigest, newDigest)
+}
+
+func validateApprovalEvidenceFields(e baselineApproval) error {
+	adh := strings.TrimSpace(e.ADH)
+	token := strings.TrimSpace(e.ApprovalToken)
+	if adh == "" && token == "" {
+		return fmt.Errorf("approval evidence missing approving ADH or approval token")
+	}
+	if strings.TrimSpace(e.Reviewer) == "" {
+		return fmt.Errorf("approval evidence missing reviewer identity")
+	}
+	if strings.TrimSpace(e.Date) == "" {
+		return fmt.Errorf("approval evidence missing date")
+	}
+	if strings.TrimSpace(e.Path) == "" {
+		return fmt.Errorf("approval evidence missing path")
+	}
+	if normalizeDigest(e.NewDigest) == "" {
+		return fmt.Errorf("approval evidence missing newDigest")
+	}
+	// oldDigest may be empty for a newly introduced baseline file.
+	return nil
+}
+
+func loadBaselineManifest(path string) (baselineManifest, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return baselineManifest{}, fmt.Errorf("baseline manifest: read %s: %w", path, err)
+	}
+	var manifest baselineManifest
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		return baselineManifest{}, fmt.Errorf("baseline manifest: parse %s: %w", path, err)
+	}
+	if manifest.Files == nil {
+		manifest.Files = map[string]string{}
+	}
+	normalized := make(map[string]string, len(manifest.Files))
+	for p, d := range manifest.Files {
+		p = filepath.ToSlash(p)
+		if p == "" || isBaselineGovernanceFile(p) {
+			return baselineManifest{}, fmt.Errorf("baseline manifest: invalid file entry %q", p)
+		}
+		nd := normalizeDigest(d)
+		if nd == "" || !isSHA256Hex(nd) {
+			return baselineManifest{}, fmt.Errorf("baseline manifest: invalid digest for %q", p)
+		}
+		normalized[p] = nd
+	}
+	manifest.Files = normalized
+	return manifest, nil
+}
+
+func loadBaselineApprovals(path string) (baselineApprovalsFile, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return baselineApprovalsFile{}, fmt.Errorf("baseline approvals: read %s: %w", path, err)
+	}
+	// Allow a literally empty file or empty JSON object for the initial baseline.
+	trimmed := strings.TrimSpace(string(raw))
+	if trimmed == "" {
+		return baselineApprovalsFile{}, nil
+	}
+	var approvals baselineApprovalsFile
+	if err := json.Unmarshal(raw, &approvals); err != nil {
+		return baselineApprovalsFile{}, fmt.Errorf("baseline approvals: parse %s: %w", path, err)
+	}
+	if approvals.RecordedDigests == nil {
+		approvals.RecordedDigests = map[string]string{}
+	}
+	normalized := make(map[string]string, len(approvals.RecordedDigests))
+	for p, d := range approvals.RecordedDigests {
+		p = filepath.ToSlash(p)
+		nd := normalizeDigest(d)
+		if p == "" || isBaselineGovernanceFile(p) {
+			return baselineApprovalsFile{}, fmt.Errorf("baseline approvals: invalid recordedDigests path %q", p)
+		}
+		if nd == "" || !isSHA256Hex(nd) {
+			return baselineApprovalsFile{}, fmt.Errorf("baseline approvals: invalid recorded digest for %q", p)
+		}
+		normalized[p] = nd
+	}
+	approvals.RecordedDigests = normalized
+	if approvals.Approvals == nil {
+		approvals.Approvals = []baselineApproval{}
+	}
+	return approvals, nil
+}
+
+func computeBaselineDigests(baselineDir string) (map[string]string, error) {
+	info, err := os.Stat(baselineDir)
+	if err != nil {
+		return nil, fmt.Errorf("baseline directory: %w", err)
+	}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("baseline directory: %s is not a directory", baselineDir)
+	}
+
+	out := make(map[string]string)
+	err = filepath.WalkDir(baselineDir, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(baselineDir, path)
+		if err != nil {
+			return err
+		}
+		rel = filepath.ToSlash(rel)
+		if isBaselineGovernanceFile(rel) {
+			return nil
+		}
+		// Baseline snapshots are JSON schema documents.
+		if !strings.HasSuffix(rel, ".json") {
+			return nil
+		}
+		digest, err := sha256FileHex(path)
+		if err != nil {
+			return fmt.Errorf("baseline digest %s: %w", rel, err)
+		}
+		out[rel] = digest
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func compareBaselineDigests(manifest, actual map[string]string) error {
+	paths := make(map[string]struct{}, len(manifest)+len(actual))
+	for p := range manifest {
+		paths[p] = struct{}{}
+	}
+	for p := range actual {
+		paths[p] = struct{}{}
+	}
+	for _, path := range sortedKeys(paths) {
+		want, inManifest := manifest[path]
+		got, onDisk := actual[path]
+		switch {
+		case inManifest && !onDisk:
+			return fmt.Errorf("baseline integrity: path %q listed in manifest but missing from baseline directory", path)
+		case !inManifest && onDisk:
+			return fmt.Errorf("baseline integrity: path %q present in baseline directory but missing from manifest", path)
+		case want != got:
+			return fmt.Errorf("baseline integrity: digest mismatch for %q: manifest=%s actual=%s (tampered or stale baseline)", path, want, got)
+		}
+	}
+	return nil
+}
+
+func sha256FileHex(path string) (string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:]), nil
+}
+
+func normalizeDigest(d string) string {
+	d = strings.TrimSpace(d)
+	d = strings.TrimPrefix(d, "sha256:")
+	d = strings.TrimPrefix(d, "SHA256:")
+	return strings.ToLower(strings.TrimSpace(d))
+}
+
+func isSHA256Hex(d string) bool {
+	if len(d) != sha256.Size*2 {
+		return false
+	}
+	for _, c := range d {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+func isBaselineGovernanceFile(rel string) bool {
+	base := filepath.Base(rel)
+	return base == BaselineManifestFileName || base == BaselineApprovalsFileName
 }
