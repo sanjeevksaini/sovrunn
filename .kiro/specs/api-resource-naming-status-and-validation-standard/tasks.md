@@ -285,7 +285,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VALIDATION-001, F12-VALIDATION-004, F12-VALIDATION-005, F12-SCOPE-002_
     - _Verification: unit tests — structural fail-closed on nil/error; all layer-8 invalid configs produce 500; valid paths produce correct outcomes_
 
-  - [ ] 6.5 Implement If-Match/resourceVersion stale-write helper (`internal/apivalid/concurrency.go`)
+  - [x] 6.5 Implement If-Match/resourceVersion stale-write helper (`internal/apivalid/concurrency.go`)
     - CheckIfMatch: compares If-Match header value with current resourceVersion; stale → 412 STALE_RESOURCE_VERSION Problem; match or absent → nil
     - _Design: D-10_
     - _Requirements: F12-UPDATE-002_
