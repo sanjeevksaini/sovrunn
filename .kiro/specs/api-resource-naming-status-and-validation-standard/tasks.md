@@ -1,5 +1,9 @@
 # Implementation Plan: FEATURE-0012 — API, Resource Naming, Status, and Validation Standard
 
+Feature: FEATURE-0012 — API, Resource Naming, Status, and Validation Standard
+Phase: Phase 2 — Reuse-First PaaS Fabric Foundation
+Stage: Tasks
+
 ## Overview
 
 This plan converts the approved design into discrete, dependency-ordered coding tasks.
