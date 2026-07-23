@@ -81,7 +81,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-REF-001, F12-SCOPE-002, F12-OWNER-001, F12-META-004_
     - _Verification: `go test ./internal/apimeta/...` — NormalizeScope maps explicit Platform to nil; CanonicalScopeIdentity nil → Platform/PlatformScopeUID; PlatformScopeUID not a valid generated uid; UID generation produces opaque 128-bit values_
 
-  - [ ] 2.3 Implement ListEnvelope generic type and Page struct (`internal/apimeta`)
+  - [x] 2.3 Implement ListEnvelope generic type and Page struct (`internal/apimeta`)
     - ListEnvelope[T] with TypeMeta anonymous embed (json promotion), Items, Page
     - Page struct with opaque NextPageToken
     - _Design: data models section (ListEnvelope)_
