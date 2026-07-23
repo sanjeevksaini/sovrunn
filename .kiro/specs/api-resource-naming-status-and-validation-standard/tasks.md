@@ -790,7 +790,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-COMPAT-001_
     - _Verification: `go test ./internal/apiconform/...` passes the coverage check_
 
-- [ ] 16. Fitness functions and feature-gate integration
+- [x] 16. Fitness functions and feature-gate integration
   - [x] 16.1 Implement schema, metadata, ownership, and field-policy fitness functions (`internal/apiconform/fitness_schema.go`)
     - Check 1: Every external schema declares profile/boundary/stability/allowed-scopes
     - Check 1a (field-policy coverage): Every property crossing an API boundary explicitly declares x-sovrunn-field-policy with exactly: classification, authorizedWriter, authorizedReaders, mutability, retention, redaction, residency, auditRequired; no unknown policy field accepted; controlled values are valid; unknown x-sovrunn-* extensions fail closed; verifies the explicit declarations used by FEATURE-0012 schemas (no inheritance algorithm)
@@ -841,7 +841,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-002_
     - _Verification: script exits 0 when all conformance tests pass_
 
-  - [ ] 16.7 Wire FEATURE-0012 into feature-gate (`scripts/feature-gate.sh`)
+  - [x] 16.7 Wire FEATURE-0012 into feature-gate (`scripts/feature-gate.sh`)
     - Add FEATURE-0012 case that invokes `scripts/api-conformance-check.sh`
     - Ensure `make ff-feature-gate FEATURE=FEATURE-0012` triggers the new check
     - _Design: files section (gate)_
