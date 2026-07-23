@@ -770,7 +770,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.4, 4.5, 4.6, 7.6 (F12-SCOPE-001, F12-SEC-006, F12-BOUNDARY-001)**
     - _Verification: `go test ./internal/apiconform/...` passes with -count=1_
 
-- [ ] 15. Phase 1 compatibility report and coverage checks
+- [x] 15. Phase 1 compatibility report and coverage checks
   - [x] 15.1 Create Phase 1 compatibility report (`docs/api/PHASE1_COMPATIBILITY_REPORT.md`)
     - Cover all Phase 1 resources: Organization, OrganizationUnit, Tenant, Project, Operation, ServiceClass, ServicePlan, Plugin, Capability, ServiceInstance, ServiceBinding, health/readiness, demo-flow
     - Per contract: record conforming behavior, explicit exceptions, and migration candidates
@@ -779,7 +779,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-COMPAT-001, F12-COMPAT-002, F12-COMPAT-003_
     - _Verification: report covers all Phase 1 resources; exceptions documented_
 
-  - [ ] 15.2 Implement Phase 1 coverage assertion (`internal/apiconform/compat.go`)
+  - [x] 15.2 Implement Phase 1 coverage assertion (`internal/apiconform/compat.go`)
     - Asserts every Phase 1 resource is covered in the compatibility report
     - Fails if a Phase 1 resource is missing from the report
     - _Design: D-13_
