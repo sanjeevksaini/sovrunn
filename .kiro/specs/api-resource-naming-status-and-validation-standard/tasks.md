@@ -816,7 +816,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-VERIFY-001(10,11,12,13)_
     - _Verification: `go test ./internal/apiconform/...` — checks 10, 11, 12, 13 pass_
 
-  - [ ] 16.4 Implement runtime absence, exception governance, and traceability fitness functions (`internal/apiconform/fitness_runtime.go`)
+  - [x] 16.4 Implement runtime absence, exception governance, and traceability fitness functions (`internal/apiconform/fitness_runtime.go`)
     - Check 14: Later-feature runtime behavior is absent (no provider/plugin/policy/placement/audit/provisioning service in grammar packages; no runtime HTTP routes added)
     - Check 15: Exceptions require an approved architecture handoff
     - _Design: architecture §8.2; testing strategy section_
