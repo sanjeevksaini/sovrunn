@@ -559,7 +559,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.9 (F12-VALIDATION-001(2), F12-VALIDATION-002)**
     - _Verification: `go test ./internal/apiconform/...` passes with -count=1_
 
-- [ ] 9. Schema annotations, extensions, route validation, and schema-diff gate
+- [x] 9. Schema annotations, extensions, route validation, and schema-diff gate
   - [x] 9.1 Implement x-sovrunn-* extension parsing and vocabulary checks (`internal/apischema/annotations.go`)
     - ReadAnnotations: parses exactly these five registered extensions:
       - x-sovrunn-profile
@@ -597,7 +597,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-EVOLVE-002, F12-VERIFY-001(10)_
     - _Verification: unit tests — tampered baseline fails integrity; missing approval evidence fails; valid approval with matching digests passes_
 
-  - [ ] 9.5 Write property test for controlled baseline updates (Property 6)
+  - [x] 9.5 Write property test for controlled baseline updates (Property 6)
     - **Property 6: Controlled baseline updates**
     - For any baseline change, gate fails unless accompanied by recorded approval evidence with matching digests and ADH/token/reviewer/date; co-editing baseline+manifest without evidence never passes
     - Minimum 100 generated iterations; deterministic seed or report failing seed
