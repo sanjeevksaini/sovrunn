@@ -201,7 +201,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
       - _document metadata ($schema, $id, title, description) accepted_
       - _fail-closed: no constraint silently ignored_
 
-  - [ ] 5.2 Implement ValidateInstance for structural validation (`internal/apischema/subsetvalidate.go`)
+  - [x] 5.2 Implement ValidateInstance for structural validation (`internal/apischema/subsetvalidate.go`)
     - Structurally validates a decoded instance against a canonical schema using only the supported subset
     - Returns package-local `SchemaIssue` slice with stable codes and JSON Pointer paths
     - Callers must first pass ValidateSchemaSupport

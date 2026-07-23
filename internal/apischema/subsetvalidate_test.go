@@ -330,3 +330,233 @@ func hasIssue(issues []SchemaIssue, code, path string) bool {
 	}
 	return false
 }
+
+func TestValidateInstanceValidPasses(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"name": {
+				"type": "string",
+				"minLength": 1,
+				"maxLength": 63,
+				"pattern": "^[a-z0-9-]+$"
+			},
+			"count": {
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 100
+			},
+			"phase": {
+				"type": "string",
+				"enum": ["Pending", "Ready"]
+			},
+			"tags": {
+				"type": "array",
+				"items": { "type": "string" }
+			}
+		},
+		"required": ["name", "phase"],
+		"additionalProperties": false,
+		"title": "Example",
+		"x-sovrunn-profile": "ManagedResource"
+	}`)
+	instance := map[string]any{
+		"name":  "payments",
+		"count": float64(3),
+		"phase": "Ready",
+		"tags":  []any{"a", "b"},
+	}
+	if issues := ValidateInstance(schema, instance); len(issues) != 0 {
+		t.Fatalf("valid instance must pass, got %#v", issues)
+	}
+}
+
+func TestValidateInstanceMissingRequiredFieldFails(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"name": { "type": "string" },
+			"phase": { "type": "string" }
+		},
+		"required": ["name", "phase"]
+	}`)
+	instance := map[string]any{
+		"name": "payments",
+	}
+	issues := ValidateInstance(schema, instance)
+	if !hasIssue(issues, CodeRequiredField, "/phase") {
+		t.Fatalf("want %s at /phase, got %#v", CodeRequiredField, issues)
+	}
+}
+
+func TestValidateInstanceWrongTypeFails(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"count": { "type": "integer" }
+		}
+	}`)
+	instance := map[string]any{
+		"count": "not-an-integer",
+	}
+	issues := ValidateInstance(schema, instance)
+	if !hasIssue(issues, CodeTypeMismatch, "/count") {
+		t.Fatalf("want %s at /count, got %#v", CodeTypeMismatch, issues)
+	}
+}
+
+func TestValidateInstanceEnumMismatchFails(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"phase": {
+				"type": "string",
+				"enum": ["Pending", "Ready"]
+			}
+		}
+	}`)
+	instance := map[string]any{
+		"phase": "Failed",
+	}
+	issues := ValidateInstance(schema, instance)
+	if !hasIssue(issues, CodeEnumMismatch, "/phase") {
+		t.Fatalf("want %s at /phase, got %#v", CodeEnumMismatch, issues)
+	}
+}
+
+func TestValidateInstanceAdditionalPropertiesFalse(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"name": { "type": "string" }
+		},
+		"additionalProperties": false
+	}`)
+	instance := map[string]any{
+		"name":  "ok",
+		"extra": true,
+	}
+	issues := ValidateInstance(schema, instance)
+	if !hasIssue(issues, CodeUnknownField, "/extra") {
+		t.Fatalf("want %s at /extra, got %#v", CodeUnknownField, issues)
+	}
+}
+
+func TestValidateInstanceStringAndNumberBounds(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"name": { "type": "string", "minLength": 2, "maxLength": 4, "pattern": "^[a-z]+$" },
+			"count": { "type": "number", "minimum": 1, "maximum": 10 }
+		}
+	}`)
+
+	tooShort := ValidateInstance(schema, map[string]any{"name": "a", "count": float64(5)})
+	if !hasIssue(tooShort, CodeOutOfRange, "/name") {
+		t.Fatalf("minLength: want %s at /name, got %#v", CodeOutOfRange, tooShort)
+	}
+
+	badPattern := ValidateInstance(schema, map[string]any{"name": "ab1", "count": float64(5)})
+	if !hasIssue(badPattern, CodePatternMismatch, "/name") {
+		t.Fatalf("pattern: want %s at /name, got %#v", CodePatternMismatch, badPattern)
+	}
+
+	tooLarge := ValidateInstance(schema, map[string]any{"name": "ab", "count": float64(11)})
+	if !hasIssue(tooLarge, CodeOutOfRange, "/count") {
+		t.Fatalf("maximum: want %s at /count, got %#v", CodeOutOfRange, tooLarge)
+	}
+}
+
+func TestValidateInstanceUnresolvedRefFailsClosed(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"ref": { "$ref": "../_common/typed-ref.json" }
+		}
+	}`)
+	issues := ValidateInstance(schema, map[string]any{
+		"ref": map[string]any{"apiVersion": "v1", "kind": "Project", "name": "p"},
+	})
+	if !hasIssue(issues, CodeUnresolvedRef, "/ref") {
+		t.Fatalf("want %s at /ref, got %#v", CodeUnresolvedRef, issues)
+	}
+}
+
+func TestValidateInstanceRejectsUnsupportedSchema(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{"oneOf":[{"type":"string"}]}`)
+	issues := ValidateInstance(schema, "x")
+	if !hasIssue(issues, CodeUnsupportedKeyword, "/oneOf") {
+		t.Fatalf("want support failure before instance checks, got %#v", issues)
+	}
+}
+
+func TestValidateInstanceBooleanSchemas(t *testing.T) {
+	t.Parallel()
+
+	if issues := ValidateInstance([]byte(`true`), map[string]any{"any": true}); len(issues) != 0 {
+		t.Fatalf("boolean true schema must accept, got %#v", issues)
+	}
+	issues := ValidateInstance([]byte(`false`), "x")
+	if !hasIssue(issues, CodeSchemaFalse, "/") {
+		t.Fatalf("boolean false schema must reject, got %#v", issues)
+	}
+}
+
+func TestValidateInstanceTypedStructRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	type sample struct {
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"name": { "type": "string" },
+			"count": { "type": "integer" }
+		},
+		"required": ["name", "count"],
+		"additionalProperties": false
+	}`)
+	if issues := ValidateInstance(schema, sample{Name: "demo", Count: 2}); len(issues) != 0 {
+		t.Fatalf("typed struct must pass via JSON normalize, got %#v", issues)
+	}
+	issues := ValidateInstance(schema, map[string]any{"name": "demo", "count": "x"})
+	if !hasIssue(issues, CodeTypeMismatch, "/count") {
+		t.Fatalf("want %s at /count, got %#v", CodeTypeMismatch, issues)
+	}
+}
+
+func TestValidateInstanceJSONPointerEscaping(t *testing.T) {
+	t.Parallel()
+
+	schema := []byte(`{
+		"type": "object",
+		"properties": {
+			"a/b~c": { "type": "integer" }
+		}
+	}`)
+	issues := ValidateInstance(schema, map[string]any{
+		"a/b~c": "nope",
+	})
+	wantPath := "/a~1b~0c"
+	if !hasIssue(issues, CodeTypeMismatch, wantPath) {
+		t.Fatalf("want %s at %s, got %#v", CodeTypeMismatch, wantPath, issues)
+	}
+}
