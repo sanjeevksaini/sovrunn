@@ -62,7 +62,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Verification: `go test ./internal/apiconform/...` passes_
 
 - [ ] 2. Shared metadata, reference, condition, and problem primitives
-  - [ ] 2.1 Implement TypeMeta, ObjectMeta, and profile/boundary/stability/data-classification enums (`internal/apimeta`)
+  - [x] 2.1 Implement TypeMeta, ObjectMeta, and profile/boundary/stability/data-classification enums (`internal/apimeta`)
     - `typemeta.go`: TypeMeta struct with `apiVersion`/`kind`; group/version parsing helpers
     - `objectmeta.go`: ObjectMeta struct with all fields per design; ownership/mutability doc comments
     - `profile.go`: Profile, Boundary, Stability, DataClassification enums with controlled vocabularies
