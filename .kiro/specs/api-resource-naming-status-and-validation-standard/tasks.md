@@ -123,7 +123,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - **Validates: Requirements 4.8 (F12-STATUS-002, F12-STATUS-003)**
     - _Verification: `go test ./internal/apicond/...` passes with -count=1_
 
-- [ ] 3. Checkpoint — primitives compile and pass
+- [x] 3. Checkpoint — primitives compile and pass
   - Run: `make fmt`; `git diff --check`; `go test ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apiconform/...`; `go test -race ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apiconform/...`; `go vet ./internal/apimeta/... ./internal/apiref/... ./internal/apicond/... ./internal/apiproblem/... ./internal/apivalid/... ./internal/apiconform/...`
   - Covers: apimeta, apiref, apicond, apiproblem (tasks 2.1–2.6), apivalid task 2.7 (RefIssuesToViolations), apiconform task 1.3 (import-boundary test)
   - All tests must pass before proceeding to task group 4
