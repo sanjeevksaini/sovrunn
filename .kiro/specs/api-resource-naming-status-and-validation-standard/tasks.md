@@ -650,8 +650,8 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-EVOLVE-002, F12-VERIFY-001(10)_
     - _Verification: VerifyBaselineIntegrity passes against the generated manifest_
 
-- [ ] 11. Canonical-schema-to-Go TypeBinding verification
-  - [ ] 11.1 Implement TypeBinding struct and VerifyGoTypeAgainstSchema (`internal/apischema/typebinding.go`)
+- [x] 11. Canonical-schema-to-Go TypeBinding verification
+  - [x] 11.1 Implement TypeBinding struct and VerifyGoTypeAgainstSchema (`internal/apischema/typebinding.go`)
     - TypeBinding struct: SchemaPath + reflect.Type (generic; no import of concrete contract types)
     - VerifyGoTypeAgainstSchema: reflection-based check verifying property names, JSON tags, required vs optional (omitempty/pointer), primitive types, arrays/maps, embedded fields, enum-backed types, additionalProperties behavior
     - Returns package-local `SchemaIssue` slice (NOT apiproblem.Violation); mismatches carry stable codes
