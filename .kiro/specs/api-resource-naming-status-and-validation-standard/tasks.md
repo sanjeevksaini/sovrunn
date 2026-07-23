@@ -31,7 +31,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
 
 ## Tasks
 
-- [ ] 1. Repository and Go 1.22 alignment
+- [x] 1. Repository and Go 1.22 alignment
   - [x] 1.1 Update go.mod to declare `go 1.22` minimum
     - Change `go 1.21` directive to `go 1.22` in `go.mod`
     - Run `go mod tidy` to verify no breakage
@@ -46,7 +46,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-IMPL-001_
     - _Verification: `go build ./internal/...` succeeds; no import cycles detected by `go vet ./...`_
 
-  - [ ] 1.3 Add provider-neutral import-direction and package-boundary enforcement test
+  - [x] 1.3 Add provider-neutral import-direction and package-boundary enforcement test
     - Create `internal/apiconform/imports_test.go` that parses Go imports of all grammar packages and asserts:
       - `apimeta` imports only stdlib
       - `apiref` imports only `apimeta`
