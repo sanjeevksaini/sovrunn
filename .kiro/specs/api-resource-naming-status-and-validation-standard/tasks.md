@@ -110,7 +110,7 @@ Controlling handoffs: ADH-2026-012 (Approved), ADH-2026-013 (Approved).
     - _Requirements: F12-ERROR-001, F12-ERROR-002, F12-ERROR-003, F12-ERROR-004_
     - _Verification: `go test ./internal/apiproblem/...` — codes match baseline table; Problem serializes to RFC 9457_
 
-  - [ ] 2.7 Add apiref issue-to-violation translator in apivalid
+  - [x] 2.7 Add apiref issue-to-violation translator in apivalid
     - In `internal/apivalid/translate.go`: function `RefIssuesToViolations([]apiref.RefIssue) []apiproblem.Violation` translating package-local apiref results into apiproblem violations
     - _Design: D-02 (import direction); D-04 (validation pipeline)_
     - _Requirements: F12-VALIDATION-006_
