@@ -58,6 +58,34 @@ PYCURSOR
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_prompt_generated" >/dev/null
 info "Cursor task prompt generated: $OUT"
 
+if [[ -n "${FEATURE_FACTORY_ALLOWED_PATHS:-}" ]]; then
+  {
+    cat <<'EOF'
+
+## Automation-enforced path scope
+
+Every changed file must match one of the allowed rules below. Do not
+create, modify, rename, or delete files outside this scope.
+
+Reuse existing verification helpers when possible. Do not add a test in
+another package unless that path or directory is explicitly listed.
+
+Allowed path rules:
+EOF
+
+    while IFS= read -r allowed_file; do
+      [[ -n "$allowed_file" ]] || continue
+      printf -- '- `%s`\n' "$allowed_file"
+    done <<<"$FEATURE_FACTORY_ALLOWED_PATHS"
+
+    cat <<'EOF'
+
+Before reporting completion, run `git diff --name-only HEAD` and confirm
+that every changed path is allowed.
+EOF
+  } >> "$OUT"
+fi
+
 if [[ "$MODE" == "prompt" || "$MODE" == "manual" ]]; then
   info "Prompt/manual mode: paste this into Cursor. Default is auto/headless; set FEATURE_FACTORY_CURSOR_MODE=prompt only when you intentionally want manual mode."
   exit 0

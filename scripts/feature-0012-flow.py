@@ -412,6 +412,10 @@ def allowed_rules(task_id: str) -> list[str]:
             "api/schemas/audit-event.json",
             "internal/apiconform/canonical_schemas_test.go",
         ]
+    if task_id == "10.3":
+        # Task 10.3 owns immutable baseline snapshots and their manifest
+        # and approval metadata. Existing verification code must be reused.
+        return common + ["api/schemas/baseline/"]
     if group == "10":
         return common + ["api/schemas/"]
     if group == "11":
@@ -760,6 +764,7 @@ def execute_cursor_task(runner: Runner, task_id: str, plan: Plan) -> None:
     env = {
         "FEATURE_FACTORY_CURSOR_MODE": "auto",
         "FEATURE_FACTORY_CURSOR_VERIFY": "0",
+        "FEATURE_FACTORY_ALLOWED_PATHS": "\n".join(allowed_rules(task_id)),
         "GO_DOCKER_IMAGE": runner.image,
     }
     update_state(
