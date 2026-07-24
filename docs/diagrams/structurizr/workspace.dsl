@@ -38,6 +38,7 @@ workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
         chatgpt -> gitRepo "Reads Architecture Operating System context and produces handoff"
         platformArchitect -> kiro "Approves handoff for repo update"
         kiro -> gitRepo "Updates architecture docs, DEC/RFCs, feature specs, and Structurizr DSL"
+        platformArchitect -> cursor "Starts implementation from approved Kiro tasks"
         cursor -> gitRepo "Implements approved tasks and tests"
 
         sovrunn.api -> sovrunn.controlPlane "Submits service requests and management actions"
