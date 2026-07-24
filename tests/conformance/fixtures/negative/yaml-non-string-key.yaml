@@ -1,0 +1,6 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  1: payments-production
+spec:
+  description: Non-string mapping keys are not permitted.

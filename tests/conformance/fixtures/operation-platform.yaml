@@ -1,0 +1,41 @@
+apiVersion: ops.sovrunn.io/v1alpha1
+kind: Operation
+metadata:
+    createdAt: "2026-07-08T14:00:00Z"
+    displayName: Platform Provision Operation
+    generation: 1
+    labels:
+        sovrunn.io/operation-scope: platform
+    name: op-provision-platform-001
+    resourceVersion: rv-op-platform-1
+    uid: 8f901a2b3c4d5e6f708192a3b4c5d6e7
+    updatedAt: "2026-07-08T14:10:00Z"
+spec:
+    action: Provision
+    idempotencyKey: idem-platform-provision-001
+    requestId: req-platform-provision-001
+    requesterRef:
+        apiVersion: identity.sovrunn.io/v1alpha1
+        kind: Principal
+        name: operator-alice
+        uid: 7e8f901a2b3c4d5e6f708192a3b4c5d6
+    targetRef:
+        apiVersion: plugin.sovrunn.io/v1alpha1
+        kind: PluginDefinition
+        name: provisioning-plugin-v1
+        uid: 0718293a4b5c6d7e8f901a2b3c4d5e6f
+status:
+    cancelRequested: "False"
+    conditions:
+        - lastTransitionTime: "2026-07-08T14:10:00Z"
+          message: Operation reached Succeeded.
+          observedGeneration: 1
+          reason: TerminalSucceeded
+          status: "True"
+          type: Completed
+    observedGeneration: 1
+    phase: Succeeded
+    progressPercent: 100
+    retryable: "False"
+    terminalCode: SUCCEEDED
+    terminalMessage: Platform-scoped operation completed.

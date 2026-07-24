@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/page.json",
+  "title": "Page",
+  "description": "Pagination metadata for ListEnvelope responses (F12-LIST-001, F12-LIST-002). nextPageToken is opaque and MUST NOT expose offsets, provider detail, or authorization context.",
+  "type": "object",
+  "properties": {
+    "nextPageToken": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque continuation token; absence means no further page.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["customer", "operator", "internal"],
+        "mutability": "system-only",
+        "retention": "none",
+        "redaction": "omit",
+        "residency": "any",
+        "auditRequired": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

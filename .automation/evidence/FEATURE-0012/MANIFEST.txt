@@ -1,0 +1,21 @@
+# FEATURE-0012 Task 17.3 evidence manifest
+collected_at_utc=2026-07-23T16:54:13Z
+manifest_refreshed_at_utc=2026-07-23T16:56:03Z
+head=3cb1dd7f9d4884a674f1592f5cf99babee512357
+status=PENDING_HUMAN_REVIEW
+human_approval_written_by_agent=false
+
+# files
+changed-files-feature-0012.txt sha256=62ab67af3aff693ad34aaad5587cea776cf185e1c9bfc98010470f7b6dc3ae50 bytes=9640
+changed-files-vs-main.txt sha256=6453d6fd96f5862bee34f4c4f88329f740858dc01f02855c518c56ab2404692b bytes=27773
+changed-files.txt sha256=62ab67af3aff693ad34aaad5587cea776cf185e1c9bfc98010470f7b6dc3ae50 bytes=9640
+collection-meta.txt sha256=f6546011315622271da5f27738401e8028bdaa36cf306f127ce4f9803509b24b bytes=260
+commits-feature-0012.txt sha256=1be343f6bc4549a707b5b3ed98173a02096a89d8d9913c0d95d0f4486b716fb4 bytes=10503
+doc-evidence-pointers.txt sha256=3017c1779e90ae246097b6d3de96efab6cc5768e91e8f65d00b1a067283e8736 bytes=859
+docker-verify-summary.txt sha256=7ab8dcdc76153fa6cc05861d696eb2bd115885dcf66fd4603169ac59282bc182 bytes=1290
+docker-verify.out sha256=0c1cb62eb418b81ecbca7f508826d2630b41c63851d05001d1f1b43f6d8ff3d1 bytes=1082
+feature-gate-summary.txt sha256=cdf8e6d7fd2947b748dcfc1acf362b50d8adcbda0f589aa31cd562d9a6a3cb2d bytes=4162
+feature-gate.out sha256=a79322f947687b1dd539532c4f8aca14f14042e000c49226b52b919477df47f8 bytes=46839
+matrix-e-residual-risk-review-inputs.md sha256=fb3a8f1e4d4441de77aa75440694c7a9822e2d7e4866d9a0b6a521301c09cd24 bytes=4554
+README.md sha256=34d2fd12041e61131801cacd1bda51de8ad4511dd7c6964e81cfacea7f79f132 bytes=2545
+task-17.2-flow-log.json sha256=c5a0bdf0f07d512fb500ca1a9550c2f32d7143f4122dc7f036e3df9c3f5a75fb bytes=1151

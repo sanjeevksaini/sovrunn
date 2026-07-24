@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/audit-event.json",
+  "title": "AuditEvent",
+  "description": "Governance-only ImmutableRecord under Organization scope (Matrix D). Append-only accountability record; corrections create linked records.",
+  "type": "object",
+  "x-sovrunn-profile": "ImmutableRecord",
+  "x-sovrunn-boundary": "governance-only",
+  "x-sovrunn-allowed-scopes": ["Organization"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["governance.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["AuditEvent"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Immutable Organization-scoped record identity.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "record": {
+      "type": "object",
+      "description": "Append-only audit payload linking actor, request, operation, subject, and version.",
+      "properties": {
+        "actorRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Who or what acted.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Opaque request correlation identifier.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "operationRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Optional linked Operation for lifecycle correlation.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "subjectRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Subject resource of the audited action.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "subjectResourceVersion": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opaque subject resourceVersion at decision time.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[A-Z][A-Za-z0-9]*$",
+          "description": "Stable PascalCase audited action.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["Succeeded", "Denied", "Failed"],
+          "description": "Closed audit outcome vocabulary.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable machine reason code; safe for explainability without message scraping.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "correctionOfRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Optional link to a prior AuditEvent when this record is a linked correction.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["actorRef", "requestId", "subjectRef", "action", "outcome", "reasonCode"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal"],
+        "mutability": "append-only",
+        "retention": "archival",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "record"],
+  "additionalProperties": false
+}

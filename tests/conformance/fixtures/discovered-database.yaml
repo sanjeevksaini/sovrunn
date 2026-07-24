@@ -1,0 +1,35 @@
+apiVersion: adapter.sovrunn.io/v1alpha1
+freshness:
+    freshnessState: Fresh
+    ttlSeconds: 300
+kind: DiscoveredDatabase
+metadata:
+    createdAt: "2026-07-03T09:00:00Z"
+    displayName: Orders Database Observation
+    generation: 1
+    name: orders-db-observation
+    resourceVersion: rv-discovered-1
+    scopeRef:
+        apiVersion: fabric.sovrunn.io/v1alpha1
+        kind: Provider
+        name: sovereign-provider
+        uid: d4e5f60718293a4b5c6d7e8f901a2b3c
+    uid: e5f60718293a4b5c6d7e8f901a2b3c4d
+    updatedAt: "2026-07-03T09:01:00Z"
+provenance:
+    observedAt: "2026-07-03T09:01:00Z"
+    sourceRef:
+        apiVersion: adapter.sovrunn.io/v1alpha1
+        kind: AdapterConfiguration
+        name: postgres-discovery-adapter
+        uid: f60718293a4b5c6d7e8f901a2b3c4d5e
+status:
+    conditions:
+        - lastTransitionTime: "2026-07-03T09:01:00Z"
+          message: Observation is current.
+          observedGeneration: 1
+          reason: AdapterReported
+          status: "True"
+          type: Observed
+    externalName: orders-primary
+    observationState: Current

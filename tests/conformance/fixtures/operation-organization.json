@@ -1,0 +1,56 @@
+{
+  "apiVersion": "ops.sovrunn.io/v1alpha1",
+  "kind": "Operation",
+  "metadata": {
+    "name": "op-update-organization-001",
+    "uid": "901a2b3c4d5e6f708192a3b4c5d6e7f8",
+    "displayName": "Organization Update Operation",
+    "scopeRef": {
+      "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+      "kind": "Organization",
+      "name": "acme-org",
+      "uid": "6d7e8f901a2b3c4d5e6f708192a3b4c5"
+    },
+    "labels": {
+      "sovrunn.io/operation-scope": "organization"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-op-org-1",
+    "createdAt": "2026-07-08T15:00:00Z",
+    "updatedAt": "2026-07-08T15:05:00Z"
+  },
+  "spec": {
+    "targetRef": {
+      "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+      "kind": "Organization",
+      "name": "acme-org",
+      "uid": "6d7e8f901a2b3c4d5e6f708192a3b4c5"
+    },
+    "action": "Update",
+    "requesterRef": {
+      "apiVersion": "identity.sovrunn.io/v1alpha1",
+      "kind": "Principal",
+      "name": "operator-alice",
+      "uid": "7e8f901a2b3c4d5e6f708192a3b4c5d6"
+    },
+    "idempotencyKey": "idem-org-update-001",
+    "requestId": "req-org-update-001"
+  },
+  "status": {
+    "phase": "Running",
+    "progressPercent": 40,
+    "retryable": "Unknown",
+    "cancelRequested": "False",
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Progressing",
+        "status": "True",
+        "reason": "ExecutorActive",
+        "message": "Organization-scoped operation in progress.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-08T15:05:00Z"
+      }
+    ]
+  }
+}

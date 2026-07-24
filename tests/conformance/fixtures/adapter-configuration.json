@@ -1,0 +1,48 @@
+{
+  "apiVersion": "adapter.sovrunn.io/v1alpha1",
+  "kind": "AdapterConfiguration",
+  "metadata": {
+    "name": "postgres-discovery-adapter",
+    "uid": "f60718293a4b5c6d7e8f901a2b3c4d5e",
+    "displayName": "Postgres Discovery Adapter",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "sovereign-provider",
+      "uid": "d4e5f60718293a4b5c6d7e8f901a2b3c"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-adapter-1",
+    "createdAt": "2026-07-05T11:00:00Z",
+    "updatedAt": "2026-07-05T11:05:00Z"
+  },
+  "spec": {
+    "adapterClass": "postgres-discovery",
+    "credentialsSecretRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Secret",
+      "name": "postgres-adapter-credentials",
+      "uid": "18293a4b5c6d7e8f901a2b3c4d5e6f70"
+    },
+    "nativeConfigRef": {
+      "apiVersion": "adapter.sovrunn.io/v1alpha1",
+      "kind": "NativeConfig",
+      "name": "postgres-adapter-native",
+      "uid": "293a4b5c6d7e8f901a2b3c4d5e6f7081"
+    }
+  },
+  "status": {
+    "phase": "Ready",
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Configured",
+        "status": "True",
+        "reason": "SecretsBound",
+        "message": "Adapter configuration is ready.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-05T11:05:00Z"
+      }
+    ]
+  }
+}

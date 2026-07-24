@@ -22,7 +22,7 @@ Tool-output safety constraints:
 
 Context:
 Sovrunn is an AI-first sovereign cloud-native PaaS platform.
-This feature belongs on branch {{FEATURE_BRANCH}} and should be scoped to Phase 1 unless explicitly stated otherwise.
+This feature belongs on branch {{FEATURE_BRANCH}} and must use the phase and scope resolved from docs/features/FEATURE_INDEX.md and the active feature assessment; do not default Phase 2 work to Phase 1.
 
 Use these repo context files:
 - AGENTS.md
@@ -35,8 +35,13 @@ Use these repo context files:
 - docs/api/API_CONTRACT_PHASE1.md
 - docs/engineering/ai-context-loading-standard.md
 - docs/engineering/go-coding-guardrails.md
+- docs/features/FEATURE_INDEX.md
+- the active feature assessment resolved from FEATURE_INDEX.md
+- the controlling ADH referenced by that assessment
+- any canonical architecture document referenced by the assessment or ADH
+- docs/phase2/PHASE2_FEATURE_SEQUENCE.md and docs/phase2/PHASE2_EXECUTION_STRATEGY.md for Phase 2 features
 
-Requirements must include:
+Requirements must include the exact active feature identity and `Stage: Requirements`, then:
 1. Introduction
 2. Glossary if new concepts are introduced
 3. User stories

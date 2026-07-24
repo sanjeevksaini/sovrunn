@@ -1,0 +1,22 @@
+{
+  "apiVersion": "core.sovrunn.io/v1alpha1",
+  "kind": "Project",
+  "metadata": {
+    "name": "payments-production",
+    "uid": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "displayName": "Payments Production",
+    "generation": 1,
+    "resourceVersion": "rv-project-1",
+    "createdAt": "2026-07-01T12:00:00Z",
+    "updatedAt": "2026-07-01T12:05:00Z"
+  },
+  "ownerRef": {
+    "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+    "kind": "Tenant",
+    "name": "acme-tenant",
+    "uid": "b2c3d4e5f60718293a4b5c6d7e8f901a"
+  },
+  "spec": {
+    "description": "ownerRef must not substitute for required scopeRef."
+  }
+}

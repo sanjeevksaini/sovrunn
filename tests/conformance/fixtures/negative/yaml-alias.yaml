@@ -1,0 +1,7 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  name: &n payments-production
+  displayName: *n
+spec:
+  description: YAML aliases are not permitted.

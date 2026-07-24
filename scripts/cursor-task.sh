@@ -58,6 +58,34 @@ PYCURSOR
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_prompt_generated" >/dev/null
 info "Cursor task prompt generated: $OUT"
 
+if [[ -n "${FEATURE_FACTORY_ALLOWED_PATHS:-}" ]]; then
+  {
+    cat <<'EOF'
+
+## Automation-enforced path scope
+
+Every changed file must match one of the allowed rules below. Do not
+create, modify, rename, or delete files outside this scope.
+
+Reuse existing verification helpers when possible. Do not add a test in
+another package unless that path or directory is explicitly listed.
+
+Allowed path rules:
+EOF
+
+    while IFS= read -r allowed_file; do
+      [[ -n "$allowed_file" ]] || continue
+      printf -- '- `%s`\n' "$allowed_file"
+    done <<<"$FEATURE_FACTORY_ALLOWED_PATHS"
+
+    cat <<'EOF'
+
+Before reporting completion, run `git diff --name-only HEAD` and confirm
+that every changed path is allowed.
+EOF
+  } >> "$OUT"
+fi
+
 if [[ "$MODE" == "prompt" || "$MODE" == "manual" ]]; then
   info "Prompt/manual mode: paste this into Cursor. Default is auto/headless; set FEATURE_FACTORY_CURSOR_MODE=prompt only when you intentionally want manual mode."
   exit 0
@@ -66,14 +94,31 @@ fi
 CURSOR_BIN="${CURSOR_AGENT_BIN:-}"
 if [[ -z "$CURSOR_BIN" ]]; then
   if command -v cursor-agent >/dev/null 2>&1; then
-    CURSOR_BIN="cursor-agent"
-  elif command -v cursor >/dev/null 2>&1; then
-    CURSOR_BIN="cursor"
+    CURSOR_BIN="$(command -v cursor-agent)"
+  elif command -v agent >/dev/null 2>&1; then
+    CURSOR_BIN="$(command -v agent)"
   else
-    fail "Cursor CLI not found in PATH. Install Cursor CLI/headless agent or set CURSOR_AGENT_BIN."
+    fail "Cursor Agent CLI not found. Install cursor-agent or set CURSOR_AGENT_BIN to its absolute path."
   fi
+elif [[ "$CURSOR_BIN" != */* ]]; then
+  CURSOR_BIN="$(command -v "$CURSOR_BIN")" ||
+    fail "Cursor Agent CLI command not found: $CURSOR_BIN"
 fi
-command -v "$CURSOR_BIN" >/dev/null 2>&1 || fail "Cursor CLI command not found: $CURSOR_BIN"
+
+[[ -x "$CURSOR_BIN" ]] ||
+  fail "Cursor Agent CLI is not executable: $CURSOR_BIN"
+
+case "$(basename "$CURSOR_BIN")" in
+  cursor|Cursor)
+    fail "refusing desktop Cursor launcher; use cursor-agent or set CURSOR_AGENT_BIN"
+    ;;
+esac
+
+CURSOR_HELP="$("$CURSOR_BIN" --help 2>&1 || true)"
+for required_option in --output-format --model --force; do
+  grep -q -- "$required_option" <<<"$CURSOR_HELP" ||
+    fail "$CURSOR_BIN is not a compatible Cursor Agent CLI: missing $required_option"
+done
 
 mkdir -p ".automation/logs/$FEATURE"
 LOG_FILE=".automation/logs/$FEATURE/cursor-task-${TASK}.log"

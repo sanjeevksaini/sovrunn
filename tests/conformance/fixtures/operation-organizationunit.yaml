@@ -1,0 +1,44 @@
+apiVersion: ops.sovrunn.io/v1alpha1
+kind: Operation
+metadata:
+    createdAt: "2026-07-08T16:00:00Z"
+    displayName: OrganizationUnit Reconcile Operation
+    generation: 1
+    labels:
+        sovrunn.io/operation-scope: organizationunit
+    name: op-reconcile-organizationunit-001
+    resourceVersion: rv-op-ou-1
+    scopeRef:
+        apiVersion: tenancy.sovrunn.io/v1alpha1
+        kind: OrganizationUnit
+        name: acme-engineering
+        uid: b23c4d5e6f708192a3b4c5d6e7f8091a
+    uid: a12b3c4d5e6f708192a3b4c5d6e7f809
+    updatedAt: "2026-07-08T16:02:00Z"
+spec:
+    action: Reconcile
+    idempotencyKey: idem-ou-reconcile-001
+    requestId: req-ou-reconcile-001
+    requesterRef:
+        apiVersion: identity.sovrunn.io/v1alpha1
+        kind: Principal
+        name: operator-alice
+        uid: 7e8f901a2b3c4d5e6f708192a3b4c5d6
+    targetRef:
+        apiVersion: tenancy.sovrunn.io/v1alpha1
+        kind: OrganizationUnit
+        name: acme-engineering
+        uid: b23c4d5e6f708192a3b4c5d6e7f8091a
+status:
+    cancelRequested: "False"
+    conditions:
+        - lastTransitionTime: "2026-07-08T16:02:00Z"
+          message: OrganizationUnit-scoped operation accepted.
+          observedGeneration: 1
+          reason: Queued
+          status: "True"
+          type: Accepted
+    observedGeneration: 1
+    phase: Pending
+    progressPercent: 0
+    retryable: Unknown

@@ -1,0 +1,21 @@
+{
+  "files": {
+    "_common/condition.json": "a5e806c60c1a9efcc5d36127bc64055cc805f4dac89b7d8fe74d373c5de7a573",
+    "_common/object-meta.json": "67b366ed9340b853502896d69902534b727e5b1543c7df4f39c8f927e010a41f",
+    "_common/owner-ref.json": "a4be763bfff231c5f692aa8adb21e8d1dc965c93812aabb22d9de307d9279fc7",
+    "_common/page.json": "305bc13f1dde7b34e5934d926a71e35ffa1b3d00169525234bed7ae62fa02ba6",
+    "_common/problem.json": "e6b9f9c744bb87fb86c9d9a31e0dedde9144e3fdd4f8dcca2146f4d2baec0510",
+    "_common/scope-ref.json": "53abad345e304970afb8bddb157106fe54c107849b31135fd53def50b1177f7f",
+    "_common/type-meta.json": "f6a7651d9c6065921d8aea65debd92f2cf6bf347d0ace3686b152c3a17fc2209",
+    "_common/typed-ref.json": "a4ca612909c249153a4b1e6a5375b22bb0848534bd110bf6a1be69e40532377f",
+    "_common/violation.json": "9fc6210135034dc06f84b1ca0fdeffd4b5dd5fd8aef0078359deead5fc3ebdbe",
+    "adapter-configuration.json": "7ef25827e0dee745d83edb8aa64159369dc47685b182319e3bafecdee963e2f9",
+    "audit-event.json": "c60dd8e0f9b5e5388ba1982ae316d619ea3ea23fb560b0b933d6b998f94a5ef0",
+    "discovered-database.json": "c9c4ef06b2bfe0256a634c0f08a52071301fc1af64df3ecea2813f1ea3b5114a",
+    "operation.json": "7392c375313e29345a837c01505109e5e279d5b374cfd08c647667a4bc51aa1a",
+    "placement-evaluation-request.json": "9edfb7c751172e2eac58e1b0e1b5d2bfb5ae9ad44493b449dc283af11ddbe117",
+    "plugin-definition.json": "1b325f8ea0e5e73617600cf11f5d305838e136565bef4300a7afaabfe9455edc",
+    "project.json": "1985641eec785612794bf8646adf1f344a7a08ec9f5776016e405932336b6d94",
+    "resource-pool.json": "2906ffbcb8cc27b6a21d051147613560c4d68ec378f692788d71bc0af8a9714c"
+  }
+}

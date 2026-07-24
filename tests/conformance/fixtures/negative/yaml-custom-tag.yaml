@@ -1,0 +1,6 @@
+apiVersion: core.sovrunn.io/v1alpha1
+kind: Project
+metadata:
+  name: !custom payments-production
+spec:
+  description: YAML custom tags are not permitted.

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/condition.json",
+  "title": "Condition",
+  "description": "Stable machine-readable current-fact observation; not event history (F12-STATUS-002, F12-STATUS-003).",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Za-z0-9]*$",
+      "description": "Stable PascalCase condition type.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["True", "False", "Unknown"],
+      "description": "Closed condition status vocabulary.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Za-z0-9]*$",
+      "description": "Stable PascalCase machine reason; not free-form prose.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable informational message; not a machine contract. MUST NOT carry secrets.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "adapter", "plugin", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "observedGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Desired-state generation evaluated when this condition was produced.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "lastTransitionTime": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UTC RFC 3339 timestamp; advances only when status changes.",
+      "x-sovrunn-field-policy": {
+        "classification": "Customer-visible",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    }
+  },
+  "required": ["type", "status", "reason", "observedGeneration", "lastTransitionTime"],
+  "additionalProperties": false
+}

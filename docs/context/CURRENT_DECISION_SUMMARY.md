@@ -7,6 +7,7 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - Sovrunn is a sovereign cloud-native PaaS platform.
 - SDE is a future managed service inside Sovrunn.
 - Reuse before build is mandatory (`DEC-0026`).
+- FEATURE-0012 uses the approved provider-neutral API/resource baseline in `docs/architecture/api-resource-standard.md` (`ADH-2026-012`).
 - Phase 2 is model/decision/audit/adapter only (`DEC-0027`).
 - Policy evaluation must use a policy-engine abstraction (`DEC-0028`).
 - Provider-neutral resource model is required before provider integrations.

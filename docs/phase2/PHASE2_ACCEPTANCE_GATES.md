@@ -17,8 +17,14 @@ Every Phase 2 feature must pass these gates before merge.
 - Dependencies are listed.
 - Phase boundary is respected.
 - Reuse assessment is complete.
-- Customer/provider/internal/plugin API boundary is identified.
+- Customer, operator, internal-engine, adapter, plugin, or governance API boundary is identified.
 - Non-goals are explicit.
+
+FEATURE-0012-and-later resource/API contracts must also conform to:
+
+`docs/architecture/api-resource-standard.md`
+
+The architecture gate checks resource profile, allowed scope, boundary classification, ownership, provider neutrality, compatibility, and reassessment coverage.
 
 ## 2. Reuse Gate
 

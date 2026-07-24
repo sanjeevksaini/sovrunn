@@ -1,0 +1,7 @@
+feature_id: FEATURE-0012
+slug: api-resource-naming-status-and-validation-standard
+title: API, Resource Naming, Status, and Validation Standard
+phase_branch: phase2-reuse-first-paas-fabric-foundation
+feature_branch: feature-0012-api-resource-naming-status-and-validation-standard
+spec_path: .kiro/specs/api-resource-naming-status-and-validation-standard
+status: branch_created

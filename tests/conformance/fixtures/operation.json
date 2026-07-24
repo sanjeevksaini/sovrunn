@@ -1,0 +1,52 @@
+{
+  "apiVersion": "ops.sovrunn.io/v1alpha1",
+  "kind": "Operation",
+  "metadata": {
+    "name": "op-provision-platform-001",
+    "uid": "8f901a2b3c4d5e6f708192a3b4c5d6e7",
+    "displayName": "Platform Provision Operation",
+    "labels": {
+      "sovrunn.io/operation-scope": "platform"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-op-platform-1",
+    "createdAt": "2026-07-08T14:00:00Z",
+    "updatedAt": "2026-07-08T14:10:00Z"
+  },
+  "spec": {
+    "targetRef": {
+      "apiVersion": "plugin.sovrunn.io/v1alpha1",
+      "kind": "PluginDefinition",
+      "name": "provisioning-plugin-v1",
+      "uid": "0718293a4b5c6d7e8f901a2b3c4d5e6f"
+    },
+    "action": "Provision",
+    "requesterRef": {
+      "apiVersion": "identity.sovrunn.io/v1alpha1",
+      "kind": "Principal",
+      "name": "operator-alice",
+      "uid": "7e8f901a2b3c4d5e6f708192a3b4c5d6"
+    },
+    "idempotencyKey": "idem-platform-provision-001",
+    "requestId": "req-platform-provision-001"
+  },
+  "status": {
+    "phase": "Succeeded",
+    "progressPercent": 100,
+    "retryable": "False",
+    "cancelRequested": "False",
+    "terminalCode": "SUCCEEDED",
+    "terminalMessage": "Platform-scoped operation completed.",
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Completed",
+        "status": "True",
+        "reason": "TerminalSucceeded",
+        "message": "Operation reached Succeeded.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-08T14:10:00Z"
+      }
+    ]
+  }
+}

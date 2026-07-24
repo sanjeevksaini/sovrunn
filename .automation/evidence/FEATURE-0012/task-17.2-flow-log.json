@@ -1,0 +1,31 @@
+{
+  "feature": "FEATURE-0012",
+  "human_approval": false,
+  "kind": "cursor-task",
+  "paths": [
+    ".automation/state/FEATURE-0012.json",
+    ".kiro/specs/api-resource-naming-status-and-validation-standard/tasks.md",
+    "internal/apiconform/fitness.go",
+    "internal/apiconform/fitness_compat.go",
+    "internal/apiconform/fitness_ref.go",
+    "internal/apiconform/fitness_runtime.go",
+    "internal/apiconform/fitness_schema.go",
+    "internal/apiconform/fixtures.go",
+    "internal/apiconform/fixtures_test.go",
+    "internal/apiconform/provider_neutrality_property_test.go",
+    "internal/apiconform/readfile.go",
+    "internal/apiconform/schemaregistry.go",
+    "internal/apiref/constraints_test.go",
+    "internal/apischema/diff.go",
+    "internal/apischema/schema_support_property_test.go",
+    "internal/apischema/typebinding.go",
+    "internal/apivalid/platform_scope_property_test.go",
+    "internal/apivalid/stage_defaulting.go",
+    "internal/apivalid/stage_reference.go",
+    "internal/apivalid/stage_semantic.go"
+  ],
+  "result": "PASS",
+  "rolled_up_parents": [],
+  "task": "17.2",
+  "timestamp": "2026-07-23T16:52:28.980092+00:00"
+}

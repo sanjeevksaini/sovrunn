@@ -1,0 +1,78 @@
+command: make ff-feature-gate FEATURE=FEATURE-0012
+exit_code: 0
+collected_at_utc: 2026-07-23T16:54:13Z
+head: 3cb1dd7f9d4884a674f1592f5cf99babee512357
+
+result_lines:
+==> Sovrunn Feature Gate: FEATURE-0012
+PASS: Found docs/context/CURRENT_ARCHITECTURE_BASELINE.md
+PASS: Found docs/context/ARCHITECTURE_VERSION.md
+PASS: Found docs/governance/REVIEW_GATES.md
+PASS: Found docs/engineering/go-version-standard.md
+PASS: Found docs/engineering/go-observability-standard.md
+PASS: Found docs/diagrams/structurizr/workspace.dsl
+PASS: Found docs/features/FEATURE_INDEX.md
+==> Resolving feature paths from docs/features/FEATURE_INDEX.md
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Active feature identity present in .kiro/specs/api-resource-naming-status-and-validation-standard/tasks.md
+PASS: Active feature identity present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Requirements stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Design stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Tasks stage present in .kiro/specs/api-resource-naming-status-and-validation-standard/tasks.md
+PASS: Reuse Assessment present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Acceptance Criteria present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Non-goals present in .kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md
+PASS: Feature-level reuse summary present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Controlling ADH reference present in docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md
+PASS: Architecture Drift Checks present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Observability present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Security present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+PASS: Non-goals present in .kiro/specs/api-resource-naming-status-and-validation-standard/design.md
+==> Collecting authoritative changed-file list
+PASS: Changed-file list collected (240 files)
+==> Running reuse-assessment validator (strict)
+PASS: reuse assessment validation for FEATURE-0012
+PASS: reuse-assessment validator
+==> Checking generated artifacts are not staged
+PASS: Generated artifacts are not staged
+==> Running Structurizr workspace check
+PASS: Structurizr workspace exists: docs/diagrams/structurizr/workspace.dsl
+WARN: Structurizr CLI not installed; syntax validation skipped
+PASS: Structurizr workspace check
+==> Running gofmt check
+PASS: gofmt check
+==> Running go test ./...
+PASS: go test ./...
+==> Running go test -race ./...
+PASS: go test -race ./...
+==> Running golangci-lint
+PASS: golangci-lint
+==> Running gosec
+PASS: gosec
+==> Running phase1 consistency check
+==> Phase 1 Consistency Check
+==> Checking resource model files
+==> Checking validation files
+==> Checking API handler/decode files
+WARN: missing optional organization API decode
+==> Checking registry files
+==> Checking gofmt
+==> Checking tests
+==> Checking race safety
+==> Checking lint
+==> Checking security
+==> Phase 1 Consistency Check passed
+PASS: phase1 consistency check
+==> Running phase2 scope check
+==> Checking Phase 2 scope boundaries for FEATURE-0012
+PASS: Phase 2 scope boundaries
+PASS: phase2 scope check
+==> Running FEATURE-0012 API conformance check
+==> FEATURE-0012 API conformance check
+==> Running: go test ./internal/apiconform/...
+PASS: API conformance checks passed
+PASS: FEATURE-0012 API conformance check
+WARN: docs/reviews/feature-gates/FEATURE-0012-approval-review.md not found
+WARN: automated checks may pass, but final merge approval requires Final feature-review status: Approved
+SUCCESS: FEATURE-0012 passed Sovrunn feature gate

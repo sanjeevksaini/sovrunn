@@ -1,0 +1,25 @@
+apiVersion: plugin.sovrunn.io/v1alpha1
+kind: PluginDefinition
+metadata:
+    createdAt: "2026-07-04T10:00:00Z"
+    displayName: Provisioning Plugin Contract
+    generation: 1
+    labels:
+        sovrunn.io/plugin-class: provisioning
+    name: provisioning-plugin-v1
+    resourceVersion: rv-plugindef-1
+    uid: 0718293a4b5c6d7e8f901a2b3c4d5e6f
+    updatedAt: "2026-07-04T10:00:00Z"
+spec:
+    compatibilityRange: '>=1.0.0 <2.0.0'
+    publicationState: Published
+    version: 1.0.0
+status:
+    conditions:
+        - lastTransitionTime: "2026-07-04T10:00:00Z"
+          message: Published definition accepted.
+          observedGeneration: 1
+          reason: ContractValid
+          status: "True"
+          type: Accepted
+    phase: Accepted

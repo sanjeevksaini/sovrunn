@@ -14,7 +14,7 @@ Sovrunn Data Engine is a future managed service inside the broader Sovrunn platf
 
 ## Approved Architecture Principles
 
-- Reuse before build is mandatory.
+- Reuse before build is mandatory and applies across Sovrunn phases.
 - Provider-neutral core is mandatory.
 - Adapter boundaries must exist before deep integration.
 - Policy logic must go through a `PolicyEngineAdapter` boundary.
@@ -23,6 +23,12 @@ Sovrunn Data Engine is a future managed service inside the broader Sovrunn platf
 - Customer-facing APIs must not expose low-level IaaS complexity.
 - Provider-facing, internal, plugin-facing, and customer-facing APIs must remain separate.
 - AI may recommend and explain, but must not bypass policy, approval, or audit.
+
+## Approved FEATURE-0012 Architecture Baseline
+
+ADH-2026-012 approves `docs/architecture/api-resource-standard.md` as the controlling baseline for FEATURE-0012 Kiro specifications. It establishes provider-neutral resource profiles, scope/reference semantics, boundary and ownership rules, status/condition grammar, strict validation, stable errors, compatibility, conformance, migration, and reassessment requirements.
+
+The standard is cross-phase in effect but remains draft until FEATURE-0012 implementation and final review complete.
 
 ## Approved Phase 2 Scope
 
@@ -126,7 +132,9 @@ Deferred until later phases:
 
 Current active phase: Phase 2.
 
-Next feature: `FEATURE-0011: Reuse Assessment Standard`.
+Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
+
+Active next stage: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — Kiro requirements generation.
 
 ## Change Control
 

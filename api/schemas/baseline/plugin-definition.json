@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/plugin-definition.json",
+  "title": "PluginDefinition",
+  "description": "Plugin-facing VersionedDefinition under Platform scope (Matrix D). Published versions are immutable; changed contracts create new versions.",
+  "type": "object",
+  "x-sovrunn-profile": "VersionedDefinition",
+  "x-sovrunn-boundary": "plugin-facing",
+  "x-sovrunn-allowed-scopes": ["Platform"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["plugin.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["PluginDefinition"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Platform-scoped definition identity (canonical nil scopeRef).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Published plugin contract payload. Draft mutable; published version immutable (semantic rule).",
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+([-a-z0-9.]+)?$",
+          "description": "Immutable published semantic version for this definition object.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "compatibilityRange": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Declared compatibility range metadata for consumers.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "publicationState": {
+          "type": "string",
+          "enum": ["Draft", "Published", "Superseded"],
+          "description": "Publication lifecycle; Published objects must not mutate contract fields.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "spec-owner",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "mutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["version", "compatibilityRange", "publicationState"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "Optional system-owned observation of definition acceptance.",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["Pending", "Accepted", "Rejected"],
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}

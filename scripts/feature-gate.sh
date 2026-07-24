@@ -427,6 +427,19 @@ if [[ -x scripts/phase2-scope-check.sh ]]; then
   fi
 fi
 
+# Feature-specific conformance gates (F12-VERIFY-002).
+case "$FEATURE" in
+  FEATURE-0012)
+    if [[ -x scripts/api-conformance-check.sh ]]; then
+      echo "==> Running FEATURE-0012 API conformance check"
+      scripts/api-conformance-check.sh
+      pass "FEATURE-0012 API conformance check"
+    else
+      fail_config "scripts/api-conformance-check.sh is missing or not executable"
+    fi
+    ;;
+esac
+
 # Exact final-review marker. Only "Final feature-review status: Approved" satisfies merge approval.
 REVIEW_FILE="docs/reviews/feature-gates/${FEATURE}-approval-review.md"
 if [[ -f "$REVIEW_FILE" ]]; then

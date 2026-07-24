@@ -1,0 +1,19 @@
+# Compatibility report evidence pointers
+path=docs/api/PHASE1_COMPATIBILITY_REPORT.md
+sha256=73980ef7bbe634bc65f9bb725469681f7d0f0109820c1b27390f5854db570622
+bytes=19281
+lines=231
+
+# Boundary ledger evidence pointers
+yaml_path=docs/api/boundary-ledger.yaml
+yaml_sha256=4c1568e1cf99ca255dee2b06969575069f8e9be870e79ea1cc4a6eb8904c493f
+md_path=docs/api/BOUNDARY_LEDGER.md
+md_sha256=5c83c2e7a4381291078f309e691317b594b4cb970d2b35e371ad848c4c1a24dc
+
+# Baseline protected-review evidence
+path=docs/reviews/feature-gates/FEATURE-0012-baseline-protected-review-evidence.md
+sha256=0c3d566c2d819f14652bc2c8e3203a1b5a19a04afb3a000064cbacb8c9ba8362
+
+# Reuse assessment approval evidence (architecture; not final merge approval)
+path=docs/reviews/reuse-assessments/FEATURE-0012-approval-evidence.md
+sha256=9376cf8ebd8eab2a5281c358b6facde390489fac906beb83c42b69100ea1105d
