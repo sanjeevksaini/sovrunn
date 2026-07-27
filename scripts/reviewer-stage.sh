@@ -58,6 +58,23 @@ missing = [str(path) for path in foundation_paths if not path.exists()]
 if missing:
     raise SystemExit('ERROR: missing required review context: ' + ', '.join(missing))
 context_paths = list(foundation_paths)
+feature_evidence_paths = []
+if feature == "FEATURE-0013":
+    feature_evidence_paths = [
+        Path("docs/traceability/ADH-2026-014-terminology-reconciliation.md"),
+        Path("docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md"),
+    ]
+
+missing_feature_evidence = [
+    str(path) for path in feature_evidence_paths if not path.exists()
+]
+if missing_feature_evidence:
+    raise SystemExit(
+        "ERROR: missing feature-specific review evidence: "
+        + ", ".join(missing_feature_evidence)
+    )
+context_paths.extend(feature_evidence_paths)
+
 for candidate in sorted(Path('docs/architecture').glob(f'*{feature}*.md')):
     context_paths.append(candidate)
 handoff_dir = Path('docs/reviews/architecture-decision-handoffs')
