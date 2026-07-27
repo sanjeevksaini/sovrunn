@@ -37,8 +37,10 @@ for scope identity across Sovrunn, establishes the seven canonical values
 (Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and
 ServiceInstance), and confirms that AuditEvent uses `metadata.scopeRef` as its
 sole canonical scope identity drawn from this vocabulary. It supersedes the
-six-scope AuditEvent statement in ADH-2026-014 by additively including
-ServiceInstance while retaining Provider unchanged. No separate AuditEvent scope
+six-scope AuditEvent statement in ADH-2026-014 by reconciling that AuditEvent
+list with the FEATURE-0012 shared vocabulary: ServiceInstance is added to the
+shared ScopeKind vocabulary, Provider is retained, and all seven values are
+permitted for AuditEvent. No separate AuditEvent scope
 enum or independently mutable scope field is permitted. This is contract-only
 work authorizing no runtime capability.
 
@@ -93,12 +95,12 @@ The Sovrunn Architecture Owner approves the following:
 
 ## Rationale
 
-ADH-2026-014 established six formal governance scopes for AuditEvent but did
-not explicitly include ServiceInstance, which is a natural and necessary scope
-for audit events relating to service instance lifecycle decisions. Adding
-ServiceInstance additively preserves backward compatibility with all existing
-FEATURE-0012 serialized values while ensuring that the scope vocabulary is
-complete for FEATURE-0013 decision and audit use cases. Confirming
+ADH-2026-014 required ServiceInstance for AuditEvent even though
+ServiceInstance was absent from FEATURE-0012's shared ScopeKind vocabulary,
+while FEATURE-0012 included Provider and ADH-2026-014 omitted Provider from the
+AuditEvent list. Adding ServiceInstance to the shared vocabulary and permitting
+all seven canonical values for AuditEvent resolves both mismatches without
+removing or renaming any existing FEATURE-0012 serialized value. Confirming
 `metadata.scopeRef` as the sole canonical scope identity eliminates ambiguity
 about where scope is expressed and prevents divergent enum proliferation.
 
