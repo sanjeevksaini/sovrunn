@@ -783,7 +783,7 @@ This section is classified as `CONTRACT_NOW`. The dependency gate (DEP-01 throug
 FEATURE-0012 completed checkpoint 18, received final human approval (2026-07-24), and is implemented and merged via commit a1b74fb / PR #14. The dependency readiness condition for FEATURE-0013 design authorization is fully met.
 
 Evidence:
-- `.automation/state/FEATURE-0012.json`: `automation_flow_status: final_checkpoint_passed_pending_approval`, `status: PENDING_HUMAN_REVIEW` (pre-merge state)
+- `.automation/state/FEATURE-0012.json`: `automation_flow_status: final_checkpoint_passed_pending_approval`, `status: PENDING_HUMAN_REVIEW` (historical pre-merge checkpoint state; final approval and PR #14 merge evidence below are authoritative)
 - `docs/reviews/feature-gates/FEATURE-0012-approval-review.md`: `Final feature-review status: Approved`, reviewer Sanjeev Kumar, decision date 2026-07-24
 - `docs/reviews/feature-gates/FEATURE-0012-human-semantic-review-evidence.md`: evidence staged and reviewed
 - ADH-2026-013 accepted as architecture clarification within FEATURE-0012 scope
