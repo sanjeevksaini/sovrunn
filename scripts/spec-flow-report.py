@@ -4,6 +4,8 @@
 import argparse
 import datetime as dt
 import json
+import os
+import re
 from pathlib import Path
 
 
@@ -17,6 +19,12 @@ def main() -> None:
     parser.add_argument("--baseline-lines", default=0, type=int)
     parser.add_argument("--action", default="")
     args = parser.parse_args()
+
+    review_epoch = os.environ.get("FEATURE_FACTORY_REVIEW_EPOCH", "")
+    if review_epoch and not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", review_epoch
+    ):
+        raise SystemExit(f"ERROR: invalid review epoch: {review_epoch!r}")
 
     now = dt.datetime.now(dt.timezone.utc)
     elapsed = max(0, int(now.timestamp()) - args.started_epoch)
@@ -47,7 +55,12 @@ def main() -> None:
     revisions = {}
     verdicts = {}
     for stage in ("requirements", "design", "tasks"):
-        count_path = review_root / f"{stage}.revision-count"
+        count_name = (
+            f"{stage}.{review_epoch}.revision-count"
+            if review_epoch
+            else f"{stage}.revision-count"
+        )
+        count_path = review_root / count_name
         revisions[stage] = int(count_path.read_text().strip()) if count_path.exists() else 0
         review_path = review_root / f"{stage}.review.json"
         if review_path.exists():
@@ -60,6 +73,7 @@ def main() -> None:
 
     report = {
         "feature": args.feature,
+        "review_epoch": review_epoch or None,
         "status": args.status,
         "started_at": dt.datetime.fromtimestamp(args.started_epoch, dt.timezone.utc).isoformat(),
         "finished_at": now.isoformat(),
@@ -90,6 +104,7 @@ def main() -> None:
         f"# {args.feature} specification automation report",
         "",
         f"- Status: **{args.status}**",
+        f"- Review epoch: {review_epoch or 'legacy/default'}",
         f"- Elapsed: {elapsed} seconds",
         f"- Kiro routing: Auto",
         f"- Kiro invocations: {args.kiro_invocations}",
