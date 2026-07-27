@@ -11,7 +11,9 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - FEATURE-0012 is implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` (final approval 2026-07-24).
 - FEATURE-0013 uses the approved DecisionRecord and AuditEvent standard in `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` (`ADH-2026-014`).
 - `DecisionRecord` replaces the former term `DecisionObject` as a controlled terminology correction (`ADH-2026-014`).
-- `AuditEvent` scope is expanded from Organization-only to six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, ServiceInstance (`ADH-2026-014`).
+- `AuditEvent` scope is expanded from Organization-only to six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, ServiceInstance (`ADH-2026-014`). **(Superseded by `ADH-2026-015`.)**
+- `ScopeKind` is the single canonical shared scope vocabulary with exactly seven values: Platform, Organization, OrganizationUnit, Tenant, Project, Provider, ServiceInstance (`ADH-2026-015`). `ServiceInstance` is additive; `Provider` is retained.
+- `AuditEvent` permits all seven canonical `ScopeKind` values and uses `metadata.scopeRef` as its sole canonical scope identity; no separate `AuditEvent` scope enum is permitted (`ADH-2026-015`). Existing FEATURE-0012 serialized values and Organization-scoped `AuditEvent`s remain valid. FEATURE-0013 requirements are returned to fresh independent review; design/tasks/implementation remain unauthorized.
 - Phase 2 is model/decision/audit/adapter only (`DEC-0027`).
 - Policy evaluation must use a policy-engine abstraction (`DEC-0028`).
 - Provider-neutral resource model is required before provider integrations.

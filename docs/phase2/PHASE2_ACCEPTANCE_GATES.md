@@ -80,10 +80,10 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 - All normative documents use `DecisionRecord` (not `DecisionObject`) for the common decision envelope.
 - A terminology reconciliation traceability record exists.
 
-### 6.2 Six-scope AuditEvent
+### 6.2 Canonical seven-value ScopeKind and AuditEvent
 
-- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance scopes.
-- Compatibility fixtures exist for all six scopes.
+- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance through `metadata.scopeRef` as its sole scope identity.
+- Compatibility fixtures exist for all seven AuditEvent scopes, with regression coverage for the six pre-existing FEATURE-0012 ScopeKind values.
 - FEATURE-0012 conformance is not regressed.
 
 ### 6.3 Contract-only scope

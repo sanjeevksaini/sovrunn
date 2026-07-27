@@ -20,7 +20,22 @@ Human architecture review status: **APPROVED_FOR_KIRO_REQUIREMENTS**.
 
 - Reviewer: Sanjeev Kumar
 - Decision date: 2026-07-27
-- Controlling handoff: ADH-2026-014
+- Controlling handoffs: ADH-2026-014 and ADH-2026-015 (joint)
+
+> **Scope vocabulary clarification (ADH-2026-015, Approved 2026-07-27).**
+> ADH-2026-014 and ADH-2026-015 are the joint controlling handoffs for
+> FEATURE-0013. ADH-2026-015 supersedes **only** the earlier six-scope
+> `AuditEvent` statement in ADH-2026-014. All other ADH-2026-014 decisions
+> remain controlling and unchanged. Under ADH-2026-015, `ScopeKind` is the
+> single canonical shared scope vocabulary with exactly seven values
+> (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`,
+> `Provider`, `ServiceInstance`); `ServiceInstance` is additive and `Provider`
+> is retained. `AuditEvent` initially permits all seven values and uses
+> `metadata.scopeRef` as its sole canonical scope identity. See section 29 for
+> the full clarification, the value-by-value compatibility table, and the
+> mandatory Dependency Contract Reconciliation framework. Where any earlier
+> statement in this document refers to "six" `AuditEvent` scopes, section 29 is
+> authoritative and controls.
 
 The reviewer approves AD-001 through AD-044, the two controlled baseline
 corrections, contract-only Phase 2 scope, anti-overengineering guardrails,
@@ -39,9 +54,19 @@ Phase 2 spine:
 
 1. `DecisionRecord` replaces the ambiguous common name `DecisionObject`.
 2. `AuditEvent` scope is expanded from the FEATURE-0012 Organization-only alpha
-   profile to the six governance scopes already established by FEATURE-0012.
+   profile to all seven canonical `ScopeKind` values (`Platform`,
+   `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`,
+   `ServiceInstance`) per ADH-2026-015, using `metadata.scopeRef` as the sole
+   canonical scope identity. `ServiceInstance` is additive to the FEATURE-0012
+   shared vocabulary and `Provider` is retained. The earlier ADH-2026-014
+   statement that expanded `AuditEvent` to "six governance scopes already
+   established by FEATURE-0012" is superseded and was factually incorrect:
+   FEATURE-0012 established the shared `ScopeKind` vocabulary, not a six-scope
+   `AuditEvent` profile. Section 29 (ADH-2026-015) is authoritative.
 
-ADH-2026-014 approves both changes for FEATURE-0013 requirements generation.
+ADH-2026-014 approves the terminology correction, and ADH-2026-015 approves the
+seven-value `ScopeKind`/`AuditEvent` scope correction, for FEATURE-0013
+requirements generation.
 The affected spine, baseline, RFC, feature-index, traceability, and compatibility
 updates remain required before implementation proceeds.
 
@@ -710,7 +735,11 @@ available when AI is disabled or disconnected.
   reason code, obligation, event type, evidence type, and projection are
   versioned and governable offline.
 - Migrations are reversible where practical and preserve old evidence/digests.
-- FEATURE-0012 `AuditEvent` expansion requires fixtures for all six scopes and a
+- Per ADH-2026-015, `AuditEvent` expansion requires fixtures for all seven
+  canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`,
+  `Tenant`, `Project`, `Provider`, `ServiceInstance`), separate regression
+  fixtures for the six pre-existing FEATURE-0012 `ScopeKind` values (`Platform`,
+  `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`), and a
   documented alpha compatibility decision.
 
 ## 16. Observability and operability
@@ -848,7 +877,7 @@ not human acceptance.
 | F13-R25 | Correctness/security | Clock uncertainty invalidates ordering, expiry, freshness, or replay protection | AD-018, AD-022 | 3×5 High | Trusted-time provenance, validity epoch, profile outage behavior | Skew, rollback, expiry-boundary tests | 2×4 Medium | MITIGATE | Runtime/security owner | Disconnected or multi-site deployment | PENDING_HUMAN_REVIEW |
 | F13-R26 | Security/privacy | Cross-scope references disclose or influence another tenant or governance domain | AD-015, AD-019 | 3×5 High | Scope authorization, no-existence disclosure, typed references, projections | Cross-scope and safe-denial fixtures | 1×5 Medium | MITIGATE | API/security owner | New scope/reference kind | PENDING_HUMAN_REVIEW |
 | F13-R27 | Compatibility/governance | Later features silently redefine common decision semantics | AD-029, AD-030 | 4×5 Critical | Stable envelope, profile conformance, architecture change control | Baseline/schema semantic-diff gate | 1×5 Medium | AVOID | Architecture owner | Common-envelope or closed-vocabulary change | PENDING_HUMAN_REVIEW |
-| F13-R28 | Compatibility | Six-scope `AuditEvent` correction breaks FEATURE-0012 consumers | AD-015 | 3×4 High | Explicit correction approval, versioning, fixtures, migration evidence | Six-scope compatibility and baseline tests | 1×4 Low | MITIGATE | FEATURE-0013/API owner | Stable API promotion | PENDING_HUMAN_REVIEW |
+| F13-R28 | Compatibility | Seven-value `ScopeKind`/`AuditEvent` correction (ADH-2026-015) breaks FEATURE-0012 consumers | AD-015 | 3×4 High | Explicit correction approval, versioning, seven-value fixtures, six-value regression fixtures, migration evidence | Seven-value `ScopeKind`/`AuditEvent` compatibility and six-value regression baseline tests | 1×4 Low | MITIGATE | FEATURE-0013/API owner | Stable API promotion | PENDING_HUMAN_REVIEW |
 | F13-R29 | Traceability | `DecisionRecord` rename breaks spine, documents, schemas, or consumer identity | AD-001 | 3×4 High | Architecture clarification, coordinated traceability update, aliases/migration if required | Repository-wide identity and baseline checks | 1×4 Low | MITIGATE | Architecture owner | Rename approval or stable promotion | PENDING_HUMAN_REVIEW |
 | F13-R30 | Cost/sovereignty | High-assurance controls make small or local deployments unaffordable | AD-016, AD-017, AD-041 | 3×4 High | Tiered conformance and assurance profiles; no universal remote dependencies | Minimal/regulated/sovereign profile cost fixtures | 2×3 Medium | MITIGATE | Deployment architecture owner | New mandatory assurance control | PENDING_HUMAN_REVIEW |
 | F13-R31 | Governance/cost | Downstream adoption governance becomes duplicative bureaucracy or a premature registry framework | AD-044 | 4×3 High | One normative contract, one short per-feature section, one lightweight gate; trigger-based escalation only | Changed-file/gate review; absence of manifests, registry, index, and separate approval workflow | 1×3 Low | AVOID | Architecture governance owner | Repeated semantic drift or structured-manifest trigger in section 28.8 | PENDING_HUMAN_REVIEW |
@@ -931,7 +960,7 @@ recorded exception. “Cost” means lifecycle cost, not merely initial build co
 | AD-012 | Pure stateless decision kernel | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
 | AD-013 | Effective-once via idempotency, not exactly-once claims | 5 | 5 | 5 | 5 | 4 | 5 | Approve |
 | AD-014 | Decision and audit durable-acceptance invariant | 5 | 5 | 4 | 5 | 5 | 5 | Approve with later persistence pattern |
-| AD-015 | Extend AuditEvent to six governance scopes | 5 | 5 | 4 | 5 | 5 | 5 | Approve with FEATURE-0012 correction |
+| AD-015 | Extend `AuditEvent` to all seven canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`) per ADH-2026-015, using `metadata.scopeRef` as sole scope identity | 5 | 5 | 4 | 5 | 5 | 5 | Approve with FEATURE-0012 compatibility correction (ADH-2026-015) |
 | AD-016 | Sovereignty as seven enforceable dimensions | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
 | AD-017 | Connected, private, edge, and air-gapped profiles | 5 | 5 | 3 | 5 | 5 | 5 | Approve; tier conformance to control cost |
 | AD-018 | Local control-plane dependencies and signed synchronization | 5 | 5 | 3 | 5 | 5 | 5 | Approve; advanced profile only |
@@ -1035,7 +1064,8 @@ This architecture may become the controlling FEATURE-0013 input when the human
 architecture owner records:
 
 1. approval of `DecisionRecord` terminology and affected spine updates;
-2. approval of six-scope `AuditEvent` compatibility correction;
+2. approval of the seven-value `ScopeKind`/`AuditEvent` compatibility correction
+   (ADH-2026-015), permitting all seven canonical values via `metadata.scopeRef`;
 3. approval of the durable decision/audit obligation;
 4. confirmation of runtime-neutral Phase 2 scope;
 5. acceptance or revision of AD-001 through AD-044;
@@ -1100,7 +1130,7 @@ or any relaxation of fail-closed, projection, audit, or immutability rules.
 | Structured explainability | PASS | Typed rationale, reasons, alternatives, obligations, provenance, evidence references, and authorized `DecisionContext` projections are mandatory |
 | No side effects in Phase 2 contracts | PASS | Sections 3, 7.4, 8.4, and 20 prohibit runtime/provider/plugin execution and defer production persistence and orchestration choices |
 | AI is consumer, not authority | PASS | Sections 6.3 and 13 make AI non-authoritative, projected, policy-governed, optional, and unable to mutate or execute |
-| Earlier features own shared concepts | PASS WITH CONTROLLED CORRECTION | FEATURE-0012 grammar is extended rather than duplicated; six-scope `AuditEvent` remains subject to explicit compatibility approval |
+| Earlier features own shared concepts | PASS WITH CONTROLLED CORRECTION | FEATURE-0012 grammar is extended rather than duplicated; the seven-value `ScopeKind`/`AuditEvent` correction (ADH-2026-015) remains subject to explicit compatibility approval |
 | Audit linkage | PASS | Section 10 requires local atomic decision and audit-obligation acceptance and prevents telemetry from becoming audit authority |
 | Effective context is the resolution boundary | PASS | Section 7.3 resolves hierarchy once into digest-pinned `EffectivePolicyContext` and prohibits hidden traversal by decision domains |
 | Provider-neutral capability matching | PASS | Decision profiles and typed results reference normalized capabilities and typed references rather than provider resources |
@@ -1413,3 +1443,134 @@ Meeting a trigger permits evaluation; it does not automatically approve the
 additional framework. The proposal must demonstrate that a small extension of
 the existing feature gate is insufficient, quantify maintenance and review
 cost, and receive human architecture approval.
+
+## 29. ADH-2026-015 scope vocabulary clarification and dependency reconciliation
+
+### 29.1 Controlling authority
+
+ADH-2026-014 and ADH-2026-015 are the **joint controlling handoffs** for
+FEATURE-0013. ADH-2026-015 (Approved, 2026-07-27, Sanjeev Kumar) supersedes
+**only** the earlier six-scope `AuditEvent` statement in ADH-2026-014. Every
+other ADH-2026-014 decision — including the provider-neutral, contract-only,
+statelessness, security, sovereignty, anti-overengineering, Matrix E, and
+downstream-adoption decisions — remains controlling and unchanged.
+
+Where any earlier text in this document (for example sections 1.1, 7.3, and 15)
+refers to "six" `AuditEvent` scopes, this section is authoritative and the
+seven-value canonical vocabulary controls.
+
+### 29.2 Approved scope vocabulary decision
+
+1. `ScopeKind` is the single canonical shared vocabulary for scope identity
+   across Sovrunn.
+2. Its exact canonical values are: `Platform`, `Organization`,
+   `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and `ServiceInstance`.
+3. `ServiceInstance` is an **additive** extension of the FEATURE-0012 shared
+   vocabulary; `Provider` is **retained unchanged**.
+4. `AuditEvent` initially permits **all seven** canonical values.
+5. `AuditEvent` uses `metadata.scopeRef` as its **sole canonical scope
+   identity**.
+6. No separate `AuditEvent` scope enum or independently mutable scope field is
+   permitted anywhere in schemas, bindings, or validators.
+7. Existing FEATURE-0012 serialized `ScopeKind` values and existing
+   Organization-scoped `AuditEvent`s remain valid.
+
+### 29.3 metadata.scopeRef is the sole scope authority
+
+For `AuditEvent`, `metadata.scopeRef` is the single authoritative expression of
+scope identity. A second `AuditEvent` scope source — a parallel scope enum, a
+duplicated scope field, or an independently mutable scope attribute — is
+prohibited. Any record that declares scope through more than one source, or
+through any source other than `metadata.scopeRef`, must be rejected as a
+contradictory or duplicate scope.
+
+### 29.4 Value-by-value FEATURE-0012 versus FEATURE-0013 compatibility
+
+Every inherited controlled-vocabulary value is classified using the required
+taxonomy: **added, removed, renamed, mapped, restricted, expanded, or
+semantically reinterpreted**.
+
+| Value | FEATURE-0012 `ScopeKind` | FEATURE-0013 (ADH-2026-015) | Classification | Notes |
+|---|---|---|---|---|
+| `Platform` | Present | Present | Unchanged | Canonical stored form remains absent/nil (FEATURE-0012 D-16). |
+| `Organization` | Present | Present | Unchanged | Existing Organization-scoped `AuditEvent`s remain valid. |
+| `OrganizationUnit` | Present | Present | Unchanged | — |
+| `Tenant` | Present | Present | Unchanged | — |
+| `Project` | Present | Present | Unchanged | — |
+| `Provider` | Present | Present | Unchanged (retained) | ADH-2026-014's six-scope `AuditEvent` list omitted `Provider`; ADH-2026-015 retains it and permits it for `AuditEvent`. |
+| `ServiceInstance` | Absent | Present | **Added** (additive) | Added to the shared vocabulary to reconcile ADH-2026-014's `AuditEvent` requirement with the FEATURE-0012 vocabulary. |
+
+`AuditEvent` profile-level difference:
+
+| Contract element | FEATURE-0012 current | FEATURE-0013 (ADH-2026-015) | Classification |
+|---|---|---|---|
+| `AuditEvent` permitted scopes (`x-sovrunn-allowed-scopes`) | `["Organization"]` (alpha) | All seven canonical values | **Expanded** |
+| `AuditEvent` scope identity field | `metadata.scopeRef` only | `metadata.scopeRef` only (confirmed sole authority) | Unchanged / confirmed |
+
+Overall migration classification: **additive, backward-compatible extension**.
+No value is removed, renamed, mapped, restricted, or semantically reinterpreted.
+
+Detailed inspected-file evidence is recorded in
+`docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`.
+
+### 29.5 Mandatory Dependency Contract Reconciliation framework
+
+Whenever FEATURE-0013 (or any feature) inherits a controlled vocabulary, shared
+type, or contract from a dependency, a Dependency Contract Reconciliation must
+be recorded before design approval. The reconciliation must cover **every** of
+the following dimensions explicitly:
+
+1. **Exact dependency version and files** — the dependency's contract version
+   and the exact schema, binding, validator, and fixture files inspected.
+2. **Enums** — every controlled-vocabulary value, classified per section 29.6.
+3. **Required fields** — which fields are required and whether requiredness
+   changed.
+4. **Cardinality** — how many of each element are permitted; any change.
+5. **Ownership** — which feature owns the shared vocabulary or contract.
+6. **Serialization** — the impact on existing serialized values and forms.
+7. **Validation** — accepted values, rejected values, and rejection rules.
+8. **Security semantics** — authorization/scope semantics and whether they
+   changed (scope does not grant authorization).
+9. **Go bindings** — the impact on generated or hand-written Go types.
+10. **Fixtures** — positive and negative fixture obligations.
+11. **Migration classification** — additive, backward-compatible, or breaking.
+12. **Approval reference** — the controlling ADH/DEC/RFC approval.
+
+A reconciliation that leaves any dimension unaddressed is incomplete and blocks
+design approval.
+
+### 29.6 Controlled-vocabulary difference classification requirement
+
+Every inherited controlled-vocabulary difference must be classified as exactly
+one of: **added**, **removed**, **renamed**, **mapped**, **restricted**,
+**expanded**, or **semantically reinterpreted**. A difference that cannot be
+classified with confidence, or that would be `removed`, `renamed`, `mapped`,
+`restricted`, or `semantically reinterpreted`, is not permitted without a
+separately approved architecture decision.
+
+### 29.7 Prohibition on agent-resolved dependency deltas
+
+Kiro and Cursor must not resolve any unapproved dependency delta between an
+inherited contract and the FEATURE-0013 contract. They must not choose
+mappings, aliases, removals, additional scopes, restrictions, or applicability
+exclusions. Any dependency delta not explicitly approved by ADH-2026-014 or
+ADH-2026-015 must be recorded as `ARCHITECTURE_DECISION_REQUIRED` and escalated
+to the Architecture Owner. No implementation may proceed from an unapproved
+dependency delta.
+
+### 29.8 Synchronization obligation
+
+Canonical schemas, Go bindings, validators, fixtures, compatibility evidence,
+architecture, requirements, and design must eventually be synchronized to the
+seven-value canonical vocabulary. This synchronization is an obligation, not a
+completed state. It must occur only during a separately authorized
+implementation stage after requirements receive fresh independent approval.
+
+### 29.9 Preservation of unchanged decisions
+
+ADH-2026-015 changes only the `AuditEvent` scope statement. All provider-
+neutral, contract-only, statelessness, security, sovereignty, anti-
+overengineering, Matrix E, and downstream-adoption decisions in this document
+remain in force. Sections 1 through 28, AD-001 through AD-044, and Matrix E
+F13-R01 through F13-R31 are preserved except for the clarified `AuditEvent`
+scope vocabulary controlled by this section.

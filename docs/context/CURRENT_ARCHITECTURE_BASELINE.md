@@ -4,7 +4,9 @@ Status: Approved Phase 2 start baseline.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`
 
-Last controlled update: ADH-2026-014 (2026-07-27) — DecisionRecord terminology correction and six-scope AuditEvent extension.
+Last controlled update: ADH-2026-015 (2026-07-27) — ScopeKind clarified as the single canonical seven-value scope vocabulary (adds ServiceInstance, retains Provider); AuditEvent permits all seven values via metadata.scopeRef as sole scope identity. Supersedes only the earlier ADH-2026-014 six-scope AuditEvent statement.
+
+Prior controlled update: ADH-2026-014 (2026-07-27) — DecisionRecord terminology correction and AuditEvent scope extension.
 
 ## Product Position
 
@@ -138,16 +140,28 @@ Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
 
 Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
 
-Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — Kiro requirements generation (ADH-2026-014 approved 2026-07-27).
+Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — Kiro requirements returned to `PENDING_HUMAN_REVIEW` pending fresh independent approval after the ADH-2026-015 scope vocabulary clarification (ADH-2026-014 and ADH-2026-015 both approved 2026-07-27; joint controlling handoffs).
 
 ## Approved FEATURE-0013 Architecture Baseline
 
-ADH-2026-014 approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as the controlling baseline for FEATURE-0013 Kiro specifications. It establishes the common, immutable, provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` six-scope linkage, sovereign security and projection, conformance fixtures, and downstream adoption contract.
+ADH-2026-014 approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as the controlling baseline for FEATURE-0013 Kiro specifications. It establishes the common, immutable, provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` seven-scope linkage (per ADH-2026-015), sovereign security and projection, conformance fixtures, and downstream adoption contract.
 
 ### Controlled corrections (ADH-2026-014)
 
 1. `DecisionRecord` replaces the former term `DecisionObject` across the Phase 2 spine, baseline, and normative documents. This is a terminology correction, not a new concept.
-2. `AuditEvent` scope is expanded from Organization-only (FEATURE-0012 alpha) to the six formal governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. Scope does not grant authorization.
+2. `AuditEvent` scope is expanded from Organization-only (FEATURE-0012 alpha) to the six formal governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. Scope does not grant authorization. **(Superseded by ADH-2026-015 — see below.)**
+
+### Controlled correction (ADH-2026-015)
+
+ADH-2026-015 (Approved 2026-07-27) supersedes only the ADH-2026-014 six-scope `AuditEvent` statement:
+
+1. `ScopeKind` is the single canonical shared scope vocabulary with exactly seven values: Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance.
+2. `ServiceInstance` is an additive extension; `Provider` is retained unchanged.
+3. `AuditEvent` initially permits all seven canonical values and uses `metadata.scopeRef` as its sole canonical scope identity. No separate `AuditEvent` scope enum or independently mutable scope field is permitted.
+4. Existing FEATURE-0012 serialized `ScopeKind` values and existing Organization-scoped `AuditEvent`s remain valid.
+5. Schemas, Go bindings, validators, fixtures, compatibility evidence, architecture, requirements, and design must eventually be synchronized. Tasks, implementation, and continued design remain unauthorized until FEATURE-0013 requirements receive fresh independent approval.
+
+Compatibility evidence: `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`.
 
 ## Change Control
 

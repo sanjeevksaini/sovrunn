@@ -153,12 +153,12 @@ Phase 2 must not define or invoke the complete plugin execution chain.
 | Record | Responsibility |
 |---|---|
 | `DecisionRecord` | Captures what Sovrunn decided, why it decided it, and which inputs were considered. Immutable governed conclusion with authority, rationale, typed result, and audit linkage. |
-| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. Supports six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. |
+| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. Uses the canonical seven-value ScopeKind vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance; metadata.scopeRef is the sole scope identity. |
 | `Operation` | Tracks an asynchronous lifecycle action or attempted change. |
 
 A record may reference the others, but they must not be collapsed into one object.
 
-> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. `AuditEvent` scope is expanded from Organization-only to the six formal governance scopes per the same handoff.
+> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. ADH-2026-015 supersedes the earlier six-scope statement: `ScopeKind` has seven canonical values, `AuditEvent` permits all seven, and `metadata.scopeRef` is its sole scope identity.
 
 ### Invariant I — Explainability is structured
 

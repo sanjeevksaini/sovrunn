@@ -14,7 +14,7 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 
 - Reuse assessment standard
 - API/resource standard
-- Decision and AuditEvent standard (DecisionRecord envelope, six-scope AuditEvent)
+- Decision and AuditEvent standard (DecisionRecord envelope, canonical seven-value ScopeKind, AuditEvent via metadata.scopeRef)
 - Provider-neutral resource model
 - ResourcePool and ProviderCapability model
 - Adapter boundary foundation
