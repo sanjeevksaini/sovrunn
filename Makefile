@@ -42,7 +42,7 @@ clean:
 
 PHASE_BRANCH ?= phase1-foundation
 
-.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state
+.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-spec-report ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state
 
 ff-start:
 	./scripts/feature-start.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" --phase-branch "$(PHASE_BRANCH)"
@@ -83,6 +83,9 @@ ff-approve-tasks:
 
 ff-spec-flow:
 	./scripts/spec-flow.sh --feature "$(FEATURE)" --mode "$${FEATURE_FACTORY_REVIEW_MODE:-auto}" --kiro-mode "$${FEATURE_FACTORY_KIRO_MODE:-auto}"
+
+ff-spec-report:
+	@cat ".automation/reports/$(FEATURE)/spec-flow-latest.md"
 
 ff-kiro-decision:
 	./scripts/kiro-decision.sh --feature "$(FEATURE)" --stage "$(STAGE)" --question "$(QUESTION)"

@@ -118,7 +118,7 @@ Automated reviewer mode with the OpenAI adapter:
 ```bash
 export OPENAI_API_KEY="..."
 export FEATURE_FACTORY_REVIEW_MODE=auto
-export FEATURE_FACTORY_REVIEWER_MODEL="gpt-5"
+export FEATURE_FACTORY_REVIEWER_MODEL="gpt-5.6-terra"
 
 make -f Makefile.feature-factory \
   ff-review-auto \
@@ -147,8 +147,34 @@ runs the reviewer for that stage, persists the review result, and advances only
 when the exact approval token is present.
 
 `scripts/spec-flow.sh` calls Kiro CLI headlessly for requirements, design,
-tasks, and reviewer-requested revisions. Set
-`FEATURE_FACTORY_KIRO_MODE=prompt` only to force manual pauses.
+tasks, and reviewer-requested revisions. Kiro's default Auto routing is used;
+the automation does not force a model. Review attempts and raw OpenAI responses
+are archived under `.automation/reviews/<FEATURE>/history/`. The bounded loop
+defaults to five revisions per stage and can be changed with
+`FEATURE_FACTORY_MAX_REVISIONS`.
+
+Every OpenAI review receives a deterministic repository context bundle rather
+than relying on model memory. The bundle contains the active stage document,
+the reviewer contract, the FEATURE architecture and approved architecture
+handoff, applicable RFCs, preceding specification stages, current architecture
+baseline and version, Phase 2 architecture/acceptance/reuse standards,
+governance gates, engineering standards, feature index, and traceability
+matrix. Each attempt archives the complete prompt and a file manifest with
+paths, line/byte counts, and SHA-256 digests under
+`.automation/reviews/<FEATURE>/history/`.
+
+The flow is resumable by default: an existing stage document is reviewed rather
+than regenerated. Set `FEATURE_FACTORY_RESUME=0` only when intentionally
+regenerating the active specification files. On completion or failure, inspect:
+
+```bash
+make ff-spec-report FEATURE=<FEATURE-ID>
+```
+
+The report includes elapsed time, document lines, revisions, Kiro invocations,
+and exact OpenAI API token usage. Kiro credits cannot be obtained reliably from
+the headless CLI; use Kiro's interactive `/usage` command or the enterprise
+usage report for authoritative credit accounting.
 
 ## Kiro Decision Policy
 

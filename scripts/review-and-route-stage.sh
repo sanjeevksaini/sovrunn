@@ -1,7 +1,7 @@
 #!/opt/homebrew/bin/bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
-FEATURE=""; STAGE=""; MODE="${FEATURE_FACTORY_REVIEW_MODE:-auto}"; MAX_REVISIONS="${FEATURE_FACTORY_MAX_REVISIONS:-3}"
+FEATURE=""; STAGE=""; MODE="${FEATURE_FACTORY_REVIEW_MODE:-auto}"; MAX_REVISIONS="${FEATURE_FACTORY_MAX_REVISIONS:-5}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --feature) FEATURE="$2"; shift 2;;
@@ -17,6 +17,7 @@ cd "$(repo_root)"; ensure_feature_state "$FEATURE"
 ./scripts/reviewer-stage.sh --feature "$FEATURE" --stage "$STAGE" --mode "$MODE"
 REVIEW_FILE=".automation/reviews/$FEATURE/${STAGE}.review.json"
 [[ -f "$REVIEW_FILE" ]] || fail "missing review file: $REVIEW_FILE"
+set +e
 python3 - "$FEATURE" "$STAGE" "$REVIEW_FILE" "$MAX_REVISIONS" <<'PY'
 import json, sys
 from pathlib import Path
@@ -68,15 +69,17 @@ print(f'ERROR: unknown review status: {status}', file=sys.stderr)
 sys.exit(1)
 PY
 rc=$?
+set -e
 if [[ $rc -eq 0 ]]; then
   ./scripts/approve-stage.sh --feature "$FEATURE" --stage "$STAGE"
   exit 0
 elif [[ $rc -eq 2 ]]; then
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_revision_required" >/dev/null
-  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false >/dev/null
   info "Revision required. Run the generated revision prompt in Kiro, then rerun this stage review."
   exit 2
 else
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_blocked" >/dev/null || true
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null || true
   exit "$rc"
 fi
