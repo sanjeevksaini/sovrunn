@@ -8,6 +8,17 @@ Canonical architecture: docs/architecture/api-resource-standard.md
 Canonical reuse standard: docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
 Depends on: FEATURE-0011 (Reuse Assessment Standard)
 
+> **Frozen-artifact terminology note (ADH-2026-016, Approved 2026-07-27).**
+> This is a frozen, completed FEATURE-0012 artifact. Its historical use of
+> `DecisionObject` (in the FEATURE-0013 non-goal/deferred boundary text) is
+> **preserved verbatim** as the record of the pre-ADH-2026-014 wording.
+> `DecisionObject` is the historical pre-ADH-2026-014 name for `DecisionRecord`;
+> it refers to the **same** concept and does **not** create a second schema,
+> Go type, runtime alias, parallel contract, or migration implementation. The
+> canonical current term is `DecisionRecord` (ADH-2026-014). Active normative
+> documents use `DecisionRecord`; this frozen artifact retains the historical
+> term only under this note.
+
 ## Overview
 
 FEATURE-0012 delivers the Sovrunn-owned, provider-neutral API and resource

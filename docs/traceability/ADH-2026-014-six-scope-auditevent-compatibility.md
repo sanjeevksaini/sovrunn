@@ -1,5 +1,30 @@
 # Six-Scope AuditEvent Alpha Compatibility Decision
 
+> **⚠️ SUPERSEDED — HISTORICAL EVIDENCE ONLY.**
+> This entire document records the **superseded** six-scope `AuditEvent`
+> compatibility decision originally stated by ADH-2026-014. It is **SUPERSEDED
+> by ADH-2026-015** (Approved, 2026-07-27) and confirmed as superseded historical
+> evidence by ADH-2026-016 (Approved, 2026-07-27). It is retained **only as
+> historical evidence** and is **not authoritative** for the current
+> `AuditEvent` scope contract.
+>
+> **Authoritative current disposition.** Under ADH-2026-015, `ScopeKind` is the
+> single canonical shared vocabulary with exactly **seven** values — `Platform`,
+> `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and
+> `ServiceInstance`. `Provider` is retained (the six-scope list below omitted
+> it) and `ServiceInstance` is additive. `AuditEvent` permits all seven values
+> and uses `metadata.scopeRef` as its sole scope authority; the canonical
+> `Platform` form is an absent/nil `metadata.scopeRef`. For the authoritative
+> seven-value contract and the value-by-value compatibility evidence, see:
+> - `docs/reviews/architecture-decision-handoffs/ADH-2026-015-feature-0013-scope-vocabulary-clarification.md`
+> - `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`
+> - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` (sections 29 and 30)
+>
+> This notice does **not** rewrite the historical body below. The six-scope
+> scope table, migration path, and fixture references are retained **verbatim**
+> as the record of what ADH-2026-014 originally stated. They must not be read as
+> describing the current seven-value contract.
+
 ## Purpose
 
 Records the approved compatibility decision for expanding the FEATURE-0012 alpha `AuditEvent` profile from Organization-only to six formal governance scopes per ADH-2026-014.

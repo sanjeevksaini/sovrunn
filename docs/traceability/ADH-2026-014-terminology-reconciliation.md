@@ -23,6 +23,25 @@
 > - `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`
 > - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` (section 29)
 
+## ADH-2026-016 update (2026-07-27) — active normative versus frozen historical treatment
+
+ADH-2026-016 (Approved, 2026-07-27) completed the `DecisionObject`-to-`DecisionRecord`
+migration by distinguishing **corrected active normative documents** from
+**frozen historical artifacts** with explicit compatibility treatment. This
+update refines the "Files intentionally NOT corrected" table below.
+
+| File | ADH-2026-014 disposition | ADH-2026-016 disposition | Treatment |
+|---|---|---|---|
+| `docs/architecture/api-resource-standard.md` | Not corrected (deferred-domain non-goal references) | **Corrected** | Active normative document. The two `DecisionObject` non-goal/deferred references (FEATURE-0013 boundary) are now corrected to `DecisionRecord`. This is a naming correction only; the non-goal boundary meaning is unchanged (the payloads remain owned by and deferred to FEATURE-0013). |
+| `.kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md` | Not corrected (frozen FEATURE-0012 scope) | **Preserved as frozen historical artifact** | Historical `DecisionObject` text is preserved verbatim; an explicit artifact-level note records that `DecisionObject` is the historical pre-ADH-2026-014 name for `DecisionRecord` and creates no second schema, Go type, alias, or contract. |
+| `.kiro/specs/api-resource-naming-status-and-validation-standard/design.md` | Not corrected (frozen FEATURE-0012 scope) | **Preserved as frozen historical artifact** | Same frozen-artifact treatment as above: verbatim historical text plus the explicit artifact-level compatibility note. |
+
+Distinction rule: **active normative documents** use `DecisionRecord`; **frozen
+historical artifacts** retain `DecisionObject` only under an explicit
+artifact-level note identifying it as the same concept under its historical
+name. No parallel schema, type, alias, or contract is created by either
+treatment.
+
 ## Purpose
 
 Documents the controlled replacement of `DecisionObject` with `DecisionRecord` across the Sovrunn repository baseline, as mandated by ADH-2026-014 (Approved, 2026-07-27).
@@ -65,9 +84,9 @@ Documents the controlled replacement of `DecisionObject` with `DecisionRecord` a
 
 | File | Reason |
 |---|---|
-| `docs/architecture/api-resource-standard.md` | Uses `DecisionObject` as a deferred-domain reference in non-goal context ("DecisionObject or AuditEvent domain payloads owned by FEATURE-0013"). These references describe what FEATURE-0012 does NOT own and will be updated when FEATURE-0013 implementation introduces the actual DecisionRecord schemas. Correcting them now would change the semantic meaning of a completed feature's non-goal boundary. |
-| `.kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md` | Same as above — FEATURE-0012 non-goal and deferred references. Owned by completed FEATURE-0012 scope. |
-| `.kiro/specs/api-resource-naming-status-and-validation-standard/design.md` | Same as above. |
+| `docs/architecture/api-resource-standard.md` | **Superseded by the ADH-2026-016 update above: now CORRECTED.** ADH-2026-014 originally left this file uncorrected on the basis that its `DecisionObject` uses were deferred-domain non-goal references. ADH-2026-016 reclassifies it as an active normative document and corrects both `DecisionObject` references to `DecisionRecord`; the non-goal boundary meaning (payloads owned by and deferred to FEATURE-0013) is unchanged. |
+| `.kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md` | **Frozen historical artifact (ADH-2026-016).** Historical `DecisionObject` text preserved verbatim; an explicit artifact-level note identifies it as the historical pre-ADH-2026-014 name for `DecisionRecord`, creating no second schema, type, alias, or contract. Owned by completed FEATURE-0012 scope. |
+| `.kiro/specs/api-resource-naming-status-and-validation-standard/design.md` | **Frozen historical artifact (ADH-2026-016).** Same frozen-artifact treatment: verbatim historical text plus the explicit artifact-level compatibility note. |
 | `docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md` | Non-goal reference in completed feature spec. |
 | `docs/reviews/architecture-decision-handoffs/ADH-2026-012-*.md` | Historical handoff document records the state at time of approval. |
 | `docs/reviews/architecture-decision-handoffs/ADH-2026-014-*.md` | Self-referencing (describes the correction being made). |

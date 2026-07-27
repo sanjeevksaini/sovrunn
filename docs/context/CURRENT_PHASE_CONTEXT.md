@@ -40,7 +40,7 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 
 | Feature | Status | Controlling handoff |
 |---|---|---|
-| FEATURE-0013 Decision Record and AuditEvent Standard | Kiro requirements active | ADH-2026-014 (Approved 2026-07-27) |
+| FEATURE-0013 Decision Record and AuditEvent Standard | Kiro requirements in architecture-remediation (PENDING_HUMAN_REVIEW) | ADH-2026-014, ADH-2026-015, ADH-2026-016 (joint controlling, all Approved 2026-07-27) |
 
 ## Phase 2 Exit Criteria
 

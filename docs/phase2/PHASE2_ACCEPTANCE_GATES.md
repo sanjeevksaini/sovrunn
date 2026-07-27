@@ -96,13 +96,23 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 
 ### 6.4 Controlling references
 
-- ADH-2026-014 and ADH-2026-015 are the joint controlling handoffs. ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement; all other ADH-2026-014 decisions remain controlling.
-- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` is the canonical architecture.
-- `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` records the value-by-value compatibility evidence.
+- ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the joint controlling handoffs. ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement; ADH-2026-016 clarifies previously unresolved contract boundaries without introducing new architecture; all other ADH-2026-014 decisions remain controlling.
+- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` is the canonical architecture (section 30 for the ADH-2026-016 clarified boundaries).
+- `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` records the value-by-value compatibility evidence and is authoritative for the seven-value contract.
+- `docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md` is SUPERSEDED historical evidence.
 - AD-001 through AD-044 are preserved.
 - Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
 
-### 6.5 Downstream adoption
+### 6.5 ADH-2026-016 contract boundary criteria
+
+- `DecisionRecord` uses `metadata.scopeRef` as its sole logical and serialized scope authority; no top-level `DecisionRecord` `scopeRef` or parallel scope source exists.
+- Sensitivity classification uses the closed ordered provider-neutral vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; jurisdiction-specific labels are versioned profile mappings; profiles permitting captured output declare a sensitivity ceiling, content-category rules, and maximum fields/bytes/depth/value-types.
+- Security validation is bounded to structural conformance; no secret/credential/PII/malware/DLP/content-scanning engine is introduced; comprehensive semantic content scanning is a later approved feature.
+- Algorithm-agile carrier fields and structural trust metadata are contract-now; canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services remain DEFERRED under ADR-F13-002; RFC 8785 is illustrative only.
+- Architecture section 17 scenarios map one-to-one to stable IDs `F13-CF-01` through `F13-CF-28`; coverage is counted by scenario ID with an explicit coverage-matrix entry per scenario.
+- FEATURE-0013 requirements remain in architecture-remediation status (`PENDING_HUMAN_REVIEW` / gate `PENDING_INDEPENDENT_REVIEW`); ADH-2026-016 grants no stage authorization.
+
+### 6.6 Downstream adoption
 
 - One normative downstream adoption contract exists.
 - One lightweight gate check validates adoption section presence.

@@ -20,7 +20,33 @@ Human architecture review status: **APPROVED_FOR_KIRO_REQUIREMENTS**.
 
 - Reviewer: Sanjeev Kumar
 - Decision date: 2026-07-27
-- Controlling handoffs: ADH-2026-014 and ADH-2026-015 (joint)
+- Controlling handoffs: ADH-2026-014, ADH-2026-015, and ADH-2026-016 (joint)
+
+> **Contract boundary clarification (ADH-2026-016, Approved 2026-07-27).**
+> ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the joint controlling
+> handoffs for FEATURE-0013. ADH-2026-016 is a clarification that does not
+> introduce new architecture; ADH-2026-014 and ADH-2026-015 remain controlling
+> except where ADH-2026-016 clarifies their previously unresolved contract
+> boundaries. ADH-2026-016 fixes seven boundaries: (1) `DecisionRecord` uses
+> FEATURE-0012 `metadata.scopeRef` as its sole logical and serialized scope
+> authority and any top-level or parallel scope source is removed and
+> prohibited (see sections 6.1 and 30.2); (2) the closed ordered
+> provider-neutral sensitivity vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL <
+> RESTRICTED` with mandatory profile-bound ceiling/category/size/depth/type
+> rules, and jurisdiction-specific labels as versioned profile mappings (see
+> section 12.4 and 30.3); (3) FEATURE-0013 security validation is bounded to
+> structural conformance and comprehensive semantic content scanning belongs to
+> later approved features (see section 12.1 and 30.4); (4) structural trust
+> metadata is separated from cryptographic verification, RFC 8785 is
+> illustrative only, and the canonicalization algorithm/profile, digest-covered
+> fields, signature algorithm, and cryptographic services remain DEFERRED under
+> ADR-F13-002 (see sections 12.3, 14, and 30.5); (5) the section 17 conformance
+> scenarios are assigned stable IDs `F13-CF-01` through `F13-CF-28` in their
+> existing order (see section 17 and 30.6); (6) six-scope `AuditEvent` evidence
+> is SUPERSEDED; and (7) the `DecisionObject`-to-`DecisionRecord` migration is
+> completed in active normative documents. ADH-2026-016 authorizes no runtime
+> capability and no product, provider, or algorithm selection. Section 30 is
+> authoritative for these clarified boundaries.
 
 > **Scope vocabulary clarification (ADH-2026-015, Approved 2026-07-27).**
 > ADH-2026-014 and ADH-2026-015 are the joint controlling handoffs for
@@ -185,6 +211,19 @@ versioned decision profile, primary form, authority, purpose, request, actors,
 subjects, scope, inputs, evaluations, composition, typed result, rationale,
 obligations, provenance, validity, correlation, and audit links.
 
+`DecisionRecord` scope identity is expressed solely through the FEATURE-0012
+`metadata.scopeRef` field. Per ADH-2026-016, `metadata.scopeRef` is the sole
+logical and serialized scope authority; a top-level `scopeRef` field, a
+parallel scope enum, a duplicated scope attribute, or any second scope source
+is removed and prohibited. The canonical `Platform` form is an absent/nil
+`metadata.scopeRef` (inherited from FEATURE-0012 `NormalizeScope` /
+`CanonicalScopeIdentity`, section 29.3.1) where the applicable contract permits
+`Platform`; every non-Platform scope carries a non-nil `metadata.scopeRef` with
+a canonical `ScopeKind` and UID. A record that declares scope through more than
+one source, or through any source other than `metadata.scopeRef`, fails
+validation. A canonical nil `metadata.scopeRef` that resolves to `Platform` is
+not a contradictory or duplicate scope. See section 30.2.
+
 The envelope does not contain every domain's result fields. `DecisionProfile`
 selects a separately versioned typed-result schema. An adopting feature may add
 a profile and result schema without revising FEATURE-0013 when it conforms to
@@ -193,6 +232,13 @@ the extension contract and existing semantic registries.
 ```yaml
 kind: DecisionRecord
 apiVersion: sovrunn.io/v1alpha1
+metadata:
+  # metadata.scopeRef is the sole scope authority (ADH-2026-016).
+  # Absent/nil scopeRef is the canonical Platform form where the
+  # contract permits Platform; every non-Platform scope carries a
+  # non-nil scopeRef with a canonical ScopeKind and UID. No top-level
+  # or parallel scope source is permitted.
+  scopeRef: null
 profileRef:
   name: PlacementDecision
   version: 1.0.0
@@ -202,7 +248,6 @@ purpose: workload-placement
 requestRef: null
 actorRef: null
 subjectRefs: []
-scopeRef: null
 effectivePolicyContextRef: null
 inputSnapshotRef: null
 evaluationResultRefs: []
@@ -674,6 +719,21 @@ states and regulated sectors.
   untrusted data.
 - Enforce schema, size, depth, character, URI, and reference-kind limits.
 
+**Security validation boundary (ADH-2026-016).** FEATURE-0013 owns only
+structural schema validation, typed classification, declared bounds, projection
+restrictions, and deterministic conformance. FEATURE-0013 does **not** claim
+comprehensive semantic detection of secrets, credentials, personal data,
+malware, or policy violations in arbitrary content. Producers must redact
+prohibited content before submission. Comprehensive semantic content scanning
+and runtime content inspection belong to later approved security features.
+Kiro and Cursor must not invent secret-pattern, credential-pattern, PII,
+malware, DLP, or content-scanning engines in FEATURE-0013. Where this document
+describes rejecting a "secret", "credential", "prompt", or "unrestricted tenant
+content" projection (for example the AC-13.7 fixtures), it means structural and
+typed conformance against declared bounds, prohibited content-category rules,
+and sensitivity ceilings — not a semantic content-scanning capability. See
+section 30.4.
+
 ### 12.2 Confidentiality and minimization
 
 The canonical governance record may retain protected evidence references but
@@ -699,6 +759,55 @@ trusted-time, or notarization calls are not universal hot-path requirements.
 Profiles may require local signing, per-record signing, batched Merkle signing,
 or asynchronous external notarization according to assurance level. They must
 declare latency, outage, key-rotation, revocation, and fail-closed behavior.
+
+**Structural trust versus cryptographic verification boundary (ADH-2026-016).**
+Algorithm-agile carrier fields and structural trust metadata are `CONTRACT_NOW`:
+the canonicalization-method identifier, the digest-algorithm identifier, the
+covered-field descriptor, the signature-algorithm identifier, and the
+structural trust-state fields are versioned data the contract carries without
+selecting any value. The canonicalization algorithm/profile, the exact set of
+digest-covered fields, the signature algorithm, and cryptographic
+product/service selection are **DEFERRED** and remain blocked by **ADR-F13-002**.
+Actual cryptographic verification, signing, HSM, notary, trusted-time, key,
+revocation-distribution, and WORM services are not FEATURE-0013 artifacts.
+Structural fixtures may use opaque deterministic test assertions to validate
+state and failure semantics but must not claim cryptographic validity or select
+an algorithm. When a profile requires verified trust, an unknown, absent,
+expired, revoked, mismatched, or unverified trust state fails closed. RFC 8785
+is illustrative only and cannot be selected by design, tasks, fixtures, or code
+without a later approved decision. See sections 14 and 30.5.
+
+### 12.4 Provider-neutral sensitivity classification vocabulary (ADH-2026-016)
+
+Sensitivity classification uses a single closed, ordered, provider-neutral core
+vocabulary:
+
+```text
+PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED
+```
+
+- The four core values are ordered from least to most sensitive. No fifth core
+  value and no fewer than these four are permitted.
+- Jurisdiction-specific classification labels and caveats (for example national
+  government classification schemes or sector-specific handling markings) are
+  versioned profile mappings onto this core vocabulary, not additional core
+  enum values. Preserving jurisdiction-specific mappings as profile data keeps
+  the contract provider-neutral and avoids enum proliferation.
+- A profile that permits captured evaluator output (or any other captured
+  classified content) must declare all of the following mandatory,
+  profile-bound rules:
+  - a sensitivity **ceiling** (the maximum core value the profile permits);
+  - allowed and prohibited **content-category** rules;
+  - a maximum **field** count;
+  - a maximum **byte** size;
+  - a maximum nesting **depth**;
+  - the allowed value **types**.
+- Missing or unknown mandatory profile values invalidate the profile.
+- A captured value classified above the declared ceiling fails validation.
+
+This vocabulary and its profile-bound rules are structural and typed conformance
+only; they are not a semantic content-scanning capability (see sections 12.1 and
+30.4). See section 30.3.
 
 ## 13. AI-first architecture
 
@@ -732,7 +841,7 @@ available when AI is disabled or disconnected.
 | OMG DMN concepts | Reuse bounded decision-requirements concepts; do not select a DMN engine |
 | CloudEvents | Optional transport mapping only; never the canonical audit or decision record |
 | OpenTelemetry | Correlation and operational telemetry only; never audit authority |
-| RFC 8785 JCS | Candidate canonicalization profile for digests; exact covered fields decided in design |
+| RFC 8785 JCS | Illustrative only (ADH-2026-016); not selected. The canonicalization algorithm/profile and the exact digest-covered fields are DEFERRED under ADR-F13-002 and cannot be selected by design, tasks, fixtures, or code without a later approved decision |
 | DSSE/in-toto and SPDX/CycloneDX concepts | Reuse for signed supply-chain evidence references; do not duplicate their schemas |
 | CEL/OPA/Cedar | Future evaluator candidates behind adapters; no engine-native core types |
 | Workflow/durable execution systems | Later runtime candidates behind operation/orchestration ports |
@@ -769,46 +878,45 @@ must be able to diagnose and recover the system without vendor remote access.
 
 ## 17. Conformance model
 
-The architecture requires executable positive and negative fixtures for:
+The architecture requires executable positive and negative fixtures for the
+following scenarios. Per ADH-2026-016, these scenarios map exactly and
+one-to-one to the stable conformance IDs `F13-CF-01` through `F13-CF-28` in
+their existing order; the IDs must not be merged, renumbered, or omitted.
+Additional `AC-13.7`, scope, security, and compatibility cases use separately
+named IDs and do not alter this canonical count. One fixture may cover multiple
+scenario IDs, but every scenario must have an explicit coverage-matrix entry;
+coverage is counted by scenario ID, not by fixture-file count.
 
-1. simplest synchronous atomic authorization decision;
-2. simplest deterministic denial with actionable rationale and obligations;
-3. pure selection with a typed result and no adjudication facet;
-4. ranking, classification, resolution, allocation, plan, assessment,
-   recommendation, advisory, and simulation profiles;
-5. human-approval asynchronous decision linked to an `Operation`;
-6. maximally complex but bounded hierarchical composite decision;
-7. parallel evaluations with deterministic aggregation;
-8. timeout, missing evidence, evaluator failure, and policy conflict;
-9. idempotent replay and concurrent duplicate requests;
-10. partial decision/audit persistence failure and reconciliation;
-11. supersession, correction, revocation, cycle, and chain-limit behavior;
-12. unauthorized profile, authority, projection, obligation bypass, and
-    cross-scope reference rejection;
-13. offline/air-gapped profile registry, trust, and signed-bundle operation;
-14. export/import across two conforming provider implementations;
-15. AI-disabled operation and AI projection redaction;
-16. graph size, depth, width, fan-out, timeout, and payload budget rejection;
-17. registration of a new decision family without a common-envelope change;
-18. immutable supersession and revocation with calculated effective state;
-19. local atomic decision/audit-obligation acceptance while downstream audit
-    delivery is unavailable;
-20. idempotency retry identity versus semantic decision identity across policy,
-    profile, strategy, authority, evaluator-version, and validity changes;
-21. deterministic replay from captured nondeterministic or AI evaluation output
-    without rerunning the evaluator;
-22. synchronous operation with profile registry and policy resolver unavailable
-    but valid local digest-pinned bundles present;
-23. rejection of unknown, expired, revoked, or digest-mismatched profile bundles;
-24. enforcement denial for unknown or unsupported mandatory obligations;
-25. local authorization artifact cache hit, expiry, revocation, scope mismatch,
-    and stale-policy failure;
-26. cancellation and total remote-call, byte, concurrency, retry, jurisdiction,
-    time, and cost budgets for composite graphs;
-27. local digest plus batched signing/notarization during remote cryptographic-
-    service outage;
-28. disconnected export/import replay, duplicate, ordering, unknown trust root,
-    revoked origin, and explicit conflict reconciliation.
+| Conformance ID | Scenario |
+|---|---|
+| F13-CF-01 | simplest synchronous atomic authorization decision |
+| F13-CF-02 | simplest deterministic denial with actionable rationale and obligations |
+| F13-CF-03 | pure selection with a typed result and no adjudication facet |
+| F13-CF-04 | ranking, classification, resolution, allocation, plan, assessment, recommendation, advisory, and simulation profiles |
+| F13-CF-05 | human-approval asynchronous decision linked to an `Operation` |
+| F13-CF-06 | maximally complex but bounded hierarchical composite decision |
+| F13-CF-07 | parallel evaluations with deterministic aggregation |
+| F13-CF-08 | timeout, missing evidence, evaluator failure, and policy conflict |
+| F13-CF-09 | idempotent replay and concurrent duplicate requests |
+| F13-CF-10 | partial decision/audit persistence failure and reconciliation |
+| F13-CF-11 | supersession, correction, revocation, cycle, and chain-limit behavior |
+| F13-CF-12 | unauthorized profile, authority, projection, obligation bypass, and cross-scope reference rejection |
+| F13-CF-13 | offline/air-gapped profile registry, trust, and signed-bundle operation |
+| F13-CF-14 | export/import across two conforming provider implementations |
+| F13-CF-15 | AI-disabled operation and AI projection redaction |
+| F13-CF-16 | graph size, depth, width, fan-out, timeout, and payload budget rejection |
+| F13-CF-17 | registration of a new decision family without a common-envelope change |
+| F13-CF-18 | immutable supersession and revocation with calculated effective state |
+| F13-CF-19 | local atomic decision/audit-obligation acceptance while downstream audit delivery is unavailable |
+| F13-CF-20 | idempotency retry identity versus semantic decision identity across policy, profile, strategy, authority, evaluator-version, and validity changes |
+| F13-CF-21 | deterministic replay from captured nondeterministic or AI evaluation output without rerunning the evaluator |
+| F13-CF-22 | synchronous operation with profile registry and policy resolver unavailable but valid local digest-pinned bundles present |
+| F13-CF-23 | rejection of unknown, expired, revoked, or digest-mismatched profile bundles |
+| F13-CF-24 | enforcement denial for unknown or unsupported mandatory obligations |
+| F13-CF-25 | local authorization artifact cache hit, expiry, revocation, scope mismatch, and stale-policy failure |
+| F13-CF-26 | cancellation and total remote-call, byte, concurrency, retry, jurisdiction, time, and cost budgets for composite graphs |
+| F13-CF-27 | local digest plus batched signing/notarization during remote cryptographic-service outage |
+| F13-CF-28 | disconnected export/import replay, duplicate, ordering, unknown trust root, revoked origin, and explicit conflict reconciliation |
 
 ## 18. Matrix E v2 — architecture risk register
 
@@ -1633,3 +1741,118 @@ overengineering, Matrix E, and downstream-adoption decisions in this document
 remain in force. Sections 1 through 28, AD-001 through AD-044, and Matrix E
 F13-R01 through F13-R31 are preserved except for the clarified `AuditEvent`
 scope vocabulary controlled by this section.
+
+## 30. ADH-2026-016 contract boundary clarification
+
+### 30.1 Controlling authority
+
+ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the **joint controlling
+handoffs** for FEATURE-0013. ADH-2026-016 (Approved, 2026-07-27, Sanjeev Kumar)
+is a **clarification**: it introduces no new architecture and authorizes no
+runtime capability and no product, provider, or algorithm selection.
+ADH-2026-014 and ADH-2026-015 remain controlling except where ADH-2026-016
+clarifies their previously unresolved contract boundaries. The precise
+relationships are:
+
+- ADH-2026-015 supersedes **only** the earlier six-scope `AuditEvent` statement
+  in ADH-2026-014; all other ADH-2026-014 decisions remain controlling.
+- ADH-2026-016 clarifies the previously unresolved contract boundaries of both
+  ADH-2026-014 and ADH-2026-015 (scope authority, sensitivity vocabulary,
+  security-validation scope, trust boundary, conformance coverage, six-scope
+  evidence disposition, and `DecisionObject` migration) without changing any
+  other decision. The seven-value `ScopeKind` vocabulary approved by
+  ADH-2026-015 is preserved unchanged.
+
+Where any earlier text in this document conflicts with the clarified boundaries
+below, this section is authoritative for those boundaries.
+
+### 30.2 DecisionRecord scope authority
+
+`DecisionRecord` uses FEATURE-0012 `metadata.scopeRef` as its sole logical and
+serialized scope authority. A top-level `DecisionRecord` `scopeRef` or any
+second scope source is removed and prohibited (see the corrected canonical
+example in section 6.1). `Platform` uses an absent/nil `metadata.scopeRef`
+where `Platform` is permitted; every non-Platform scope uses a non-nil
+`metadata.scopeRef` with canonical `ScopeKind` and UID semantics. Duplicate,
+conflicting, alternate, aliased, or parallel scope sources fail validation. A
+canonical nil `metadata.scopeRef` that resolves to `Platform` is not a
+contradictory or duplicate scope. The seven-value `ScopeKind` vocabulary
+approved by ADH-2026-015 (section 29) is preserved.
+
+### 30.3 Provider-neutral sensitivity vocabulary
+
+The closed ordered core sensitivity vocabulary is `PUBLIC < INTERNAL <
+CONFIDENTIAL < RESTRICTED` (section 12.4). Jurisdiction-specific classification
+labels and caveats are versioned profile mappings, not additional core enum
+values. A profile permitting captured evaluator output must declare a
+sensitivity ceiling, allowed/prohibited content-category rules, maximum fields,
+maximum bytes, maximum depth, and allowed value types. Missing or unknown
+mandatory profile values invalidate the profile; captured values above the
+declared ceiling fail validation.
+
+### 30.4 Security validation boundary
+
+FEATURE-0013 owns structural schema validation, typed classification, declared
+bounds, projection restrictions, and deterministic conformance (section 12.1).
+FEATURE-0013 does not claim comprehensive semantic detection of secrets,
+credentials, personal data, malware, or policy violations in arbitrary content.
+Producers must redact prohibited content before submission. Comprehensive
+semantic content scanning and runtime content inspection belong to later
+approved security features. Kiro and Cursor must not invent secret-pattern,
+credential-pattern, PII, malware, DLP, or content-scanning engines in
+FEATURE-0013.
+
+### 30.5 Canonicalization and trust boundary
+
+Algorithm-agile carrier fields and structural trust metadata are `CONTRACT_NOW`
+(section 12.3). The canonicalization algorithm/profile, digest-covered fields,
+signature algorithm, and cryptographic product/service selection are `DEFERRED`
+and remain blocked by **ADR-F13-002**. Actual cryptographic verification,
+signing, HSM, notary, trusted-time, key, revocation-distribution, and WORM
+services are not FEATURE-0013 artifacts. Structural fixtures may use opaque
+deterministic test assertions to validate state and failure semantics but must
+not claim cryptographic validity or select an algorithm. When a profile
+requires verified trust, an unknown, absent, expired, revoked, mismatched, or
+unverified trust state fails closed. RFC 8785 is illustrative only (section 14)
+and cannot be selected by design, tasks, fixtures, or code without a later
+approved decision.
+
+### 30.6 Exact conformance coverage
+
+Section 17 scenarios map exactly and one-to-one to the stable IDs `F13-CF-01`
+through `F13-CF-28` in their existing order. The IDs must not be merged,
+renumbered, or omitted. Additional `AC-13.7`, scope, security, and
+compatibility cases use separately named IDs and do not alter the canonical
+count. One fixture may cover multiple scenario IDs, but every scenario must have
+an explicit coverage-matrix entry; coverage is counted by scenario ID, not by
+fixture-file count. Contract-only fixtures remain pure/in-memory and must not
+implement prohibited runtime systems.
+
+### 30.7 Six-scope evidence disposition
+
+`docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md` is
+SUPERSEDED historical evidence. ADH-2026-015 and
+`docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` are
+authoritative for the seven-value contract. Historical six-scope content is
+preserved but carries an explicit supersession notice and current disposition.
+
+### 30.8 DecisionObject migration
+
+Active normative documents use `DecisionRecord`. Frozen FEATURE-0012 Kiro
+specifications may retain `DecisionObject` only with an explicit artifact-level
+note identifying it as the historical pre-ADH-2026-014 name for the same
+concept; no second schema, Go type, runtime alias, parallel contract, or
+migration implementation is created. Generated context files are regenerated
+from corrected sources and are not edited manually; reconciliation evidence
+distinguishes corrected active normative documents from frozen historical
+artifacts.
+
+### 30.9 Scope and preservation
+
+ADH-2026-016 authorizes no production decision/audit/security/cryptographic/
+profile-registry/synchronization service, no provider-specific component, no
+parallel scope field, no second decision type, adapter interface, queue,
+worker, persistence layer, or product selection. Matrix E identifiers and all
+unaffected ADH-2026-014 and ADH-2026-015 decisions are preserved. Requirements
+return to architecture-remediation status; design, tasks, and implementation
+are not generated or resumed; the superseded design remains non-authoritative.

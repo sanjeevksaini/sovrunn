@@ -158,7 +158,7 @@ Phase 2 must not define or invoke the complete plugin execution chain.
 
 A record may reference the others, but they must not be collapsed into one object.
 
-> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. ADH-2026-015 supersedes the earlier six-scope statement: `ScopeKind` has seven canonical values, `AuditEvent` permits all seven, and `metadata.scopeRef` is its sole scope identity.
+> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. ADH-2026-015 supersedes the earlier six-scope statement: `ScopeKind` has seven canonical values, `AuditEvent` permits all seven, and `metadata.scopeRef` is its sole scope identity. ADH-2026-016 (Approved 2026-07-27) clarifies FEATURE-0013 contract boundaries without new architecture: `DecisionRecord` also uses `metadata.scopeRef` as its sole scope authority (no top-level or parallel scope source); a closed ordered provider-neutral sensitivity vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; a structural-only security-validation boundary; a structural-trust versus deferred-cryptographic boundary (ADR-F13-002; RFC 8785 illustrative only); and exact conformance coverage `F13-CF-01`–`F13-CF-28`. ADH-2026-014, ADH-2026-015, and ADH-2026-016 are joint controlling.
 
 ### Invariant I — Explainability is structured
 

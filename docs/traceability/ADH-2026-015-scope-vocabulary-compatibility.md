@@ -7,6 +7,7 @@ feature_id: FEATURE-0013
 controlling_handoffs:
   - ADH-2026-014
   - ADH-2026-015
+  - ADH-2026-016
 depends_on:
   - FEATURE-0012
 ai_load_priority: high
@@ -21,9 +22,30 @@ This document records read-only compatibility analysis for applying approved
 handoff **ADH-2026-015** (Scope Vocabulary Clarification) to FEATURE-0013. It
 is documentation and evidence only.
 
-- Controlling handoffs: **ADH-2026-014** (Approved, 2026-07-27) and
-  **ADH-2026-015** (Approved, 2026-07-27). ADH-2026-015 supersedes only the
-  earlier six-scope `AuditEvent` statement in ADH-2026-014; all other
+**This document is authoritative for the seven-value `ScopeKind`/`AuditEvent`
+contract** (the canonical values `Platform`, `Organization`, `OrganizationUnit`,
+`Tenant`, `Project`, `Provider`, `ServiceInstance`; `metadata.scopeRef` as the
+sole `AuditEvent` scope identity; the additive `ServiceInstance`; and the
+retained `Provider`). It supersedes the six-scope compatibility evidence in
+`docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md`, which is
+retained only as superseded historical evidence.
+
+**ADH-2026-016 relationship.** ADH-2026-016 (Approved, 2026-07-27) does **not**
+change this seven-value contract. It is referenced here only for the **newly
+clarified boundaries** it added on top of the seven-value contract:
+`DecisionRecord` `metadata.scopeRef` as the sole scope authority (no top-level
+or parallel scope source), the provider-neutral sensitivity vocabulary, the
+structural-only security-validation boundary, the structural-trust versus
+deferred-cryptographic boundary (ADR-F13-002), the exact conformance coverage
+`F13-CF-01` through `F13-CF-28`, and the SUPERSEDED disposition of the six-scope
+evidence. See `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
+section 30.
+
+- Controlling handoffs: **ADH-2026-014** (Approved, 2026-07-27),
+  **ADH-2026-015** (Approved, 2026-07-27), and **ADH-2026-016** (Approved,
+  2026-07-27). ADH-2026-015 supersedes only the earlier six-scope `AuditEvent`
+  statement in ADH-2026-014; ADH-2026-016 clarifies previously unresolved
+  contract boundaries without changing the seven-value contract; all other
   ADH-2026-014 decisions remain controlling.
 - Evidence status: **PENDING_IMPLEMENTATION_EVIDENCE**.
 - Requirements status dependency: continued design, tasks, and implementation

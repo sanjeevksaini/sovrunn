@@ -13,7 +13,7 @@ ai_summary: Dependency-safe Phase 2 feature sequence for Me + AI chain execution
 |---:|---|---|---|
 | 1 | FEATURE-0011 Reuse Assessment Standard | Phase 1 baseline | Reuse/Wrap/Extend/Build gate for every feature. |
 | 2 | FEATURE-0012 API, Resource Naming, Status, and Validation Standard | FEATURE-0011 | Common resource shape and API boundary classification. |
-| 3 | FEATURE-0013 Decision Record and AuditEvent Standard | FEATURE-0012 | Common decision/audit schema (DecisionRecord envelope, canonical seven-value ScopeKind, and AuditEvent via metadata.scopeRef). |
+| 3 | FEATURE-0013 Decision Record and AuditEvent Standard | FEATURE-0012 | Common decision/audit schema (DecisionRecord envelope, canonical seven-value ScopeKind, and both DecisionRecord and AuditEvent scope via metadata.scopeRef as sole scope authority per ADH-2026-016). |
 | 4 | FEATURE-0014 Provider-Neutral Resource Model | FEATURE-0012 | Provider, location, datacenter, failure domain, IaaS stack. |
 | 5 | FEATURE-0015 ResourcePool and ProviderCapability Model | FEATURE-0014 | Placement and compatibility boundary. |
 | 6 | FEATURE-0016 Adapter Boundary Foundation | FEATURE-0012, FEATURE-0013 | Interfaces/placeholders for mature OSS reuse. |
