@@ -1,7 +1,7 @@
 ---
 doc_type: architecture
 title: FEATURE-0013 Decision Record and AuditEvent Standard
-status: pending-human-architecture-review
+status: approved-for-kiro-requirements
 phase: 2
 feature_id: FEATURE-0013
 ai_load_priority: always
@@ -12,19 +12,25 @@ ai_summary: Provider-neutral, sovereign-ready architecture for extensible Decisi
 
 ## 1. Decision status and authority
 
-This document is the proposed architecture input from which Kiro may generate
-FEATURE-0013 requirements, design, and tasks. It is not an implementation
-specification and does not authorize runtime execution.
+This document is the approved architecture input from which Kiro may generate
+FEATURE-0013 requirements only. It is not an implementation specification and
+does not authorize design, tasks, source code, or runtime execution.
 
-The architecture owner must approve the decisions marked **Approve with
-revision** in the scorecard before this becomes the controlling baseline.
+Human architecture review status: **APPROVED_FOR_KIRO_REQUIREMENTS**.
 
-Human review status: **PENDING_HUMAN_REVIEW**.
+- Reviewer: Sanjeev Kumar
+- Decision date: 2026-07-27
+- Controlling handoff: ADH-2026-014
 
-This document is a proposed FEATURE-0013 architecture baseline. It does not
-become controlling input for Kiro requirements until the architecture owner
-records the required terminology, compatibility, decision-scorecard, Matrix E,
-scope, and traceability decisions.
+The reviewer approves AD-001 through AD-044, the two controlled baseline
+corrections, contract-only Phase 2 scope, anti-overengineering guardrails,
+lightweight downstream adoption contract, and the proposed treatment,
+verification, ownership, and reassessment plans for Matrix E F13-R01 through
+F13-R31. This architecture approval does not accept final residual risk. Final
+per-risk residual acceptance remains pending implementation evidence and human
+semantic review. F13-R04, F13-R08, and F13-R13 remain explicitly open at target
+High residual level and require reassessment before their corresponding
+production capabilities are enabled.
 
 ### 1.1 Change classification
 
@@ -35,8 +41,9 @@ Phase 2 spine:
 2. `AuditEvent` scope is expanded from the FEATURE-0012 Organization-only alpha
    profile to the six governance scopes already established by FEATURE-0012.
 
-Both changes require architecture change control and traceability to affected
-documents. Until approved, `DecisionObject` remains the controlling spine term.
+ADH-2026-014 approves both changes for FEATURE-0013 requirements generation.
+The affected spine, baseline, RFC, feature-index, traceability, and compatibility
+updates remain required before implementation proceeds.
 
 ## 2. Problem statement
 
@@ -812,7 +819,7 @@ requires a later owner and trigger; it does not mean accepted.
 The residual levels below are architecture targets after the stated controls,
 not human acceptance.
 
-| ID | Category | Risk scenario | ADs | Inherent L×I | FEATURE-0013 controls | Verification/detection | Target residual | Treatment | Residual/later owner | Reassessment trigger | Status |
+| ID | Category | Risk scenario | ADs | Inherent L×I | FEATURE-0013 controls | Verification/detection | Target residual | Treatment | Residual/later owner | Reassessment trigger | Final residual status |
 |---|---|---|---|---:|---|---|---:|---|---|---|---|
 | F13-R01 | Governance/compatibility | Later features create overlapping `DecisionProfile` semantics | AD-029, AD-030 | 4×4 High | Governed registration, ownership, reuse review, compatibility | Duplicate-profile and new-family fixtures | 2×3 Medium | MITIGATE | Architecture owner | New profile family or stable promotion | PENDING_HUMAN_REVIEW |
 | F13-R02 | Correctness | Typed results become an ungoverned property bag or override the envelope | AD-002, AD-029 | 4×4 High | Versioned result schemas; semantic-override prohibition | Schema and negative conformance | 2×4 Medium | MITIGATE | FEATURE-0013 owner | New result extension mechanism | PENDING_HUMAN_REVIEW |
@@ -846,10 +853,27 @@ not human acceptance.
 | F13-R30 | Cost/sovereignty | High-assurance controls make small or local deployments unaffordable | AD-016, AD-017, AD-041 | 3×4 High | Tiered conformance and assurance profiles; no universal remote dependencies | Minimal/regulated/sovereign profile cost fixtures | 2×3 Medium | MITIGATE | Deployment architecture owner | New mandatory assurance control | PENDING_HUMAN_REVIEW |
 | F13-R31 | Governance/cost | Downstream adoption governance becomes duplicative bureaucracy or a premature registry framework | AD-044 | 4×3 High | One normative contract, one short per-feature section, one lightweight gate; trigger-based escalation only | Changed-file/gate review; absence of manifests, registry, index, and separate approval workflow | 1×3 Low | AVOID | Architecture governance owner | Repeated semantic drift or structured-manifest trigger in section 28.8 | PENDING_HUMAN_REVIEW |
 
-### 18.4 Per-risk human acceptance record
+### 18.4 Architecture-stage treatment approval
 
-The human reviewer must complete one record per risk; a global approval does
-not accept unreviewed risks.
+- Reviewer: Sanjeev Kumar
+- Decision date: 2026-07-27
+- Decision: `APPROVE_TREATMENT` for F13-R01 through F13-R31
+- Scope: approve the risks as requirements inputs together with their proposed
+  controls, verification plans, target residual levels, ownership roles, and
+  reassessment triggers
+- Explicitly open High target-residual risks: F13-R04, F13-R08, F13-R13
+- Final residual-risk decision: `PENDING_HUMAN_REVIEW`
+
+This approval authorizes Kiro to preserve the risk controls as requirements. It
+does not assert that controls have been implemented, does not accept residual
+risk, and does not authorize a production capability. Final residual decisions
+require implementation evidence and the per-risk record below.
+
+### 18.5 Final per-risk residual acceptance record
+
+At final feature review, the human reviewer must complete one record per risk;
+architecture treatment approval and a global feature approval do not accept
+unreviewed residual risks.
 
 ```yaml
 risk_id: F13-Rxx
@@ -873,7 +897,7 @@ verification evidence, and blank human-only fields. Automated PASS, architecture
 approval, reuse approval, or prior-feature acceptance is not residual-risk
 acceptance.
 
-### 18.5 Risk traceability lifecycle
+### 18.6 Risk traceability lifecycle
 
 ```text
 architecture.md Matrix E source
@@ -1016,14 +1040,16 @@ architecture owner records:
 4. confirmation of runtime-neutral Phase 2 scope;
 5. acceptance or revision of AD-001 through AD-044;
 6. acceptance of the sovereign deployment profile model;
-7. an explicit `ACCEPT`, `REJECT`, or `DEFER` decision for every Matrix E risk
-   F13-R01 through F13-R31, with no blank or global-only acceptance;
-8. residual likelihood, impact, level, rationale, owner, corrective path,
-   reassessment trigger, acceptance expiry, reviewer, date, and reviewed
-   evidence for every accepted risk;
-9. a later owner and feature/milestone for every deferred risk;
-10. the additional required owners and time bounds for every High residual risk,
-    and no accepted Critical correctness or security residual risk;
+7. architecture-stage `APPROVE_TREATMENT`, `REJECT`, or `DEFER` decisions are
+   recorded for Matrix E F13-R01 through F13-R31;
+8. controls, target residual levels, ownership roles, corrective paths,
+   reassessment triggers, reviewer, and date are recorded as requirements
+   inputs without claiming implementation evidence;
+9. F13-R04, F13-R08, and F13-R13 remain explicitly open with later owners,
+   production-entry gates, and reassessment triggers;
+10. final per-risk residual acceptance remains a mandatory human gate after
+    implementation evidence and is not a prerequisite for requirements
+    generation;
 11. Kiro requirements, design, and tasks pass every anti-overengineering
     guardrail in section 27;
 12. the lightweight downstream-adoption contract in section 28 is preserved

@@ -3,11 +3,11 @@ doc_type: architecture_decision_handoff
 handoff_id: ADH-2026-014
 feature: FEATURE-0013
 title: Decision Record and AuditEvent Standard
-status: Proposed
+status: Approved
 classification: Extension
 phase: 2
-approval_date: null
-approving_role: null
+approval_date: 2026-07-27
+approving_role: Sovrunn Architecture Owner
 ---
 
 # ADH-2026-014 — FEATURE-0013 Decision Record and AuditEvent Standard
@@ -20,8 +20,8 @@ approving_role: null
 - Related feature: FEATURE-0013
 - Related phase: Phase 2, with cross-phase contract applicability
 - Author: ChatGPT architecture synthesis with Sovrunn project owner
-- Human approver: _PENDING_HUMAN_REVIEW_
-- Approval status: Proposed
+- Human approver: Sanjeev Kumar
+- Approval status: Approved
 
 ## Decision title
 
@@ -88,8 +88,10 @@ Relevant baseline references:
 
 ## Decision or proposed decision
 
-Subject to recorded human approval of AD-001 through AD-044 and Matrix E risks
-F13-R01 through F13-R31:
+The Sovrunn Architecture Owner approves AD-001 through AD-044 and the
+architecture-stage treatment plans for Matrix E F13-R01 through F13-R31 as
+requirements inputs. Final residual-risk acceptance remains pending
+implementation evidence and final human semantic review.
 
 1. Use `DecisionRecord` as the immutable common governed-conclusion envelope;
    retain `EvaluationResult`, `AuditEvent`, `Operation`, and `DecisionContext`
@@ -210,27 +212,28 @@ standard into a premature production platform.
 
 ## Conflict check
 
-- Conflicts with accepted DEC/RFC: Yes, two controlled baseline deltas require
-  approval.
+- Conflicts with accepted DEC/RFC: Yes, two controlled baseline deltas are
+  approved by this handoff and require coordinated baseline updates.
 - Conflicting or incomplete baseline statements:
   - the Phase 2 spine uses `DecisionObject`; this proposal uses
     `DecisionRecord`.
   - the FEATURE-0012 alpha `AuditEvent` profile is Organization-only; this
     proposal requires six formal governance scopes.
 - Resolution required:
-  - approve this ADH;
+  - apply this approved ADH;
   - update the architecture spine, current baseline, current decision summary,
     RFC, feature index, traceability, and relevant gates;
   - preserve compatibility and migration evidence.
 
 ## Required action
 
-- Approve, reject, or defer AD-001 through AD-044.
-- Complete per-risk Matrix E disposition for F13-R01 through F13-R31.
-- Approve or reject the `DecisionRecord` terminology correction.
-- Approve or reject the six-scope `AuditEvent` correction.
+- Preserve approved AD-001 through AD-044 in requirements traceability.
+- Preserve the approved architecture-stage treatment plans for Matrix E
+  F13-R01 through F13-R31; do not claim final residual acceptance.
+- Apply the approved `DecisionRecord` terminology correction.
+- Apply the approved six-scope `AuditEvent` correction.
 - Validate this handoff with `make arch-handoff-check`.
-- After approval, update the canonical architecture status to
+- Keep the canonical architecture status
   `approved-for-kiro-requirements` and record this handoff as controlling.
 - Update baseline, RFC, feature-index, traceability, agent-loading, and gate
   references.
@@ -268,13 +271,14 @@ standard into a premature production platform.
 ## Acceptance criteria for Kiro update
 
 - [ ] Handoff validated against Architecture Operating System files.
-- [ ] Approval status is Approved with human approver and date before Kiro uses
-      it as controlling input.
+- [ ] Approval status, human approver, and date are preserved when Kiro uses it
+      as controlling input.
 - [ ] Canonical architecture status is `approved-for-kiro-requirements`.
 - [ ] AD-001 through AD-044 are preserved by reference or testable requirement
       coverage without being silently changed.
 - [ ] Matrix E F13-R01 through F13-R31 IDs, controls, verification, ownership,
-      and human dispositions are preserved.
+      architecture-stage treatment approvals, open High risks, and pending final
+      residual dispositions are preserved.
 - [ ] `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`,
       `Operation`, and `DecisionContext` remain distinct.
 - [ ] Simple and bounded complex use cases are covered without authorizing a
@@ -311,10 +315,16 @@ standard into a premature production platform.
 
 ## Human approval
 
-- Approval status: Proposed
-- Approved by: _PENDING_HUMAN_REVIEW_
-- Date: _PENDING_HUMAN_REVIEW_
+- Approval status: Approved
+- Approved by: Sanjeev Kumar
+- Date: 2026-07-27
 - Notes:
-  - This file stages the proposed handoff only.
-  - It does not accept Matrix E residual risk.
-  - It does not authorize Kiro requirements until separately human-approved.
+  - AD-001 through AD-044 are approved as the controlling architecture for
+    FEATURE-0013 requirements.
+  - Matrix E F13-R01 through F13-R31 treatment, control, verification,
+    ownership, and reassessment plans are approved as requirements inputs.
+  - F13-R04, F13-R08, and F13-R13 remain open at target High residual level and
+    require reassessment before corresponding production capabilities.
+  - This approval does not accept final Matrix E residual risk.
+  - This approval authorizes Kiro to generate `requirements.md` only; it does
+    not authorize design, tasks, implementation, or runtime selection.
