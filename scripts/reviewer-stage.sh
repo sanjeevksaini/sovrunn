@@ -63,6 +63,7 @@ if feature == "FEATURE-0013":
     feature_evidence_paths = [
         Path("docs/traceability/ADH-2026-014-terminology-reconciliation.md"),
         Path("docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md"),
+        Path("docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md"),
     ]
 
 missing_feature_evidence = [
