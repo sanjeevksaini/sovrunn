@@ -62,7 +62,7 @@ This feature owns:
 
 ### 1.3 Phase 2 scope constraint
 
-FEATURE-0013 is contract-only within Phase 2. It defines schemas, vocabularies, validation, conformance fixtures, and documentation. It does not implement a production decision service, audit service, persistence layer, orchestration runtime, or any provider-specific adapter.
+FEATURE-0013 is contract-only within Phase 2. It defines schemas, vocabularies, validation, conformance fixtures, and documentation. It does not implement a production decision service, audit service, persistence layer, orchestration runtime, or any provider-specific adapter. It also does not define `EvaluatorAdapter`, `PolicyEngineAdapter`, `IdentityProviderAdapter`, `SecretProviderAdapter`, `ObservabilityAdapter`, or any shared adapter interface; those interfaces are owned by FEATURE-0016 or the later owning feature. FEATURE-0013 owns only the normalized `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, validation, and adapter-facing data requirements. Adapter names appearing in this document are illustrative future consumers/producers only and generate no interface or implementation artifact here (DEC-0036 boundary intent preserved).
 
 ### 1.4 Terminology correction
 
@@ -83,8 +83,9 @@ Per ADH-2026-015 approval, `AuditEvent` scope is expanded from the FEATURE-0012 
 
 ### 1.6 Controlling references
 
-- ADH-2026-014 (Approved, 2026-07-27)
+- ADH-2026-014 (Approved, 2026-07-27) and ADH-2026-015 (Approved, 2026-07-27) — joint controlling handoffs. ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement; all other ADH-2026-014 decisions remain controlling.
 - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
+- `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`
 - DEC-0026 — Reuse Before Build
 - DEC-0036 — Adapter Boundaries Before External Integration
 - RFC-0023 — Decision and Audit Standard
@@ -100,7 +101,7 @@ Per ADH-2026-015 approval, `AuditEvent` scope is expanded from the FEATURE-0012 
 | DecisionRationale | Structured reasons, alternatives, obligations, warnings, and corrective suggestions embedded in a decision. |
 | DecisionRequest | Bounded request to decide, with context references and constraints. |
 | DecisionContext | Sanitized, policy-governed projection for AI and human explanation. Owned by FEATURE-0025. |
-| AuditEvent | Immutable accountability record of actor/action/subject/outcome, scoped through `metadata.scopeRef` at one of the seven canonical `ScopeKind` values: `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, or `ServiceInstance` (ADH-2026-015; section 17 authoritative). `metadata.scopeRef` is the sole canonical scope identity. |
+| AuditEvent | Immutable accountability record of actor/action/subject/outcome, scoped through `metadata.scopeRef` at one of the seven canonical `ScopeKind` values: `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, or `ServiceInstance` (ADH-2026-015; section 17 authoritative). `metadata.scopeRef` is the sole logical and serialized scope authority; the canonical `Platform` form is an absent/nil `metadata.scopeRef` (FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`). |
 | Decision Form | Primary semantic shape of a decision: adjudication, selection, ranking, classification, resolution, allocation, plan, assessment, or recommendation. |
 | Decision Authority | Whether the decision is authoritative, advisory, recommendation, or simulation. |
 | Composition Strategy | Versioned, registered algorithm for combining bounded evaluation results into a decision. |
@@ -201,7 +202,7 @@ As a developer of a downstream feature, I need a lightweight adoption contract w
 - AC-21: Every meaningful decision links to at least one `AuditEvent`. A single audit event may reference a decision, operation, actor, subject, resource, request, trace, and parent event. A "meaningful decision" is one that produces a durable `DecisionRecord`; ephemeral governed authorization evaluations that satisfy AC-40's aggregation profile are not individually persisted as `DecisionRecord` instances and therefore do not individually satisfy AC-21. Their audit evidence is governed by the aggregation profile's audit obligation, not by per-event `DecisionRecord` linkage. The distinction is: AC-21 applies to every persisted `DecisionRecord`; AC-40 defines which authorization events require durable `DecisionRecord` persistence versus governed aggregation.
 - AC-22: A final decision must not be reported as durably recorded until its immutable `DecisionRecord` and its required audit obligation are atomically accepted by the same local persistence boundary.
 - AC-23: The atomic boundary preallocates the immutable `AuditEvent` identity and stores that identity in both the `DecisionRecord` reference and audit obligation. Asynchronous materialization uses the same identity without mutating the `DecisionRecord`.
-- AC-24: `AuditEvent` supports all seven canonical `ScopeKind` values expressed through `metadata.scopeRef`: `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and `ServiceInstance` (ADH-2026-015). `metadata.scopeRef` is the sole canonical scope identity; no parallel `AuditEvent` scope enum or independently mutable scope field is permitted. SV-AC-01 through SV-AC-09 (section 17) expand on and are authoritative for this criterion.
+- AC-24: `AuditEvent` supports all seven canonical `ScopeKind` values through `metadata.scopeRef`: `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and `ServiceInstance` (ADH-2026-015). `metadata.scopeRef` is the sole logical and serialized scope authority; no parallel `AuditEvent` scope enum, presence flag, `AuditScope` type, discriminator, alias, or independently mutable scope field is permitted. Per FEATURE-0012 `NormalizeScope` (`internal/apimeta/scope.go:84-92`) and `CanonicalScopeIdentity` (`internal/apimeta/scope.go:107-112`), the canonical form of `Platform` scope is an absent/nil `metadata.scopeRef`: an absent `scopeRef` resolves deterministically to `Platform` where the contract permits `Platform`, and returns the stable required-scope error where it does not (absence is not automatically valid). Every non-Platform scope requires a non-nil `metadata.scopeRef` with canonical kind and UID semantics inherited from FEATURE-0012. SV-AC-01 through SV-AC-09 (section 17) expand on and are authoritative for this criterion.
 - AC-25: Audit outcomes are separate from decision outcomes: `Succeeded`, `Denied`, `Failed`. Successfully producing a `DENIED` adjudication is audit outcome `Succeeded`.
 
 ### 4.8 Execution model invariants (INVARIANT_FOR_LATER)
@@ -247,12 +248,14 @@ As a developer of a downstream feature, I need a lightweight adoption contract w
 - AC-44: Different authorized projections serve customer, operator, auditor, regulator, provider, and AI consumers. Redaction is field- and reason-aware.
 - AC-45: Canonical serialization and content digests are supported. Deployment profiles may require signatures, trusted timestamps, append-only/WORM retention, or external notarization. The contract remains algorithm-agile.
 
-### 4.14 AI governance (CONTRACT_NOW)
+### 4.14 AI governance invariants (INVARIANT_FOR_LATER)
 
-- AC-46: AI consumers receive only authorized `DecisionContext` projections. They may explain, summarize, identify anomalies, and suggest remediation through normal approval.
-- AC-47: AI must not mutate records, invent evidence, suppress audit, widen disclosure, bypass approval, or execute a suggestion.
-- AC-48: AI-generated recommendations are labelled with model/provider/version, prompt-template version, data boundary, confidence, and human-review status.
-- AC-49: Core decisions remain available and correct when AI is disabled or disconnected.
+AC-46 through AC-49 constrain the behavior of a later AI consumer and AI runtime. The `DecisionContext` schema, the AI consumer, prompt/model integration, the model client, the AI runtime, and any production projection service are owned by FEATURE-0025 or the later owning feature. FEATURE-0013 does **not** define or implement them. FEATURE-0013 owns only the `DecisionProfile` projection constraints, authorized-projection semantics, references, labels, and non-executing conformance data that `DecisionRecord` and `AuditEvent` require; those genuinely FEATURE-0013-owned contract elements remain CONTRACT_NOW and are carried by AC-08 (DecisionProfile schema) and the projection semantics in SEC-09 and SEC-13. AC-46 through AC-49 themselves generate no FEATURE-0013 runtime or schema implementation task beyond documentation and non-executing conformance placeholders.
+
+- AC-46: (INVARIANT_FOR_LATER) A later AI consumer receives only an authorized `DecisionContext` projection. It may explain, summarize, identify anomalies, and suggest remediation through normal approval. The authorized-projection constraint fields that a `DecisionProfile` declares are CONTRACT_NOW (AC-08); the `DecisionContext` schema and AI consumer are owned by FEATURE-0025.
+- AC-47: (INVARIANT_FOR_LATER) A later AI consumer must not mutate records, invent evidence, suppress audit, widen disclosure, bypass approval, or execute a suggestion. This constrains later AI-runtime behavior, not a FEATURE-0013 artifact.
+- AC-48: (INVARIANT_FOR_LATER) AI-generated recommendations are labelled with model/provider/version, prompt-template version, data boundary, confidence, and human-review status. The label/field schema a `DecisionProfile` or `DecisionRecord` may carry is CONTRACT_NOW (AC-08); producing the labelled recommendation is later AI-runtime behavior owned by FEATURE-0025.
+- AC-49: (INVARIANT_FOR_LATER) Core decisions remain available and correct when AI is disabled or disconnected. This is a runtime invariant a later implementation must satisfy; FEATURE-0013 proves it only through non-executing conformance placeholders (EC-09).
 
 ### 4.15 Conformance fixtures (CONTRACT_NOW)
 
@@ -267,7 +270,7 @@ As a developer of a downstream feature, I need a lightweight adoption contract w
 - AC-51: Every canonical schema has explicit version and compatibility rules.
 - AC-52: Decision form, authority, adjudication, typed-result, reason-code, obligation, strategy, and digest semantics cannot change silently. Readers reject unsupported major versions.
 - AC-53: Registries for decision profile, form, authority, evaluator type, strategy, reason code, obligation, event type, evidence type, and projection are versioned and governable offline.
-- AC-54: Per ADH-2026-015, `AuditEvent` expansion requires compatibility fixtures for all seven canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`), separate regression fixtures for the six pre-existing FEATURE-0012 `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`), and a documented alpha compatibility decision.
+- AC-54: Per ADH-2026-015, `AuditEvent` expansion requires compatibility fixtures for all seven canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`), separate regression fixtures for the six pre-existing FEATURE-0012 `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`), and a documented alpha compatibility decision. The `Platform` positive fixture uses the canonical absent/nil `metadata.scopeRef` form; a negative fixture must assert that an absent `metadata.scopeRef` is rejected with the stable required-scope error under a contract that does not permit `Platform`.
 
 ### 4.17 Downstream adoption contract (CONTRACT_NOW)
 
@@ -397,9 +400,9 @@ FEATURE-0013 must not implement:
 - Reused or external responsibility: DMN composition concepts, OpenTelemetry correlation, RFC 8785 canonicalization, FEATURE-0012 grammar
 - Data crossing the boundary: Evaluation results enter through normalized adapter contracts; external evidence enters as digest references
 - Control crossing the boundary: Profile, strategy, and evaluator definitions enter through governed registration; runtime evaluator calls cross through adapter ports
-- Adapter required: Yes
-- Adapter rationale: External evaluators, policy engines, identity providers, evidence stores, and cryptographic services are accessed through adapters per DEC-0036
-- Adapter or contract identifier: EvaluatorAdapter, PolicyEngineAdapter, IdentityProviderAdapter, SecretProviderAdapter, ObservabilityAdapter (contracts defined; implementation deferred)
+- Adapter required: Yes — the adapter boundary applies, but the adapter interfaces are not owned by FEATURE-0013.
+- Adapter rationale: External evaluators, policy engines, identity providers, secret providers, evidence stores, and observability/cryptographic services are accessed through adapters per DEC-0036. FEATURE-0013 owns only the normalized data that crosses that boundary — `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, their validation, and adapter-facing data requirements — not the adapter interfaces.
+- Adapter or contract identifier: `EvaluatorAdapter`, `PolicyEngineAdapter`, `IdentityProviderAdapter`, `SecretProviderAdapter`, and `ObservabilityAdapter` are named as illustrative future consumers/producers only. FEATURE-0013 does not define these interfaces or any shared adapter interface; they are owned by FEATURE-0016 or the later owning feature, and no interface or implementation artifact for them is generated in FEATURE-0013. DEC-0036 boundary intent is preserved.
 - Vendor-native types allowed: No
 
 #### Suitability
@@ -475,8 +478,8 @@ FEATURE-0013 must not implement:
 
 | Classification | Acceptance criteria |
 |---|---|
-| CONTRACT_NOW | AC-01 through AC-07, AC-08 through AC-16, AC-17 through AC-25, AC-36 through AC-58 |
-| INVARIANT_FOR_LATER | AC-26 through AC-35, AC-59 through AC-61 |
+| CONTRACT_NOW | AC-01 through AC-25, AC-36 through AC-45, AC-50 through AC-58 |
+| INVARIANT_FOR_LATER | AC-26 through AC-35, AC-46 through AC-49, AC-59 through AC-61 |
 | DEFERRED | Production persistence pattern, workflow/orchestration runtime, evidence store, identity provider, key manager, jurisdiction-specific values, provider adapters, AI runtime, canonicalization/signature profiles, cross-site topology |
 
 ### 11.3 Security requirements classification
@@ -625,7 +628,7 @@ The traceability record is structurally complete. The previously identified defe
 | PRE-01 (repository-wide DecisionObject audit) | SATISFIED | `docs/traceability/ADH-2026-014-terminology-reconciliation.md` "Corrected normative files" table lists 11 normative files audited with all four columns complete; "Files intentionally NOT corrected" lists 7 excluded with rationale; "Verification" section states PRE-01 Complete. DGA-01 re-verified: PASS. |
 | PRE-02 (each occurrence corrected or aliased) | SATISFIED | Same traceability record confirms all normative uses replaced; historical/non-goal references documented as intentionally retained with explicit rationale per file. DGA-01 re-verified: PASS. |
 | PRE-03 (traceability record exists) | SATISFIED | `docs/traceability/ADH-2026-014-terminology-reconciliation.md` exists at the canonical path, lists every changed file, prior term, corrected term, and rationale. All table rows structurally complete. DGA-01 re-verified: PASS. |
-| PRE-05 (seven-value AuditEvent scope correction documented) | EVIDENCE_RECORDED | ADH-2026-015 and section 17 document the canonical seven-value ScopeKind and AuditEvent contract. The controlling Phase 2 spine, acceptance gates, current baseline, decision summary, RFC, feature index, and traceability matrix are synchronized to ADH-2026-015. Historical ADH-2026-014 six-scope evidence remains preserved as superseded compatibility history. |
+| PRE-05 (seven-value AuditEvent scope correction documented) | EVIDENCE_RECORDED | ADH-2026-015 and section 17 document the canonical seven-value ScopeKind and AuditEvent contract, including the canonical absent/nil `Platform` form. The controlling Phase 2 spine, acceptance gates, current baseline, decision summary, RFC, feature index, and traceability matrix identify ADH-2026-014 and ADH-2026-015 as the joint controlling handoffs and record the seven-value contract at the documentary level. Schema, Go-binding, validator, and fixture synchronization remains an obligation pending implementation evidence and is not claimed complete. Historical ADH-2026-014 six-scope evidence remains preserved as superseded compatibility history. |
 | PRE-07 (alpha compatibility decision recorded with approval) | EVIDENCE_RECORDED | ADH-2026-015 approves the seven-value `ScopeKind`/`AuditEvent` correction (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance` via `metadata.scopeRef`), superseding the earlier ADH-2026-014 six-scope statement. Human approval: Sanjeev Kumar, 2026-07-27. The superseded ADH-2026-014 approval remains recorded in `docs/reviews/architecture-decision-handoffs/ADH-2026-014-feature-0013-decision-record-and-auditevent-standard.md` and `docs/traceability/ADH-2026-014-terminology-reconciliation.md` as compatibility history. |
 | Section 12.4: PHASE2_ARCHITECTURE_SPINE.md | EVIDENCE_RECORDED | Uses DecisionRecord terminology and the canonical seven-value ScopeKind; AuditEvent permits all seven through metadata.scopeRef as sole scope identity. The earlier ADH-2026-014 six-scope statement is explicitly identified as superseded. |
 | Section 12.4: CURRENT_ARCHITECTURE_BASELINE.md | EVIDENCE_RECORDED | Records ADH-2026-015 as the latest controlled update, the seven canonical ScopeKind values, all-seven AuditEvent applicability, and metadata.scopeRef as sole scope identity. |
@@ -633,7 +636,7 @@ The traceability record is structurally complete. The previously identified defe
 | Section 12.4: RFC-0023-decision-and-audit-standard.md | EVIDENCE_RECORDED | Uses DecisionRecord terminology and records ADH-2026-014 and ADH-2026-015 as joint controlling handoffs with the seven-value scope contract. |
 | Section 12.4: FEATURE_INDEX.md | EVIDENCE_RECORDED | FEATURE-0013 uses the canonical Decision Record title and identifies ADH-2026-014 and ADH-2026-015 as joint controlling handoffs. |
 | Section 12.4: FEATURE_TRACEABILITY_MATRIX.md | EVIDENCE_RECORDED | FEATURE-0013 records the seven-value ScopeKind, all-seven AuditEvent applicability, metadata.scopeRef sole authority, ADH-2026-015 compatibility evidence, and pending fresh requirements review. |
-| Section 12.4: PHASE2_ACCEPTANCE_GATES.md | EVIDENCE_RECORDED | FEATURE-0013 gates require the canonical seven-value ScopeKind, all-seven AuditEvent fixtures, six-value FEATURE-0012 regression coverage, and metadata.scopeRef as sole scope identity. |
+| Section 12.4: PHASE2_ACCEPTANCE_GATES.md | EVIDENCE_RECORDED | FEATURE-0013 gates identify ADH-2026-014 and ADH-2026-015 as joint controlling handoffs (ADH-2026-015 superseding only the earlier six-scope statement) and require the canonical seven-value ScopeKind, all-seven AuditEvent fixtures (canonical absent/nil `Platform`, non-Platform via `metadata.scopeRef`), a negative absence-when-`Platform`-disallowed fixture, six-value FEATURE-0012 regression coverage, and `metadata.scopeRef` as sole scope authority. Schema/binding/validator/fixture synchronization remains pending implementation evidence. |
 | Terminology-reconciliation traceability record exists (section 12.2.1) | SATISFIED | `docs/traceability/ADH-2026-014-terminology-reconciliation.md` exists at canonical path. Structure is complete: all 11 rows have four columns; 7 excluded files documented with rationale; PRE-01/02/03 marked Complete. DGA-01 re-verified: PASS. |
 | FEATURE-0012 dependency readiness (section 13.4) | EVIDENCE_RECORDED | DEP-01 through DEP-04 all satisfied per section 13.7. |
 
@@ -685,7 +688,7 @@ Before FEATURE-0013 may progress from requirements to design, the following dete
 - Verify: `docs/rfc/RFC-0023-decision-and-audit-standard.md` contains `DecisionRecord`.
 - Verify: `docs/features/FEATURE_INDEX.md` FEATURE-0013 entry contains "Decision Record".
 - Verify: `docs/traceability/FEATURE_TRACEABILITY_MATRIX.md` FEATURE-0013 row references ADH-2026-014.
-- Verify: `docs/phase2/PHASE2_ACCEPTANCE_GATES.md` contains FEATURE-0013 gate criteria.
+- Verify: `docs/phase2/PHASE2_ACCEPTANCE_GATES.md` contains FEATURE-0013 gate criteria and identifies ADH-2026-014 and ADH-2026-015 as the joint controlling handoffs, stating that ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement.
 - Failure action: APPROVED_FOR_DESIGN is blocked until the missing update is applied.
 
 **Check DGA-03: Seven-value `AuditEvent` scope correction (ADH-2026-015) is recorded with human approval.**
@@ -709,7 +712,7 @@ Before FEATURE-0013 may progress from requirements to design, the following dete
 | Check | Evidence collected | Evidence summary |
 |---|---|---|
 | DGA-01 | PASS | `docs/traceability/ADH-2026-014-terminology-reconciliation.md` exists with 11 corrected files (all four columns complete including Rationale), 7 excluded files with rationale, and PRE-01/02/03 marked Complete. Structural defect remediated and re-verified. |
-| DGA-02 | PASS | All seven section 12.4 documents verified per section 12.6 evidence table. `DecisionRecord` present in normative text; `DecisionObject` only in historical/migration notes. |
+| DGA-02 | PASS | All seven section 12.4 documents verified per section 12.6 evidence table. `DecisionRecord` present in normative text; `DecisionObject` only in historical/migration notes. `PHASE2_ACCEPTANCE_GATES.md` identifies ADH-2026-014 and ADH-2026-015 as joint controlling handoffs (ADH-2026-015 superseding only the earlier six-scope statement). |
 | DGA-03 | PASS | ADH-2026-015 supersedes the ADH-2026-014 six-scope statement and approves the seven-value `ScopeKind`/`AuditEvent` correction (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`) via `metadata.scopeRef`; Human approval: Approved, Sanjeev Kumar, 2026-07-27. |
 | DGA-04 | PASS | Section 13.7 confirms DEP-01 through DEP-04 SATISFIED; FEATURE-0012-approval-review.md confirms "Final feature-review status: Approved". |
 
@@ -844,7 +847,7 @@ This section is classified as `CONTRACT_NOW`. The boundary semantics, distinguis
 - DQ-02: DecisionProfile schema representation — Go struct with embedded validation rules, or a standalone schema document format?
 - DQ-03: Bounded graph representation — adjacency list, edge list, or embedded struct? Design must define the representation and validation of profile-declared finite bounds (nodes, depth, width, fan-out, payload) without selecting numeric defaults. Each profile declares its own finite limits as a required field. If a baseline or system-wide default maximum is needed (e.g., an upper ceiling that no profile may exceed), that value must be escalated as `ARCHITECTURE_DECISION_REQUIRED` rather than invented by design, tasks, fixtures, or code.
 - DQ-04: Canonical serialization for content digests — RFC 8785 JCS or alternative? Exact fields covered by the digest.
-- DQ-05: RESOLVED (ADH-2026-015). `AuditEvent` has no separate scope field or scope enum. `metadata.scopeRef` is the sole canonical scope identity for all seven `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`). Design must not introduce a parallel scope field or enum; it must validate scope solely through `metadata.scopeRef`. Remaining design work is limited to the Go struct layout that references `metadata.scopeRef`, not scope-source discrimination.
+- DQ-05: RESOLVED (ADH-2026-015, refined by the ADH-2026-015 review-epoch correction). `AuditEvent` has no separate scope field or scope enum. `metadata.scopeRef` is the sole logical and serialized scope authority for all seven `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`). The canonical `Platform` form is an absent/nil `metadata.scopeRef` per FEATURE-0012 `NormalizeScope` (`internal/apimeta/scope.go:84-92`, test `TestNormalizeScope`) and `CanonicalScopeIdentity` (`internal/apimeta/scope.go:107-112`, test `TestCanonicalScopeIdentity`); an absent `scopeRef` resolves deterministically to `Platform` where the contract permits it and returns the stable required-scope error otherwise. Design must not introduce a parallel scope field, presence flag, enum, discriminator, or alias, and must not invent behavior incompatible with the inherited FEATURE-0012 normalization/canonical-identity functions; it must validate scope solely through `metadata.scopeRef`. Remaining design work is limited to the Go struct layout that references `metadata.scopeRef`, not scope-source discrimination.
 - DQ-06: Composition strategy registration format — static Go registry map or a declarative file format?
 - DQ-07: How to represent the atomic decision/audit-obligation acceptance in pure-function conformance fixtures without an actual persistence layer.
 - DQ-08: Conformance fixture format — Go table-driven tests, YAML test cases, or both?
@@ -880,13 +883,13 @@ This section adds requirements only. Continued design, tasks, and implementation
 ### 17.2 Scope vocabulary acceptance criteria (CONTRACT_NOW)
 
 - SV-AC-01: `ScopeKind` is the single canonical shared scope vocabulary. Its exact values are exactly seven: `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and `ServiceInstance`. No eighth value and no fewer than these seven are permitted. (CONTRACT_NOW)
-- SV-AC-02: `AuditEvent` accepts all seven canonical `ScopeKind` values. A conforming `AuditEvent` fixture must exist for each of the seven values. (CONTRACT_NOW)
-- SV-AC-03: `AuditEvent` uses `metadata.scopeRef` as its sole canonical scope identity. Validation must confirm scope is expressed only through `metadata.scopeRef`. (CONTRACT_NOW)
-- SV-AC-04: No parallel `AuditEvent` scope enum and no independently mutable scope field may exist in any schema, Go binding, or validator. Conformance must include a negative check asserting the absence of a second scope source. (CONTRACT_NOW)
+- SV-AC-02: `AuditEvent` accepts all seven canonical `ScopeKind` values. A conforming `AuditEvent` fixture must exist for each of the seven values. The positive `Platform` fixture uses the canonical absent/nil `metadata.scopeRef` form (per FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`); the six positive non-Platform fixtures each carry a non-nil `metadata.scopeRef` with a canonical kind and UID. (CONTRACT_NOW)
+- SV-AC-03: `AuditEvent` uses `metadata.scopeRef` as its sole logical and serialized scope authority. Validation must confirm scope is expressed only through `metadata.scopeRef`. An absent/nil `metadata.scopeRef` is the canonical `Platform` form and resolves deterministically to `Platform` where the contract permits `Platform`; where the contract does not permit `Platform`, an absent `metadata.scopeRef` returns the stable required-scope error (absence is not automatically valid). (CONTRACT_NOW)
+- SV-AC-04: No parallel `AuditEvent` scope enum, presence flag, `AuditScope` type, local scope enum, discriminator, alias, or independently mutable scope field may exist in any schema, Go binding, or validator. Conformance must include a negative check asserting the absence of a second scope source. The canonical absent/nil `metadata.scopeRef` `Platform` form is not a second scope source and must not be flagged by this check. (CONTRACT_NOW)
 - SV-AC-05: Backward compatibility — every one of the six existing FEATURE-0012 `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`) remains valid and unchanged. Regression fixtures must cover each of the six values. (CONTRACT_NOW)
 - SV-AC-06: Existing Organization-scoped `AuditEvent` records remain valid. A regression fixture must exercise an Organization-scoped `AuditEvent` and pass. (CONTRACT_NOW)
 - SV-AC-07: `ServiceInstance` positive fixtures — at least one positive fixture must exercise `ServiceInstance` as a valid `ScopeKind` value for `AuditEvent`. (CONTRACT_NOW)
-- SV-AC-08: Contradictory or duplicate scope rejection — an `AuditEvent` that declares scope through any source other than `metadata.scopeRef`, or through more than one scope source, or with conflicting scope declarations, must be rejected. A negative fixture must cover this. (CONTRACT_NOW)
+- SV-AC-08: Contradictory or duplicate scope rejection — an `AuditEvent` that declares scope through any source other than `metadata.scopeRef`, or through more than one scope source, or with conflicting scope declarations, must be rejected. The contradictory/duplicate condition is the presence of an unauthorized second scope property or source; a canonical absent/nil `metadata.scopeRef` resolving to `Platform` is explicitly not contradictory and must not be rejected on this basis. A negative fixture must cover an unauthorized second scope source, and a positive fixture must confirm the canonical nil-`Platform` form is accepted. (CONTRACT_NOW)
 - SV-AC-09: A scope value outside the canonical seven must be rejected by validators. A negative fixture must cover an out-of-vocabulary scope kind. (CONTRACT_NOW)
 
 ### 17.3 Dependency-reconciliation acceptance criteria (CONTRACT_NOW)

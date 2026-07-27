@@ -82,8 +82,10 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 
 ### 6.2 Canonical seven-value ScopeKind and AuditEvent
 
-- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance through `metadata.scopeRef` as its sole scope identity.
-- Compatibility fixtures exist for all seven AuditEvent scopes, with regression coverage for the six pre-existing FEATURE-0012 ScopeKind values.
+- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance through `metadata.scopeRef` as its sole logical and serialized scope authority.
+- The canonical `Platform` form is an absent/nil `metadata.scopeRef` (FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`): an absent `scopeRef` resolves deterministically to `Platform` where the contract permits `Platform`, and returns the stable required-scope error where it does not (absence is not automatically valid).
+- No parallel scope enum, presence flag, `AuditScope` type, discriminator, alias, or independently mutable scope field is introduced.
+- Compatibility fixtures exist for all seven AuditEvent scopes — a positive `Platform` fixture using canonical absent/nil `metadata.scopeRef`, positive non-Platform fixtures using `metadata.scopeRef`, and a negative absence fixture asserting rejection when `Platform` is disallowed — with regression coverage for the six pre-existing FEATURE-0012 ScopeKind values.
 - FEATURE-0012 conformance is not regressed.
 
 ### 6.3 Contract-only scope
@@ -94,8 +96,9 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 
 ### 6.4 Controlling references
 
-- ADH-2026-014 is the controlling handoff.
+- ADH-2026-014 and ADH-2026-015 are the joint controlling handoffs. ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement; all other ADH-2026-014 decisions remain controlling.
 - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` is the canonical architecture.
+- `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` records the value-by-value compatibility evidence.
 - AD-001 through AD-044 are preserved.
 - Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
 

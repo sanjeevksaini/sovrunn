@@ -101,6 +101,20 @@ It does not implement a policy engine, placement engine, orchestration runtime,
 queue, database, evidence store, identity provider, provider adapter, plugin
 execution, AI agent, or production audit service.
 
+FEATURE-0013 owns only the normalized `DecisionRecord`, `DecisionProfile`,
+`EvaluationResult`, and `AuditEvent` contracts, their validation, and the
+adapter-facing *data* requirements those contracts impose. It does **not**
+define `EvaluatorAdapter`, `PolicyEngineAdapter`, `IdentityProviderAdapter`,
+`SecretProviderAdapter`, `ObservabilityAdapter`, or any other shared adapter
+interface. Those adapter interfaces and their implementations are owned by
+FEATURE-0016 or the later owning feature. Where such adapter names appear in
+this document they are **illustrative future consumers/producers only** and must
+generate no interface or implementation artifact in FEATURE-0013. This preserves
+the DEC-0036 adapter-boundary intent: evaluator-, policy-, identity-, secret-,
+and observability-native data still enters only through adapters, but
+FEATURE-0013 defines the normalized data contract that crosses that boundary,
+not the adapter interface itself.
+
 ## 4. Architectural principles
 
 1. **Facts, evaluations, decisions, recommendations, actions, and accountability
@@ -1484,6 +1498,51 @@ prohibited. Any record that declares scope through more than one source, or
 through any source other than `metadata.scopeRef`, must be rejected as a
 contradictory or duplicate scope.
 
+### 29.3.1 Canonical Platform representation (inherited FEATURE-0012 normalization)
+
+`Platform` scope has no separate serialized form. Its single canonical logical
+and serialized representation is an **absent/nil** `metadata.scopeRef`, exactly
+as established by FEATURE-0012 (D-16). This behavior is inherited by reference,
+not re-invented, and FEATURE-0013 must not define any incompatible behavior:
+
+- `NormalizeScope` (`internal/apimeta/scope.go:84-92`; test `TestNormalizeScope`,
+  `internal/apimeta/scope_test.go:36-67`) maps an explicit `Kind == "Platform"`
+  `ScopeRef` to nil and leaves every non-Platform scope unchanged. An explicit
+  `Kind == "Platform"` value is an accepted input alternate only; the canonical
+  stored and emitted form is nil.
+- `CanonicalScopeIdentity` (`internal/apimeta/scope.go:107-112`; test
+  `TestCanonicalScopeIdentity`, `internal/apimeta/scope_test.go:69-98`) maps a
+  nil (or explicit-Platform) `ScopeRef` to `{Platform, PlatformScopeUID}` and a
+  non-Platform `ScopeRef` to `{kind, uid}`.
+
+Deterministic validation rules for `AuditEvent` scope:
+
+1. If `metadata.scopeRef` is absent/nil and the containing contract permits
+   `Platform` (its `x-sovrunn-allowed-scopes` includes `Platform`), validation
+   deterministically interprets the scope as `Platform`.
+2. If `metadata.scopeRef` is absent/nil and the containing contract does **not**
+   permit `Platform`, validation returns the stable required-scope error.
+   Absence is never automatically valid.
+3. Every non-Platform scope requires a non-nil `metadata.scopeRef` carrying a
+   canonical `ScopeKind` and the UID semantics inherited from FEATURE-0012.
+
+No presence flag, second scope field, `AuditScope` type, local scope enum,
+discriminator, alias, or parallel scope source may be introduced to express
+this. A canonical nil `metadata.scopeRef` that resolves to `Platform` is **not**
+a contradictory or duplicate scope: the contradictory/duplicate-scope rejection
+in section 29.3 concerns an unauthorized *second* scope property or source, not
+the canonical absent-Platform form.
+
+Fixture expectations follow directly:
+
+- a **positive Platform** fixture uses the canonical absent/nil
+  `metadata.scopeRef`;
+- **positive non-Platform** fixtures each carry a non-nil `metadata.scopeRef`
+  with a canonical kind and UID;
+- a **negative absence** fixture asserts that an absent `metadata.scopeRef` is
+  rejected with the stable required-scope error under a contract that does not
+  permit `Platform`.
+
 ### 29.4 Value-by-value FEATURE-0012 versus FEATURE-0013 compatibility
 
 Every inherited controlled-vocabulary value is classified using the required
@@ -1492,7 +1551,7 @@ semantically reinterpreted**.
 
 | Value | FEATURE-0012 `ScopeKind` | FEATURE-0013 (ADH-2026-015) | Classification | Notes |
 |---|---|---|---|---|
-| `Platform` | Present | Present | Unchanged | Canonical stored form remains absent/nil (FEATURE-0012 D-16). |
+| `Platform` | Present | Present | Unchanged | Canonical logical and serialized form is absent/nil `metadata.scopeRef` per FEATURE-0012 D-16 (`NormalizeScope`, `CanonicalScopeIdentity`; section 29.3.1). Absent `scopeRef` resolves to `Platform` only where the contract permits `Platform`; otherwise it is the stable required-scope error. |
 | `Organization` | Present | Present | Unchanged | Existing Organization-scoped `AuditEvent`s remain valid. |
 | `OrganizationUnit` | Present | Present | Unchanged | — |
 | `Tenant` | Present | Present | Unchanged | — |

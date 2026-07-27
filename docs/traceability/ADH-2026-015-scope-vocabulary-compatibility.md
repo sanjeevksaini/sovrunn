@@ -75,7 +75,7 @@ semantically reinterpreted**.
 
 | Value | In FEATURE-0012 `ScopeKind` | In FEATURE-0013 (ADH-2026-015) | Classification | Serialization impact | Notes |
 |---|---|---|---|---|---|
-| `Platform` | Present | Present | Unchanged (no delta) | None | Canonical stored form remains absent/nil per FEATURE-0012 D-16; unchanged. |
+| `Platform` | Present | Present | Unchanged (no delta) | None | Canonical logical and serialized form is an absent/nil `metadata.scopeRef` per FEATURE-0012 D-16 (`NormalizeScope`, `internal/apimeta/scope.go:84-92`; `CanonicalScopeIdentity`, `internal/apimeta/scope.go:107-112`); unchanged. Absent `scopeRef` resolves to `Platform` only where the contract permits `Platform`, else the stable required-scope error applies. |
 | `Organization` | Present | Present | Unchanged (no delta) | None | Existing Organization-scoped `AuditEvent`s remain valid. |
 | `OrganizationUnit` | Present | Present | Unchanged (no delta) | None | — |
 | `Tenant` | Present | Present | Unchanged (no delta) | None | — |
@@ -144,11 +144,19 @@ implementation stage. They are recorded here as obligations only.
 - Existing Organization-scoped `AuditEvent` fixtures must continue to pass.
 - At least one positive fixture must exercise `ServiceInstance` as a valid
   `ScopeKind` value for `AuditEvent`.
+- The positive `Platform` fixture must use the canonical absent/nil
+  `metadata.scopeRef` form; an absent `metadata.scopeRef` must resolve
+  deterministically to `Platform` only where the contract permits `Platform`.
+- A negative fixture must assert that an absent `metadata.scopeRef` is rejected
+  with the stable required-scope error under a contract that does not permit
+  `Platform` (absence is not automatically valid).
 - Validators must reject any scope value outside the canonical seven.
 - No separate `AuditEvent` scope enum or independently mutable scope field may
   be introduced anywhere in schemas, bindings, or validators.
 - Contradictory or duplicate scope identity (any scope source other than
-  `metadata.scopeRef`, or conflicting scope declarations) must be rejected.
+  `metadata.scopeRef`, or conflicting scope declarations) must be rejected. A
+  canonical absent/nil `metadata.scopeRef` resolving to `Platform` is not a
+  contradictory or duplicate scope.
 
 ## 9. Remaining implementation evidence (not produced)
 
@@ -173,8 +181,8 @@ independent approval and a separately authorized implementation stage begins.
 | Required fields | `AuditEvent` scope identity remains `metadata.scopeRef` (required via `object-meta.json`). |
 | Cardinality | Single scope identity per record; no additional scope field. |
 | Ownership | `ScopeKind` vocabulary owned as shared canonical vocabulary; `AuditEvent` scope contract owned by FEATURE-0013. |
-| Serialization | Additive value only; existing serialized values unchanged. |
-| Validation | Expanded acceptance to seven values; reject values outside the seven; reject non-`metadata.scopeRef` scope sources. |
+| Serialization | Additive value only; existing serialized values unchanged. Canonical `Platform` scope remains an absent/nil `metadata.scopeRef` per FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity` (unchanged). |
+| Validation | Expanded acceptance to seven values; reject values outside the seven; reject non-`metadata.scopeRef` scope sources. Absent `metadata.scopeRef` resolves to `Platform` where permitted, else returns the stable required-scope error (absence is not automatically valid); canonical nil-`Platform` is not a contradictory/duplicate scope. |
 | Security semantics | Scope does not grant authorization; `scopeRef.uid` resolves authorization (unchanged). |
 | Go bindings | `internal/apimeta/scope.go` requires additive `ServiceInstance` (pending). |
 | Fixtures | `ServiceInstance` positive fixtures and expanded `AuditEvent` coverage required (pending). |

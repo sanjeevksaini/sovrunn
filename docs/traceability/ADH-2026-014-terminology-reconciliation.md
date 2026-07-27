@@ -1,5 +1,28 @@
 # ADH-2026-014 Terminology Reconciliation Record
 
+> **⚠️ SUPERSESSION NOTICE — six-scope AuditEvent material superseded by ADH-2026-015.**
+> This record is **preserved as historical evidence** of the ADH-2026-014
+> terminology reconciliation and remains valid for the `DecisionObject` →
+> `DecisionRecord` correction. However, **all six-scope `AuditEvent` material in
+> this document is superseded by ADH-2026-015** (Approved, 2026-07-27), which is
+> the authoritative source for `AuditEvent` scope. Under ADH-2026-015, the single
+> canonical `ScopeKind` vocabulary has exactly seven values — `Platform`,
+> `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and
+> `ServiceInstance` — where `Provider` is retained (the earlier six-scope list
+> omitted it) and `ServiceInstance` is additive; `AuditEvent` permits all seven
+> through `metadata.scopeRef` as its sole scope authority, and the canonical
+> `Platform` form is an absent/nil `metadata.scopeRef`.
+>
+> This notice does **not** rewrite the historical evidence below: the
+> "Six-scope AuditEvent correction" section and any six-scope wording are
+> retained verbatim as the record of what ADH-2026-014 originally stated. They
+> are not restated as though they described seven scopes.
+>
+> Authoritative successor material:
+> - `docs/reviews/architecture-decision-handoffs/ADH-2026-015-feature-0013-scope-vocabulary-clarification.md`
+> - `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`
+> - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` (section 29)
+
 ## Purpose
 
 Documents the controlled replacement of `DecisionObject` with `DecisionRecord` across the Sovrunn repository baseline, as mandated by ADH-2026-014 (Approved, 2026-07-27).
