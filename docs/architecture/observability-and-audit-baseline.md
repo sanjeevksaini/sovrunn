@@ -255,9 +255,9 @@ If an administrator asks what happened, who did it, where it happened, and why i
 
 Phase 2 standardizes:
 
-- DecisionObject,
+- DecisionRecord (replaces former DecisionObject per ADH-2026-014),
 - DecisionEvent,
-- AuditEvent,
+- AuditEvent (six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, ServiceInstance),
 - EvidenceRecord placeholder,
 - AI-readable DecisionContext,
 - Operation-to-decision linkage.

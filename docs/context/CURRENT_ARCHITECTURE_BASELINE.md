@@ -4,6 +4,8 @@ Status: Approved Phase 2 start baseline.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`
 
+Last controlled update: ADH-2026-014 (2026-07-27) — DecisionRecord terminology correction and six-scope AuditEvent extension.
+
 ## Product Position
 
 Sovrunn is a cloud-native sovereign PaaS platform for local cloud providers, MSPs, and on-premise cloud operators.
@@ -134,7 +136,18 @@ Current active phase: Phase 2.
 
 Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
 
-Active next stage: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — Kiro requirements generation.
+Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
+
+Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — Kiro requirements generation (ADH-2026-014 approved 2026-07-27).
+
+## Approved FEATURE-0013 Architecture Baseline
+
+ADH-2026-014 approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as the controlling baseline for FEATURE-0013 Kiro specifications. It establishes the common, immutable, provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` six-scope linkage, sovereign security and projection, conformance fixtures, and downstream adoption contract.
+
+### Controlled corrections (ADH-2026-014)
+
+1. `DecisionRecord` replaces the former term `DecisionObject` across the Phase 2 spine, baseline, and normative documents. This is a terminology correction, not a new concept.
+2. `AuditEvent` scope is expanded from Organization-only (FEATURE-0012 alpha) to the six formal governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. Scope does not grant authorization.
 
 ## Change Control
 

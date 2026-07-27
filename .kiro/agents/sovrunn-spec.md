@@ -9,7 +9,9 @@ resources:
   - file://docs/features/FEATURE_INDEX.md
   - file://docs/architecture/**/*.md
   - file://docs/features/FEATURE-0012-*.md
+  - file://docs/features/FEATURE-0013-*.md
   - file://docs/reviews/architecture-decision-handoffs/ADH-2026-012-*.md
+  - file://docs/reviews/architecture-decision-handoffs/ADH-2026-014-*.md
   - file://docs/phase2/*.md
 ---
 

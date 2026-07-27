@@ -92,7 +92,7 @@ If a later feature requires changing an earlier decision, it must use the Archit
 ```text
 FEATURE-0011: Reuse Assessment Standard
 FEATURE-0012: API, Resource Naming, Status, and Validation Standard
-FEATURE-0013: Decision Object and AuditEvent Standard
+FEATURE-0013: Decision Record and AuditEvent Standard
 ```
 
 These features define the standards used by all later Phase 2 work.

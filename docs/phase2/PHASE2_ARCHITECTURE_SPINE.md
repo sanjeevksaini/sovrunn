@@ -152,11 +152,13 @@ Phase 2 must not define or invoke the complete plugin execution chain.
 
 | Record | Responsibility |
 |---|---|
-| `DecisionObject` | Captures what Sovrunn decided, why it decided it, and which inputs were considered. |
-| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. |
+| `DecisionRecord` | Captures what Sovrunn decided, why it decided it, and which inputs were considered. Immutable governed conclusion with authority, rationale, typed result, and audit linkage. |
+| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. Supports six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. |
 | `Operation` | Tracks an asynchronous lifecycle action or attempted change. |
 
 A record may reference the others, but they must not be collapsed into one object.
+
+> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. `AuditEvent` scope is expanded from Organization-only to the six formal governance scopes per the same handoff.
 
 ### Invariant I — Explainability is structured
 
@@ -276,7 +278,7 @@ FEATURE-0011 Reuse Assessment Standard
     |
     +--> FEATURE-0012 API, Resource Naming, Status and Validation Standard
     |        |
-    |        +--> FEATURE-0013 Decision Object and AuditEvent Standard
+    |        +--> FEATURE-0013 Decision Record and AuditEvent Standard
     |        |
     |        +--> FEATURE-0014 Provider-Neutral Resource Model
     |        |        |
@@ -349,7 +351,7 @@ Entitlement consumes the resolved context rather than independently resolving go
 
 FEATURE-0023 must not begin until the following inputs exist:
 
-- `DecisionObject` and `AuditEvent` standard;
+- `DecisionRecord` and `AuditEvent` standard;
 - `ResourcePool`;
 - `ProviderCapability`;
 - `EffectivePolicyContext`;
@@ -379,7 +381,7 @@ It must not compensate for missing contracts by adding private demo-only models.
 | `ServiceClass` and `ServicePlan` | Phase 1 baseline | `ServiceRuntimeProfile` and service request | Remain customer-facing catalog concepts. Infrastructure requirements must not be added directly to the customer API by default. |
 | `ReuseAssessment` | Architecture Operating System | Every Phase 2 feature | Documentation and review contract, not a runtime API resource. |
 | Common resource grammar | FEATURE-0012 | Every later resource model | Owns metadata, references, status, validation, and API boundary classification. |
-| `DecisionObject` | FEATURE-0013 | Policy, placement, and future decision types | Common decision envelope. Specialized decisions extend or compose it without redefining common semantics. |
+| `DecisionRecord` | FEATURE-0013 | Policy, placement, and future decision types | Common decision envelope. Specialized decisions extend or compose it without redefining common semantics. |
 | `AuditEvent` | FEATURE-0013 | Decisions, operations, and future execution | Accountability record. It is not a log line or operation status. |
 | Provider hierarchy | FEATURE-0014 | `ResourcePool` and placement | Describes provider-neutral topology and sovereignty context. |
 | `ResourcePool` | FEATURE-0015 | Runtime compatibility and placement | Unit considered for placement. It is not necessarily a Kubernetes cluster or cloud region. |
@@ -393,7 +395,7 @@ It must not compensate for missing contracts by adding private demo-only models.
 | `ServiceEntitlement` and quota placeholder | FEATURE-0021 | `PlacementRequest` validation | Answers whether the service request may proceed to placement consideration. It does not implement billing or full quota accounting. |
 | `ServiceRuntimeProfile` | FEATURE-0022 | Placement and plugin classification | Internal bridge from `ServicePlan` to provider-neutral runtime and capability requirements. |
 | `PlacementRequest` | FEATURE-0023 | Placement evaluator | Immutable evaluation input assembled from previously owned contracts. |
-| `PlacementDecision` | FEATURE-0023 | Audit, API response, and AI explanation | Specialized `DecisionObject` representing placement outcome. It does not execute provisioning. |
+| `PlacementDecision` | FEATURE-0023 | Audit, API response, and AI explanation | Specialized `DecisionRecord` representing placement outcome. It does not execute provisioning. |
 | Plugin taxonomy models | FEATURE-0024 | Future plugin execution | Classification, manifest, and trust metadata only during Phase 2. |
 | `DecisionContext` | FEATURE-0025 | AI explanation and human review | Sanitized structured projection of decisions and evidence. It must not contain secrets or unrestricted tenant data. |
 
@@ -417,7 +419,7 @@ Plugin execution is explicitly outside Phase 2.
 
 A `PolicyEvaluationResult` is an input to a Sovrunn decision.
 
-It is not automatically the final `DecisionObject` because Sovrunn may need to combine:
+It is not automatically the final `DecisionRecord` because Sovrunn may need to combine:
 
 - multiple policy evaluations;
 - entitlement;

@@ -58,7 +58,7 @@ Phase 2 features are executable Phase 2 scope and should be developed in order u
 |---|---|---|---|
 | FEATURE-0011 | Reuse Assessment Standard | Executable | Require Reuse / Wrap / Extend / Build decision for every feature. |
 | FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Executable | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
-| FEATURE-0013 | Decision Object and AuditEvent Standard | Executable | Define common decision and audit event structure. |
+| FEATURE-0013 | Decision Record and AuditEvent Standard | Executable | Define common decision and audit event structure. |
 | FEATURE-0014 | Provider-Neutral Resource Model | Executable | Define Provider, ProviderLocation/Region, ProviderDatacenter, DatacenterFailureDomain, and IaaSStack. |
 | FEATURE-0015 | ResourcePool and ProviderCapability Model | Executable | Define ResourcePool as placement boundary and ProviderCapability as compatibility boundary. |
 | FEATURE-0016 | Adapter Boundary Foundation | Executable | Define adapter interfaces for policy, identity, secrets, operations, observability, events, and repositories. |

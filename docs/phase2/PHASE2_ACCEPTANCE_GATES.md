@@ -70,3 +70,37 @@ Check:
 ## 5. Human Acceptance Gate
 
 The architecture owner approves with ChatGPT support before merge.
+
+## 6. FEATURE-0013 Specific Gate Criteria
+
+FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy:
+
+### 6.1 Terminology reconciliation
+
+- All normative documents use `DecisionRecord` (not `DecisionObject`) for the common decision envelope.
+- A terminology reconciliation traceability record exists.
+
+### 6.2 Six-scope AuditEvent
+
+- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance scopes.
+- Compatibility fixtures exist for all six scopes.
+- FEATURE-0012 conformance is not regressed.
+
+### 6.3 Contract-only scope
+
+- No production runtime implementation exists.
+- No persistence, workflow, or external service implementation exists.
+- Schemas, validation, conformance fixtures, and documentation only.
+
+### 6.4 Controlling references
+
+- ADH-2026-014 is the controlling handoff.
+- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` is the canonical architecture.
+- AD-001 through AD-044 are preserved.
+- Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
+
+### 6.5 Downstream adoption
+
+- One normative downstream adoption contract exists.
+- One lightweight gate check validates adoption section presence.
+- No separate manifests, registries, indexes, or approval workflows are introduced.
