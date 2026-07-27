@@ -1,0 +1,7 @@
+feature_id: FEATURE-0013
+slug: decision-object-and-auditevent-standard
+title: Decision Object and AuditEvent Standard
+phase_branch: phase2-reuse-first-paas-fabric-foundation
+feature_branch: feature-0013-decision-record-and-auditevent-standard
+spec_path: .kiro/specs/decision-object-and-auditevent-standard
+status: branch_created
