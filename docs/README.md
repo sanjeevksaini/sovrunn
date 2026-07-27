@@ -22,7 +22,7 @@ For Phase 2 and Phase 3 development, AI agents must load these before generating
 - `docs/phase2/PHASE2_ACCEPTANCE_GATES.md`
 - `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
 - `docs/architecture/api-resource-standard.md`
-- `docs/architecture/decision-and-audit-standard.md`
+- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
 - `docs/architecture/provider-neutral-resource-model.md`
 - `docs/architecture/policy-evaluation-abstraction.md`
 - `docs/architecture/placement-decision-engine.md`

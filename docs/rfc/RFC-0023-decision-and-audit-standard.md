@@ -9,7 +9,7 @@ ai_summary: RFC for common decision and audit event structures.
 
 # RFC-0023: Decision and Audit Standard
 
-See `docs/architecture/decision-and-audit-standard.md`.
+See `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`.
 
 ## Decision
 
