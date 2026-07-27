@@ -39,6 +39,9 @@ if not template_path.exists():
 template = template_path.read_text()
 content = Path(target).read_text()
 foundation_paths = [
+    Path('.automation/state/FEATURE-0012.json'),
+    Path('docs/reviews/feature-gates/FEATURE-0012-approval-review.md'),
+    Path('docs/reviews/feature-gates/FEATURE-0012-human-semantic-review-evidence.md'),
     Path('docs/context/CURRENT_ARCHITECTURE_BASELINE.md'),
     Path('docs/context/ARCHITECTURE_VERSION.md'),
     Path('docs/context/CURRENT_DECISION_SUMMARY.md'),
