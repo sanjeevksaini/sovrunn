@@ -24,6 +24,16 @@ case "$MODE" in prompt|manual|auto) ;; *) fail "unsupported mode: $MODE";; esac
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
 
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  if [[ -n "${KIRO_AGENT:-}" && "${KIRO_AGENT}" != "sovrunn-spec" ]]; then
+    fail "FEATURE-0013 requires KIRO_AGENT=sovrunn-spec; refusing override: ${KIRO_AGENT}"
+  fi
+  KIRO_AGENT="sovrunn-spec"
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode pre
+fi
+
 # Render the prompt first. render-prompt.py prints the generated file path.
 PROMPT_PATH="$(./scripts/render-prompt.py --feature "$FEATURE" --stage "$STAGE" | tail -n 1)"
 [[ -f "$PROMPT_PATH" ]] || fail "generated prompt not found: $PROMPT_PATH"
@@ -116,6 +126,12 @@ if [[ ! -f "$EXPECTED_DOC" ]]; then
   echo "Check Kiro log: $LOG_FILE" >&2
 else
   info "Kiro output detected: $EXPECTED_DOC"
+fi
+
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
 fi
 
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_generated" >/dev/null

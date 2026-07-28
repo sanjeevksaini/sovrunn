@@ -153,12 +153,12 @@ Phase 2 must not define or invoke the complete plugin execution chain.
 | Record | Responsibility |
 |---|---|
 | `DecisionRecord` | Captures what Sovrunn decided, why it decided it, and which inputs were considered. Immutable governed conclusion with authority, rationale, typed result, and audit linkage. |
-| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. Uses the canonical seven-value ScopeKind vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance; metadata.scopeRef is the sole scope identity. |
+| `AuditEvent` | Captures accountability: who or what acted, on which subject, and with what outcome. Uses FEATURE-0012's six governance scopes through `metadata.scopeRef`; a ServiceInstance is identified through a typed `subjectRef`, normally under Project scope. |
 | `Operation` | Tracks an asynchronous lifecycle action or attempted change. |
 
 A record may reference the others, but they must not be collapsed into one object.
 
-> **Terminology note (ADH-2026-014):** `DecisionRecord` replaces the former term `DecisionObject` as a controlled correction approved 2026-07-27. ADH-2026-015 supersedes the earlier six-scope statement: `ScopeKind` has seven canonical values, `AuditEvent` permits all seven, and `metadata.scopeRef` is its sole scope identity. ADH-2026-016 (Approved 2026-07-27) clarifies FEATURE-0013 contract boundaries without new architecture: `DecisionRecord` also uses `metadata.scopeRef` as its sole scope authority (no top-level or parallel scope source); a closed ordered provider-neutral sensitivity vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; a structural-only security-validation boundary; a structural-trust versus deferred-cryptographic boundary (ADR-F13-002; RFC 8785 illustrative only); and exact conformance coverage `F13-CF-01`–`F13-CF-28`. ADH-2026-014, ADH-2026-015, and ADH-2026-016 are joint controlling.
+> **FEATURE-0013 consolidation note:** Approved replacement `ADH-2026-017` controls the complete FEATURE-0013 architecture. It retains `DecisionRecord`, makes `metadata.scopeRef` the sole scope authority, preserves FEATURE-0012's six-value `ScopeKind`, and represents `ServiceInstance` as a typed subject rather than a scope. Predecessor handoffs ADH-2026-014, ADH-2026-015, and ADH-2026-016 are provenance only and are not separate downstream instructions. Fresh requirements generation is authorized; design, tasks, and implementation remain separately gated.
 
 ### Invariant I — Explainability is structured
 

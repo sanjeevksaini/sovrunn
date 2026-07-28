@@ -161,7 +161,7 @@ Sovrunn must normalize audit events from:
 - backup/restore events,
 - SDE admin events.
 
-Minimum AuditEvent fields:
+Phase 1 conceptual audit inputs (historical):
 
 | Field | Required | Description |
 |---|---:|---|
@@ -178,6 +178,18 @@ Minimum AuditEvent fields:
 | decision | yes | Allowed, denied, failed, observed. |
 | reason | no | Machine-readable reason. |
 | correlationId | yes | Trace correlation ID. |
+
+For Phase 2 and later, this table is input history, not a parallel public
+`AuditEvent` schema. The canonical contract is the FEATURE-0012
+`ImmutableRecord` envelope specialized by FEATURE-0013: type metadata, common
+`metadata`, and one immutable `record` payload. `metadata.scopeRef` is the sole
+governance-scope authority and uses exactly the six FEATURE-0012 `ScopeKind`
+values. Organization, OrganizationUnit, Tenant, and Project identities shown
+above are represented through the canonical scope and typed references rather
+than independent top-level scope fields. A ServiceInstance is a typed subject
+under its governing Project scope, never a `ScopeKind`. Requirements, design,
+tasks, and implementation must not recreate the Phase 1 conceptual columns as
+a second scope model.
 
 ## 12. Backup and Archival Governance
 

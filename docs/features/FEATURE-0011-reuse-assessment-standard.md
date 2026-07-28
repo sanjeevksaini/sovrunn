@@ -2,7 +2,7 @@
 doc_type: feature
 id: FEATURE-0011
 title: Reuse Assessment Standard
-status: draft
+status: implemented
 phase: 2
 reuse_assessment_format_version: 1.0.0
 depends_on: []

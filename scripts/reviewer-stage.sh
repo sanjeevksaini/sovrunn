@@ -39,7 +39,6 @@ if not template_path.exists():
 template = template_path.read_text()
 content = Path(target).read_text()
 foundation_paths = [
-    Path('.automation/state/FEATURE-0012.json'),
     Path('docs/reviews/feature-gates/FEATURE-0012-approval-review.md'),
     Path('docs/reviews/feature-gates/FEATURE-0012-human-semantic-review-evidence.md'),
     Path('docs/context/CURRENT_ARCHITECTURE_BASELINE.md'),
@@ -54,6 +53,11 @@ foundation_paths = [
     Path('docs/features/FEATURE_INDEX.md'),
     Path('docs/traceability/FEATURE_TRACEABILITY_MATRIX.md'),
 ]
+if feature != "FEATURE-0013":
+    # FEATURE-0012's workflow state is historical automation state, not its
+    # post-merge approval authority. FEATURE-0013 reviews bind the immutable
+    # approval and dependency artifacts below instead.
+    foundation_paths.insert(0, Path('.automation/state/FEATURE-0012.json'))
 missing = [str(path) for path in foundation_paths if not path.exists()]
 if missing:
     raise SystemExit('ERROR: missing required review context: ' + ', '.join(missing))
@@ -61,9 +65,19 @@ context_paths = list(foundation_paths)
 feature_evidence_paths = []
 if feature == "FEATURE-0013":
     feature_evidence_paths = [
-        Path("docs/traceability/ADH-2026-014-terminology-reconciliation.md"),
-        Path("docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md"),
-        Path("docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md"),
+        Path("docs/features/FEATURE-0011-reuse-assessment-standard.md"),
+        Path("docs/reviews/feature-gates/FEATURE-0011-approval-review.md"),
+        Path("docs/reviews/architecture-decision-handoffs/ADH-2026-011-feature-0011-reuse-assessment-standard.md"),
+        Path("docs/architecture/api-resource-standard.md"),
+        Path("docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md"),
+        Path(".kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md"),
+        Path(".kiro/specs/api-resource-naming-status-and-validation-standard/design.md"),
+        Path("docs/reviews/feature-gates/FEATURE-0012-approval-review.md"),
+        Path("docs/reviews/architecture-decision-handoffs/ADH-2026-012-feature-0012-api-resource-standard.md"),
+        Path("docs/reviews/architecture-decision-handoffs/ADH-2026-013-operation-allowed-scopes.md"),
+        Path("api/schemas/_common/scope-ref.json"),
+        Path("api/schemas/audit-event.json"),
+        Path("internal/apimeta/scope.go"),
     ]
 
 missing_feature_evidence = [
@@ -79,7 +93,13 @@ context_paths.extend(feature_evidence_paths)
 for candidate in sorted(Path('docs/architecture').glob(f'*{feature}*.md')):
     context_paths.append(candidate)
 handoff_dir = Path('docs/reviews/architecture-decision-handoffs')
-context_paths.extend(sorted(handoff_dir.glob(f'*{feature.lower()}*.md')) if handoff_dir.exists() else [])
+if feature == 'FEATURE-0013':
+    consolidated = handoff_dir / 'ADH-2026-017-feature-0013-consolidated-architecture.md'
+    if not consolidated.exists():
+        raise SystemExit('ERROR: missing sole FEATURE-0013 handoff: ' + str(consolidated))
+    context_paths.append(consolidated)
+elif handoff_dir.exists():
+    context_paths.extend(sorted(handoff_dir.glob(f'*{feature.lower()}*.md')))
 rfc_dir = Path('docs/rfc')
 for candidate in sorted(rfc_dir.glob('*.md')) if rfc_dir.exists() else []:
     try:

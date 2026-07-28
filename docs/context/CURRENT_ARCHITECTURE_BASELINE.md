@@ -4,11 +4,9 @@ Status: Approved Phase 2 start baseline.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`
 
-Last controlled update: ADH-2026-016 (2026-07-27) — FEATURE-0013 contract boundary clarification: `DecisionRecord` uses `metadata.scopeRef` as its sole scope authority (no top-level or parallel scope source); a closed ordered provider-neutral sensitivity vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; a structural-only security-validation boundary; a structural-trust versus deferred-cryptographic boundary (ADR-F13-002, RFC 8785 illustrative only); exact conformance coverage `F13-CF-01` through `F13-CF-28`; six-scope `AuditEvent` evidence marked SUPERSEDED; and the completed `DecisionObject`-to-`DecisionRecord` migration in active normative documents. Clarification only; no new architecture and no runtime/product/provider/algorithm selection. FEATURE-0013 requirements returned to architecture-remediation status.
+FEATURE-0013 consolidation status: `ADH-2026-017` is the Approved replacement that captures the complete FEATURE-0013 architecture in one content-bound approval envelope. Requirements regeneration is authorized; later stages retain their normal independent gates.
 
-Prior controlled update: ADH-2026-015 (2026-07-27) — ScopeKind clarified as the single canonical seven-value scope vocabulary (adds ServiceInstance, retains Provider); AuditEvent permits all seven values via metadata.scopeRef as sole scope identity. Supersedes only the earlier ADH-2026-014 six-scope AuditEvent statement.
-
-Prior controlled update: ADH-2026-014 (2026-07-27) — DecisionRecord terminology correction and AuditEvent scope extension.
+Historical FEATURE-0013 updates: `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` record the path to the consolidation. They are retained for provenance, excluded from downstream instructions, and normatively superseded by approved `ADH-2026-017`.
 
 ## Product Position
 
@@ -142,42 +140,22 @@ Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
 
 Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
 
-Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — Kiro requirements remain `PENDING_HUMAN_REVIEW` (gate status `PENDING_INDEPENDENT_REVIEW`) pending fresh independent approval. ADH-2026-014, ADH-2026-015, and ADH-2026-016 (all approved 2026-07-27) are the joint controlling handoffs. ADH-2026-016 returned the requirements to architecture-remediation status to apply the clarified contract boundaries; it granted no stage authorization.
+Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — consolidated architecture is `APPROVED_FOR_KIRO_REQUIREMENTS`. `ADH-2026-017` is the approved single replacement handoff for the complete FEATURE-0013 architecture. Kiro requirements regeneration is authorized; design, tasks, and implementation remain separately gated.
 
-## Approved FEATURE-0013 Architecture Baseline
+## Approved Consolidated FEATURE-0013 Architecture Baseline
 
-ADH-2026-014 approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as the controlling baseline for FEATURE-0013 Kiro specifications. It establishes the common, immutable, provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` seven-scope linkage (per ADH-2026-015), sovereign security and projection, conformance fixtures, and downstream adoption contract.
+`ADH-2026-017` approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as one complete, authoritative architecture package. It consolidates the common immutable provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` linkage, structural security and projection controls, conformance cases, Matrix E risks, guardrails, and the downstream adoption contract.
 
-### Controlled corrections (ADH-2026-014)
+The consolidated scope model preserves FEATURE-0012 semantics:
 
-1. `DecisionRecord` replaces the former term `DecisionObject` across the Phase 2 spine, baseline, and normative documents. This is a terminology correction, not a new concept.
-2. `AuditEvent` scope is expanded from Organization-only (FEATURE-0012 alpha) to the six formal governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and ServiceInstance. Scope does not grant authorization. **(Superseded by ADH-2026-015 — see below.)**
+1. `ScopeKind` remains the six-value governance vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
+2. `metadata.scopeRef` is the sole scope authority. Platform uses the canonical absent scope form; every non-Platform scope uses a canonical non-empty reference.
+3. `ServiceInstance` is lifecycle-contained by its owner and is represented as a typed `subjectRef`, normally under its governing Project scope. It is not a `ScopeKind`.
+4. Scope identifies the governance boundary; subject identifies the entity about which the decision or audit statement was made. Neither grants authorization.
 
-### Controlled correction (ADH-2026-015)
+`ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` remain historical decision records. They are normatively superseded and must not be loaded as separate Kiro, reviewer, design, task, or implementation instructions.
 
-ADH-2026-015 (Approved 2026-07-27) supersedes only the ADH-2026-014 six-scope `AuditEvent` statement:
-
-1. `ScopeKind` is the single canonical shared scope vocabulary with exactly seven values: Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance.
-2. `ServiceInstance` is an additive extension; `Provider` is retained unchanged.
-3. `AuditEvent` initially permits all seven canonical values and uses `metadata.scopeRef` as its sole canonical scope identity. No separate `AuditEvent` scope enum or independently mutable scope field is permitted.
-4. Existing FEATURE-0012 serialized `ScopeKind` values and existing Organization-scoped `AuditEvent`s remain valid.
-5. Schemas, Go bindings, validators, fixtures, compatibility evidence, architecture, requirements, and design must eventually be synchronized. Tasks, implementation, and continued design remain unauthorized until FEATURE-0013 requirements receive fresh independent approval.
-
-Compatibility evidence: `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`.
-
-### Controlled clarification (ADH-2026-016)
-
-ADH-2026-016 (Approved 2026-07-27) is a clarification that introduces no new architecture and clarifies previously unresolved FEATURE-0013 contract boundaries of ADH-2026-014 and ADH-2026-015. The seven-value `ScopeKind` vocabulary above is preserved unchanged.
-
-1. `DecisionRecord` uses FEATURE-0012 `metadata.scopeRef` as its sole logical and serialized scope authority; a top-level `DecisionRecord` `scopeRef` or any parallel scope source is removed and prohibited. `Platform` uses an absent/nil `metadata.scopeRef`; every non-Platform scope uses a non-nil `metadata.scopeRef` with canonical `ScopeKind` and UID.
-2. Sensitivity classification uses the closed ordered provider-neutral vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; jurisdiction-specific labels are versioned profile mappings; profiles permitting captured output must declare a sensitivity ceiling, content-category rules, and maximum fields/bytes/depth/value-types.
-3. FEATURE-0013 security validation is bounded to structural conformance; comprehensive semantic content scanning belongs to later approved features.
-4. Algorithm-agile carrier fields and structural trust metadata are `CONTRACT_NOW`; the canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services are DEFERRED and blocked by ADR-F13-002. RFC 8785 is illustrative only.
-5. Architecture section 17 scenarios map one-to-one to `F13-CF-01` through `F13-CF-28`.
-6. `docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md` is SUPERSEDED historical evidence; `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` is authoritative for the seven-value contract.
-7. Active normative documents use `DecisionRecord`; frozen FEATURE-0012 Kiro specifications retain `DecisionObject` only with an explicit historical artifact note (no second schema, type, alias, or contract).
-
-ADH-2026-016 returned FEATURE-0013 requirements to architecture-remediation status and authorizes no runtime capability or product/provider/algorithm selection. Controlling architecture: `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` section 30.
+No earlier requirements approval token survives this consolidation. A fresh requirements document must be generated from approved `ADH-2026-017` and its exact architecture digest.
 
 ## Change Control
 

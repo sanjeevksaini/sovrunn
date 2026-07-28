@@ -12,6 +12,12 @@ approving_role: Sovrunn Architecture Owner
 
 # ADH-2026-015 — FEATURE-0013 Scope Vocabulary Clarification
 
+> **Historical predecessor during consolidation.** ADH-2026-017 is the proposed
+> single replacement handoff and replaces ServiceInstance-as-ScopeKind with a
+> typed ServiceInstance subject under Project scope. This record must not be
+> loaded as a downstream instruction. On ADH-2026-017 approval, its normative
+> status becomes Superseded.
+
 ## Metadata
 
 - Handoff ID: ADH-2026-015

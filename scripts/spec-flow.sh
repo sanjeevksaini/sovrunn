@@ -29,6 +29,12 @@ done
 command -v kiro-cli >/dev/null 2>&1 || command -v kiro >/dev/null 2>&1 || fail "Kiro CLI is not available"
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  if [[ -n "${KIRO_AGENT:-}" && "${KIRO_AGENT}" != "sovrunn-spec" ]]; then
+    fail "FEATURE-0013 requires KIRO_AGENT=sovrunn-spec; refusing override: ${KIRO_AGENT}"
+  fi
+  export KIRO_AGENT="sovrunn-spec"
+fi
 SPEC_PATH=$(get_feature_value "$FEATURE" spec_path)
 BASELINE_LINES="$(find "$SPEC_PATH" -maxdepth 1 -type f \( -name 'requirements.md' -o -name 'design.md' -o -name 'tasks.md' \) -exec cat {} + 2>/dev/null | wc -l | tr -d ' ')"
 

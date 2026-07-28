@@ -1,34 +1,29 @@
 ---
 doc_type: traceability
 title: ADH-2026-015 Scope Vocabulary Compatibility Evidence
-status: pending-implementation-evidence
+status: historical-pending-consolidation
 phase: 2
 feature_id: FEATURE-0013
-controlling_handoffs:
-  - ADH-2026-014
-  - ADH-2026-015
-  - ADH-2026-016
+proposed_successor: ADH-2026-017
 depends_on:
   - FEATURE-0012
-ai_load_priority: high
-ai_summary: Read-only value-by-value compatibility evidence for the ADH-2026-015 ScopeKind clarification (seven canonical values, additive ServiceInstance, metadata.scopeRef as sole AuditEvent scope identity). Records inspected FEATURE-0012 artifacts, migration classification, affected consumers, and regression obligations. No schema, binding, validator, fixture, or test has been changed; status remains pending implementation evidence and fresh independent requirements review.
+ai_load_priority: historical
+ai_summary: Historical compatibility analysis for ADH-2026-015. It is not a downstream architecture input. Proposed ADH-2026-017 replaces the fragmented FEATURE-0013 handoffs with the consolidated architecture, preserves FEATURE-0012's six ScopeKind values, and models ServiceInstance as a typed subject.
 ---
 
 # ADH-2026-015 — Scope Vocabulary Compatibility Evidence
 
 ## 1. Purpose and status
 
-This document records read-only compatibility analysis for applying approved
-handoff **ADH-2026-015** (Scope Vocabulary Clarification) to FEATURE-0013. It
-is documentation and evidence only.
+This document records the historical compatibility analysis performed for
+ADH-2026-015. It is retained for provenance only and must not be loaded as a
+requirements, design, task, implementation, or reviewer instruction.
 
-**This document is authoritative for the seven-value `ScopeKind`/`AuditEvent`
-contract** (the canonical values `Platform`, `Organization`, `OrganizationUnit`,
-`Tenant`, `Project`, `Provider`, `ServiceInstance`; `metadata.scopeRef` as the
-sole `AuditEvent` scope identity; the additive `ServiceInstance`; and the
-retained `Provider`). It supersedes the six-scope compatibility evidence in
-`docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md`, which is
-retained only as superseded historical evidence.
+**This document is not authoritative for the consolidated FEATURE-0013
+architecture.** Proposed replacement ADH-2026-017 preserves FEATURE-0012's six
+governance `ScopeKind` values and represents `ServiceInstance` as a typed
+subject under its governing scope. On approval, ADH-2026-017 and the exact
+digest-bound consolidated architecture become the sole normative input.
 
 **ADH-2026-016 relationship.** ADH-2026-016 (Approved, 2026-07-27) does **not**
 change this seven-value contract. It is referenced here only for the **newly
@@ -196,11 +191,21 @@ independent approval and a separately authorized implementation stage begins.
 
 ## 10. Dependency Contract Reconciliation summary
 
+> **Correction note (2026-07-27).** The "Required fields" row previously stated
+> that `metadata.scopeRef` was "required via `object-meta.json`". That statement
+> was internally inconsistent with the canonical nil-`Platform` representation
+> defined in ADH-2026-015 and clarified by ADH-2026-016 (and with SV-AC-03,
+> AC-24, and CB-AC-02 of the requirements). It has been corrected to describe
+> `metadata.scopeRef` as the sole scope source that is conditionally present —
+> absent/nil for canonical `Platform` where permitted, non-nil and required for
+> every non-Platform scope, and rejected when absent under a contract that
+> disallows `Platform`. No other contract change is introduced.
+
 | Reconciliation dimension | Evidence |
 |---|---|
 | Exact dependency version/files | FEATURE-0012 `sovrunn.io` `v1alpha1` grammar; files enumerated in section 3. |
 | Enums | `ScopeKind` expanded additively by `ServiceInstance` (six → seven). |
-| Required fields | `AuditEvent` scope identity remains `metadata.scopeRef` (required via `object-meta.json`). |
+| Required fields | `AuditEvent` scope identity is `metadata.scopeRef` as the **sole** scope source. It is **conditionally present, not universally required**: the canonical `Platform` form is an absent/nil `metadata.scopeRef` where the contract permits `Platform`; a non-nil `metadata.scopeRef` is required for every non-Platform scope and whenever the applicable contract does not permit `Platform` (in which case an absent `metadata.scopeRef` is rejected with the stable required-scope error). `object-meta.json` defines `metadata.scopeRef` via `$ref` to `scope-ref.json`; it does not make the field unconditionally required. |
 | Cardinality | Single scope identity per record; no additional scope field. |
 | Ownership | `ScopeKind` vocabulary owned as shared canonical vocabulary; `AuditEvent` scope contract owned by FEATURE-0013. |
 | Serialization | Additive value only; existing serialized values unchanged. Canonical `Platform` scope remains an absent/nil `metadata.scopeRef` per FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity` (unchanged). |

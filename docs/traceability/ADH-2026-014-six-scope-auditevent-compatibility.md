@@ -1,5 +1,11 @@
 # Six-Scope AuditEvent Alpha Compatibility Decision
 
+> **CONSOLIDATION NOTICE:** This entire ADH-specific record is historical
+> provenance. Proposed replacement ADH-2026-017 consolidates the active
+> FEATURE-0013 scope and subject model in one architecture, preserves the six
+> FEATURE-0012 governance scopes, and treats `ServiceInstance` as a typed
+> subject. This file must not be loaded as a downstream instruction.
+
 > **⚠️ SUPERSEDED — HISTORICAL EVIDENCE ONLY.**
 > This entire document records the **superseded** six-scope `AuditEvent`
 > compatibility decision originally stated by ADH-2026-014. It is **SUPERSEDED

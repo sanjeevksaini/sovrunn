@@ -12,64 +12,35 @@ ai_summary: Provider-neutral, sovereign-ready architecture for extensible Decisi
 
 ## 1. Decision status and authority
 
-This document is the approved architecture input from which Kiro may generate
-FEATURE-0013 requirements only. It is not an implementation specification and
-does not authorize design, tasks, source code, or runtime execution.
+This document is the approved consolidated architecture from which Kiro may
+generate FEATURE-0013 requirements. It is not an implementation specification
+and does not authorize design, tasks, source code, or runtime execution; those
+remain subject to their normal independent gates.
 
 Human architecture review status: **APPROVED_FOR_KIRO_REQUIREMENTS**.
 
-- Reviewer: Sanjeev Kumar
-- Decision date: 2026-07-27
-- Controlling handoffs: ADH-2026-014, ADH-2026-015, and ADH-2026-016 (joint)
+- Consolidation reviewer: Sanjeev Kumar
+- Consolidation decision date: 2026-07-28
+- Sole controlling handoff: ADH-2026-017
+- Historical predecessor handoffs: ADH-2026-014, ADH-2026-015, and
+  ADH-2026-016; provenance only after ADH-2026-017 approval
 
-> **Contract boundary clarification (ADH-2026-016, Approved 2026-07-27).**
-> ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the joint controlling
-> handoffs for FEATURE-0013. ADH-2026-016 is a clarification that does not
-> introduce new architecture; ADH-2026-014 and ADH-2026-015 remain controlling
-> except where ADH-2026-016 clarifies their previously unresolved contract
-> boundaries. ADH-2026-016 fixes seven boundaries: (1) `DecisionRecord` uses
-> FEATURE-0012 `metadata.scopeRef` as its sole logical and serialized scope
-> authority and any top-level or parallel scope source is removed and
-> prohibited (see sections 6.1 and 30.2); (2) the closed ordered
-> provider-neutral sensitivity vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL <
-> RESTRICTED` with mandatory profile-bound ceiling/category/size/depth/type
-> rules, and jurisdiction-specific labels as versioned profile mappings (see
-> section 12.4 and 30.3); (3) FEATURE-0013 security validation is bounded to
-> structural conformance and comprehensive semantic content scanning belongs to
-> later approved features (see section 12.1 and 30.4); (4) structural trust
-> metadata is separated from cryptographic verification, RFC 8785 is
-> illustrative only, and the canonicalization algorithm/profile, digest-covered
-> fields, signature algorithm, and cryptographic services remain DEFERRED under
-> ADR-F13-002 (see sections 12.3, 14, and 30.5); (5) the section 17 conformance
-> scenarios are assigned stable IDs `F13-CF-01` through `F13-CF-28` in their
-> existing order (see section 17 and 30.6); (6) six-scope `AuditEvent` evidence
-> is SUPERSEDED; and (7) the `DecisionObject`-to-`DecisionRecord` migration is
-> completed in active normative documents. ADH-2026-016 authorizes no runtime
-> capability and no product, provider, or algorithm selection. Section 30 is
-> authoritative for these clarified boundaries.
+The main body consolidates every active FEATURE-0013 architecture decision and
+is the sole normative architecture text for downstream requirements generation.
+ADH-2026-017 is the single approved envelope for the exact consolidated
+document. Historical handoffs and evidence preserve provenance but do not
+create parallel semantics or downstream inputs.
 
-> **Scope vocabulary clarification (ADH-2026-015, Approved 2026-07-27).**
-> ADH-2026-014 and ADH-2026-015 are the joint controlling handoffs for
-> FEATURE-0013. ADH-2026-015 supersedes **only** the earlier six-scope
-> `AuditEvent` statement in ADH-2026-014. All other ADH-2026-014 decisions
-> remain controlling and unchanged. Under ADH-2026-015, `ScopeKind` is the
-> single canonical shared scope vocabulary with exactly seven values
-> (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`,
-> `Provider`, `ServiceInstance`); `ServiceInstance` is additive and `Provider`
-> is retained. `AuditEvent` initially permits all seven values and uses
-> `metadata.scopeRef` as its sole canonical scope identity. See section 29 for
-> the full clarification, the value-by-value compatibility table, and the
-> mandatory Dependency Contract Reconciliation framework. Where any earlier
-> statement in this document refers to "six" `AuditEvent` scopes, section 29 is
-> authoritative and controls.
-
-The reviewer approves AD-001 through AD-044, the two controlled baseline
-corrections, contract-only Phase 2 scope, anti-overengineering guardrails,
-lightweight downstream adoption contract, and the proposed treatment,
-verification, ownership, and reassessment plans for Matrix E F13-R01 through
-F13-R31. This architecture approval does not accept final residual risk. Final
-per-risk residual acceptance remains pending implementation evidence and human
-semantic review. F13-R04, F13-R08, and F13-R13 remain explicitly open at target
+The consolidated decision register contains AD-001 through AD-045. AD-001
+through AD-044 preserve and reconcile the previous handoff decisions; AD-045
+closes public error binding and code ownership at architecture level. The
+register covers the controlled baseline corrections, contract-only Phase 2
+scope, anti-overengineering guardrails, lightweight downstream adoption
+contract, and the approved treatment, verification, ownership, and reassessment
+plans for Matrix E F13-R01 through F13-R31. This consolidated document requires
+fresh human approval and does not accept final residual risk. Final per-risk
+residual acceptance remains pending implementation evidence and human semantic
+review. F13-R04, F13-R08, and F13-R13 remain explicitly open at target
 High residual level and require reassessment before their corresponding
 production capabilities are enabled.
 
@@ -80,19 +51,17 @@ Phase 2 spine:
 
 1. `DecisionRecord` replaces the ambiguous common name `DecisionObject`.
 2. `AuditEvent` scope is expanded from the FEATURE-0012 Organization-only alpha
-   profile to all seven canonical `ScopeKind` values (`Platform`,
-   `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`,
-   `ServiceInstance`) per ADH-2026-015, using `metadata.scopeRef` as the sole
-   canonical scope identity. `ServiceInstance` is additive to the FEATURE-0012
-   shared vocabulary and `Provider` is retained. The earlier ADH-2026-014
-   statement that expanded `AuditEvent` to "six governance scopes already
-   established by FEATURE-0012" is superseded and was factually incorrect:
-   FEATURE-0012 established the shared `ScopeKind` vocabulary, not a six-scope
-   `AuditEvent` profile. Section 29 (ADH-2026-015) is authoritative.
+   profile to all six canonical FEATURE-0012 governance `ScopeKind` values:
+   `Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, and
+   `Provider`. `metadata.scopeRef` is the sole governance-scope authority.
+   `ServiceInstance` remains a Project-scoped resource and is identified by a
+   typed `subjectRef` or `subjectRefs`; it is not a `ScopeKind`. This replaces
+   the ServiceInstance-as-scope portion of ADH-2026-015 while preserving its
+   correct retention of `Provider` and its single-scope-authority rule.
 
-ADH-2026-014 approves the terminology correction, and ADH-2026-015 approves the
-seven-value `ScopeKind`/`AuditEvent` scope correction, for FEATURE-0013
-requirements generation.
+ADH-2026-017 approves both corrections and every other FEATURE-0013
+architecture decision as one content-bound package. Requirements regeneration
+is authorized; design, tasks, and implementation retain their separate gates.
 The affected spine, baseline, RFC, feature-index, traceability, and compatibility
 updates remain required before implementation proceeds.
 
@@ -141,6 +110,15 @@ and observability-native data still enters only through adapters, but
 FEATURE-0013 defines the normalized data contract that crosses that boundary,
 not the adapter interface itself.
 
+`DecisionRequest` is a conceptual input role, not a fifth FEATURE-0013 shared
+contract. Its calling domain owns its request schema and lifecycle. When such a
+request is exchanged, it must reuse the FEATURE-0012 `TransientRequestResult`
+profile, common typed references, scope rules, decoding limits, validation, and
+Problem Details contract. FEATURE-0013 defines no canonical shared
+`DecisionRequest` schema, Go type, registry entry, persistence model, or public
+API resource. A later owning feature may define a domain-specific request
+without changing FEATURE-0013 when it conforms to these inherited boundaries.
+
 ## 4. Architectural principles
 
 1. **Facts, evaluations, decisions, recommendations, actions, and accountability
@@ -165,7 +143,7 @@ not the adapter interface itself.
 
 | Object | Meaning | Lifecycle owner | Authoritative? |
 |---|---|---|---|
-| `DecisionRequest` | Bounded request to decide, with context references and constraints | Calling domain | No |
+| `DecisionRequest` | Conceptual bounded input role with context references and constraints; not a FEATURE-0013 shared schema or type | Calling domain | No |
 | `EffectivePolicyContext` | Resolved, read-only hierarchical governance input | FEATURE-0020 | Input authority |
 | `EvaluationResult` | Atomic, evaluator-specific normalized finding | Evaluator adapter/domain | Evidence, not final decision |
 | `DecisionProfile` | Versioned contract defining one decision family's form, authority, inputs, typed result, rationale, obligations, projections, and limits | FEATURE-0013 registry; adopting domain supplies profiles | Definition authority |
@@ -202,6 +180,36 @@ fields to or fork the common envelope.
 - A `DecisionContext` is a filtered explanation projection.
 - Telemetry describes system behavior and is never an audit authority.
 
+### 5.4 FEATURE-0012 resource-profile and boundary inheritance
+
+FEATURE-0013 does not choose new object shapes. Each externally exchanged
+object inherits exactly one FEATURE-0012 resource profile and boundary rule:
+
+| FEATURE-0013 object | FEATURE-0012 profile | Canonical boundary and persistence rule |
+|---|---|---|
+| `DecisionProfile` and semantic-registry bundle | `VersionedDefinition` | Governance-only publication contract; published versions are immutable; runtime services are deferred |
+| `DecisionRequest` | `TransientRequestResult` | Calling-domain-owned internal-engine-facing input; FEATURE-0013 defines no shared schema or type and it is never persisted merely to satisfy resource grammar |
+| `EvaluationResult` | `EmbeddedValue` when captured inside a record; `TransientRequestResult` when exchanged independently | Adapter/internal-engine-facing evidence; no independent durable lifecycle is created by FEATURE-0013 |
+| `DecisionRecord` | `ImmutableRecord` | Governance-only canonical record; append-only; customer, operator, auditor, regulator, provider, and AI access occurs through authorized projections |
+| `AuditEvent` | `ImmutableRecord` | Governance-only canonical accountability record; append-only; telemetry and transport events are not substitutes |
+| `Operation` | `LongRunningOperation` | Inherited unchanged from FEATURE-0012/ADH-2026-013; owns asynchronous lifecycle, not decision meaning |
+| `DecisionContext` | `TransientRequestResult` | Authorized audience-specific projection; non-authoritative and not persisted merely to satisfy resource grammar |
+
+`DecisionRecord` and `AuditEvent` use FEATURE-0012's `ImmutableRecord` shape:
+type metadata, common `metadata`, and one immutable record payload. They do not
+use mutable desired-state `spec`, observed `status`, or a second scope field.
+The payload fields shown in section 6.1 are the record payload and are not an
+alternative resource grammar. `DecisionProfile` uses the FEATURE-0012
+`VersionedDefinition` shape; its definition content is `spec`, while publication
+status, if present, follows FEATURE-0012 ownership and mutability rules.
+
+Canonical governance records are never made customer-facing merely by exposing
+their schema. Audience-specific disclosure is a projection decision governed by
+the profile, sensitivity mapping, purpose, authorization, and minimization
+rules. Requirements and design may not select a different resource profile,
+introduce a parallel envelope, or turn an embedded/transient value into a
+persistent resource without a new architecture decision.
+
 ## 6. Extensible decision semantics
 
 ### 6.1 Stable common envelope
@@ -212,17 +220,17 @@ subjects, scope, inputs, evaluations, composition, typed result, rationale,
 obligations, provenance, validity, correlation, and audit links.
 
 `DecisionRecord` scope identity is expressed solely through the FEATURE-0012
-`metadata.scopeRef` field. Per ADH-2026-016, `metadata.scopeRef` is the sole
+`metadata.scopeRef` field. `metadata.scopeRef` is the sole
 logical and serialized scope authority; a top-level `scopeRef` field, a
 parallel scope enum, a duplicated scope attribute, or any second scope source
 is removed and prohibited. The canonical `Platform` form is an absent/nil
-`metadata.scopeRef` (inherited from FEATURE-0012 `NormalizeScope` /
-`CanonicalScopeIdentity`, section 29.3.1) where the applicable contract permits
+`metadata.scopeRef` (inherited from FEATURE-0012 `NormalizeScope` and
+`CanonicalScopeIdentity`) where the applicable contract permits
 `Platform`; every non-Platform scope carries a non-nil `metadata.scopeRef` with
 a canonical `ScopeKind` and UID. A record that declares scope through more than
 one source, or through any source other than `metadata.scopeRef`, fails
 validation. A canonical nil `metadata.scopeRef` that resolves to `Platform` is
-not a contradictory or duplicate scope. See section 30.2.
+not a contradictory or duplicate scope.
 
 The envelope does not contain every domain's result fields. `DecisionProfile`
 selects a separately versioned typed-result schema. An adopting feature may add
@@ -230,42 +238,54 @@ a profile and result schema without revising FEATURE-0013 when it conforms to
 the extension contract and existing semantic registries.
 
 ```yaml
+apiVersion: governance.sovrunn.io/v1alpha1
 kind: DecisionRecord
-apiVersion: sovrunn.io/v1alpha1
 metadata:
-  # metadata.scopeRef is the sole scope authority (ADH-2026-016).
-  # Absent/nil scopeRef is the canonical Platform form where the
-  # contract permits Platform; every non-Platform scope carries a
-  # non-nil scopeRef with a canonical ScopeKind and UID. No top-level
-  # or parallel scope source is permitted.
-  scopeRef: null
-profileRef:
-  name: PlacementDecision
-  version: 1.0.0
-form: SELECTION
-authority: AUTHORITATIVE
-purpose: workload-placement
-requestRef: null
-actorRef: null
-subjectRefs: []
-effectivePolicyContextRef: null
-inputSnapshotRef: null
-evaluationResultRefs: []
-composition:
-  strategyRef: null
-  graphRef: null
-result:
-  finality: FINAL
-  adjudication: null
-  typedResult: {}
-  rationale: {}
-  obligations: []
-provenance: {}
-validity: {}
-correlation:
-  operationRef: null
-  auditEventRefs: []
+  name: placement-decision-123
+  uid: decision-123
+  # scopeRef is omitted only for canonical Platform scope. A non-Platform
+  # record carries the one canonical FEATURE-0012 ScopeRef object here.
+  scopeRef:
+    apiVersion: core.sovrunn.io/v1alpha1
+    kind: Project
+    name: payments-production
+    uid: project-123
+record:
+  profileRef:
+    name: PlacementDecision
+    version: 1.0.0
+  form: SELECTION
+  authority: AUTHORITATIVE
+  purpose: workload-placement
+  subjectRefs:
+    - apiVersion: platform.sovrunn.io/v1alpha1
+      kind: ServiceInstance
+      name: postgres-primary
+      uid: service-456
+  evaluationResultRefs: []
+  result:
+    finality: FINAL
+    typedResult: {}
+    rationale: {}
+    obligations: []
+  provenance: {}
+  validity: {}
+  correlation:
+    auditEventRefs: []
 ```
+
+The example follows FEATURE-0012 reference identity and absence rules:
+
+- `Project` retains its approved `core.sovrunn.io/v1alpha1` API identity;
+- `ServiceInstance` retains its existing
+  `platform.sovrunn.io/v1alpha1` compatibility identity until a separately
+  approved migration changes it;
+- every present typed reference contains `apiVersion`, `kind`, and `name`, with
+  optional immutable `uid`; and
+- absent optional singular references are omitted. They are not serialized as
+  `null` unless a future approved canonical schema explicitly declares a
+  nullable union. Empty reference collections may be represented as empty
+  arrays when the owning profile permits them.
 
 ### 6.2 Decision forms
 
@@ -348,9 +368,11 @@ was refused.
 Final `DecisionRecord` and `AuditEvent` resources are append-only. Corrections
 or revocations create new records linked by typed `supersedes`, `corrects`, or
 `revokes` references. Chains are bounded and cycle-free. Retention or lawful
-erasure may remove protected payloads only through an approved cryptographic
-erasure/redaction process that preserves a verifiable tombstone and chain
-integrity where law permits.
+erasure never rewrites the canonical immutable record. A later approved
+architecture may use separately controlled payload custody, cryptographic key
+destruction, or a linked tombstone/redaction record that preserves identity and
+chain integrity where law permits. FEATURE-0013 defines only the structural
+state and linkage contract; it implements no erasure or cryptographic process.
 
 ### 6.8 DecisionProfile contract
 
@@ -377,17 +399,36 @@ Profiles and semantic registries must be distributable and verifiable offline.
 Registration requires conformance review; accepting arbitrary profile URIs at
 runtime would create an ungoverned extension and is prohibited.
 
-Registry publication and approval are control-plane operations. Runtime workers
-load signed, versioned profile bundles locally and pin profile name, version,
-schema digest, and trust-root identity in each decision. A synchronous decision
-must not require a network lookup to the profile or semantic registry. Unknown,
-revoked, expired, or digest-mismatched profiles are rejected or quarantined.
+The canonical registry representation is a declarative, versioned, provider-
+and language-neutral JSON bundle governed by JSON Schema. Go registry types and
+static in-memory maps are derivative implementation views and must not become
+the source of semantic truth. A bundle contains profile and semantic-registry
+entries plus algorithm-agile integrity and trust carriers; it does not select
+or execute canonicalization, digest, signing, or verification algorithms.
 
-FEATURE-0013 defines `DecisionProfile` schemas, governance, signed bundle
-format, validation, and conformance only. It does not implement or authorize a
-production network registry, distribution service, or control plane in Phase 2.
-Production publication, replication, revocation distribution, and runtime
-registry services are deferred to separately approved features.
+FEATURE-0012 platform/schema validation ceilings are absolute outer safety
+bounds. Within those inherited ceilings, profile declarations own the maximum
+permitted sensitivity, content categories, field count, bytes, depth, value
+types, graph, latency, and payload bounds for their decision family. Evaluator
+registrations may narrow those profile limits for one evaluator type but may
+never widen, replace, or contradict either the profile or FEATURE-0012 ceiling.
+The effective bound is the most restrictive applicable value. Missing, unknown,
+incomparable, or above-ceiling mandatory bounds fail validation.
+
+Registry publication and approval are later control-plane operations. Runtime
+workers may eventually load locally available, versioned profile bundles and
+pin profile name, version, schema identity, and opaque trust-root identity in a
+decision. A synchronous decision must not require a network lookup. Before
+ADR-F13-002, FEATURE-0013 validates only static bundle structure, identifier
+syntax, carrier presence, opaque expected-versus-observed states, and fail-
+closed trust-state transitions. Unknown, expired, revoked, mismatched, or
+unverified required trust states fail closed; no cryptographic-validity claim
+is made.
+
+FEATURE-0013 defines `DecisionProfile` schemas, declarative bundle format,
+governance, structural validation, and conformance only. It does not implement
+or authorize a production registry, distribution service, control plane,
+canonicalizer, digester, signer, verifier, key service, or revocation service.
 
 ### 6.9 Anticipated decision families
 
@@ -436,7 +477,8 @@ actions always require a durable `DecisionRecord` and audit obligation.
 
 FEATURE-0013 does not require a remote central authorization call for every
 request. A later enforcement architecture may use local policy decision points,
-digest-pinned context, verified short-lived decision artifacts, or safe caches
+version-pinned context, later-approved verified short-lived decision artifacts,
+or safe caches
 when the profile defines audience, scope, expiry, revocation, freshness, and
 fail-closed behavior. Aggregation may reduce durable `DecisionRecord` volume but
 must not suppress audit evidence required by the applicable profile.
@@ -446,18 +488,30 @@ must not suppress audit evidence required by the applicable profile.
 ### 7.1 Atomic evaluation
 
 An atomic evaluation has one registered evaluator type, one bounded input
-snapshot or digest, one result, one timing envelope, and explicit success,
+snapshot reference or opaque integrity carrier, one result, one timing envelope, and explicit success,
 non-match, indeterminate, timeout, or error semantics. Evaluator-native payloads
 remain behind adapters; normalized fields enter the common record.
 
 Evaluation reproducibility and decision reproducibility are distinct. An
 external, probabilistic, or AI evaluator may not reproduce the same output when
 rerun. Its normalized result must therefore capture evaluator identity and
-version, governed input snapshot or digest, returned output, relevant execution
+version, governed input snapshot reference and optional opaque integrity carrier, returned output, relevant execution
 configuration, evaluation time, trust boundary, safety/policy filters, and
-integrity digest. Authoritative composition is deterministic from these
+structural trust state. Authoritative composition is deterministic from these
 captured results and must not rerun an external or AI evaluator during replay or
 audit. A profile may prohibit nondeterministic evaluators entirely.
+
+`EvaluationResult` does not establish an independent governance scope. Its
+accepted scope is derived from the containing `DecisionRecord`'s canonical
+`metadata.scopeRef` and the profile's declared cross-scope rules. If an
+evaluator supplies scope metadata for structural comparison, that metadata is
+evidence only: it must equal or be an explicitly permitted narrowing of the
+record scope and must never become a second scope authority. Profile rules own
+the permitted cross-scope relationship; evaluator registrations may narrow but
+not widen it. Cross-scope validation occurs before composition, and a mismatch,
+unknown scope, unauthorized widening, or inaccessible reference fails closed
+without disclosing whether the referenced target exists. Design may choose the
+validation-pass organization but may not change these authority semantics.
 
 ### 7.2 Composite decision
 
@@ -477,8 +531,9 @@ registered strategy. Every strategy declares:
 Fail-open remains subject to the profile restrictions in section 6.8 and can
 never be selected merely as a runtime fallback.
 
-The chosen strategy identifier, version, ordered input digests, and output are
-recorded so the result can be reproduced.
+The chosen strategy identifier, version, ordered input identities, optional
+opaque integrity carriers, and output are recorded so the result can be
+reproduced without requiring digest computation in FEATURE-0013.
 
 ### 7.3 Hierarchical evaluation
 
@@ -486,11 +541,13 @@ Governance inheritance is resolved before final decision composition into one
 `EffectivePolicyContext`. The decision layer must not independently traverse
 Platform, Organization, OrganizationUnit, Tenant, Project, or Provider trees.
 The resolved context includes provenance, precedence, conflict resolution,
-effective time, and digest. This prevents every decision domain from creating a
+effective time, and versioned identity with an optional opaque integrity
+carrier. This prevents every decision domain from creating a
 different hidden inheritance engine.
 
 A valid immutable context snapshot may be resolved ahead of the request and
-cached by scope, version, effective-time window, and digest. The synchronous
+cached by scope, version, effective-time window, and complete semantic identity.
+An optional opaque integrity carrier may accompany the snapshot. The synchronous
 path must not traverse the governance hierarchy or call a central resolver when
 a policy-valid local snapshot is available. Profiles define maximum staleness,
 invalidation, revocation, and fail-closed behavior.
@@ -512,7 +569,7 @@ The graph must have:
   evaluations, per-evaluator timeout, retries, cross-jurisdiction calls, and
   cost units;
 - cycle, duplicate, missing dependency, and incompatible-version rejection;
-- recorded graph definition/version or immutable digest.
+- recorded graph definition/version and optional opaque integrity carrier.
 
 The graph may describe dependency and composition only. It cannot execute
 provisioning, human tasks, compensations, arbitrary code, or unbounded loops.
@@ -526,9 +583,21 @@ background activity.
 
 Simple and bounded decisions should complete synchronously when all required
 inputs are available within the declared latency budget. The path does not
-require a queue or durable workflow engine. It returns either a final
-`DecisionRecord` reference/value or a typed non-final response indicating that
-asynchronous handling is required.
+require a queue or durable workflow engine. Its externally exchanged outcome
+uses only existing FEATURE-0012/0013 contracts:
+
+- completion returns a `DecisionRecord` value or canonical typed reference;
+- accepted asynchronous handling returns an existing `Operation` value or
+  canonical typed reference conforming to FEATURE-0012 `LongRunningOperation`;
+  and
+- rejection, malformed input, or inability to accept either path returns the
+  inherited FEATURE-0012 Problem Details envelope.
+
+FEATURE-0013 defines no `PendingDecision`, `DeferredDecision`,
+`DecisionPending`, pending-decision status vocabulary, or other non-final
+decision response envelope. Transition to `Operation` is the sole accepted
+asynchronous handoff; it does not make the decision mutable and does not imply
+that a final `DecisionRecord` already exists.
 
 ### 8.2 Asynchronous path
 
@@ -560,7 +629,8 @@ recovery, and licensing fit.
 
 All profile, schema, strategy, policy-context, trust, and evaluator material
 needed for a bounded synchronous decision must be locally available,
-version-pinned, and digest-verifiable. Profile publication, policy resolution,
+version-pinned, and structurally verifiable. Later approved cryptographic
+profiles may additionally require digest verification. Profile publication, policy resolution,
 schema distribution, evidence export, audit indexing, AI inference,
 notarization, and regulator replication are control-plane or asynchronous
 activities unless a specific profile explicitly makes one part of the decision
@@ -568,42 +638,84 @@ input and budgets its failure behavior.
 
 No remote registry, audit index, evidence exporter, AI model, identity control
 plane, cryptographic notary, or vendor control plane may become an implicit
-universal synchronous dependency. A missing mandatory input causes a typed
-non-final response, deterministic fail-closed adjudication, or transition to an
-`Operation` according to the profile; it never causes an unbounded synchronous
-wait.
+universal synchronous dependency. When a mandatory input is missing, the only
+permitted outcomes are: a final fail-closed `DecisionRecord` when the profile
+defines a deterministic adjudication; transition to the existing `Operation`
+contract when asynchronous handling is accepted; or inherited FEATURE-0012
+Problem Details when neither path can be accepted. No other non-final response
+type or status is permitted, and processing never waits synchronously without
+a bound.
 
 ## 9. Statelessness, scalability, and cost controls
 
-The decision kernel is a pure, deterministic function of versioned inputs,
-registered strategy, and bounded configuration. Workers hold no authoritative
-local session state between requests and are interchangeable behind ordinary
-load balancing.
+Implementation classification for this section is closed by architecture:
 
-Durable state, deduplication, locks/leases, input snapshots, and audit records
-are external services accessed through ports. Implementations must support:
+- `CONTRACT_NOW`: schema fields for retry identity and the complete semantic
+  decision-identity descriptor, profile-declared finite bounds, pure or bounded
+  in-memory conformance, and documentation of the later invariants;
+- `INVARIANT_FOR_LATER`: stateless interchangeable workers, external durable
+  state behind ports, compare-and-create semantics, effective-once behavior,
+  bounded delivery/retry/backpressure/cache behavior, and runtime resource
+  budgets; and
+- `DEFERRED`: every concrete store, transaction, lock, lease, queue,
+  dead-letter processor, cache, worker topology, scaling policy, and production
+  numeric default.
+
+The `CONTRACT_NOW` reference kernel is a pure, deterministic function of
+versioned inputs, registered strategy, and explicit fixture-local bounded
+configuration. It holds no authoritative session state and performs no
+production persistence, delivery, locking, caching, or scaling behavior.
+
+A later production implementation is constrained by the following
+`INVARIANT_FOR_LATER` obligations:
 
 - a caller-supplied idempotency key scoped to caller and request purpose for
   retry identity;
-- a separate semantic decision digest covering scope, purpose, profile name and
-  version, authority, canonical input snapshot, `EffectivePolicyContext`,
+- a separate complete semantic decision identity descriptor covering scope,
+  purpose, profile name and version, authority, canonical input snapshot,
+  `EffectivePolicyContext`,
   composition strategy/version, evaluator contract versions, and relevant
   evaluation-time or validity epoch;
 - compare-and-create or equivalent concurrency control;
 - at-least-once delivery without duplicate authoritative decisions;
 - bounded retries with jitter and dead-letter/quarantine handling;
 - backpressure, admission control, per-scope quotas, and load shedding;
-- deterministic caching only by the complete semantic decision digest, with
+- deterministic caching only by the complete semantic decision identity, with
   audience, scope, expiry, revocation, and freshness enforcement;
 - no dependence on sticky sessions;
 - scale-to-zero where deployment policy permits;
-- hot-path summaries with cold evidence referenced by digest;
+- hot-path summaries with cold evidence referenced by typed identity and,
+  where externally supplied, an opaque integrity carrier;
 - batch and parallel evaluation only within declared resource budgets.
 
-Exactly-once transport is not claimed. Business-level effective-once behavior
-comes from idempotency, immutable identity, and atomic persistence boundaries.
+Exactly-once transport is not claimed. In a later production implementation,
+business-level effective-once behavior comes from idempotency, immutable
+identity, and atomic persistence boundaries. FEATURE-0013 implements only the
+carrier fields, validation, and deterministic conformance needed to preserve
+that future invariant.
+
+FEATURE-0013 deliberately defines no new universal numeric decision-domain
+defaults or system-wide graph ceiling. Existing FEATURE-0012 decoder, schema,
+and validation ceilings remain inherited absolute outer bounds. Every
+conforming profile must declare finite values for all domain limits it uses
+within those ceilings, and evaluator registrations may only narrow them. A
+later platform-governance feature may approve additional deployment-wide
+decision ceilings. Until then, requirements, design, fixtures, and code must
+not invent a FEATURE-0013 default, fallback, or hidden maximum; conformance uses
+explicit fixture-local profile values solely to test boundary behavior.
 
 ## 10. Audit consistency
+
+Implementation classification for this section is closed by architecture:
+
+- `CONTRACT_NOW`: immutable `DecisionRecord`/`AuditEvent` identity and linkage,
+  the audit-obligation carrier, correlation fields, validation, and pure or
+  bounded in-memory partial-failure/reconciliation conformance;
+- `INVARIANT_FOR_LATER`: atomic durable acceptance, asynchronous
+  materialization, bounded delivery, recovery, quarantine, and reconciliation;
+  and
+- `DEFERRED`: the transaction, outbox, event-store, database, queue, index,
+  exporter, SIEM, replication, and regulator-delivery mechanisms.
 
 A final decision must not be reported as durably recorded until:
 
@@ -621,11 +733,12 @@ Asynchronous materialization must create the `AuditEvent` using the same
 identity and must never require mutation of the `DecisionRecord`.
 
 The concrete local mechanism—single transaction, transactional outbox,
-event-sourced append, or another atomic pattern—is deferred. The synchronous
-path must not depend on a remote audit service or index. Implementations must
-expose recovery, bounded delivery, poison-record quarantine, and reconciliation
-for partial downstream failure and must never fabricate success from a
-telemetry log.
+event-sourced append, or another atomic pattern—is deferred. A later
+implementation's synchronous path must not depend on a remote audit service or
+index and must expose recovery, bounded delivery, poison-record quarantine, and
+reconciliation for partial downstream failure. FEATURE-0013 represents and
+tests these failure semantics without implementing any such runtime mechanism.
+No implementation may fabricate durable success from a telemetry log.
 
 Every meaningful decision links to at least one `AuditEvent`. A single audit
 event may reference a decision, operation, actor, subject, resource, request,
@@ -659,16 +772,25 @@ The same canonical contracts must operate in:
 
 Disconnected profiles use local trust roots, identity, time source, artifact
 registry, schema registry, policy bundles, keys, observability, audit store, and
-AI inference if AI is enabled. Synchronization is explicit, signed,
-policy-authorized, resumable, and conflict-detecting; it is never a hidden
-foreign control-plane dependency.
+AI inference if AI is enabled. FEATURE-0013 defines only the static,
+origin-aware synchronization manifest, policy-authorization fields, ordering,
+duplicate/replay markers, quarantine states, and explicit conflict evidence as
+`CONTRACT_NOW`. Resumable synchronization execution and reconciliation are
+`INVARIANT_FOR_LATER`. Manifest signing, signature verification, trust-root
+cryptography, and all algorithms/products/services are `DEFERRED` under
+ADR-F13-002. Synchronization is never a hidden foreign control-plane
+dependency.
 
 Export and import use collision-resistant record identifiers, origin trust-
-domain identity, signed manifests, replay protection, duplicate detection,
-per-origin ordering, and explicit trust-root version. Unknown profiles, keys,
-origins, or revoked trust roots are quarantined. Immutable records are never
-merged using last-writer-wins; cross-origin conflicts produce explicit evidence
-and a governed reconciliation decision.
+domain identity, algorithm-agile signature carriers, replay markers, duplicate
+detection, per-origin ordering, and explicit opaque trust-root identity. The
+manifest is not cryptographically signed or verified by FEATURE-0013. Unknown
+profiles, origins, or opaque trust states—including unknown, absent, expired,
+revoked, mismatched, or unverified states—fail closed or are represented as
+quarantined according to the profile. Immutable records are never merged using
+last-writer-wins; cross-origin conflicts produce explicit evidence and a
+governed reconciliation decision. Runtime quarantine and reconciliation are
+later invariants, not FEATURE-0013 services.
 
 ### 11.3 Provider neutrality and deployment portability
 
@@ -698,7 +820,8 @@ The contracts carry or reference, without embedding secrets:
   assurance;
 - key domain and cryptographic proof references;
 - approved disclosure and export policy;
-- integrity digest and trusted timestamp provenance;
+- opaque integrity and trusted-time provenance carriers, with verification
+  deferred to later approved cryptographic architecture;
 - emergency/break-glass use with mandatory reason and follow-up review.
 
 Jurisdiction-specific values belong in versioned profiles and policy
@@ -719,7 +842,7 @@ states and regulated sectors.
   untrusted data.
 - Enforce schema, size, depth, character, URI, and reference-kind limits.
 
-**Security validation boundary (ADH-2026-016).** FEATURE-0013 owns only
+**Security validation boundary.** FEATURE-0013 owns only
 structural schema validation, typed classification, declared bounds, projection
 restrictions, and deterministic conformance. FEATURE-0013 does **not** claim
 comprehensive semantic detection of secrets, credentials, personal data,
@@ -731,8 +854,7 @@ malware, DLP, or content-scanning engines in FEATURE-0013. Where this document
 describes rejecting a "secret", "credential", "prompt", or "unrestricted tenant
 content" projection (for example the AC-13.7 fixtures), it means structural and
 typed conformance against declared bounds, prohibited content-category rules,
-and sensitivity ceilings — not a semantic content-scanning capability. See
-section 30.4.
+and sensitivity ceilings — not a semantic content-scanning capability.
 
 ### 12.2 Confidentiality and minimization
 
@@ -748,19 +870,20 @@ change the final outcome or falsely imply that omitted evidence did not exist.
 
 ### 12.3 Integrity and non-repudiation
 
-Canonical serialization and content digests are supported. Deployment profiles
-may require signatures, trusted timestamps, append-only/WORM retention, Merkle
-batch proofs, or external notarization. The core contract remains
-algorithm-agile and does not mandate one national or vendor cryptographic
-service.
+The contract carries algorithm-agile canonicalization, digest, signature, and
+trust metadata so later approved deployment profiles can require cryptographic
+assurance without changing the common envelope. FEATURE-0013 does not compute a
+digest over content, canonicalize content, sign, verify, timestamp, notarize,
+enforce WORM retention, or claim that an opaque carrier proves content existed
+or was considered.
 
-Local digest computation is permitted on every record. Per-record remote HSM,
-trusted-time, or notarization calls are not universal hot-path requirements.
-Profiles may require local signing, per-record signing, batched Merkle signing,
-or asynchronous external notarization according to assurance level. They must
-declare latency, outage, key-rotation, revocation, and fail-closed behavior.
+Production deployment profiles may later require local or external signing,
+trusted timestamps, append-only/WORM retention, Merkle batch proofs, or
+notarization. Those capabilities, their algorithms, covered fields, products,
+outage behavior, rotation, revocation, and latency policy require separately
+approved architecture and implementation.
 
-**Structural trust versus cryptographic verification boundary (ADH-2026-016).**
+**Structural trust versus cryptographic verification boundary.**
 Algorithm-agile carrier fields and structural trust metadata are `CONTRACT_NOW`:
 the canonicalization-method identifier, the digest-algorithm identifier, the
 covered-field descriptor, the signature-algorithm identifier, and the
@@ -774,10 +897,10 @@ Structural fixtures may use opaque deterministic test assertions to validate
 state and failure semantics but must not claim cryptographic validity or select
 an algorithm. When a profile requires verified trust, an unknown, absent,
 expired, revoked, mismatched, or unverified trust state fails closed. RFC 8785
-is illustrative only and cannot be selected by design, tasks, fixtures, or code
-without a later approved decision. See sections 14 and 30.5.
+is illustrative only and cannot be selected by requirements, design, tasks,
+fixtures, or code without a later approved decision.
 
-### 12.4 Provider-neutral sensitivity classification vocabulary (ADH-2026-016)
+### 12.4 Provider-neutral sensitivity classification vocabulary
 
 Sensitivity classification uses a single closed, ordered, provider-neutral core
 vocabulary:
@@ -785,6 +908,33 @@ vocabulary:
 ```text
 PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED
 ```
+
+This sensitivity value is a decision/profile handling constraint; it does not
+replace or redefine FEATURE-0012 `DataClassification`. FEATURE-0012
+`DataClassification` continues to classify externally exchanged object data and
+metadata using its seven canonical values. FEATURE-0013 sensitivity controls
+the maximum handling and projection exposure permitted inside a
+`DecisionProfile`, `EvaluationResult`, rationale, evidence, or typed result.
+
+The two dimensions coexist and must not be silently converted. The canonical
+minimum mapping is:
+
+| FEATURE-0012 `DataClassification` | FEATURE-0013 sensitivity floor |
+|---|---|
+| `Public` | `PUBLIC` |
+| `Customer-visible` | `CONFIDENTIAL` |
+| `Tenant-confidential` | `CONFIDENTIAL` |
+| `Operator-confidential` | `CONFIDENTIAL` |
+| `Internal` | `INTERNAL` |
+| `Sensitive` | `RESTRICTED` |
+| `Secret-reference-only` | `RESTRICTED` |
+
+A profile may raise this floor but may never lower it. The original FEATURE-
+0012 classification remains present; the mapped sensitivity does not erase or
+rewrite it. When multiple classifications apply, validation uses the most
+restrictive result. An unmapped, unknown, contradictory, or lower-than-floor
+value fails closed. Jurisdiction-specific mappings may further restrict
+handling but cannot weaken either canonical dimension.
 
 - The four core values are ordered from least to most sensitive. No fifth core
   value and no fewer than these four are permitted.
@@ -806,8 +956,7 @@ PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED
 - A captured value classified above the declared ceiling fails validation.
 
 This vocabulary and its profile-bound rules are structural and typed conformance
-only; they are not a semantic content-scanning capability (see sections 12.1 and
-30.4). See section 30.3.
+only; they are not a semantic content-scanning capability (see section 12.1).
 
 ## 13. AI-first architecture
 
@@ -835,16 +984,24 @@ available when AI is disabled or disconnected.
 
 ## 14. Reuse and standards strategy
 
-| Foundation | Decision |
-|---|---|
-| FEATURE-0012 API/resource grammar | Extend; do not create a parallel metadata, reference, error, or validation grammar |
-| OMG DMN concepts | Reuse bounded decision-requirements concepts; do not select a DMN engine |
-| CloudEvents | Optional transport mapping only; never the canonical audit or decision record |
-| OpenTelemetry | Correlation and operational telemetry only; never audit authority |
-| RFC 8785 JCS | Illustrative only (ADH-2026-016); not selected. The canonicalization algorithm/profile and the exact digest-covered fields are DEFERRED under ADR-F13-002 and cannot be selected by design, tasks, fixtures, or code without a later approved decision |
-| DSSE/in-toto and SPDX/CycloneDX concepts | Reuse for signed supply-chain evidence references; do not duplicate their schemas |
-| CEL/OPA/Cedar | Future evaluator candidates behind adapters; no engine-native core types |
-| Workflow/durable execution systems | Later runtime candidates behind operation/orchestration ports |
+This is the single mandatory FEATURE-0011 feature-level reuse summary for the
+FEATURE-0013 architecture. Field meanings and controlled vocabularies are owned
+only by `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`.
+
+| Capability / decision unit | Disposition | Rationale | Decision status | Controlling reference |
+|---|---|---|---|---|
+| FEATURE-0012 API/resource grammar | Extend | Reuse every shared profile, metadata, reference, boundary, validation, Problem Details, schema, and compatibility primitive; add only decision/audit domain semantics and approved per-kind constraints. | Approved | ADH-2026-017; ADH-2026-012; RFC-0022 |
+| DecisionRecord, DecisionProfile, EvaluationResult, and AuditEvent domain contract | Build | No mature external model supplies Sovrunn's complete sovereign, provider-neutral authority, projection, scope, audit-obligation, and downstream-adoption semantics. The common contract is Sovrunn differentiation; external concepts remain inputs rather than native core types. | Approved | ADH-2026-017; DEC-0026; RFC-0023 |
+| Bounded decision-requirements and composition concepts | Reuse | Reuse applicable OMG DMN decision-requirements concepts without selecting, embedding, or recreating a DMN engine or workflow language. | Approved | ADH-2026-017; RFC-0023 |
+| Audit transport and operational correlation | Reuse | CloudEvents may be an optional transport mapping and OpenTelemetry may carry operational correlation; neither becomes the canonical record or audit authority. | Approved | ADH-2026-017; RFC-0023 |
+| Supply-chain evidence references | Reuse | Reuse DSSE/in-toto and SPDX/CycloneDX concepts by typed reference without duplicating their schemas or implementing signing. | Approved | ADH-2026-017; ADR-F13-002 |
+| Canonicalization, digest, signing, and cryptographic verification | Reuse | Preserve algorithm-agile carriers and evaluate mature standards later; RFC 8785 is illustrative only and no algorithm, covered-field set, product, or service is selected in FEATURE-0013. | Deferred | ADH-2026-017; ADR-F13-002 |
+| Policy/evaluator and workflow runtimes | Wrap | CEL, OPA, Cedar, durable-execution, and workflow products are later candidates behind owning-feature adapters or ports; FEATURE-0013 defines no wrapper or runtime implementation. | Deferred | ADH-2026-017; DEC-0036 |
+
+Capability-level assessments required by the canonical reuse standard must be
+completed for the Sovrunn-owned domain contract and any later runtime candidate
+before source implementation. They must reuse this summary and must not invent
+new dispositions in requirements or design.
 
 ## 15. Compatibility and evolution
 
@@ -857,13 +1014,71 @@ available when AI is disabled or disconnected.
 - Registries for decision profile, form, authority, evaluator type, strategy,
   reason code, obligation, event type, evidence type, and projection are
   versioned and governable offline.
+
+### 15.1 Public Problem Details binding
+
+Public validation failures inherit the FEATURE-0012 RFC 9457 Problem Details
+contract, stable codes, RFC 6901 JSON Pointer field paths, safe-denial, bounded
+violations, and redaction rules. A FEATURE-0013 structural or semantic
+validation failure has exactly this public binding:
+
+| Problem member | Required public value or rule |
+|---|---|
+| `type` | `urn:sovrunn:problem:validation-failed` |
+| `status` | `422` |
+| `code` | `VALIDATION_FAILED` |
+| `violations[].field` | RFC 6901 JSON Pointer to the rejected field or nearest safe parent |
+| `violations[].code` | Exactly one code from the closed registry in section 15.2 |
+| `violations[].message` | Human-readable, non-authoritative, redactable, and never parsed by clients |
+
+The `DECISION_PROFILE_`, `DECISION_EVALUATION_`,
+`DECISION_COMPOSITION_`, `DECISION_OBLIGATION_`, `DECISION_TRUST_`,
+`DECISION_SCOPE_`, and `DECISION_RELATIONSHIP_` prefixes are public namespaces
+only for `violations[].code`. They are not `Problem.type` URI families,
+top-level `Problem.code` values, HTTP-status selectors, or internal-only
+categories. Existing FEATURE-0012 top-level codes and HTTP meanings continue to
+handle malformed input, authentication, authorization, absence, conflict,
+stale state, internal failure, and temporary dependency unavailability.
+
+### 15.2 Initial closed public violation-code registry
+
+| Public family | Allowed `violations[].code` values | Architectural meaning |
+|---|---|---|
+| Decision profile | `DECISION_PROFILE_UNKNOWN`, `DECISION_PROFILE_VERSION_UNSUPPORTED`, `DECISION_PROFILE_INACTIVE`, `DECISION_PROFILE_SCHEMA_INVALID`, `DECISION_PROFILE_LIMIT_INVALID` | Profile identity, lifecycle, schema, or declared bounds are invalid |
+| Evaluation | `DECISION_EVALUATION_TYPE_UNSUPPORTED`, `DECISION_EVALUATION_RESULT_INVALID`, `DECISION_EVALUATION_SCOPE_MISMATCH`, `DECISION_EVALUATION_LIMIT_EXCEEDED` | Captured evaluation cannot conform to the selected profile and record |
+| Composition | `DECISION_COMPOSITION_STRATEGY_UNSUPPORTED`, `DECISION_COMPOSITION_GRAPH_INVALID`, `DECISION_COMPOSITION_CYCLE`, `DECISION_COMPOSITION_LIMIT_EXCEEDED`, `DECISION_COMPOSITION_INPUT_CONFLICT` | Strategy or bounded deterministic graph contract is invalid |
+| Obligation | `DECISION_OBLIGATION_UNKNOWN`, `DECISION_OBLIGATION_INVALID`, `DECISION_OBLIGATION_UNSUPPORTED_MANDATORY` | Obligation vocabulary, payload, or mandatory support contract is invalid |
+| Trust | `DECISION_TRUST_REQUIRED`, `DECISION_TRUST_UNKNOWN`, `DECISION_TRUST_EXPIRED`, `DECISION_TRUST_REVOKED`, `DECISION_TRUST_MISMATCH` | Required structural trust carrier or fail-closed trust state is invalid; no cryptographic-validity claim is implied |
+| Scope | `DECISION_SCOPE_REQUIRED`, `DECISION_SCOPE_INVALID`, `DECISION_SCOPE_CONFLICT`, `DECISION_SCOPE_MISMATCH`, `DECISION_SCOPE_WIDENING` | Canonical scope is missing, invalid, duplicated, mismatched, or impermissibly widened |
+| Relationship | `DECISION_RELATIONSHIP_KIND_INVALID`, `DECISION_RELATIONSHIP_TARGET_INVALID`, `DECISION_RELATIONSHIP_CYCLE`, `DECISION_RELATIONSHIP_CHAIN_LIMIT_EXCEEDED`, `DECISION_RELATIONSHIP_CONFLICT` | Correction, supersession, revocation, or other governed relationship is invalid |
+
+These names are public compatibility contracts owned by architecture. A new
+code, rename, removal, changed meaning, different prefix, or remapping to a
+different top-level problem requires an approved architecture and compatibility
+change. Requirements may enumerate testable cases and map each case to an
+existing code and JSON Pointer; they must not create, rename, alias, or assign
+semantics to public codes. Design may map the approved codes to validators and
+tasks may implement those mappings, but neither may introduce a parallel error
+envelope, alternate `Problem.type`, new HTTP meaning, or ungoverned code.
+
+### 15.3 Other compatibility rules
+
 - Migrations are reversible where practical and preserve old evidence/digests.
-- Per ADH-2026-015, `AuditEvent` expansion requires fixtures for all seven
-  canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`,
-  `Tenant`, `Project`, `Provider`, `ServiceInstance`), separate regression
-  fixtures for the six pre-existing FEATURE-0012 `ScopeKind` values (`Platform`,
-  `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`), and a
-  documented alpha compatibility decision.
+- `AuditEvent` expansion requires fixtures for all six canonical FEATURE-0012
+  governance `ScopeKind` values (`Platform`, `Organization`,
+  `OrganizationUnit`, `Tenant`, `Project`, `Provider`), continued regression
+  for the existing Organization-scoped alpha fixture, and a ServiceInstance
+  subject fixture whose `metadata.scopeRef` is the containing Project.
+
+Every inherited FEATURE-0011 or FEATURE-0012 vocabulary, shared type, error
+contract, schema convention, or validation rule must have one dependency-
+reconciliation record before design approval. That record identifies exact
+versions and files; compares enums, requiredness, cardinality, ownership,
+serialization, validation, security semantics, bindings, fixtures, and
+migration impact; and classifies every difference as added, removed, renamed,
+mapped, restricted, expanded, or semantically reinterpreted. Kiro and design
+must escalate any unapproved delta and may not invent aliases, mappings,
+restrictions, applicability exclusions, or compatibility behavior.
 
 ## 16. Observability and operability
 
@@ -879,7 +1094,7 @@ must be able to diagnose and recover the system without vendor remote access.
 ## 17. Conformance model
 
 The architecture requires executable positive and negative fixtures for the
-following scenarios. Per ADH-2026-016, these scenarios map exactly and
+following scenarios. These scenarios map exactly and
 one-to-one to the stable conformance IDs `F13-CF-01` through `F13-CF-28` in
 their existing order; the IDs must not be merged, renumbered, or omitted.
 Additional `AC-13.7`, scope, security, and compatibility cases use separately
@@ -887,13 +1102,75 @@ named IDs and do not alter this canonical count. One fixture may cover multiple
 scenario IDs, but every scenario must have an explicit coverage-matrix entry;
 coverage is counted by scenario ID, not by fixture-file count.
 
+The 28 IDs are stable scenario families. Every independently mandatory clause
+inside a family has a stable lowercase suffix in textual order (`.a`, `.b`,
+`.c`, and so on). For example, F13-CF-08 has `.a` timeout, `.b` missing
+evidence, `.c` evaluator failure, and `.d` policy conflict. The same rule is
+mandatory for compound families F13-CF-04, 08, 11, 12, 16, 20, 26, and 28;
+coverage of the parent requires coverage of every suffix. Requirements may
+state expected results and error codes but must not merge, omit, renumber, or
+invent the architectural cases.
+
+The following additional stable cases are also mandatory and do not change the
+canonical family count:
+
+| Case range | Mandatory atomic cases |
+|---|---|
+| `F13-SCOPE-01` | Positive canonical Platform scope; serialized `metadata.scopeRef` is absent |
+| `F13-SCOPE-02` | Positive canonical Organization scope |
+| `F13-SCOPE-03` | Positive canonical OrganizationUnit scope |
+| `F13-SCOPE-04` | Positive canonical Tenant scope |
+| `F13-SCOPE-05` | Positive canonical Project scope |
+| `F13-SCOPE-06` | Positive canonical Provider scope |
+| `F13-SCOPE-07` | Absent scope rejected when Platform is not permitted |
+| `F13-SCOPE-08` | Explicit Platform input normalizes to canonical absent serialized form |
+| `F13-SCOPE-09` | Parallel, duplicate, or second scope source rejected |
+| `F13-SCOPE-10` | Out-of-vocabulary scope, including ServiceInstance, rejected |
+| `F13-SCOPE-11` | ServiceInstance subject accepted through typed `subjectRef` under its Project `metadata.scopeRef`; subject/scope mismatch rejected |
+| `F13-EVAL-01` | Profile sensitivity and projection limits accepted at their declared bounds |
+| `F13-EVAL-02` | Evaluator registration narrows profile limits |
+| `F13-EVAL-03` | Evaluator widening of profile limits rejected |
+| `F13-EVAL-04` | Missing, unknown, or incomparable mandatory limits rejected |
+| `F13-EVAL-05` | Prohibited typed content category or value type rejected structurally |
+| `F13-EVAL-06` | Evaluation scope mismatch or unauthorized widening rejected without existence disclosure |
+| `F13-EVAL-07` | Opaque expected-versus-observed integrity state mismatch fails closed |
+| `F13-EVAL-08` | Arbitrary text is not subjected to lexical secret, credential, PII, malware, or DLP scanning |
+| `F13-SEC-01` | Sensitivity ceiling boundary |
+| `F13-SEC-02` | Field-count boundary |
+| `F13-SEC-03` | Byte-size boundary |
+| `F13-SEC-04` | Nesting-depth boundary |
+| `F13-SEC-05` | Allowed-value-type boundary |
+| `F13-SEC-06` | Prohibited-category boundary |
+| `F13-SEC-07` | FEATURE-0012 classification-to-sensitivity floor cannot be lowered |
+| `F13-SEC-08` | Unknown, unmapped, contradictory, or below-floor classification fails closed |
+| `F13-TRUST-01` | Algorithm-agile carrier presence and identifier syntax validated structurally |
+| `F13-TRUST-02` | Covered-field descriptor presence validated without interpreting or selecting it |
+| `F13-TRUST-03` | Unknown, absent, expired, revoked, mismatched, or unverified required trust state fails closed |
+| `F13-TRUST-04` | No canonicalization, content-to-digest computation, signing, verification, notarization, or cryptographic-validity claim executes before ADR-F13-002 |
+| `F13-COMPAT-01` | FEATURE-0012 Platform ScopeKind regression |
+| `F13-COMPAT-02` | FEATURE-0012 Organization ScopeKind regression |
+| `F13-COMPAT-03` | FEATURE-0012 OrganizationUnit ScopeKind regression |
+| `F13-COMPAT-04` | FEATURE-0012 Tenant ScopeKind regression |
+| `F13-COMPAT-05` | FEATURE-0012 Project ScopeKind regression |
+| `F13-COMPAT-06` | FEATURE-0012 Provider ScopeKind regression |
+| `F13-COMPAT-07` | Existing Organization-scoped FEATURE-0012 AuditEvent remains valid |
+| `F13-COMPAT-08` | AuditEvent accepts all six existing governance scopes without changing the shared ScopeKind vocabulary |
+| `F13-COMPAT-09` | FEATURE-0012 metadata, typed-reference, validation-layer, Problem Details, extension, and ServiceInstance-as-Project-scoped-resource semantics remain unchanged |
+
+Every listed parent, suffix, and additional ID requires one coverage-matrix row.
+A physical fixture may cover several rows, but file count never substitutes for
+semantic coverage. All fixtures are deterministic, pure or bounded in-memory
+contract tests; runtime-oriented scenarios validate only inputs, outputs, and
+failure semantics and do not authorize persistence, networking, queues,
+workers, cryptographic execution, AI runtime, or external integration.
+
 | Conformance ID | Scenario |
 |---|---|
 | F13-CF-01 | simplest synchronous atomic authorization decision |
 | F13-CF-02 | simplest deterministic denial with actionable rationale and obligations |
 | F13-CF-03 | pure selection with a typed result and no adjudication facet |
 | F13-CF-04 | ranking, classification, resolution, allocation, plan, assessment, recommendation, advisory, and simulation profiles |
-| F13-CF-05 | human-approval asynchronous decision linked to an `Operation` |
+| F13-CF-05 | human-approval asynchronous handoff returns an existing `Operation` value/reference; the eventual `DecisionRecord` links to that `Operation`, with no FEATURE-0013-specific pending-response envelope |
 | F13-CF-06 | maximally complex but bounded hierarchical composite decision |
 | F13-CF-07 | parallel evaluations with deterministic aggregation |
 | F13-CF-08 | timeout, missing evidence, evaluator failure, and policy conflict |
@@ -901,7 +1178,7 @@ coverage is counted by scenario ID, not by fixture-file count.
 | F13-CF-10 | partial decision/audit persistence failure and reconciliation |
 | F13-CF-11 | supersession, correction, revocation, cycle, and chain-limit behavior |
 | F13-CF-12 | unauthorized profile, authority, projection, obligation bypass, and cross-scope reference rejection |
-| F13-CF-13 | offline/air-gapped profile registry, trust, and signed-bundle operation |
+| F13-CF-13 | offline/air-gapped static profile-bundle structure, opaque trust carriers, and fail-closed trust states; no signing or verification execution |
 | F13-CF-14 | export/import across two conforming provider implementations |
 | F13-CF-15 | AI-disabled operation and AI projection redaction |
 | F13-CF-16 | graph size, depth, width, fan-out, timeout, and payload budget rejection |
@@ -910,24 +1187,28 @@ coverage is counted by scenario ID, not by fixture-file count.
 | F13-CF-19 | local atomic decision/audit-obligation acceptance while downstream audit delivery is unavailable |
 | F13-CF-20 | idempotency retry identity versus semantic decision identity across policy, profile, strategy, authority, evaluator-version, and validity changes |
 | F13-CF-21 | deterministic replay from captured nondeterministic or AI evaluation output without rerunning the evaluator |
-| F13-CF-22 | synchronous operation with profile registry and policy resolver unavailable but valid local digest-pinned bundles present |
-| F13-CF-23 | rejection of unknown, expired, revoked, or digest-mismatched profile bundles |
+| F13-CF-22 | synchronous contract behavior with registry and policy resolver unavailable but valid local version-pinned bundles and opaque trust state present; no network or cryptographic execution |
+| F13-CF-23 | structural rejection of unknown, expired, revoked, or opaque expected-versus-observed mismatched profile bundles without digest computation |
 | F13-CF-24 | enforcement denial for unknown or unsupported mandatory obligations |
 | F13-CF-25 | local authorization artifact cache hit, expiry, revocation, scope mismatch, and stale-policy failure |
 | F13-CF-26 | cancellation and total remote-call, byte, concurrency, retry, jurisdiction, time, and cost budgets for composite graphs |
-| F13-CF-27 | local digest plus batched signing/notarization during remote cryptographic-service outage |
-| F13-CF-28 | disconnected export/import replay, duplicate, ordering, unknown trust root, revoked origin, and explicit conflict reconciliation |
+| F13-CF-27 | structural representation and fail-closed state semantics for a later local-digest/batched-signing/notarization profile during remote-service outage; no cryptographic execution |
+| F13-CF-28 | bounded in-memory disconnected export/import contract semantics for replay, duplicate, ordering, opaque unknown trust root, revoked origin, and explicit conflict reconciliation; no synchronization runtime |
 
 ## 18. Matrix E v2 — architecture risk register
 
 ### 18.1 Compatibility with FEATURE-0012
 
-Matrix E v2 preserves FEATURE-0012's stable risk identifiers, primary controls,
-detection/response evidence, automated evidence staging, human-only residual
-acceptance, owner, corrective path, and reassessment trigger. It adds explicit
-category, affected architecture decisions, inherent and residual assessment,
-treatment, separate detection and response, control owner, later-feature owner,
-acceptance expiry, and per-risk status.
+Matrix E v2 reuses FEATURE-0012's risk-governance principles and evidence
+lifecycle, not its identifiers. FEATURE-0012 identifiers `F12-R01` through
+`F12-R16` remain owned exclusively by FEATURE-0012. FEATURE-0013 defines the
+separate `F13-R01` through `F13-R31` namespace. The two namespaces must not be
+merged, renumbered, aliased, inherited, or mapped by ordinal position.
+FEATURE-0013 carries its own primary controls, detection/response evidence,
+automated evidence staging, human-only residual acceptance, owner, corrective
+path, reassessment trigger, category, affected architecture decisions,
+inherent and residual assessment, treatment, control owner, later-feature
+owner, acceptance expiry, and per-risk status.
 
 Kiro and implementation automation must preserve `F13-Rxx` identifiers. They
 must not renumber, merge, delete, downgrade, or accept risks. Automation may
@@ -975,12 +1256,12 @@ not human acceptance.
 | F13-R01 | Governance/compatibility | Later features create overlapping `DecisionProfile` semantics | AD-029, AD-030 | 4×4 High | Governed registration, ownership, reuse review, compatibility | Duplicate-profile and new-family fixtures | 2×3 Medium | MITIGATE | Architecture owner | New profile family or stable promotion | PENDING_HUMAN_REVIEW |
 | F13-R02 | Correctness | Typed results become an ungoverned property bag or override the envelope | AD-002, AD-029 | 4×4 High | Versioned result schemas; semantic-override prohibition | Schema and negative conformance | 2×4 Medium | MITIGATE | FEATURE-0013 owner | New result extension mechanism | PENDING_HUMAN_REVIEW |
 | F13-R03 | Security/correctness | Advisory, recommendation, simulation, or AI output is consumed as authority | AD-020, AD-031 | 4×5 Critical | Explicit authority; projection marking; enforcement validation | Authority-confusion negative tests and audit | 1×5 Medium | MITIGATE | Security architecture; enforcement owner | New AI/execution consumer | PENDING_HUMAN_REVIEW |
-| F13-R04 | Correctness | Stale `EffectivePolicyContext` produces an invalid decision | AD-007, AD-038 | 4×5 Critical | Digest, effective time, freshness, revocation, fail-closed rules | Cache expiry/revocation/staleness tests | 2×5 High | MITIGATE | Effective-context owner | Production policy resolver or new inheritance rule | PENDING_HUMAN_REVIEW |
-| F13-R05 | Correctness | Weak retry identity or cache identity reuses the wrong decision | AD-013, AD-036 | 4×5 Critical | Separate retry key and complete semantic digest | Policy/profile/strategy/time mutation tests | 1×5 Medium | MITIGATE | Decision persistence owner | Canonical digest profile change | PENDING_HUMAN_REVIEW |
+| F13-R04 | Correctness | Stale `EffectivePolicyContext` produces an invalid decision | AD-007, AD-038 | 4×5 Critical | Versioned identity, optional opaque integrity carrier, effective time, freshness, revocation, fail-closed rules | Cache expiry/revocation/staleness tests without digest computation | 2×5 High | MITIGATE | Effective-context owner | Production policy resolver or new inheritance rule | PENDING_HUMAN_REVIEW |
+| F13-R05 | Correctness | Weak retry identity or cache identity reuses the wrong decision | AD-013, AD-036 | 4×5 Critical | Separate retry key and complete semantic identity descriptor; later optional digest profile | Policy/profile/strategy/time mutation tests | 1×5 Medium | MITIGATE | Decision persistence owner | Semantic-identity fields or canonical digest profile change | PENDING_HUMAN_REVIEW |
 | F13-R06 | Audit/compliance | A decision is durable without its audit obligation | AD-014, AD-035 | 3×5 High | Same-boundary atomic acceptance and preallocated audit identity | Partial-failure and reconciliation fixtures | 1×5 Medium | MITIGATE | Audit persistence owner | Production persistence selection | PENDING_HUMAN_REVIEW |
 | F13-R07 | Availability/latency | Remote audit processing blocks synchronous decisions | AD-008, AD-035 | 4×4 High | Local obligation acceptance; asynchronous downstream processing | Remote-audit outage and backlog tests | 1×4 Low | AVOID | Audit implementation owner | External audit/SIEM integration | PENDING_HUMAN_REVIEW |
 | F13-R08 | Cost/availability | Composite graphs cause fan-out, latency, retry, or cost explosion | AD-006, AD-040 | 4×5 Critical | Bounds on graph, calls, bytes, authorities, concurrency, retries, time, jurisdiction, and cost | Limit, cancellation, load, and adversarial fixtures | 2×5 High | MITIGATE | Decision runtime owner | Limit increase or new remote evaluator | PENDING_HUMAN_REVIEW |
-| F13-R09 | Correctness/AI | Nondeterministic evaluator output cannot be replayed or explained | AD-005, AD-037 | 4×4 High | Captured normalized output, provenance, input and integrity digest | Replay without evaluator access | 2×3 Medium | MITIGATE | Evaluator/AI owner | New probabilistic evaluator | PENDING_HUMAN_REVIEW |
+| F13-R09 | Correctness/AI | Nondeterministic evaluator output cannot be replayed or explained | AD-005, AD-037 | 4×4 High | Captured normalized output, provenance, input identity, and opaque integrity carrier | Replay without evaluator access or digest computation | 2×3 Medium | MITIGATE | Evaluator/AI owner | New probabilistic evaluator | PENDING_HUMAN_REVIEW |
 | F13-R10 | Security/AI | AI receives unauthorized evidence or sensitive canonical data | AD-019, AD-020 | 4×5 Critical | Authorized `DecisionContext`, minimization, classification, projection policies | Cross-scope/redaction and prompt-leak fixtures | 1×5 Medium | MITIGATE | AI-context and security owners | New model, projection, or jurisdiction | PENDING_HUMAN_REVIEW |
 | F13-R11 | Security | Enforcement silently ignores an unknown mandatory obligation | AD-032, AD-043 | 3×5 High | Unknown/unsupported obligation makes allow unenforceable | Obligation capability negative tests | 1×5 Medium | AVOID | Enforcement owner | New obligation vocabulary | PENDING_HUMAN_REVIEW |
 | F13-R12 | Latency/availability | Central authorization or decision service becomes a universal bottleneck | AD-008, AD-039 | 4×5 Critical | Local verified artifacts, policy snapshots, caches, bounded freshness | Central-service outage and horizontal-load tests | 2×4 Medium | MITIGATE | Authorization implementation owner | Production enforcement integration | PENDING_HUMAN_REVIEW |
@@ -988,18 +1269,18 @@ not human acceptance.
 | F13-R14 | Security/availability | Fail-open behavior exposes protected resources during dependency failure | AD-005, AD-043 | 3×5 High | Fail-closed high-risk profiles; bounded approved exception | Failure injection and exception-expiry checks | 1×5 Medium | AVOID | Security architecture owner | Any fail-open request | PENDING_HUMAN_REVIEW |
 | F13-R15 | Correctness | Correction, supersession, or revocation yields ambiguous effective state | AD-004, AD-034 | 3×4 High | Immutable linked effects; bounded cycle-free deterministic projection | Chain, cycle, fork, and projection fixtures | 1×4 Low | MITIGATE | Read-model owner | New relationship/effective-state semantics | PENDING_HUMAN_REVIEW |
 | F13-R16 | Privacy/security | Decision, rationale, evidence, error, or projection leaks restricted data | AD-019, AD-024 | 4×5 Critical | References/digests, minimization, classification, redaction, purpose projections | Secret/PII/cross-scope negative tests | 1×5 Medium | MITIGATE | Security/privacy owner | New evidence or projection type | PENDING_HUMAN_REVIEW |
-| F13-R17 | Compliance/integrity | Erasure or retention action breaks evidence integrity or legal hold | AD-004, AD-022 | 3×5 High | Cryptographic erasure, tombstone, retention/legal-hold profile | Hold, erasure, digest, and tombstone tests | 2×4 Medium | MITIGATE | Evidence/retention owner | Regulated deployment or retention change | PENDING_HUMAN_REVIEW |
-| F13-R18 | Latency/availability | Remote HSM, time, signing, or notarization becomes a hot-path dependency | AD-022, AD-041 | 4×4 High | Local digest; tiered local/batch/asynchronous assurance | Trust-service outage and batch-proof tests | 1×4 Low | AVOID | Security infrastructure owner | High-assurance profile adoption | PENDING_HUMAN_REVIEW |
-| F13-R19 | Sovereignty/security | Disconnected import accepts forged, replayed, or untrusted records | AD-018, AD-042 | 3×5 High | Signed manifests, origin trust, replay protection, ordering, quarantine | Forgery/replay/unknown-root fixtures | 1×5 Medium | MITIGATE | Synchronization/security owner | First disconnected deployment | PENDING_HUMAN_REVIEW |
+| F13-R17 | Compliance/integrity | Erasure or retention action breaks evidence integrity or legal hold | AD-004, AD-022 | 3×5 High | Structural tombstone and retention/legal-hold contracts now; cryptographic erasure later | Structural hold, erasure-state, opaque-carrier, and tombstone tests | 2×4 Medium | MITIGATE | Evidence/retention owner | Regulated deployment or retention change | PENDING_HUMAN_REVIEW |
+| F13-R18 | Latency/availability | Remote HSM, time, signing, or notarization becomes a hot-path dependency | AD-022, AD-041 | 4×4 High | No cryptographic service in FEATURE-0013; later tiered local/batch/asynchronous assurance | No-network/no-crypto gate now; outage and batch-proof tests in owning later feature | 1×4 Low | AVOID | Security infrastructure owner | High-assurance profile adoption | PENDING_HUMAN_REVIEW |
+| F13-R19 | Sovereignty/security | Disconnected import accepts forged, replayed, or untrusted records | AD-018, AD-042 | 3×5 High | Static origin-aware manifests, algorithm-agile signature carriers, replay/duplicate markers, ordering, opaque trust states, and fail-closed quarantine semantics now; cryptographic signing and verification later under ADR-F13-002 | Structural replay/duplicate/ordering/unknown-or-revoked-trust-state fixtures now; forgery and signature-verification evidence in the later owning feature | 1×5 Medium | MITIGATE | Synchronization/security owner | First disconnected deployment | PENDING_HUMAN_REVIEW |
 | F13-R20 | Correctness | Disconnected origins create conflicting authoritative decisions | AD-018, AD-042 | 3×5 High | Immutable origin identity; no last-writer-wins; governed reconciliation decision | Concurrent-origin conflict fixtures | 2×4 Medium | MITIGATE | Multi-site owner | Active/active or disconnected write enablement | PENDING_HUMAN_REVIEW |
 | F13-R21 | Portability | Provider/runtime-native identifiers or schemas leak into the core | AD-011, AD-023 | 4×4 High | Adapter-only native data; normalized capabilities; typed references | Import/schema lint and portability fixtures | 1×4 Low | AVOID | Adapter architecture owner | First provider/runtime adapter | PENDING_HUMAN_REVIEW |
 | F13-R22 | Scope/governance | Production registry, workflow, persistence, provider, or AI runtime leaks into Phase 2 | AD-011, AD-028 | 4×4 High | Contract-only scope, non-goals, feature gates | Changed-file, dependency, and no-side-effect gates | 1×4 Low | AVOID | FEATURE-0013 owner | Any runtime dependency proposal | PENDING_HUMAN_REVIEW |
 | F13-R23 | Cost | Durable decisions, audit, evidence, or projections create uncontrolled storage growth | AD-024, AD-033 | 4×4 High | Risk-based recording, bounded payloads, hot summaries, referenced cold evidence, retention profiles | Volume/limit/retention tests and metrics | 2×4 Medium | MITIGATE | Audit/evidence owner | Retention increase or production volume | PENDING_HUMAN_REVIEW |
-| F13-R24 | Supply chain/security | Profile, schema, strategy, evaluator, or trust bundle is compromised | AD-025, AD-038 | 3×5 High | Signed digest-pinned bundles, trust roots, revocation, quarantine, provenance | Signature/tamper/revocation fixtures | 1×5 Medium | MITIGATE | Supply-chain security owner | Signing-root or distribution change | PENDING_HUMAN_REVIEW |
+| F13-R24 | Supply chain/security | Profile, schema, strategy, evaluator, or trust bundle is compromised | AD-025, AD-038 | 3×5 High | Version-pinned bundles, opaque trust-root identity, structural revocation/quarantine/provenance now; cryptographic verification later | Structural tamper-state/revocation fixtures now; signature verification in owning later feature | 1×5 Medium | MITIGATE | Supply-chain security owner | Signing-root or distribution change | PENDING_HUMAN_REVIEW |
 | F13-R25 | Correctness/security | Clock uncertainty invalidates ordering, expiry, freshness, or replay protection | AD-018, AD-022 | 3×5 High | Trusted-time provenance, validity epoch, profile outage behavior | Skew, rollback, expiry-boundary tests | 2×4 Medium | MITIGATE | Runtime/security owner | Disconnected or multi-site deployment | PENDING_HUMAN_REVIEW |
 | F13-R26 | Security/privacy | Cross-scope references disclose or influence another tenant or governance domain | AD-015, AD-019 | 3×5 High | Scope authorization, no-existence disclosure, typed references, projections | Cross-scope and safe-denial fixtures | 1×5 Medium | MITIGATE | API/security owner | New scope/reference kind | PENDING_HUMAN_REVIEW |
-| F13-R27 | Compatibility/governance | Later features silently redefine common decision semantics | AD-029, AD-030 | 4×5 Critical | Stable envelope, profile conformance, architecture change control | Baseline/schema semantic-diff gate | 1×5 Medium | AVOID | Architecture owner | Common-envelope or closed-vocabulary change | PENDING_HUMAN_REVIEW |
-| F13-R28 | Compatibility | Seven-value `ScopeKind`/`AuditEvent` correction (ADH-2026-015) breaks FEATURE-0012 consumers | AD-015 | 3×4 High | Explicit correction approval, versioning, seven-value fixtures, six-value regression fixtures, migration evidence | Seven-value `ScopeKind`/`AuditEvent` compatibility and six-value regression baseline tests | 1×4 Low | MITIGATE | FEATURE-0013/API owner | Stable API promotion | PENDING_HUMAN_REVIEW |
+| F13-R27 | Compatibility/governance | Later features silently redefine common decision or public error semantics | AD-029, AD-030, AD-045 | 4×5 Critical | Stable envelope, profile conformance, closed public error registry, architecture change control | Baseline/schema/error semantic-diff gate | 1×5 Medium | AVOID | Architecture owner | Common-envelope, closed-vocabulary, or public-error change | PENDING_HUMAN_REVIEW |
+| F13-R28 | Compatibility | Expanded AuditEvent allowed scopes or ServiceInstance subject handling breaks FEATURE-0012 consumers | AD-015 | 3×4 High | Retain the six-value ScopeKind vocabulary, use typed ServiceInstance subject references, preserve Organization fixtures, and require schema-diff review | Six-scope AuditEvent compatibility, Organization regression, and Project-scope/ServiceInstance-subject tests | 1×4 Low | MITIGATE | FEATURE-0013/API owner | Stable API promotion | PENDING_HUMAN_REVIEW |
 | F13-R29 | Traceability | `DecisionRecord` rename breaks spine, documents, schemas, or consumer identity | AD-001 | 3×4 High | Architecture clarification, coordinated traceability update, aliases/migration if required | Repository-wide identity and baseline checks | 1×4 Low | MITIGATE | Architecture owner | Rename approval or stable promotion | PENDING_HUMAN_REVIEW |
 | F13-R30 | Cost/sovereignty | High-assurance controls make small or local deployments unaffordable | AD-016, AD-017, AD-041 | 3×4 High | Tiered conformance and assurance profiles; no universal remote dependencies | Minimal/regulated/sovereign profile cost fixtures | 2×3 Medium | MITIGATE | Deployment architecture owner | New mandatory assurance control | PENDING_HUMAN_REVIEW |
 | F13-R31 | Governance/cost | Downstream adoption governance becomes duplicative bureaucracy or a premature registry framework | AD-044 | 4×3 High | One normative contract, one short per-feature section, one lightweight gate; trigger-based escalation only | Changed-file/gate review; absence of manifests, registry, index, and separate approval workflow | 1×3 Low | AVOID | Architecture governance owner | Repeated semantic drift or structured-manifest trigger in section 28.8 | PENDING_HUMAN_REVIEW |
@@ -1066,52 +1347,61 @@ Scores are 1 (poor) to 5 (excellent). Security and correctness are veto
 criteria: a decision scoring below 4 in either cannot be approved without a
 recorded exception. “Cost” means lifecycle cost, not merely initial build cost.
 
-| ID | Architectural decision | Long. | Correct. | Cost | Security | AI-first | Reuse | Recommendation |
-|---|---|---:|---:|---:|---:|---:|---:|---|
-| AD-001 | Rename common `DecisionObject` to `DecisionRecord` | 5 | 5 | 5 | 4 | 5 | 5 | Approve with spine/traceability update |
-| AD-002 | Keep evaluations, decisions, audit, operations, and projections distinct | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-003 | Adjudication outcomes are optional, facet-specific, and closed | 5 | 5 | 5 | 5 | 5 | 5 | Approve; keep errors and typed results separate |
-| AD-004 | Immutable final records with linked corrections | 5 | 5 | 4 | 5 | 5 | 5 | Approve with lawful-erasure profile |
-| AD-005 | Deterministic versioned composition strategies | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-006 | Bounded DMN-like dependency DAG, not workflow language | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-007 | Resolve hierarchy once into `EffectivePolicyContext` | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-008 | Synchronous fast path without mandatory queue | 5 | 5 | 5 | 4 | 4 | 5 | Approve with strict budgets |
-| AD-009 | `Operation` owns asynchronous lifecycle | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-010 | Orchestrate authority; choreograph reactions | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-011 | Runtime/vendor selection deferred | 5 | 5 | 5 | 5 | 4 | 5 | Approve; define later selection gate |
-| AD-012 | Pure stateless decision kernel | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-013 | Effective-once via idempotency, not exactly-once claims | 5 | 5 | 5 | 5 | 4 | 5 | Approve |
-| AD-014 | Decision and audit durable-acceptance invariant | 5 | 5 | 4 | 5 | 5 | 5 | Approve with later persistence pattern |
-| AD-015 | Extend `AuditEvent` to all seven canonical `ScopeKind` values (`Platform`, `Organization`, `OrganizationUnit`, `Tenant`, `Project`, `Provider`, `ServiceInstance`) per ADH-2026-015, using `metadata.scopeRef` as sole scope identity | 5 | 5 | 4 | 5 | 5 | 5 | Approve with FEATURE-0012 compatibility correction (ADH-2026-015) |
-| AD-016 | Sovereignty as seven enforceable dimensions | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-017 | Connected, private, edge, and air-gapped profiles | 5 | 5 | 3 | 5 | 5 | 5 | Approve; tier conformance to control cost |
-| AD-018 | Local control-plane dependencies and signed synchronization | 5 | 5 | 3 | 5 | 5 | 5 | Approve; advanced profile only |
-| AD-019 | Authorized projections and data minimization | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-020 | AI consumes `DecisionContext`, never canonical unrestricted data | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-021 | AI optional; deterministic core works without it | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-022 | Content digests and crypto-agility; signatures profile-driven | 5 | 5 | 4 | 5 | 5 | 5 | Approve; choose exact profile in design |
-| AD-023 | Provider-neutral core with adapter-owned native identifiers | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-024 | Hot summaries plus referenced cold evidence | 5 | 5 | 5 | 5 | 5 | 5 | Approve with retention/integrity rules |
-| AD-025 | Versioned offline-capable semantic registries | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-026 | Telemetry is never audit authority | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-027 | Jurisdiction-specific controls supplied as profiles, not core enums | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-028 | Contract-only Phase 2; runtime implementation deferred | 5 | 5 | 5 | 5 | 4 | 5 | Approve |
-| AD-029 | Stable envelope plus versioned `DecisionProfile` and typed result | 5 | 5 | 5 | 5 | 5 | 5 | Approve; primary extensibility mechanism |
-| AD-030 | Closed primary-form vocabulary with registered secondary facets | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-031 | Authority is orthogonal: authoritative, advisory, recommendation, simulation | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-032 | Authorization is a profile; identity, evaluation, and enforcement remain outside | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-033 | Risk-based durable recording for high-volume authorization | 5 | 5 | 5 | 5 | 4 | 5 | Approve with governed aggregation profile |
-| AD-034 | Immutable final records; supersession/revocation are linked effects and projected state | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-035 | Local atomic decision plus audit-obligation acceptance; downstream audit is asynchronous | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-036 | Separate retry idempotency from complete semantic decision identity | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-037 | Deterministic composition replays captured evaluator output without evaluator rerun | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-038 | Synchronous data plane uses local digest-pinned profiles, policy context, schema, strategy, and trust | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-039 | Authorization permits local verified artifacts/caches with bounded freshness and revocation | 5 | 5 | 5 | 5 | 4 | 5 | Approve |
-| AD-040 | Composite work is bounded by calls, bytes, concurrency, retries, jurisdictions, time, and cost | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-041 | Cryptographic assurance is tiered; remote notary/HSM is not a universal hot-path dependency | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-042 | Disconnected synchronization uses signed origin-aware manifests and explicit reconciliation | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
-| AD-043 | High-risk profiles fail closed; fail-open requires a bounded approved exception | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
-| AD-044 | Downstream adoption uses one normative contract, one short per-feature section, and one lightweight gate | 5 | 5 | 5 | 5 | 5 | 5 | Approve; structured manifests remain trigger-based |
+The implementation class is an architecture-owned disposition, not a choice
+for requirements or design. Each decision has exactly one class. A
+`CONTRACT_NOW` row authorizes only the schemas, carriers, validation, fixtures,
+documentation, or bounded in-memory reference behavior stated in sections 3,
+17, and 27; it never authorizes a production runtime. Later runtime invariants
+and deferred selections referenced in a recommendation remain governed by the
+explicit section boundary or ADR and do not change the row's class.
+
+| ID | Architectural decision | Implementation class | Long. | Correct. | Cost | Security | AI-first | Reuse | Recommendation |
+|---|---|---|---:|---:|---:|---:|---:|---:|---|
+| AD-001 | Rename common `DecisionObject` to `DecisionRecord` | CONTRACT_NOW | 5 | 5 | 5 | 4 | 5 | 5 | Approve with spine/traceability update |
+| AD-002 | Keep calling-domain requests, evaluations, decisions, audit, operations, and projections distinct; define no shared FEATURE-0013 DecisionRequest type | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
+| AD-003 | Adjudication outcomes are optional, facet-specific, and closed | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve; keep errors and typed results separate |
+| AD-004 | Immutable final records with linked corrections | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve structural linkage; erasure mechanisms require later architecture |
+| AD-005 | Deterministic versioned composition strategies | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
+| AD-006 | Bounded DMN-like dependency DAG, not workflow language | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
+| AD-007 | Runtime hierarchy resolution produces one `EffectivePolicyContext` | INVARIANT_FOR_LATER | 5 | 5 | 5 | 5 | 5 | 5 | Approve as later invariant; FEATURE-0013 records only the typed reference and provenance contract |
+| AD-008 | Synchronous fast path without mandatory queue | INVARIANT_FOR_LATER | 5 | 5 | 5 | 4 | 4 | 5 | Approve with strict budgets |
+| AD-009 | `Operation` owns asynchronous lifecycle and is the sole non-final asynchronous handoff; no pending-decision envelope | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve contract use and conformance only |
+| AD-010 | Orchestrate authority; choreograph reactions | INVARIANT_FOR_LATER | 5 | 5 | 4 | 5 | 5 | 5 | Approve as later runtime invariant |
+| AD-011 | Runtime/vendor selection deferred | DEFERRED | 5 | 5 | 5 | 5 | 4 | 5 | Define later selection gate |
+| AD-012 | Pure stateless reference decision kernel | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve only bounded in-memory conformance behavior |
+| AD-013 | Effective-once via idempotency, not exactly-once claims | INVARIANT_FOR_LATER | 5 | 5 | 5 | 5 | 4 | 5 | Approve as later persistence/delivery invariant |
+| AD-014 | Decision and audit durable-acceptance invariant | INVARIANT_FOR_LATER | 5 | 5 | 4 | 5 | 5 | 5 | Approve with later persistence pattern |
+| AD-015 | Retain the six FEATURE-0012 governance ScopeKind values; expand AuditEvent to all six; represent ServiceInstance as a typed subject under Project scope | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve through the consolidated ADH-2026-017 |
+| AD-016 | Sovereignty as seven enforceable profile dimensions | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve structural profile contract |
+| AD-017 | Connected, private, edge, and air-gapped conformance profiles | CONTRACT_NOW | 5 | 5 | 3 | 5 | 5 | 5 | Approve static profiles; tier conformance to control cost |
+| AD-018 | Static local-dependency and synchronization carrier contracts without signing or runtime synchronization | CONTRACT_NOW | 5 | 5 | 3 | 5 | 5 | 5 | Approve structural contract; cryptographic execution deferred |
+| AD-019 | Authorized projections and data minimization | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve |
+| AD-020 | AI consumes `DecisionContext`, never canonical unrestricted data | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve projection constraints; no AI runtime |
+| AD-021 | AI optional; deterministic contracts and conformance work without it | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve AI-disabled conformance |
+| AD-022 | Algorithm-agile integrity/signature carriers and structural trust states | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve carriers only; all selections and execution deferred under ADR-F13-002 |
+| AD-023 | Provider-neutral core with adapter-owned native identifiers | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
+| AD-024 | Hot-summary and referenced-cold-evidence carrier contract | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve structural references; storage and retention runtime deferred |
+| AD-025 | Versioned offline-capable static semantic registries | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve; no registry service |
+| AD-026 | Telemetry is never audit authority | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve contract separation and conformance |
+| AD-027 | Jurisdiction-specific controls supplied as profiles, not core enums | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
+| AD-028 | Contract-only Phase 2 and its feature gates | CONTRACT_NOW | 5 | 5 | 5 | 5 | 4 | 5 | Approve; production runtime remains prohibited |
+| AD-029 | Stable envelope plus versioned `DecisionProfile` and typed result | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve; primary extensibility mechanism |
+| AD-030 | Closed primary-form vocabulary with registered secondary facets | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
+| AD-031 | Authority is orthogonal: authoritative, advisory, recommendation, simulation | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
+| AD-032 | Authorization is a profile; identity, evaluation, and enforcement remain outside | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve structural profile only |
+| AD-033 | Risk-based durable-recording and aggregation profile semantics | CONTRACT_NOW | 5 | 5 | 5 | 5 | 4 | 5 | Approve contract and conformance; no persistence runtime |
+| AD-034 | Immutable final records; supersession/revocation are linked effects and projected state | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve |
+| AD-035 | Local atomic decision plus audit-obligation acceptance; downstream audit is asynchronous | INVARIANT_FOR_LATER | 5 | 5 | 5 | 5 | 5 | 5 | Approve as later persistence/delivery invariant; current linkage is governed by AD-014 contract fields |
+| AD-036 | Separate retry idempotency from complete semantic decision identity | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve carrier fields and validation |
+| AD-037 | Deterministic composition replays captured evaluator output without evaluator rerun | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve bounded pure conformance |
+| AD-038 | Static local version-pinned profile, policy-context, schema, strategy, and opaque trust-state contract | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve structural conformance; cryptographic verification is later |
+| AD-039 | Production authorization may use local verified artifacts/caches with bounded freshness and revocation | INVARIANT_FOR_LATER | 5 | 5 | 5 | 5 | 4 | 5 | Approve as later authorization/cache invariant; no cache runtime now |
+| AD-040 | Profile and conformance bounds cover calls, bytes, concurrency, retries, jurisdictions, time, and cost | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve declared bounds and rejection fixtures |
+| AD-041 | Cryptographic assurance is tiered; remote notary/HSM is not a universal hot-path dependency | INVARIANT_FOR_LATER | 5 | 5 | 5 | 5 | 5 | 5 | Preserve as later invariant; selections and execution remain ADR-F13-002 deferred |
+| AD-042 | Static disconnected synchronization contract uses origin-aware manifests and explicit conflict evidence without signing | CONTRACT_NOW | 5 | 5 | 4 | 5 | 5 | 5 | Approve structural contract; synchronization runtime and signing are later |
+| AD-043 | High-risk profiles fail closed; fail-open requires a bounded approved exception | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve profile validation and conformance |
+| AD-044 | Downstream adoption uses one normative contract, one short per-feature section, and one lightweight gate | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve; structured manifests remain trigger-based |
+| AD-045 | Bind FEATURE-0013 validation to inherited Problem Details and an architecture-owned closed public violation-code registry | CONTRACT_NOW | 5 | 5 | 5 | 5 | 5 | 5 | Approve; requirements map cases but cannot create public codes |
 
 ### 19.1 Aggregate assessment
 
@@ -1127,15 +1417,21 @@ recorded exception. “Cost” means lifecycle cost, not merely initial build co
 ## 20. Required revisions before approval
 
 The prior draft direction was sound but incomplete for a sovereign architecture.
-This version makes the following necessary revisions:
+This section records architecture rationale and provenance; it is not an
+independent implementation backlog. The implementation class of every decision
+is fixed by the section 19 scorecard and the explicit section 9–12 boundaries.
+No item below authorizes a production runtime, product selection, or
+cryptographic execution. This version makes the following necessary revisions:
 
 1. Treat sovereignty as data, operational, technical, legal, cryptographic,
    supply-chain, and AI/model control—not residency alone.
 2. Add connected, edge, disconnected, and air-gapped deployment profiles.
 3. Add local trust, identity, keys, time, registry, audit, and observability
-   dependencies with signed synchronization.
-4. Add data minimization, legal hold, retention/disposition, lawful redaction,
-   cryptographic erasure, and integrity-preserving tombstones.
+   dependency contracts, with signed synchronization retained only as a later
+   invariant pending approved cryptographic architecture.
+4. Add data minimization, legal hold, retention/disposition, lawful-redaction,
+   payload-custody, and integrity-preserving tombstone contracts now; retain
+   cryptographic-erasure execution as a later approved invariant.
 5. Add workload identity, delegation, break-glass, purpose, and assurance.
 6. Add software provenance, SBOM, offline verification, and crypto-agility.
 7. Add AI/model sovereignty and make AI optional for core correctness.
@@ -1161,8 +1457,10 @@ This version makes the following necessary revisions:
 18. Define deterministic replay from captured evaluator results without
     requiring nondeterministic or AI evaluators to reproduce output.
 19. Prohibit implicit remote control-plane dependencies on the synchronous path.
-20. Add local authorization, profile-bundle, policy-context, evidence-fan-out,
-    cryptographic, and disconnected-synchronization safeguards.
+20. Add structural contracts and conformance for later local authorization,
+    profile-bundle, policy-context, evidence-fan-out, cryptographic, and
+    disconnected-synchronization safeguards without implementing their
+    production runtimes.
 
 ## 21. Important deferred decisions
 
@@ -1186,11 +1484,12 @@ This architecture may become the controlling FEATURE-0013 input when the human
 architecture owner records:
 
 1. approval of `DecisionRecord` terminology and affected spine updates;
-2. approval of the seven-value `ScopeKind`/`AuditEvent` compatibility correction
-   (ADH-2026-015), permitting all seven canonical values via `metadata.scopeRef`;
+2. approval of the six-value FEATURE-0012 `ScopeKind` inheritance, AuditEvent
+   acceptance of all six governance scopes, and typed ServiceInstance subject
+   model through ADH-2026-017;
 3. approval of the durable decision/audit obligation;
 4. confirmation of runtime-neutral Phase 2 scope;
-5. acceptance or revision of AD-001 through AD-044;
+5. acceptance or revision of AD-001 through AD-045;
 6. acceptance of the sovereign deployment profile model;
 7. architecture-stage `APPROVE_TREATMENT`, `REJECT`, or `DEFER` decisions are
    recorded for Matrix E F13-R01 through F13-R31;
@@ -1206,7 +1505,20 @@ architecture owner records:
     guardrail in section 27;
 12. the lightweight downstream-adoption contract in section 28 is preserved
     without introducing a separate registry or approval workflow;
-13. an architecture clarification/decision record and traceability updates.
+13. approval of the FEATURE-0012 `DataClassification` to FEATURE-0013
+    sensitivity-floor mapping in section 12.4;
+14. approval of the declarative registry, profile/evaluator ownership,
+    evaluation-scope, error-family, and atomic conformance decisions now
+    consolidated in the main body; and
+15. every accepted FEATURE-0013 reuse-summary row has `Decision status` set to
+    `Approved` with the consolidation approval as human evidence; deferred rows
+    remain `Deferred`, and no `Proposed` row remains in the approved document;
+16. confirmation that `DecisionRequest` remains a calling-domain-owned
+    conceptual input with no FEATURE-0013 shared schema/type, and that the only
+    asynchronous handoff is the inherited `Operation` value/reference; no
+    pending-decision response envelope is authorized; and
+17. a consolidation handoff and traceability updates that supersede the prior
+    requirements authorization without altering historical approvals.
 
 ## 23. Reassessment triggers
 
@@ -1224,6 +1536,15 @@ or any relaxation of fail-closed, projection, audit, or immutability rules.
 - `docs/architecture/api-resource-standard.md`
 - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
 - `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+- `docs/features/FEATURE-0011-reuse-assessment-standard.md`
+- `docs/reviews/feature-gates/FEATURE-0011-approval-review.md`
+- `.kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md`
+- `.kiro/specs/api-resource-naming-status-and-validation-standard/design.md`
+- `docs/reviews/feature-gates/FEATURE-0012-approval-review.md`
+- `docs/reviews/architecture-decision-handoffs/ADH-2026-011-feature-0011-reuse-assessment-standard.md`
+- `docs/reviews/architecture-decision-handoffs/ADH-2026-012-feature-0012-api-resource-standard.md`
+- `docs/reviews/architecture-decision-handoffs/ADH-2026-013-operation-allowed-scopes.md`
+- `docs/reviews/architecture-decision-handoffs/ADH-2026-017-feature-0013-consolidated-architecture.md`
 - `docs/rfc/RFC-0023-decision-and-audit-standard.md`
 
 ## 25. External review inputs
@@ -1252,12 +1573,12 @@ or any relaxation of fail-closed, projection, audit, or immutability rules.
 | Structured explainability | PASS | Typed rationale, reasons, alternatives, obligations, provenance, evidence references, and authorized `DecisionContext` projections are mandatory |
 | No side effects in Phase 2 contracts | PASS | Sections 3, 7.4, 8.4, and 20 prohibit runtime/provider/plugin execution and defer production persistence and orchestration choices |
 | AI is consumer, not authority | PASS | Sections 6.3 and 13 make AI non-authoritative, projected, policy-governed, optional, and unable to mutate or execute |
-| Earlier features own shared concepts | PASS WITH CONTROLLED CORRECTION | FEATURE-0012 grammar is extended rather than duplicated; the seven-value `ScopeKind`/`AuditEvent` correction (ADH-2026-015) remains subject to explicit compatibility approval |
+| Earlier features own shared concepts | PASS WITH CONTROLLED EXTENSION | FEATURE-0012 grammar and six-value ScopeKind vocabulary are inherited; AuditEvent expands its allowed-scope subset and ServiceInstance remains a Project-scoped typed subject |
 | Audit linkage | PASS | Section 10 requires local atomic decision and audit-obligation acceptance and prevents telemetry from becoming audit authority |
-| Effective context is the resolution boundary | PASS | Section 7.3 resolves hierarchy once into digest-pinned `EffectivePolicyContext` and prohibits hidden traversal by decision domains |
+| Effective context is the resolution boundary | PASS | Section 7.3 resolves hierarchy once into version-pinned `EffectivePolicyContext` with optional opaque integrity carriers and prohibits hidden traversal by decision domains |
 | Provider-neutral capability matching | PASS | Decision profiles and typed results reference normalized capabilities and typed references rather than provider resources |
-| Sovereign and disconnected fit | PASS | Section 11 covers data, operations, technology, law, cryptography, supply chain, AI/model locality, local dependencies, signed synchronization, and portability |
-| Stateless horizontal scalability | PASS | Sections 8.5 and 9 require interchangeable workers, local digest-pinned inputs, bounded work, semantic idempotency, backpressure, and no sticky sessions |
+| Sovereign and disconnected fit | PASS | Section 11 covers data, operations, technology, law, structural trust, later cryptographic assurance, supply chain, AI/model locality, local dependencies, synchronization contracts, and portability |
+| Stateless horizontal scalability | PASS | Sections 8.5 and 9 require interchangeable workers, local version-pinned inputs, bounded work, semantic idempotency, backpressure, and no sticky sessions |
 | Phase 2 scope discipline | PASS | Architecture defines contracts and conformance only; production engines, stores, providers, operations, and AI runtimes remain deferred |
 
 ### 26.1 Validation conclusion
@@ -1300,8 +1621,8 @@ Kiro may generate only the minimum artifacts needed for:
   `EvaluationResult`, `DecisionRationale`, and approved `AuditEvent` linkage;
 - static, versioned decision-form, authority, relationship, reason, obligation,
   evaluator, strategy, evidence, event, and projection registry formats;
-- strict validation, stable errors, canonical serialization/digest contracts,
-  and compatibility checks;
+- strict validation, stable errors, algorithm-agile canonicalization/digest
+  carrier contracts without computation, and compatibility checks;
 - simple, denial, selection, authorization, composite, replay, correction,
   projection, scope, limit, and extension conformance fixtures;
 - in-memory or pure-function reference composition sufficient to prove contract
@@ -1312,6 +1633,11 @@ Kiro may generate only the minimum artifacts needed for:
 
 Every changed or generated artifact must map to a `CONTRACT_NOW` requirement.
 An artifact justified only by a future scenario is prohibited.
+`DecisionRequest` is intentionally absent from the allowed shared-contract
+artifacts: downstream stages may test conformance of calling-domain inputs but
+must not create a common `DecisionRequest` schema, Go type, registry entry,
+resource, or persistence contract. They also must not create a pending-decision
+response type; asynchronous handoff reuses `Operation`.
 
 ### 27.3 Prohibited FEATURE-0013 implementation
 
@@ -1402,6 +1728,58 @@ The FEATURE-0013 gate must verify:
 - changed-file and dependency review confirms Phase 2 contract-only scope;
 - a human semantic review confirms that Kiro did not convert architecture
   invariants into premature runtime implementation.
+
+### 27.8 Closed architecture boundary for downstream stages
+
+Requirements, design, and tasks must treat the following as closed
+architecture and may not reopen them as design questions:
+
+- `DecisionRecord`, `EvaluationResult`, `AuditEvent`, `Operation`, and
+  `DecisionContext` have the distinct meanings and owners in section 5;
+- `DecisionRequest` is a calling-domain-owned conceptual input role, has no
+  FEATURE-0013 shared schema/type, and only inherits the FEATURE-0012
+  `TransientRequestResult` and common validation/reference boundaries;
+- `metadata.scopeRef` is the sole scope authority, including canonical absent
+  Platform serialization and the six-value FEATURE-0012 `ScopeKind` vocabulary;
+- `ServiceInstance` is a typed subject under Project scope, never a
+  `ScopeKind`; `ownerRef` remains lifecycle containment only;
+- the FEATURE-0012 `DataClassification` and FEATURE-0013 sensitivity dimensions
+  coexist under the mapping and fail-closed rules in section 12.4;
+- declarative JSON bundles governed by JSON Schema are the canonical profile
+  and semantic-registry representation; Go maps and types are derivative;
+- FEATURE-0012 platform/schema ceilings are absolute outer bounds; within them,
+  profiles own narrower maximum projection, sensitivity, graph, latency, cost,
+  and payload limits, and evaluator registrations may only narrow the profile;
+- `EvaluationResult` scope is derived from the containing record and profile;
+  evaluator metadata is evidence, never a second scope authority;
+- public failures inherit the FEATURE-0012 Problem Details envelope and use
+  only the FEATURE-0013 error families defined in section 15;
+- completed synchronous handling returns a `DecisionRecord` value/reference,
+  accepted asynchronous handling returns an existing `Operation`
+  value/reference, and rejected or unaccepted handling returns inherited
+  Problem Details; no FEATURE-0013-specific pending-response envelope exists;
+- the generic `Operation` contract and `LongRunningOperation` payload remain
+  owned by FEATURE-0012/ADH-2026-013; FEATURE-0013 references but never
+  redefines them;
+- every AD-001 through AD-045 implementation class is fixed by section 19;
+  downstream stages reproduce those exact classes and only `CONTRACT_NOW`
+  produces FEATURE-0013 implementation artifacts;
+- conformance coverage uses the stable parent, suffix, and additional IDs in
+  section 17;
+- pre-ADR-F13-002 trust behavior is structural and opaque only; cryptographic
+  selection and execution remain deferred; and
+- FEATURE-0013 defines no adapter interface or production runtime service.
+
+Design may decide only representation and implementation mechanics that do not
+change those semantics: Go field types, JSON Schema composition, package and
+import boundaries, bounded in-memory graph representation, validation-pass
+organization, pure-function interfaces, and physical fixture file format.
+Persistent graph storage, a graph database/schema, repository abstraction, or
+runtime graph executor is not delegated to design and is prohibited in
+FEATURE-0013. Requirements translate the closed architecture into testable
+obligations. Tasks implement only an approved design. If a downstream stage
+cannot proceed without changing a closed item, it must stop with
+`ARCHITECTURE_DECISION_REQUIRED`.
 
 ## 28. Lightweight downstream adoption contract
 
@@ -1566,293 +1944,26 @@ additional framework. The proposal must demonstrate that a small extension of
 the existing feature gate is insufficient, quantify maintenance and review
 cost, and receive human architecture approval.
 
-## 29. ADH-2026-015 scope vocabulary clarification and dependency reconciliation
+## 29. Architecture decision history
 
-### 29.1 Controlling authority
+This section records provenance only. It does not contain separate normative
+requirements or override the consolidated architecture above.
 
-ADH-2026-014 and ADH-2026-015 are the **joint controlling handoffs** for
-FEATURE-0013. ADH-2026-015 (Approved, 2026-07-27, Sanjeev Kumar) supersedes
-**only** the earlier six-scope `AuditEvent` statement in ADH-2026-014. Every
-other ADH-2026-014 decision — including the provider-neutral, contract-only,
-statelessness, security, sovereignty, anti-overengineering, Matrix E, and
-downstream-adoption decisions — remains controlling and unchanged.
-
-Where any earlier text in this document (for example sections 1.1, 7.3, and 15)
-refers to "six" `AuditEvent` scopes, this section is authoritative and the
-seven-value canonical vocabulary controls.
-
-### 29.2 Approved scope vocabulary decision
-
-1. `ScopeKind` is the single canonical shared vocabulary for scope identity
-   across Sovrunn.
-2. Its exact canonical values are: `Platform`, `Organization`,
-   `OrganizationUnit`, `Tenant`, `Project`, `Provider`, and `ServiceInstance`.
-3. `ServiceInstance` is an **additive** extension of the FEATURE-0012 shared
-   vocabulary; `Provider` is **retained unchanged**.
-4. `AuditEvent` initially permits **all seven** canonical values.
-5. `AuditEvent` uses `metadata.scopeRef` as its **sole canonical scope
-   identity**.
-6. No separate `AuditEvent` scope enum or independently mutable scope field is
-   permitted anywhere in schemas, bindings, or validators.
-7. Existing FEATURE-0012 serialized `ScopeKind` values and existing
-   Organization-scoped `AuditEvent`s remain valid.
-
-### 29.3 metadata.scopeRef is the sole scope authority
-
-For `AuditEvent`, `metadata.scopeRef` is the single authoritative expression of
-scope identity. A second `AuditEvent` scope source — a parallel scope enum, a
-duplicated scope field, or an independently mutable scope attribute — is
-prohibited. Any record that declares scope through more than one source, or
-through any source other than `metadata.scopeRef`, must be rejected as a
-contradictory or duplicate scope.
-
-### 29.3.1 Canonical Platform representation (inherited FEATURE-0012 normalization)
-
-`Platform` scope has no separate serialized form. Its single canonical logical
-and serialized representation is an **absent/nil** `metadata.scopeRef`, exactly
-as established by FEATURE-0012 (D-16). This behavior is inherited by reference,
-not re-invented, and FEATURE-0013 must not define any incompatible behavior:
-
-- `NormalizeScope` (`internal/apimeta/scope.go:84-92`; test `TestNormalizeScope`,
-  `internal/apimeta/scope_test.go:36-67`) maps an explicit `Kind == "Platform"`
-  `ScopeRef` to nil and leaves every non-Platform scope unchanged. An explicit
-  `Kind == "Platform"` value is an accepted input alternate only; the canonical
-  stored and emitted form is nil.
-- `CanonicalScopeIdentity` (`internal/apimeta/scope.go:107-112`; test
-  `TestCanonicalScopeIdentity`, `internal/apimeta/scope_test.go:69-98`) maps a
-  nil (or explicit-Platform) `ScopeRef` to `{Platform, PlatformScopeUID}` and a
-  non-Platform `ScopeRef` to `{kind, uid}`.
-
-Deterministic validation rules for `AuditEvent` scope:
-
-1. If `metadata.scopeRef` is absent/nil and the containing contract permits
-   `Platform` (its `x-sovrunn-allowed-scopes` includes `Platform`), validation
-   deterministically interprets the scope as `Platform`.
-2. If `metadata.scopeRef` is absent/nil and the containing contract does **not**
-   permit `Platform`, validation returns the stable required-scope error.
-   Absence is never automatically valid.
-3. Every non-Platform scope requires a non-nil `metadata.scopeRef` carrying a
-   canonical `ScopeKind` and the UID semantics inherited from FEATURE-0012.
-
-No presence flag, second scope field, `AuditScope` type, local scope enum,
-discriminator, alias, or parallel scope source may be introduced to express
-this. A canonical nil `metadata.scopeRef` that resolves to `Platform` is **not**
-a contradictory or duplicate scope: the contradictory/duplicate-scope rejection
-in section 29.3 concerns an unauthorized *second* scope property or source, not
-the canonical absent-Platform form.
-
-Fixture expectations follow directly:
-
-- a **positive Platform** fixture uses the canonical absent/nil
-  `metadata.scopeRef`;
-- **positive non-Platform** fixtures each carry a non-nil `metadata.scopeRef`
-  with a canonical kind and UID;
-- a **negative absence** fixture asserts that an absent `metadata.scopeRef` is
-  rejected with the stable required-scope error under a contract that does not
-  permit `Platform`.
-
-### 29.4 Value-by-value FEATURE-0012 versus FEATURE-0013 compatibility
-
-Every inherited controlled-vocabulary value is classified using the required
-taxonomy: **added, removed, renamed, mapped, restricted, expanded, or
-semantically reinterpreted**.
-
-| Value | FEATURE-0012 `ScopeKind` | FEATURE-0013 (ADH-2026-015) | Classification | Notes |
-|---|---|---|---|---|
-| `Platform` | Present | Present | Unchanged | Canonical logical and serialized form is absent/nil `metadata.scopeRef` per FEATURE-0012 D-16 (`NormalizeScope`, `CanonicalScopeIdentity`; section 29.3.1). Absent `scopeRef` resolves to `Platform` only where the contract permits `Platform`; otherwise it is the stable required-scope error. |
-| `Organization` | Present | Present | Unchanged | Existing Organization-scoped `AuditEvent`s remain valid. |
-| `OrganizationUnit` | Present | Present | Unchanged | — |
-| `Tenant` | Present | Present | Unchanged | — |
-| `Project` | Present | Present | Unchanged | — |
-| `Provider` | Present | Present | Unchanged (retained) | ADH-2026-014's six-scope `AuditEvent` list omitted `Provider`; ADH-2026-015 retains it and permits it for `AuditEvent`. |
-| `ServiceInstance` | Absent | Present | **Added** (additive) | Added to the shared vocabulary to reconcile ADH-2026-014's `AuditEvent` requirement with the FEATURE-0012 vocabulary. |
-
-`AuditEvent` profile-level difference:
-
-| Contract element | FEATURE-0012 current | FEATURE-0013 (ADH-2026-015) | Classification |
-|---|---|---|---|
-| `AuditEvent` permitted scopes (`x-sovrunn-allowed-scopes`) | `["Organization"]` (alpha) | All seven canonical values | **Expanded** |
-| `AuditEvent` scope identity field | `metadata.scopeRef` only | `metadata.scopeRef` only (confirmed sole authority) | Unchanged / confirmed |
-
-Overall migration classification: **additive, backward-compatible extension**.
-No value is removed, renamed, mapped, restricted, or semantically reinterpreted.
-
-Detailed inspected-file evidence is recorded in
-`docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md`.
-
-### 29.5 Mandatory Dependency Contract Reconciliation framework
-
-Whenever FEATURE-0013 (or any feature) inherits a controlled vocabulary, shared
-type, or contract from a dependency, a Dependency Contract Reconciliation must
-be recorded before design approval. The reconciliation must cover **every** of
-the following dimensions explicitly:
-
-1. **Exact dependency version and files** — the dependency's contract version
-   and the exact schema, binding, validator, and fixture files inspected.
-2. **Enums** — every controlled-vocabulary value, classified per section 29.6.
-3. **Required fields** — which fields are required and whether requiredness
-   changed.
-4. **Cardinality** — how many of each element are permitted; any change.
-5. **Ownership** — which feature owns the shared vocabulary or contract.
-6. **Serialization** — the impact on existing serialized values and forms.
-7. **Validation** — accepted values, rejected values, and rejection rules.
-8. **Security semantics** — authorization/scope semantics and whether they
-   changed (scope does not grant authorization).
-9. **Go bindings** — the impact on generated or hand-written Go types.
-10. **Fixtures** — positive and negative fixture obligations.
-11. **Migration classification** — additive, backward-compatible, or breaking.
-12. **Approval reference** — the controlling ADH/DEC/RFC approval.
-
-A reconciliation that leaves any dimension unaddressed is incomplete and blocks
-design approval.
-
-### 29.6 Controlled-vocabulary difference classification requirement
-
-Every inherited controlled-vocabulary difference must be classified as exactly
-one of: **added**, **removed**, **renamed**, **mapped**, **restricted**,
-**expanded**, or **semantically reinterpreted**. A difference that cannot be
-classified with confidence, or that would be `removed`, `renamed`, `mapped`,
-`restricted`, or `semantically reinterpreted`, is not permitted without a
-separately approved architecture decision.
-
-### 29.7 Prohibition on agent-resolved dependency deltas
-
-Kiro and Cursor must not resolve any unapproved dependency delta between an
-inherited contract and the FEATURE-0013 contract. They must not choose
-mappings, aliases, removals, additional scopes, restrictions, or applicability
-exclusions. Any dependency delta not explicitly approved by ADH-2026-014 or
-ADH-2026-015 must be recorded as `ARCHITECTURE_DECISION_REQUIRED` and escalated
-to the Architecture Owner. No implementation may proceed from an unapproved
-dependency delta.
-
-### 29.8 Synchronization obligation
-
-Canonical schemas, Go bindings, validators, fixtures, compatibility evidence,
-architecture, requirements, and design must eventually be synchronized to the
-seven-value canonical vocabulary. This synchronization is an obligation, not a
-completed state. It must occur only during a separately authorized
-implementation stage after requirements receive fresh independent approval.
-
-### 29.9 Preservation of unchanged decisions
-
-ADH-2026-015 changes only the `AuditEvent` scope statement. All provider-
-neutral, contract-only, statelessness, security, sovereignty, anti-
-overengineering, Matrix E, and downstream-adoption decisions in this document
-remain in force. Sections 1 through 28, AD-001 through AD-044, and Matrix E
-F13-R01 through F13-R31 are preserved except for the clarified `AuditEvent`
-scope vocabulary controlled by this section.
-
-## 30. ADH-2026-016 contract boundary clarification
-
-### 30.1 Controlling authority
-
-ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the **joint controlling
-handoffs** for FEATURE-0013. ADH-2026-016 (Approved, 2026-07-27, Sanjeev Kumar)
-is a **clarification**: it introduces no new architecture and authorizes no
-runtime capability and no product, provider, or algorithm selection.
-ADH-2026-014 and ADH-2026-015 remain controlling except where ADH-2026-016
-clarifies their previously unresolved contract boundaries. The precise
-relationships are:
-
-- ADH-2026-015 supersedes **only** the earlier six-scope `AuditEvent` statement
-  in ADH-2026-014; all other ADH-2026-014 decisions remain controlling.
-- ADH-2026-016 clarifies the previously unresolved contract boundaries of both
-  ADH-2026-014 and ADH-2026-015 (scope authority, sensitivity vocabulary,
-  security-validation scope, trust boundary, conformance coverage, six-scope
-  evidence disposition, and `DecisionObject` migration) without changing any
-  other decision. The seven-value `ScopeKind` vocabulary approved by
-  ADH-2026-015 is preserved unchanged.
-
-Where any earlier text in this document conflicts with the clarified boundaries
-below, this section is authoritative for those boundaries.
-
-### 30.2 DecisionRecord scope authority
-
-`DecisionRecord` uses FEATURE-0012 `metadata.scopeRef` as its sole logical and
-serialized scope authority. A top-level `DecisionRecord` `scopeRef` or any
-second scope source is removed and prohibited (see the corrected canonical
-example in section 6.1). `Platform` uses an absent/nil `metadata.scopeRef`
-where `Platform` is permitted; every non-Platform scope uses a non-nil
-`metadata.scopeRef` with canonical `ScopeKind` and UID semantics. Duplicate,
-conflicting, alternate, aliased, or parallel scope sources fail validation. A
-canonical nil `metadata.scopeRef` that resolves to `Platform` is not a
-contradictory or duplicate scope. The seven-value `ScopeKind` vocabulary
-approved by ADH-2026-015 (section 29) is preserved.
-
-### 30.3 Provider-neutral sensitivity vocabulary
-
-The closed ordered core sensitivity vocabulary is `PUBLIC < INTERNAL <
-CONFIDENTIAL < RESTRICTED` (section 12.4). Jurisdiction-specific classification
-labels and caveats are versioned profile mappings, not additional core enum
-values. A profile permitting captured evaluator output must declare a
-sensitivity ceiling, allowed/prohibited content-category rules, maximum fields,
-maximum bytes, maximum depth, and allowed value types. Missing or unknown
-mandatory profile values invalidate the profile; captured values above the
-declared ceiling fail validation.
-
-### 30.4 Security validation boundary
-
-FEATURE-0013 owns structural schema validation, typed classification, declared
-bounds, projection restrictions, and deterministic conformance (section 12.1).
-FEATURE-0013 does not claim comprehensive semantic detection of secrets,
-credentials, personal data, malware, or policy violations in arbitrary content.
-Producers must redact prohibited content before submission. Comprehensive
-semantic content scanning and runtime content inspection belong to later
-approved security features. Kiro and Cursor must not invent secret-pattern,
-credential-pattern, PII, malware, DLP, or content-scanning engines in
-FEATURE-0013.
-
-### 30.5 Canonicalization and trust boundary
-
-Algorithm-agile carrier fields and structural trust metadata are `CONTRACT_NOW`
-(section 12.3). The canonicalization algorithm/profile, digest-covered fields,
-signature algorithm, and cryptographic product/service selection are `DEFERRED`
-and remain blocked by **ADR-F13-002**. Actual cryptographic verification,
-signing, HSM, notary, trusted-time, key, revocation-distribution, and WORM
-services are not FEATURE-0013 artifacts. Structural fixtures may use opaque
-deterministic test assertions to validate state and failure semantics but must
-not claim cryptographic validity or select an algorithm. When a profile
-requires verified trust, an unknown, absent, expired, revoked, mismatched, or
-unverified trust state fails closed. RFC 8785 is illustrative only (section 14)
-and cannot be selected by design, tasks, fixtures, or code without a later
-approved decision.
-
-### 30.6 Exact conformance coverage
-
-Section 17 scenarios map exactly and one-to-one to the stable IDs `F13-CF-01`
-through `F13-CF-28` in their existing order. The IDs must not be merged,
-renumbered, or omitted. Additional `AC-13.7`, scope, security, and
-compatibility cases use separately named IDs and do not alter the canonical
-count. One fixture may cover multiple scenario IDs, but every scenario must have
-an explicit coverage-matrix entry; coverage is counted by scenario ID, not by
-fixture-file count. Contract-only fixtures remain pure/in-memory and must not
-implement prohibited runtime systems.
-
-### 30.7 Six-scope evidence disposition
-
-`docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md` is
-SUPERSEDED historical evidence. ADH-2026-015 and
-`docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` are
-authoritative for the seven-value contract. Historical six-scope content is
-preserved but carries an explicit supersession notice and current disposition.
-
-### 30.8 DecisionObject migration
-
-Active normative documents use `DecisionRecord`. Frozen FEATURE-0012 Kiro
-specifications may retain `DecisionObject` only with an explicit artifact-level
-note identifying it as the historical pre-ADH-2026-014 name for the same
-concept; no second schema, Go type, runtime alias, parallel contract, or
-migration implementation is created. Generated context files are regenerated
-from corrected sources and are not edited manually; reconciliation evidence
-distinguishes corrected active normative documents from frozen historical
-artifacts.
-
-### 30.9 Scope and preservation
-
-ADH-2026-016 authorizes no production decision/audit/security/cryptographic/
-profile-registry/synchronization service, no provider-specific component, no
-parallel scope field, no second decision type, adapter interface, queue,
-worker, persistence layer, or product selection. Matrix E identifiers and all
-unaffected ADH-2026-014 and ADH-2026-015 decisions are preserved. Requirements
-return to architecture-remediation status; design, tasks, and implementation
-are not generated or resumed; the superseded design remains non-authoritative.
+- `ADH-2026-014` established the initial FEATURE-0013 architecture baseline.
+- `ADH-2026-015` attempted to reconcile the `AuditEvent` scope model by adding
+  ServiceInstance to `ScopeKind`; the consolidated architecture retains its
+  single-scope-authority intent but replaces that semantic choice with a typed
+  ServiceInstance subject under Project scope.
+- `ADH-2026-016` clarified `DecisionRecord` scope authority, sensitivity,
+  structural security validation, trust boundaries, conformance identifiers,
+  evidence disposition, and terminology migration.
+- `ADH-2026-017` is the approved single replacement handoff for this complete
+  consolidated architecture. When approved, it supersedes ADH-2026-014,
+  ADH-2026-015, and ADH-2026-016 in full as normative inputs while retaining
+  them as historical provenance.
+- The consolidated main body is authoritative; the handoff is its approval
+  envelope and binds approval to the exact architecture content.
+- If the main body conflicts with superseded wording retained in historical
+  handoffs or evidence, the consolidated main body controls.
+- Future semantic changes require a new approved architecture decision; Kiro,
+  design, tasks, and implementation must not reinterpret historical wording.

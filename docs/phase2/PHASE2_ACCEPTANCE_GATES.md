@@ -80,12 +80,13 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 - All normative documents use `DecisionRecord` (not `DecisionObject`) for the common decision envelope.
 - A terminology reconciliation traceability record exists.
 
-### 6.2 Canonical seven-value ScopeKind and AuditEvent
+### 6.2 Canonical scope and subject model
 
-- `AuditEvent` supports Platform, Organization, OrganizationUnit, Tenant, Project, Provider, and ServiceInstance through `metadata.scopeRef` as its sole logical and serialized scope authority.
+- `AuditEvent` supports FEATURE-0012's six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
 - The canonical `Platform` form is an absent/nil `metadata.scopeRef` (FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`): an absent `scopeRef` resolves deterministically to `Platform` where the contract permits `Platform`, and returns the stable required-scope error where it does not (absence is not automatically valid).
 - No parallel scope enum, presence flag, `AuditScope` type, discriminator, alias, or independently mutable scope field is introduced.
-- Compatibility fixtures exist for all seven AuditEvent scopes — a positive `Platform` fixture using canonical absent/nil `metadata.scopeRef`, positive non-Platform fixtures using `metadata.scopeRef`, and a negative absence fixture asserting rejection when `Platform` is disallowed — with regression coverage for the six pre-existing FEATURE-0012 ScopeKind values.
+- `ServiceInstance` is represented through a typed `subjectRef`, normally with Project as `metadata.scopeRef`; it is rejected as a `ScopeKind`.
+- Compatibility fixtures cover all six FEATURE-0012 scopes, the canonical Platform form, invalid absence where Platform is disallowed, rejection of parallel scope sources, rejection of `ServiceInstance` as scope, and acceptance of a ServiceInstance subject within Project scope.
 - FEATURE-0012 conformance is not regressed.
 
 ### 6.3 Contract-only scope
@@ -94,23 +95,23 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 - No persistence, workflow, or external service implementation exists.
 - Schemas, validation, conformance fixtures, and documentation only.
 
-### 6.4 Controlling references
+### 6.4 Consolidated controlling reference
 
-- ADH-2026-014, ADH-2026-015, and ADH-2026-016 are the joint controlling handoffs. ADH-2026-015 supersedes only the earlier six-scope `AuditEvent` statement; ADH-2026-016 clarifies previously unresolved contract boundaries without introducing new architecture; all other ADH-2026-014 decisions remain controlling.
-- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` is the canonical architecture (section 30 for the ADH-2026-016 clarified boundaries).
-- `docs/traceability/ADH-2026-015-scope-vocabulary-compatibility.md` records the value-by-value compatibility evidence and is authoritative for the seven-value contract.
-- `docs/traceability/ADH-2026-014-six-scope-auditevent-compatibility.md` is SUPERSEDED historical evidence.
-- AD-001 through AD-044 are preserved.
+- `ADH-2026-017` is the approved single replacement handoff for `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`.
+- ADH-2026-014, ADH-2026-015, and ADH-2026-016 are historical provenance and must not be loaded as separate downstream instructions.
+- Requirements generation is authorized because ADH-2026-017 is Approved and its exact architecture digest is recorded; design, tasks, and implementation remain separately gated.
+- AD-001 through AD-045 are preserved; AD-045 owns the public error binding and
+  closed violation-code registry.
 - Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
 
-### 6.5 ADH-2026-016 contract boundary criteria
+### 6.5 Consolidated contract boundary criteria
 
 - `DecisionRecord` uses `metadata.scopeRef` as its sole logical and serialized scope authority; no top-level `DecisionRecord` `scopeRef` or parallel scope source exists.
 - Sensitivity classification uses the closed ordered provider-neutral vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; jurisdiction-specific labels are versioned profile mappings; profiles permitting captured output declare a sensitivity ceiling, content-category rules, and maximum fields/bytes/depth/value-types.
 - Security validation is bounded to structural conformance; no secret/credential/PII/malware/DLP/content-scanning engine is introduced; comprehensive semantic content scanning is a later approved feature.
 - Algorithm-agile carrier fields and structural trust metadata are contract-now; canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services remain DEFERRED under ADR-F13-002; RFC 8785 is illustrative only.
 - Architecture section 17 scenarios map one-to-one to stable IDs `F13-CF-01` through `F13-CF-28`; coverage is counted by scenario ID with an explicit coverage-matrix entry per scenario.
-- FEATURE-0013 requirements remain in architecture-remediation status (`PENDING_HUMAN_REVIEW` / gate `PENDING_INDEPENDENT_REVIEW`); ADH-2026-016 grants no stage authorization.
+- FEATURE-0013 architecture is approved for requirements generation; ADH-2026-017 grants no design, tasks, or implementation authorization.
 
 ### 6.6 Downstream adoption
 

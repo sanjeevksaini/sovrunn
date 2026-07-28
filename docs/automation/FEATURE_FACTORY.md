@@ -352,12 +352,17 @@ export KIRO_EFFORT=high                  # low|medium|high|xhigh|max
 export KIRO_TRUST_TOOLS=read,grep,write
 export KIRO_TRUST_ALL_TOOLS=1            # trusted repository-local automation only
 export KIRO_SELECTED_MODEL="Claude Opus 4.8"
-export KIRO_AGENT=sovrunn-spec-agent
+export KIRO_AGENT=sovrunn-spec
 ```
 
 `KIRO_SELECTED_MODEL` records the declared model in the usage log; it does not
 select the Kiro model by itself. Model selection is controlled by the installed
 Kiro CLI configuration or the configured Kiro agent.
+
+FEATURE-0013 forces the repository-local `sovrunn-spec` agent for initial
+generation and every revision. An unset value is filled automatically; a
+different override fails closed. This ensures the approved context profile and
+its pinned model are actually used rather than merely validated on disk.
 
 Kiro CLI runs the rendered prompt through:
 
@@ -472,8 +477,54 @@ For Phase 2 features, the architecture gates additionally require:
 - no custom policy engine embedded in handlers;
 - no raw secret storage;
 - no customer-facing IaaS leakage;
-- explainable decision objects;
+- explainable `DecisionRecord` contracts;
 - defined audit behavior;
 - preserved adapter boundaries;
 - conformance with `docs/architecture/api-resource-standard.md` for
   FEATURE-0012-and-later resource and API contracts.
+
+## FEATURE-0013 architecture-boundary controls
+
+FEATURE-0013 specification generation fails closed until the consolidated
+architecture has `approved-for-kiro-requirements` status, records a fresh human
+reviewer and date, and has exactly one approved ADH-2026-017 consolidation
+handoff.
+
+ADH-2026-017 content-binds both the approved FEATURE-0013 architecture and the
+exact FEATURE-0011/0012 dependency artifacts used to derive it. Any architecture
+or dependency digest mismatch blocks all downstream stages until a new human
+architecture decision reconciles the change.
+
+The preflight also verifies that Kiro loads the consolidated architecture,
+the sole approved ADH-2026-017 handoff, FEATURE-0011 reuse governance, and final
+FEATURE-0012 dependency contracts and approval evidence. ADH-2026-014/015/016
+remain historical provenance and are excluded from downstream model context.
+
+Every generated requirements, design, or tasks artifact must pass the
+post-generation boundary check before OpenAI review. The check rejects stale
+terminology, parallel scope models, reopened closed architecture decisions,
+missing architecture traceability, premature cryptographic selection, missing
+scope classifications, and superseded drafts.
+
+The check also requires exhaustive traceability: sections 1–28, AD-001–AD-045,
+F13-R01–F13-R31, and every stable conformance ID must appear individually in
+the downstream Architecture traceability section. A range or summary statement
+cannot conceal an omitted decision.
+
+Run a check directly with:
+
+```bash
+make feature-0013-architecture-readiness
+MODE=pre make feature-0013-architecture-boundary-check STAGE=requirements
+MODE=post make feature-0013-architecture-boundary-check STAGE=requirements
+```
+
+`feature-0013-architecture-readiness` validates the consolidated content,
+dependency lifecycle and exact SHA-256 lock, FEATURE-0011/0012 contract
+semantics, active context, Kiro resources, prompt controls, and architecture
+inventories without bypassing the human gate. `MODE=pre` repeats those checks
+and additionally requires the recorded reviewer, decision date, final reuse
+statuses, approved ADH-2026-017, and matching architecture SHA-256.
+
+Pre-consolidation specifications are preserved only under
+`docs/reviews/spec-history/FEATURE-0013/` and are never controlling inputs.

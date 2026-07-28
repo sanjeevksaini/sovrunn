@@ -14,6 +14,11 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ -n "$STAGE" ]] || fail "--stage required"
 cd "$(repo_root)"; ensure_feature_state "$FEATURE"
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
+fi
 ./scripts/reviewer-stage.sh --feature "$FEATURE" --stage "$STAGE" --mode "$MODE"
 REVIEW_FILE=".automation/reviews/$FEATURE/${STAGE}.review.json"
 [[ -f "$REVIEW_FILE" ]] || fail "missing review file: $REVIEW_FILE"

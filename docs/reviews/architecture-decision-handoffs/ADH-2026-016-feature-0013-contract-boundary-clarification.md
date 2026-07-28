@@ -12,6 +12,11 @@ approving_role: Sovrunn Architecture Owner
 
 # ADH-2026-016 — FEATURE-0013 Contract Boundary Clarification
 
+> **Historical predecessor during consolidation.** ADH-2026-017 is the proposed
+> single replacement handoff. This record remains immutable approval history
+> and must not be loaded as a downstream instruction while consolidation is
+> pending. On ADH-2026-017 approval, its normative status becomes Superseded.
+
 ## Metadata
 
 - Handoff ID: ADH-2026-016

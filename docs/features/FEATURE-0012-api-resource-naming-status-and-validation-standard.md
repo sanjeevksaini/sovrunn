@@ -2,7 +2,7 @@
 doc_type: feature
 id: FEATURE-0012
 title: API, Resource Naming, Status, and Validation Standard
-status: draft
+status: implemented
 phase: 2
 reuse_assessment_format_version: 1.0.0
 depends_on:
@@ -105,7 +105,7 @@ Feature identity: FEATURE-0012 — API, Resource Naming, Status, and Validation 
 | Allowed in current phase | Yes |
 | Current-phase work | Approve the normative architecture; generate Kiro specifications; implement shared primitives, strict validation, schema metadata, conformance fixtures, compatibility analysis, and feature-gate support only after stage approval. |
 | Deferred work | Domain payloads and runtime semantics for decisions, providers, pools, adapters, policy, placement, plugins, provisioning, watch protocols, production persistence, and stable API promotion remain with their owning features/phases. |
-| Explicit non-goals | No provider integration; no infrastructure or PostgreSQL provisioning; no plugin execution; no policy or placement engine; no DecisionObject/AuditEvent payload; no persistence selection, billing, failover execution, autonomous AI, wholesale Phase 1 rewrite, or unrestricted extension system. |
+| Explicit non-goals | No provider integration; no infrastructure or PostgreSQL provisioning; no plugin execution; no policy or placement engine; no DecisionRecord/AuditEvent payload; no persistence selection, billing, failover execution, autonomous AI, wholesale Phase 1 rewrite, or unrestricted extension system. |
 | Exit or migration boundary | Breaking contract changes require a new API version, compatibility evidence, migration path, deprecation/coexistence plan, rollback behavior, and approved architecture handoff. Provider or implementation replacement must not require customer-contract changes. |
 | Phase 2 non-goal acknowledgement | Phase 2 remains a model, standard, decision, audit, adapter-boundary, and simulation foundation. FEATURE-0012 does not authorize real runtime integrations or later-phase execution. |
 

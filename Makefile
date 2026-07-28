@@ -160,6 +160,17 @@ arch-handoff-check:
 	@test -n "$(HANDOFF)" || (echo "HANDOFF is required"; exit 1)
 	./scripts/architecture-handoff-check.sh "$(HANDOFF)"
 
+.PHONY: feature-0013-architecture-boundary-check
+feature-0013-architecture-boundary-check:
+	@test -n "$(STAGE)" || (echo "STAGE is required: requirements, design, or tasks"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
+		--feature FEATURE-0013 --stage "$(STAGE)" --mode "$${MODE:-post}"
+
+.PHONY: feature-0013-architecture-readiness
+feature-0013-architecture-readiness:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
+		--feature FEATURE-0013 --stage requirements --mode readiness
+
 .PHONY: structurizr-lite
 structurizr-lite:
 	./scripts/structurizr-lite.sh

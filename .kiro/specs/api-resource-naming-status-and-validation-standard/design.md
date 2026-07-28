@@ -1310,10 +1310,13 @@ implementations:
 
 ## Operation and audit behavior
 
-FEATURE-0012 does not create an operation or audit service (F12-IMPL-002);
-Operation and AuditEvent domain payloads belong to FEATURE-0013
-(F12-STATUS-004). This feature instead guarantees the grammar can carry the
-correlation data those features require:
+FEATURE-0012 does not create an operation or audit service (F12-IMPL-002).
+The generic `Operation` contract and its `LongRunningOperation` payload remain
+owned by FEATURE-0012 and ADH-2026-013. FEATURE-0013 reuses that contract for
+asynchronous handoff and does not redefine its payload. `DecisionRecord` and
+`AuditEvent` domain payload semantics belong to FEATURE-0013
+(F12-STATUS-004). FEATURE-0012 guarantees that the shared grammar can carry
+the correlation data those later domain contracts require:
 
 - The `Operation` fixture uses the `LongRunningOperation` profile and can
   represent target, action, requester, idempotency/correlation, progress,
