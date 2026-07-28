@@ -79,10 +79,17 @@ run_kiro_prompt_file() {
   local effort="${KIRO_EFFORT:-high}"
   effort="$(echo "$effort" | tr '[:upper:]' '[:lower:]')"
   case "$effort" in low|medium|high|xhigh|max) ;; *) effort="high";; esac
+  local model="${KIRO_MODEL:-}"
+  if [[ "$FEATURE" == "FEATURE-0013" && -z "$model" ]]; then
+    model="claude-opus-4.8"
+  fi
 
   local prompt_text
   prompt_text="$(cat "$prompt_file")"
   local args=(chat --no-interactive --effort "$effort")
+  if [[ -n "$model" ]]; then
+    args+=(--model "$model")
+  fi
   if [[ -n "${KIRO_AGENT:-}" ]]; then
     args+=(--agent "$KIRO_AGENT")
   fi

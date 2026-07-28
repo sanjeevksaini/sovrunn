@@ -82,7 +82,11 @@ print(r.get('model',''), r.get('label',''), r.get('effort','medium'))
 PY
 )
 
-SELECTED_MODEL="${KIRO_SELECTED_MODEL:-$REC_LABEL}"
+KIRO_MODEL="${KIRO_MODEL:-}"
+if [[ "$FEATURE" == "FEATURE-0013" && -z "$KIRO_MODEL" ]]; then
+  KIRO_MODEL="claude-opus-4.8"
+fi
+SELECTED_MODEL="${KIRO_SELECTED_MODEL:-${KIRO_MODEL:-$REC_LABEL}}"
 EFFORT_RAW="${KIRO_EFFORT:-$REC_EFFORT}"
 EFFORT="$(echo "$EFFORT_RAW" | tr '[:upper:]' '[:lower:]')"
 case "$EFFORT" in low|medium|high|xhigh|max) ;; *) EFFORT="high";; esac
@@ -90,6 +94,9 @@ case "$EFFORT" in low|medium|high|xhigh|max) ;; *) EFFORT="high";; esac
 PROMPT_TEXT="$(cat "$PROMPT_PATH")"
 
 KIRO_ARGS=(chat --no-interactive --effort "$EFFORT")
+if [[ -n "$KIRO_MODEL" ]]; then
+  KIRO_ARGS+=(--model "$KIRO_MODEL")
+fi
 if [[ -n "${KIRO_AGENT:-}" ]]; then
   KIRO_ARGS+=(--agent "$KIRO_AGENT")
 fi

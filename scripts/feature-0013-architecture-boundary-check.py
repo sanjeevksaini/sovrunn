@@ -463,7 +463,13 @@ def validate_complete_traceability(text: str, artifact: str) -> None:
             )
 
     for number in sorted(REQUIRED_ARCHITECTURE_SECTIONS):
-        if not re.search(rf"(?:§|section\s+){number}(?!\d)", traceability, re.I):
+        prose_reference = re.search(
+            rf"(?:§|section\s+){number}(?!\d)", traceability, re.I
+        )
+        table_reference = re.search(
+            rf"^\|\s*{number}\s*\|", traceability, re.M
+        )
+        if not (prose_reference or table_reference):
             fail(f"{artifact} traceability omits architecture section {number}")
 
     traceability_lines = traceability.splitlines()
@@ -694,14 +700,25 @@ def validate_request_response_boundary(text: str, artifact: str) -> None:
         re.I,
     )
     lines = text.splitlines()
+    section_heading = ""
     for line_number, line in enumerate(lines, 1):
+        if re.match(r"^##\s+", line):
+            section_heading = line
         context = " ".join(lines[max(0, line_number - 3) : line_number])
+        exclusion_context = bool(
+            negation.search(context)
+            or re.search(
+                r"\b(?:non-goals?|prohibited|excluded)\b",
+                section_heading,
+                re.I,
+            )
+        )
         if pending_definition.search(line) and not negation.search(line):
             fail(
                 f"{artifact} introduces a pending-decision contract at line "
                 f"{line_number}"
             )
-        if pending_name.search(line) and not negation.search(context):
+        if pending_name.search(line) and not exclusion_context:
             fail(
                 f"{artifact} introduces a pending-decision contract at line "
                 f"{line_number}"
@@ -941,7 +958,17 @@ def post_generation(stage: str) -> None:
     if "FEATURE-0013-decision-record-and-auditevent-standard.md" not in traceability:
         fail(f"{stage} traceability does not cite the consolidated architecture")
     for required_section in ("5.4", "6.1", "6.8", "7.1", "9", "12.3", "12.4", "15", "17", "27.8"):
-        if not re.search(rf"(?:§|section\s+){re.escape(required_section)}\b", traceability, re.I):
+        prose_reference = re.search(
+            rf"(?:§|section\s+){re.escape(required_section)}\b",
+            traceability,
+            re.I,
+        )
+        table_reference = re.search(
+            rf"^\|\s*{re.escape(required_section)}\s*\|",
+            traceability,
+            re.M,
+        )
+        if not (prose_reference or table_reference):
             fail(f"{stage} traceability omits architecture section {required_section}")
 
     questions = section(text, r"^##\s+.*Design Questions.*$")
