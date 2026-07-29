@@ -4,6 +4,8 @@ Current active phase: Phase 2.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`.
 
+FEATURE-0013 consolidated architecture: ADH-2026-017 Approved on 2026-07-28 and bound to the canonical architecture digest. ADH-2026-014/015/016 are historical provenance and not downstream inputs.
+
 ## Phase 2 Goal
 
 Establish the reuse-first, provider-neutral PaaS fabric foundation required before executable plugin-chain development.
@@ -12,7 +14,7 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 
 - Reuse assessment standard
 - API/resource standard
-- Decision and AuditEvent standard
+- Decision and AuditEvent standard (DecisionRecord envelope, FEATURE-0012 six-scope governance vocabulary, ServiceInstance as typed subject, AuditEvent via metadata.scopeRef)
 - Provider-neutral resource model
 - ResourcePool and ProviderCapability model
 - Adapter boundary foundation
@@ -26,6 +28,19 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 - Plugin taxonomy foundation
 - AI-readable decision context
 - Phase 2 integration demo
+
+## Phase 2 Completed Features
+
+| Feature | Status | Approval |
+|---|---|---|
+| FEATURE-0011 Reuse Assessment Standard | Merged | Complete |
+| FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` | Final human approval 2026-07-24 |
+
+## Phase 2 Active Feature
+
+| Feature | Status | Controlling handoff |
+|---|---|---|
+| FEATURE-0013 Decision Record and AuditEvent Standard | Architecture approved for fresh Kiro requirements generation | ADH-2026-017 (Approved single replacement; predecessors retained as history only) |
 
 ## Phase 2 Exit Criteria
 

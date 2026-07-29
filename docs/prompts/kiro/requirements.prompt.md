@@ -41,6 +41,93 @@ Use these repo context files:
 - any canonical architecture document referenced by the assessment or ADH
 - docs/phase2/PHASE2_FEATURE_SEQUENCE.md and docs/phase2/PHASE2_EXECUTION_STRATEGY.md for Phase 2 features
 
+## FEATURE-0013 consolidated architecture boundary
+
+When `{{FEATURE_ID}}` is `FEATURE-0013`, load all of these exact controlling
+inputs before writing:
+
+- `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
+- the single approved
+  `docs/reviews/architecture-decision-handoffs/ADH-2026-017-feature-0013-*.md`
+  consolidation handoff
+- `docs/features/FEATURE-0011-reuse-assessment-standard.md`
+- `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
+- `docs/reviews/feature-gates/FEATURE-0011-approval-review.md`
+- `docs/architecture/api-resource-standard.md`
+- `.kiro/specs/api-resource-naming-status-and-validation-standard/requirements.md`
+- `.kiro/specs/api-resource-naming-status-and-validation-standard/design.md`
+- `docs/reviews/feature-gates/FEATURE-0012-approval-review.md`
+
+The consolidated architecture main body is authoritative and ADH-2026-017 is
+its sole approval envelope. Do not load ADH-2026-014, ADH-2026-015, or
+ADH-2026-016 as instructions or parallel authority; they are historical
+provenance only. Do not load a superseded
+FEATURE-0013 requirements or design draft as controlling context.
+
+Treat architecture section 27.8 as a closed decision boundary. Requirements
+must translate those decisions into testable obligations and must not reopen
+them as design questions. A missing semantic value or conflict must be returned
+as `ARCHITECTURE_DECISION_REQUIRED`; do not invent or choose it.
+
+Preserve the closed limit hierarchy explicitly: FEATURE-0012 platform/schema
+ceilings are absolute outer bounds; a `DecisionProfile` may only narrow them;
+an evaluator registration may only narrow the profile; and the effective limit
+is the most restrictive applicable value. Do not invent FEATURE-0013 numeric
+defaults.
+
+Preserve architecture section 15's public error contract exactly. Requirements
+must reproduce the complete closed `violations[].code` registry and map
+testable cases plus RFC 6901 fields to those existing codes. They must not
+invent leaf suffixes, aliases, type URIs, top-level codes, or HTTP meanings.
+
+Preserve the request/outcome boundary exactly. `DecisionRequest` is a
+calling-domain-owned conceptual input role, not a FEATURE-0013 shared contract;
+it only conforms to inherited `TransientRequestResult` boundaries. Do not
+require a common request schema, Go type, registry entry, resource, or
+persistence model. Completed handling returns `DecisionRecord`, accepted
+asynchronous handling returns the existing FEATURE-0012 `Operation`, and
+rejected or unaccepted handling returns inherited Problem Details. Do not
+define `PendingDecision`, `DeferredDecision`, `DecisionPending`, a pending
+decision status, or any other FEATURE-0013 non-final response envelope.
+The generic `Operation` contract and `LongRunningOperation` payload remain
+owned by FEATURE-0012/ADH-2026-013; FEATURE-0013 must not redefine them.
+
+Preserve risk-identifier ownership. FEATURE-0012 `F12-R01` through `F12-R16`
+remain FEATURE-0012 identifiers. FEATURE-0013 uses only its separate `F13-R01`
+through `F13-R31` namespace. Reuse the governance approach, but do not merge,
+renumber, alias, inherit, or ordinally map the two identifier sets.
+
+Preserve the immutable erasure boundary from architecture sections 6.5-6.7:
+`DecisionRecord` and `AuditEvent` are append-only; correction, revocation, and
+erasure never rewrite the canonical record. Requirements must cover separately
+controlled payload custody, later key destruction, and linked
+tombstone/redaction records as structural alternatives, while authorizing no
+erasure or cryptographic runtime in FEATURE-0013.
+
+The generated document must contain a level-two `Architecture traceability`
+section mapping every requirement family and every retained design question to
+the exact controlling architecture section. At minimum, it must cover sections
+5.4, 6.1, 6.8, 7.1, 9, 12.3, 12.4, 15, 17, and 27.8.
+
+For FEATURE-0013, “complete” is deterministic rather than a summary claim. The
+Architecture traceability section must contain every top-level architecture
+section reference `section 1` through `section 28`, every exact decision ID
+`AD-001` through `AD-045`, every exact risk ID `F13-R01` through `F13-R31`, and
+every stable conformance ID: `F13-CF-01` through `F13-CF-28`,
+`F13-SCOPE-01` through `F13-SCOPE-11`, `F13-EVAL-01` through `F13-EVAL-08`,
+`F13-SEC-01` through `F13-SEC-08`, `F13-TRUST-01` through `F13-TRUST-04`, and
+`F13-COMPAT-01` through `F13-COMPAT-09`. Each entry must state whether it is
+translated now, preserved as a later invariant, deferred, delegated to design,
+or governance-only. Ranges such as `AD-001–AD-045` do not substitute for the
+individual IDs.
+
+Implementation class is architecture-owned, not a requirements decision. For
+each `AD-001` through `AD-045`, include exactly one explicit traceability row
+whose implementation class exactly matches the section 19 scorecard:
+`CONTRACT_NOW`, `INVARIANT_FOR_LATER`, or `DEFERRED`. Requirements must not
+reclassify, combine, qualify, or omit that value. A mismatch must stop with
+`ARCHITECTURE_DECISION_REQUIRED`.
+
 Requirements must include the exact active feature identity and `Stage: Requirements`, then:
 1. Introduction
 2. Glossary if new concepts are introduced
@@ -51,6 +138,7 @@ Requirements must include the exact active feature identity and `Stage: Requirem
 7. Security/privacy requirements
 8. Compatibility with already completed Phase 1 features
 9. Design questions to resolve later in design.md
+10. Architecture traceability
 
 Keep requirements concise, precise, implementation-aware, phase-scoped, and free of scope creep.
 
@@ -77,6 +165,6 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable decision object,
+- explainable `DecisionRecord`,
 - defined audit behavior,
 - preserved adapter boundaries.

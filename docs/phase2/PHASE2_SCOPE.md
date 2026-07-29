@@ -32,7 +32,7 @@ Phase 2 does not build real provider provisioning, real database provisioning, r
 
 - Reuse Assessment Standard
 - API, resource, status, validation, and boundary classification standard
-- Decision Object and AuditEvent Standard
+- Decision Record and AuditEvent Standard
 - Provider-neutral resource model
 - ResourcePool and ProviderCapability model
 - Adapter Boundary Foundation

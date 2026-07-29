@@ -24,6 +24,16 @@ case "$MODE" in prompt|manual|auto) ;; *) fail "unsupported mode: $MODE";; esac
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
 
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  if [[ -n "${KIRO_AGENT:-}" && "${KIRO_AGENT}" != "sovrunn-spec" ]]; then
+    fail "FEATURE-0013 requires KIRO_AGENT=sovrunn-spec; refusing override: ${KIRO_AGENT}"
+  fi
+  KIRO_AGENT="sovrunn-spec"
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode pre
+fi
+
 # Render the prompt first. render-prompt.py prints the generated file path.
 PROMPT_PATH="$(./scripts/render-prompt.py --feature "$FEATURE" --stage "$STAGE" | tail -n 1)"
 [[ -f "$PROMPT_PATH" ]] || fail "generated prompt not found: $PROMPT_PATH"
@@ -72,7 +82,11 @@ print(r.get('model',''), r.get('label',''), r.get('effort','medium'))
 PY
 )
 
-SELECTED_MODEL="${KIRO_SELECTED_MODEL:-$REC_LABEL}"
+KIRO_MODEL="${KIRO_MODEL:-}"
+if [[ "$FEATURE" == "FEATURE-0013" && -z "$KIRO_MODEL" ]]; then
+  KIRO_MODEL="claude-opus-4.8"
+fi
+SELECTED_MODEL="${KIRO_SELECTED_MODEL:-${KIRO_MODEL:-$REC_LABEL}}"
 EFFORT_RAW="${KIRO_EFFORT:-$REC_EFFORT}"
 EFFORT="$(echo "$EFFORT_RAW" | tr '[:upper:]' '[:lower:]')"
 case "$EFFORT" in low|medium|high|xhigh|max) ;; *) EFFORT="high";; esac
@@ -80,6 +94,9 @@ case "$EFFORT" in low|medium|high|xhigh|max) ;; *) EFFORT="high";; esac
 PROMPT_TEXT="$(cat "$PROMPT_PATH")"
 
 KIRO_ARGS=(chat --no-interactive --effort "$EFFORT")
+if [[ -n "$KIRO_MODEL" ]]; then
+  KIRO_ARGS+=(--model "$KIRO_MODEL")
+fi
 if [[ -n "${KIRO_AGENT:-}" ]]; then
   KIRO_ARGS+=(--agent "$KIRO_AGENT")
 fi
@@ -116,6 +133,12 @@ if [[ ! -f "$EXPECTED_DOC" ]]; then
   echo "Check Kiro log: $LOG_FILE" >&2
 else
   info "Kiro output detected: $EXPECTED_DOC"
+fi
+
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
 fi
 
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_generated" >/dev/null

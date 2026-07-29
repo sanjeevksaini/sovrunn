@@ -1,0 +1,77 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "DecisionRecord",
+  "metadata": {
+    "name": "f13-eval-01",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "project-123"
+    },
+    "uid": "decision-uid-f13-eval-01"
+  },
+  "record": {
+    "authority": "AUTHORITATIVE",
+    "correlation": {
+      "auditEventRefs": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "AuditEvent",
+          "name": "audit-f13-eval-01",
+          "uid": "audit-uid-f13-eval-01"
+        }
+      ]
+    },
+    "evaluationResults": [
+      {
+        "evaluatedAt": "2026-07-29T10:00:01Z",
+        "evaluator": {
+          "type": "capacity-evaluator",
+          "version": "1.2.0"
+        },
+        "inputSnapshotRef": {
+          "apiVersion": "evidence.sovrunn.io/v1alpha1",
+          "kind": "InputSnapshot",
+          "name": "snapshot-1",
+          "uid": "snapshot-uid-1"
+        },
+        "result": {
+          "capacity": "ok"
+        },
+        "resultStatus": "SUCCESS",
+        "structuralTrustState": "TRUSTED",
+        "timing": {
+          "completedAt": "2026-07-29T10:00:01Z",
+          "durationMs": 1000,
+          "startedAt": "2026-07-29T10:00:00Z"
+        }
+      }
+    ],
+    "finality": "FINAL",
+    "form": "SELECTION",
+    "profileRef": {
+      "name": "FixtureLocalDecision",
+      "version": "1.0.0"
+    },
+    "purpose": "profile-sensitivity-projection-bounds",
+    "result": {
+      "obligations": [],
+      "rationale": {
+        "reasonCodes": [
+          "CAPACITY_FIT"
+        ]
+      },
+      "typedResult": {
+        "selected": "pool-a"
+      }
+    },
+    "semanticIdentity": {
+      "basis": "fixture-local-v1",
+      "canonicalScope": "Project:project-123",
+      "inputRefs": [
+        "input-1"
+      ]
+    }
+  }
+}

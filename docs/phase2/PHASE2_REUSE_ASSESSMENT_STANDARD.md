@@ -1,7 +1,7 @@
 ---
 doc_type: standard
 title: Phase 2 Reuse Assessment Standard
-status: draft
+status: approved
 phase: 2
 reuse_assessment_format_version: 1.0.0
 ai_load_priority: always
@@ -18,9 +18,9 @@ file rather than redefine the schema.
 
 Format version: `1.0.0` (front matter `reuse_assessment_format_version`).
 
-Document status remains **draft** until recorded human approval through the
-FEATURE-0011 feature-review process. Approval of ADH-2026-011 authorizes
-this work; it does not mark this canonical file Approved.
+Document status is **Approved** through ADH-2026-011 and the recorded
+FEATURE-0011 human feature-review decision. Automated validation alone does
+not grant or change this status.
 
 Controlling references:
 

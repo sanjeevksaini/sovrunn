@@ -329,7 +329,7 @@ type OperationStatus struct {
 }
 
 // ---------------------------------------------------------------------------
-// AuditEvent — ImmutableRecord / governance-only / Organization
+// AuditEvent — ImmutableRecord / governance-only / six governance scopes
 // ---------------------------------------------------------------------------
 
 // AuditOutcome is the closed audit outcome vocabulary.
@@ -342,6 +342,10 @@ const (
 )
 
 // AuditEvent is the conformance-only Go type for api/schemas/audit-event.json.
+// FEATURE-0012 owns this base ImmutableRecord envelope. Optional decision
+// linkage under Record.DecisionLinkage is an additive FEATURE-0013 schema
+// extension; canonical domain ownership remains decision.AuditLinkage
+// (closure 7).
 type AuditEvent struct {
 	apimeta.TypeMeta
 	Metadata apimeta.ObjectMeta `json:"metadata"`
@@ -350,13 +354,20 @@ type AuditEvent struct {
 
 // AuditEventRecord is the append-only audit payload.
 type AuditEventRecord struct {
-	ActorRef               apimeta.TypedRef  `json:"actorRef"`
-	RequestID              string            `json:"requestId"`
-	OperationRef           *apimeta.TypedRef `json:"operationRef,omitempty"`
-	SubjectRef             apimeta.TypedRef  `json:"subjectRef"`
-	SubjectResourceVersion string            `json:"subjectResourceVersion,omitempty"`
-	Action                 string            `json:"action"`
-	Outcome                AuditOutcome      `json:"outcome"`
-	ReasonCode             string            `json:"reasonCode"`
-	CorrectionOfRef        *apimeta.TypedRef `json:"correctionOfRef,omitempty"`
+	ActorRef               apimeta.TypedRef              `json:"actorRef"`
+	RequestID              string                        `json:"requestId"`
+	OperationRef           *apimeta.TypedRef             `json:"operationRef,omitempty"`
+	SubjectRef             apimeta.TypedRef              `json:"subjectRef"`
+	SubjectResourceVersion string                        `json:"subjectResourceVersion,omitempty"`
+	Action                 string                        `json:"action"`
+	Outcome                AuditOutcome                  `json:"outcome"`
+	ReasonCode             string                        `json:"reasonCode"`
+	CorrectionOfRef        *apimeta.TypedRef             `json:"correctionOfRef,omitempty"`
+	DecisionLinkage        *AuditEventDecisionLinkageRef `json:"decisionLinkage,omitempty"`
 }
+
+// AuditEventDecisionLinkageRef is the optional FEATURE-0013 decision-linkage
+// extension carrier under record ($ref: _common/decision-linkage.json).
+// VerifyGoTypeAgainstSchema treats $ref properties as opaque structs; the
+// canonical domain type is decision.AuditLinkage and is not owned here.
+type AuditEventDecisionLinkageRef struct{}

@@ -4,6 +4,10 @@ Status: Approved Phase 2 start baseline.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`
 
+FEATURE-0013 consolidation status: `ADH-2026-017` is the Approved replacement that captures the complete FEATURE-0013 architecture in one content-bound approval envelope. Requirements regeneration is authorized; later stages retain their normal independent gates.
+
+Historical FEATURE-0013 updates: `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` record the path to the consolidation. They are retained for provenance, excluded from downstream instructions, and normatively superseded by approved `ADH-2026-017`.
+
 ## Product Position
 
 Sovrunn is a cloud-native sovereign PaaS platform for local cloud providers, MSPs, and on-premise cloud operators.
@@ -134,7 +138,24 @@ Current active phase: Phase 2.
 
 Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
 
-Active next stage: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — Kiro requirements generation.
+Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
+
+Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — consolidated architecture is `APPROVED_FOR_KIRO_REQUIREMENTS`. `ADH-2026-017` is the approved single replacement handoff for the complete FEATURE-0013 architecture. Kiro requirements regeneration is authorized; design, tasks, and implementation remain separately gated.
+
+## Approved Consolidated FEATURE-0013 Architecture Baseline
+
+`ADH-2026-017` approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as one complete, authoritative architecture package. It consolidates the common immutable provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` linkage, structural security and projection controls, conformance cases, Matrix E risks, guardrails, and the downstream adoption contract.
+
+The consolidated scope model preserves FEATURE-0012 semantics:
+
+1. `ScopeKind` remains the six-value governance vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
+2. `metadata.scopeRef` is the sole scope authority. Platform uses the canonical absent scope form; every non-Platform scope uses a canonical non-empty reference.
+3. `ServiceInstance` is lifecycle-contained by its owner and is represented as a typed `subjectRef`, normally under its governing Project scope. It is not a `ScopeKind`.
+4. Scope identifies the governance boundary; subject identifies the entity about which the decision or audit statement was made. Neither grants authorization.
+
+`ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` remain historical decision records. They are normatively superseded and must not be loaded as separate Kiro, reviewer, design, task, or implementation instructions.
+
+No earlier requirements approval token survives this consolidation. A fresh requirements document must be generated from approved `ADH-2026-017` and its exact architecture digest.
 
 ## Change Control
 

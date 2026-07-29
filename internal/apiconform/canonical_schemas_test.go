@@ -72,9 +72,16 @@ var expectedCanonicalAnnotations = map[string]struct {
 		stability: apimeta.StabilityAlpha,
 	},
 	"audit-event.json": {
-		profile:   apimeta.ProfileImmutableRecord,
-		boundary:  apimeta.BoundaryGovernanceOnly,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeOrganization},
+		profile:  apimeta.ProfileImmutableRecord,
+		boundary: apimeta.BoundaryGovernanceOnly,
+		scopes: []apimeta.ScopeKind{
+			apimeta.ScopePlatform,
+			apimeta.ScopeOrganization,
+			apimeta.ScopeOrganizationUnit,
+			apimeta.ScopeTenant,
+			apimeta.ScopeProject,
+			apimeta.ScopeProvider,
+		},
 		stability: apimeta.StabilityAlpha,
 	},
 }

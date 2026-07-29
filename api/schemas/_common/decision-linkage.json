@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/decision-linkage.json",
+  "title": "AuditLinkage",
+  "description": "FEATURE-0013 AuditEvent payload/linkage extension (F13-AUDIT-001/003; F13-COMPAT-009; design sections 7.4/7.9). Additive optional fields referenced by audit-event.json and decision correlation. Preserves the FEATURE-0012 AuditEvent base envelope; does not duplicate base fields (closure 7). Correlation reuses the DecisionRecord Correlation carrier (auditEventRefs, operationRef, traceRef) and is never redefined.",
+  "type": "object",
+  "properties": {
+    "decisionRef": {
+      "$ref": "typed-ref.json",
+      "description": "Linked DecisionRecord reference; uid required at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "auditObligationRef": {
+      "$ref": "typed-ref.json",
+      "description": "Optional audit-obligation identity reference.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "description": "Reused Correlation carrier (design sections 7.1/7.9; F13-AUDIT-001). auditEventRefs is required non-empty (minItems: 1).",
+      "properties": {
+        "auditEventRefs": {
+          "type": "array",
+          "description": "Required non-empty AuditEvent identity refs (minItems: 1).",
+          "items": {
+            "$ref": "typed-ref.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "operationRef": {
+          "$ref": "typed-ref.json",
+          "description": "Optional Operation (LongRunningOperation) reference.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "traceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Optional opaque operational correlation / trace reference. Telemetry is not audit authority (AD-026).",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        }
+      },
+      "required": [
+        "auditEventRefs"
+      ],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "decisionRef",
+    "correlation"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,44 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "AuditEvent",
+  "metadata": {
+    "createdAt": "2026-07-29T13:00:00Z",
+    "displayName": "Audit F13-COMPAT-05",
+    "generation": 1,
+    "name": "audit-f13-compat-05",
+    "resourceVersion": "rv-audit-f13-compat-05",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "project-123"
+    },
+    "uid": "audit-uid-f13-compat-05",
+    "updatedAt": "2026-07-29T13:00:00Z"
+  },
+  "record": {
+    "action": "Create",
+    "actorRef": {
+      "apiVersion": "identity.sovrunn.io/v1alpha1",
+      "kind": "Principal",
+      "name": "operator-alice",
+      "uid": "7e8f901a2b3c4d5e6f708192a3b4c5d6"
+    },
+    "operationRef": {
+      "apiVersion": "ops.sovrunn.io/v1alpha1",
+      "kind": "Operation",
+      "name": "op-audit-f13-compat-05",
+      "uid": "op-uid-f13-compat-05"
+    },
+    "outcome": "Succeeded",
+    "reasonCode": "ACCEPTED",
+    "requestId": "req-f13-compat-05",
+    "subjectRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+    },
+    "subjectResourceVersion": "rv-project-1"
+  }
+}

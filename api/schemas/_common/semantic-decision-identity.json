@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/semantic-decision-identity.json",
+  "title": "SemanticDecisionIdentity",
+  "description": "Complete semantic decision-identity descriptor (F13-SCALE-002; design section 7.9; AD-036). Distinct from the retry idempotency key. CanonicalScope is derived from metadata.scopeRef and profile scope rules; it is never an independent scope authority and never overrides metadata.scopeRef. Digest is an opaque structural carrier; no algorithm is selected or executed.",
+  "type": "object",
+  "properties": {
+    "basis": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Profile-declared identity basis id; required non-empty.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "inputRefs": {
+      "type": "array",
+      "description": "Bounded ordered input identity refs; required non-empty (minItems: 1).",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253,
+        "x-sovrunn-field-policy": {
+          "classification": "Internal",
+          "authorizedWriter": "system",
+          "authorizedReaders": [
+            "governance",
+            "internal",
+            "operator"
+          ],
+          "mutability": "immutable",
+          "retention": "archival",
+          "redaction": "none",
+          "residency": "any",
+          "auditRequired": true
+        }
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "canonicalScope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Canonical scope descriptor derived from metadata.scopeRef; required non-empty. Derived, not authoritative. Platform form is the descriptor derived from absent/nil metadata.scopeRef.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Optional opaque structural identity carrier; no algorithm selected or executed.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "basis",
+    "inputRefs",
+    "canonicalScope"
+  ],
+  "additionalProperties": false
+}

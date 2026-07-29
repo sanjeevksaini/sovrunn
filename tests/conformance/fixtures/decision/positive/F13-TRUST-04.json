@@ -1,0 +1,58 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "DecisionRecord",
+  "metadata": {
+    "name": "f13-trust-04",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "project-123"
+    },
+    "uid": "decision-uid-f13-trust-04"
+  },
+  "record": {
+    "authority": "AUTHORITATIVE",
+    "correlation": {
+      "auditEventRefs": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "AuditEvent",
+          "name": "audit-f13-trust-04",
+          "uid": "audit-uid-f13-trust-04"
+        }
+      ]
+    },
+    "finality": "FINAL",
+    "form": "SELECTION",
+    "profileRef": {
+      "name": "FixtureLocalDecision",
+      "version": "1.0.0"
+    },
+    "purpose": "no-crypto-before-adr-f13-002",
+    "result": {
+      "obligations": [],
+      "rationale": {
+        "reasonCodes": [
+          "CAPACITY_FIT"
+        ]
+      },
+      "typedResult": {
+        "selected": "pool-a"
+      }
+    },
+    "semanticIdentity": {
+      "basis": "fixture-local-v1",
+      "canonicalScope": "Project:project-123",
+      "inputRefs": [
+        "input-1"
+      ]
+    },
+    "trust": {
+      "canonicalizationMethod": "fixture-canon-v1",
+      "digestAlgorithm": "fixture-digest-v1",
+      "signatureAlgorithm": "fixture-sig-v1",
+      "state": "TRUSTED"
+    }
+  }
+}

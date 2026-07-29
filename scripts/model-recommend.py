@@ -25,7 +25,14 @@ def extract_task_text(tasks_path, task_id):
     if not p.exists():
         return ''
     text = p.read_text()
-    # Capture a task section starting with '- [ ] N.N' until next '- [ ] X.Y' at same level.
+    # Capture FEATURE-0013-style heading tasks such as `### T-001 — Title`.
+    heading = re.compile(
+        rf'(?ms)^### {re.escape(task_id)}\s+[—-].*?(?=^### T-\d{{3}}\s+[—-]|\Z)'
+    )
+    m = heading.search(text)
+    if m:
+        return m.group(0)
+    # Capture legacy checkbox tasks starting with '- [ ] N.N'.
     pat = re.compile(rf'(?ms)^\s*- \[ \] {re.escape(task_id)}\b.*?(?=^\s*- \[ \] \d+\.\d+\b|\Z)')
     m = pat.search(text)
     return m.group(0) if m else text[:4000]

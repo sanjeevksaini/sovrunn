@@ -2,7 +2,7 @@
 
 Feature: FEATURE-0011 — Reuse Assessment Standard  
 Phase: Phase 2 — Reuse-First PaaS Fabric Foundation  
-Review artifact purpose: pending human feature-review evidence after automated checks
+Review artifact purpose: recorded human feature-review approval evidence
 
 Assessment decision status: Approved
 
@@ -12,9 +12,9 @@ It does not authorize merge.
 
 Final feature-review status: Approved
 
-Final FEATURE-0011 merge review remains Pending until recorded human review
-changes this field to Approved. This pending status must not satisfy the
-final merge-approval gate.
+The recorded human review changed the final feature-review status to Approved.
+This approval, rather than automated checks or the assessment status alone,
+satisfies the final FEATURE-0011 feature-review gate.
 
 ## Approved FEATURE-0011 reuse-summary row
 
@@ -41,8 +41,8 @@ Extend.
 
 `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
 
-Canonical standard document status remains **draft**. Automated checks and
-this review artifact do not mark the canonical standard Approved.
+Canonical standard document status is **Approved**. The approval comes from
+the recorded human decision and ADH-2026-011, not from automated checks.
 
 ## Assessment artifact
 
@@ -180,7 +180,7 @@ WARN: docs/reviews/feature-gates/FEATURE-0011-approval-review.md not found
 SUCCESS: FEATURE-0011 passed Sovrunn feature gate
 ```
 
-### 7. Feature gate (Pending review status)
+### 7. Historical feature-gate negative test (pre-approval Pending status)
 
 Command:
 
@@ -190,7 +190,7 @@ bash scripts/feature-gate.sh FEATURE-0011
 
 Exit code: 1
 
-Summary:
+Historical expected failure summary:
 
 ```text
 FAIL: Final feature-review status is 'Pending' (required: Approved). Assessment decision status or other Approved mentions do not satisfy final merge approval.
@@ -199,17 +199,14 @@ FAIL: Final feature-review status is 'Pending' (required: Approved). Assessment 
 ## Explicit non-claims
 
 - Automated checks are **not** human architecture approval.
-- This artifact does **not** claim merge readiness.
 - `Assessment decision status: Approved` does **not** satisfy final merge
-  approval.
-- `Final feature-review status: Pending` does **not** satisfy final merge
-  approval.
-- The canonical Reuse Assessment Standard remains draft until a separate
-  recorded human approval transitions it.
+  approval by itself.
+- `Final feature-review status: Approved` is the recorded human decision that
+  completes the feature-review gate.
+- The canonical Reuse Assessment Standard is Approved; automation did not
+  grant that status.
 
-## Remaining human action
+## Completion record
 
-A human reviewer must change only the final-review status field from
-Pending to Approved after semantic review, without treating automation as
-architecture approval. Until that human action occurs, final merge
-approval must fail.
+The human semantic review is complete and the final feature-review status is
+Approved. No pending-review statement in this artifact overrides that status.

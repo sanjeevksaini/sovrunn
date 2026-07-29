@@ -137,7 +137,7 @@ One concept = one canonical term.
 | PlacementRequest | Request to evaluate where a ServiceInstance may run. |
 | PlacementCandidate | Candidate ResourcePool and context considered by placement. |
 | PlacementDecision | Explainable allow/deny/requires-approval decision for placement. |
-| DecisionObject | Common structure for Sovrunn decisions. |
+| DecisionRecord | Common immutable governed-conclusion envelope for Sovrunn decisions. Replaces former term `DecisionObject` per ADH-2026-014. |
 | GovernanceDecision | Decision about governance constraints. |
 | SecurityDecision | Decision about security constraints. |
 | DataMovementDecision | Decision about whether data may move or be processed in a location/provider. |

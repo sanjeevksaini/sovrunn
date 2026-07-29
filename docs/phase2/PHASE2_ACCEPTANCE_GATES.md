@@ -70,3 +70,51 @@ Check:
 ## 5. Human Acceptance Gate
 
 The architecture owner approves with ChatGPT support before merge.
+
+## 6. FEATURE-0013 Specific Gate Criteria
+
+FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy:
+
+### 6.1 Terminology reconciliation
+
+- All normative documents use `DecisionRecord` (not `DecisionObject`) for the common decision envelope.
+- A terminology reconciliation traceability record exists.
+
+### 6.2 Canonical scope and subject model
+
+- `AuditEvent` supports FEATURE-0012's six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
+- The canonical `Platform` form is an absent/nil `metadata.scopeRef` (FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`): an absent `scopeRef` resolves deterministically to `Platform` where the contract permits `Platform`, and returns the stable required-scope error where it does not (absence is not automatically valid).
+- No parallel scope enum, presence flag, `AuditScope` type, discriminator, alias, or independently mutable scope field is introduced.
+- `ServiceInstance` is represented through a typed `subjectRef`, normally with Project as `metadata.scopeRef`; it is rejected as a `ScopeKind`.
+- Compatibility fixtures cover all six FEATURE-0012 scopes, the canonical Platform form, invalid absence where Platform is disallowed, rejection of parallel scope sources, rejection of `ServiceInstance` as scope, and acceptance of a ServiceInstance subject within Project scope.
+- FEATURE-0012 conformance is not regressed.
+
+### 6.3 Contract-only scope
+
+- No production runtime implementation exists.
+- No persistence, workflow, or external service implementation exists.
+- Schemas, validation, conformance fixtures, and documentation only.
+
+### 6.4 Consolidated controlling reference
+
+- `ADH-2026-017` is the approved single replacement handoff for `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`.
+- ADH-2026-014, ADH-2026-015, and ADH-2026-016 are historical provenance and must not be loaded as separate downstream instructions.
+- Requirements generation is authorized because ADH-2026-017 is Approved and its exact architecture digest is recorded; design, tasks, and implementation remain separately gated.
+- AD-001 through AD-045 are preserved; AD-045 owns the public error binding and
+  closed violation-code registry.
+- Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
+
+### 6.5 Consolidated contract boundary criteria
+
+- `DecisionRecord` uses `metadata.scopeRef` as its sole logical and serialized scope authority; no top-level `DecisionRecord` `scopeRef` or parallel scope source exists.
+- Sensitivity classification uses the closed ordered provider-neutral vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; jurisdiction-specific labels are versioned profile mappings; profiles permitting captured output declare a sensitivity ceiling, content-category rules, and maximum fields/bytes/depth/value-types.
+- Security validation is bounded to structural conformance; no secret/credential/PII/malware/DLP/content-scanning engine is introduced; comprehensive semantic content scanning is a later approved feature.
+- Algorithm-agile carrier fields and structural trust metadata are contract-now; canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services remain DEFERRED under ADR-F13-002; RFC 8785 is illustrative only.
+- Architecture section 17 scenarios map one-to-one to stable IDs `F13-CF-01` through `F13-CF-28`; coverage is counted by scenario ID with an explicit coverage-matrix entry per scenario.
+- FEATURE-0013 architecture is approved for requirements generation; ADH-2026-017 grants no design, tasks, or implementation authorization.
+
+### 6.6 Downstream adoption
+
+- One normative downstream adoption contract exists.
+- One lightweight gate check validates adoption section presence.
+- No separate manifests, registries, indexes, or approval workflows are introduced.

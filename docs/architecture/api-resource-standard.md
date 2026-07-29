@@ -124,7 +124,7 @@ FEATURE-0012 MUST NOT implement:
 - provider or substrate models owned by FEATURE-0014/0015;
 - adapter protocols owned by FEATURE-0016;
 - policy evaluation owned by FEATURE-0017+;
-- DecisionObject or AuditEvent domain payloads owned by FEATURE-0013;
+- DecisionRecord or AuditEvent domain payloads owned by FEATURE-0013;
 - placement behavior owned by FEATURE-0023;
 - plugin taxonomy or execution owned by FEATURE-0024 and later phases;
 - provisioning, persistence selection, workflow execution, billing, failover, or autonomous AI;
@@ -763,7 +763,7 @@ The following are deliberately deferred and require separate approval when activ
 - plugin execution and compatibility negotiation details;
 - adapter transport and runtime protocol;
 - policy inheritance/evaluation semantics;
-- DecisionObject and AuditEvent payloads;
+- DecisionRecord and AuditEvent payloads;
 - provider/resource-pool domain fields;
 - production identity, secrets, workflow, and observability integrations.
 

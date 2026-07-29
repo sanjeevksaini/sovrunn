@@ -69,6 +69,16 @@ var externalCanonicalSchemaFiles = []string{
 	"audit-event.json",
 }
 
+// feature0013CanonicalSchemaFiles is the FEATURE-0013 contract schema
+// inventory (T-013/T-016). Kept separate from Matrix D so FEATURE-0012
+// eight-contract annotation checks remain unchanged.
+var feature0013CanonicalSchemaFiles = []string{
+	"decision-record.json",
+	"decision-profile.json",
+	"evaluation-result.json",
+	"decision-profile-bundle.json",
+}
+
 // commonSubSchemaFiles is the _common shared sub-schema inventory used by
 // field-policy coverage (check 1a) and ownership (check 3).
 var commonSubSchemaFiles = []string{
@@ -81,6 +91,15 @@ var commonSubSchemaFiles = []string{
 	"problem.json",
 	"violation.json",
 	"page.json",
+	// FEATURE-0013 decision/_common sub-schemas (T-012/T-016)
+	"decision-linkage.json",
+	"decision-profile-ref.json",
+	"trust-carrier.json",
+	"security-exception-ref.json",
+	"semantic-decision-identity.json",
+	"decision-relationship.json",
+	"sensitivity.json",
+	"decision-graph.json",
 }
 
 // ExternalCanonicalSchemaFiles returns a copy of the eight Matrix D contract
@@ -88,6 +107,14 @@ var commonSubSchemaFiles = []string{
 func ExternalCanonicalSchemaFiles() []string {
 	out := make([]string, len(externalCanonicalSchemaFiles))
 	copy(out, externalCanonicalSchemaFiles)
+	return out
+}
+
+// Feature0013CanonicalSchemaFiles returns a copy of the FEATURE-0013 contract
+// schema filenames under api/schemas/.
+func Feature0013CanonicalSchemaFiles() []string {
+	out := make([]string, len(feature0013CanonicalSchemaFiles))
+	copy(out, feature0013CanonicalSchemaFiles)
 	return out
 }
 

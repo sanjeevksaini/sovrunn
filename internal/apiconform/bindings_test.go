@@ -14,11 +14,14 @@ import (
 func TestTypeBindingsCoverCanonicalAndCommonSchemas(t *testing.T) {
 	t.Parallel()
 
-	want := make([]string, 0, len(commonSchemaFiles)+len(canonicalSchemaFiles))
+	want := make([]string, 0, len(commonSchemaFiles)+len(canonicalSchemaFiles)+len(feature0013CanonicalSchemaFiles))
 	for _, name := range commonSchemaFiles {
 		want = append(want, "api/schemas/_common/"+name)
 	}
 	for _, name := range canonicalSchemaFiles {
+		want = append(want, "api/schemas/"+name)
+	}
+	for _, name := range feature0013CanonicalSchemaFiles {
 		want = append(want, "api/schemas/"+name)
 	}
 	sort.Strings(want)
@@ -102,6 +105,63 @@ func TestTypeBindingsRejectDeliberateMismatch(t *testing.T) {
 	issues := apischema.VerifyGoTypeAgainstSchema(schema, reflect.TypeOf(mismatchedPage{}))
 	if len(issues) == 0 {
 		t.Fatal("expected deliberate Go-type mismatch to be rejected")
+	}
+}
+
+func TestFeature0013TypeBindingsVerifyGoTypeAgainstSchema(t *testing.T) {
+	t.Parallel()
+
+	want := make(map[string]struct{}, len(feature0013CanonicalSchemaFiles)+8)
+	for _, name := range feature0013CanonicalSchemaFiles {
+		want["api/schemas/"+name] = struct{}{}
+	}
+	for _, name := range []string{
+		"decision-linkage.json",
+		"decision-profile-ref.json",
+		"trust-carrier.json",
+		"security-exception-ref.json",
+		"semantic-decision-identity.json",
+		"decision-relationship.json",
+		"sensitivity.json",
+		"decision-graph.json",
+	} {
+		want["api/schemas/_common/"+name] = struct{}{}
+	}
+
+	root := moduleRoot(t)
+	found := 0
+	for _, binding := range TypeBindings {
+		if _, ok := want[binding.SchemaPath]; !ok {
+			continue
+		}
+		found++
+		binding := binding
+		t.Run(binding.SchemaPath, func(t *testing.T) {
+			t.Parallel()
+
+			schemaPath := filepath.Join(root, filepath.FromSlash(binding.SchemaPath))
+			schema, err := os.ReadFile(schemaPath)
+			if err != nil {
+				t.Fatalf("read schema %s: %v", schemaPath, err)
+			}
+			issues := apischema.VerifyGoTypeAgainstSchema(schema, binding.GoType)
+			if len(issues) > 0 {
+				var b strings.Builder
+				for _, issue := range issues {
+					b.WriteString("\n  ")
+					b.WriteString(issue.Path)
+					b.WriteString(" ")
+					b.WriteString(issue.Code)
+					b.WriteString(": ")
+					b.WriteString(issue.Message)
+				}
+				t.Fatalf("VerifyGoTypeAgainstSchema failed for FEATURE-0013 binding %s → %s:%s%s",
+					binding.SchemaPath, binding.GoType.PkgPath(), binding.GoType.Name(), b.String())
+			}
+		})
+	}
+	if found != len(want) {
+		t.Fatalf("FEATURE-0013 TypeBindings found=%d want=%d", found, len(want))
 	}
 }
 

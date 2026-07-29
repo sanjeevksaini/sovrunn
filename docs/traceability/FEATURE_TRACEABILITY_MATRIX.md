@@ -5,8 +5,8 @@ This matrix links features to tenets, decisions, RFCs, tests, and gate status.
 | Feature | Phase | Status | Tenets | Decisions | RFCs | Tests/Gates | Notes |
 |---|---|---|---|---|---|---|---|
 | FEATURE-0011 | Phase 2 | Implemented | TENET-017 | DEC-0026, DEC-0036 | RFC-0021 | Feature gate passed | Reuse assessment standard merged; ADH-2026-011 |
-| FEATURE-0012 | Phase 2 | Architecture Approved | TENET-015 | DEC-0026, DEC-0027, DEC-0036 | RFC-0022 | Kiro requirements pending | ADH-2026-012; canonical API/resource architecture approved |
-| FEATURE-0013 | Phase 2 | Planned | TENET-012, TENET-013 | DEC-0026 | RFC-0023 | Pending | Decision and AuditEvent standard |
+| FEATURE-0012 | Phase 2 | Implemented and Merged | TENET-015 | DEC-0026, DEC-0027, DEC-0036 | RFC-0022 | Checkpoint 18 passed; final human approval 2026-07-24; merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` | ADH-2026-012, ADH-2026-013; canonical API/resource architecture approved |
+| FEATURE-0013 | Phase 2 | Architecture Approved for Requirements | TENET-012, TENET-013 | DEC-0026, DEC-0036 | RFC-0023 | Architecture boundary preflight passed; fresh requirements generation authorized | ADH-2026-017 is the approved single replacement handoff for the complete architecture and is bound to its exact digest; ADH-2026-014/015/016 are retained only as historical provenance and excluded from downstream instructions. FEATURE-0012's six ScopeKind values are preserved; ServiceInstance is a typed subject under its governing scope. Design, tasks, and implementation remain separately gated. |
 | FEATURE-0014 | Phase 2 | Planned | TENET-008 | DEC-0024 | RFC-0024 | Pending | Provider-neutral model |
 | FEATURE-0015 | Phase 2 | Planned | TENET-009 | DEC-0024, DEC-0025 | RFC-0024 | Pending | ResourcePool and ProviderCapability |
 | FEATURE-0016 | Phase 2 | Planned | TENET-017 | DEC-0018 | RFC-0021 | Pending | Adapter boundary foundation |

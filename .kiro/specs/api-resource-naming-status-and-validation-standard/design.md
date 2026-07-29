@@ -8,6 +8,17 @@ Canonical architecture: docs/architecture/api-resource-standard.md
 Canonical reuse standard: docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
 Depends on: FEATURE-0011 (Reuse Assessment Standard)
 
+> **Frozen-artifact terminology note (ADH-2026-016, Approved 2026-07-27).**
+> This is a frozen, completed FEATURE-0012 artifact. Its historical use of
+> `DecisionObject` (in the FEATURE-0013 non-goal/deferred boundary text) is
+> **preserved verbatim** as the record of the pre-ADH-2026-014 wording.
+> `DecisionObject` is the historical pre-ADH-2026-014 name for `DecisionRecord`;
+> it refers to the **same** concept and does **not** create a second schema,
+> Go type, runtime alias, parallel contract, or migration implementation. The
+> canonical current term is `DecisionRecord` (ADH-2026-014). Active normative
+> documents use `DecisionRecord`; this frozen artifact retains the historical
+> term only under this note.
+
 ## Overview
 
 FEATURE-0012 delivers the Sovrunn-owned, provider-neutral API and resource
@@ -1299,10 +1310,13 @@ implementations:
 
 ## Operation and audit behavior
 
-FEATURE-0012 does not create an operation or audit service (F12-IMPL-002);
-Operation and AuditEvent domain payloads belong to FEATURE-0013
-(F12-STATUS-004). This feature instead guarantees the grammar can carry the
-correlation data those features require:
+FEATURE-0012 does not create an operation or audit service (F12-IMPL-002).
+The generic `Operation` contract and its `LongRunningOperation` payload remain
+owned by FEATURE-0012 and ADH-2026-013. FEATURE-0013 reuses that contract for
+asynchronous handoff and does not redefine its payload. `DecisionRecord` and
+`AuditEvent` domain payload semantics belong to FEATURE-0013
+(F12-STATUS-004). FEATURE-0012 guarantees that the shared grammar can carry
+the correlation data those later domain contracts require:
 
 - The `Operation` fixture uses the `LongRunningOperation` profile and can
   represent target, action, requester, idempotency/correlation, progress,

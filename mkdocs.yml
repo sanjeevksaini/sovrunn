@@ -52,7 +52,7 @@ nav:
   - Architecture:
       - Platform Core: architecture/platform-core.md
       - API Resource Standard: architecture/api-resource-standard.md
-      - Decision and Audit Standard: architecture/decision-and-audit-standard.md
+      - Decision Record and AuditEvent Standard: architecture/FEATURE-0013-decision-record-and-auditevent-standard.md
       - Provider-Neutral Resource Model: architecture/provider-neutral-resource-model.md
       - Policy Evaluation Abstraction: architecture/policy-evaluation-abstraction.md
       - Placement Decision Engine: architecture/placement-decision-engine.md

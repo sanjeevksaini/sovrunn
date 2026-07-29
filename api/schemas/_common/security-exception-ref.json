@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/security-exception-ref.json",
+  "title": "SecurityExceptionRef",
+  "description": "Bounded structural approval-evidence reference for profile fail-open declarations (F13-PROF-002; design section 7.7; AD-043; closure 1). Carries apiVersion/kind/name/uid via TypedRef fields plus bounded metadata only. Evidence only: never approves, issues, revokes, executes, stores, authorizes, or workflows an exception. ExceptionScopeRef is exception-evidence scope only and never overrides metadata.scopeRef. CompensatingControls is a bounded non-empty string identifier list; no ControlRef type is introduced.",
+  "type": "object",
+  "properties": {
+    "approvalRef": {
+      "$ref": "typed-ref.json",
+      "description": "Approval evidence TypedRef; uid mandatory at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "exceptionScopeRef": {
+      "$ref": "scope-ref.json",
+      "description": "Optional exception-evidence scope only; absent = Platform where allowed. Never overrides, duplicates, replaces, or widens canonical metadata.scopeRef.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "ownerRef": {
+      "$ref": "typed-ref.json",
+      "description": "Exception owner TypedRef; uid required at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "approvingAuthorityRef": {
+      "$ref": "typed-ref.json",
+      "description": "Approving authority TypedRef; uid required at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "compensatingControls": {
+      "type": "array",
+      "description": "Required non-empty bounded control identifier strings (minItems: 1). No control object or ControlRef type.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "effectiveFrom": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "UTC RFC 3339 effective-from timestamp; required non-empty.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "effectiveUntil": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "UTC RFC 3339 effective-until timestamp; must be after effectiveFrom and >= captured/effective decision time at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "auditTreatment": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Bounded audit-treatment registry identifier; structural only.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "reassessmentTrigger": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Bounded reassessment-trigger registry identifier.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "coveredFailureModes": {
+      "type": "array",
+      "description": "Required non-empty list of profile-declared failure modes covered by this exception (minItems: 1).",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "description": "Non-empty bounded purpose string.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "approvalRef",
+    "ownerRef",
+    "approvingAuthorityRef",
+    "compensatingControls",
+    "effectiveFrom",
+    "effectiveUntil",
+    "auditTreatment",
+    "reassessmentTrigger",
+    "coveredFailureModes",
+    "purpose"
+  ],
+  "additionalProperties": false
+}

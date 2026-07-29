@@ -255,9 +255,12 @@ If an administrator asks what happened, who did it, where it happened, and why i
 
 Phase 2 standardizes:
 
-- DecisionObject,
+- DecisionRecord (replaces former DecisionObject per ADH-2026-014),
 - DecisionEvent,
-- AuditEvent,
+- AuditEvent (the six FEATURE-0012 governance scopes: Platform, Organization,
+  OrganizationUnit, Tenant, Project, and Provider, carried only through
+  `metadata.scopeRef`; a ServiceInstance is a typed subject under its governing
+  Project scope and is not a `ScopeKind`),
 - EvidenceRecord placeholder,
 - AI-readable DecisionContext,
 - Operation-to-decision linkage.

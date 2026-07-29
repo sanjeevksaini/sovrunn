@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/decision-relationship.json",
+  "title": "DecisionRelationship",
+  "description": "Typed immutable-record relationship CORRECTS | SUPERSEDES | REVOKES (F13-IMMUT-002; design section 7.9). Orientation is new record -> predecessor. Target uid is mandatory at validation. Append-only; effective state is a projection only and is never written back.",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "CORRECTS",
+        "SUPERSEDES",
+        "REVOKES"
+      ],
+      "description": "Closed RelationshipKind vocabulary.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "targetRef": {
+      "$ref": "typed-ref.json",
+      "description": "Predecessor DecisionRecord reference; uid required at validation.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "targetRef"
+  ],
+  "additionalProperties": false
+}

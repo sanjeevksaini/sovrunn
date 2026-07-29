@@ -7,18 +7,25 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 	"github.com/sanjeevksaini/sovrunn/internal/apischema"
+	"github.com/sanjeevksaini/sovrunn/internal/decision"
+	"github.com/sanjeevksaini/sovrunn/internal/decision/bundle"
+	"github.com/sanjeevksaini/sovrunn/internal/decision/graph"
 )
 
 // TypeBindings is the concrete schema-to-Go TypeBinding registry for
-// FEATURE-0012 (D-01b, F12-NAMING-005, F12-VERIFY-001(13)).
+// FEATURE-0012 (D-01b, F12-NAMING-005, F12-VERIFY-001(13)) and FEATURE-0013
+// decision/audit contract schemas (T-016; F13-COMPAT-001; AD-028, AD-045).
 //
 // Bindings live in apiconform so apischema stays free of concrete contract
-// types and never imports this package (no cycle). Each entry maps one
-// canonical schema or _common sub-schema to its derivative Go type.
-// VerifyGoTypeAgainstSchema is the authoritative consistency check;
-// fixture round-tripping is supporting evidence only.
+// types and never imports this package (no cycle). apiconform remains
+// binding/conformance support only; it does not become the canonical domain
+// owner. Executable checks (T-027) may import decision/validate
+// one-directionally; validate must not import apiconform (design §5 DAG).
+// Each entry maps one canonical schema or _common sub-schema to its
+// derivative Go type. VerifyGoTypeAgainstSchema is the authoritative
+// consistency check; fixture round-tripping is supporting evidence only.
 var TypeBindings = []apischema.TypeBinding{
-	// _common sub-schemas
+	// _common sub-schemas (FEATURE-0012)
 	{SchemaPath: "api/schemas/_common/type-meta.json", GoType: reflect.TypeOf(apimeta.TypeMeta{})},
 	{SchemaPath: "api/schemas/_common/object-meta.json", GoType: reflect.TypeOf(apimeta.ObjectMeta{})},
 	{SchemaPath: "api/schemas/_common/typed-ref.json", GoType: reflect.TypeOf(apimeta.TypedRef{})},
@@ -29,6 +36,16 @@ var TypeBindings = []apischema.TypeBinding{
 	{SchemaPath: "api/schemas/_common/violation.json", GoType: reflect.TypeOf(apiproblem.Violation{})},
 	{SchemaPath: "api/schemas/_common/page.json", GoType: reflect.TypeOf(apimeta.Page{})},
 
+	// _common sub-schemas (FEATURE-0013)
+	{SchemaPath: "api/schemas/_common/decision-linkage.json", GoType: reflect.TypeOf(decision.AuditLinkage{})},
+	{SchemaPath: "api/schemas/_common/decision-profile-ref.json", GoType: reflect.TypeOf(decision.ProfileRef{})},
+	{SchemaPath: "api/schemas/_common/trust-carrier.json", GoType: reflect.TypeOf(decision.TrustCarrier{})},
+	{SchemaPath: "api/schemas/_common/security-exception-ref.json", GoType: reflect.TypeOf(decision.SecurityExceptionRef{})},
+	{SchemaPath: "api/schemas/_common/semantic-decision-identity.json", GoType: reflect.TypeOf(decision.SemanticDecisionIdentity{})},
+	{SchemaPath: "api/schemas/_common/decision-relationship.json", GoType: reflect.TypeOf(decision.DecisionRelationship{})},
+	{SchemaPath: "api/schemas/_common/sensitivity.json", GoType: reflect.TypeOf(decision.Sensitivity(""))},
+	{SchemaPath: "api/schemas/_common/decision-graph.json", GoType: reflect.TypeOf(graph.Definition{})},
+
 	// Eight canonical contract schemas (Matrix D)
 	{SchemaPath: "api/schemas/project.json", GoType: reflect.TypeOf(Project{})},
 	{SchemaPath: "api/schemas/resource-pool.json", GoType: reflect.TypeOf(ResourcePool{})},
@@ -38,4 +55,10 @@ var TypeBindings = []apischema.TypeBinding{
 	{SchemaPath: "api/schemas/placement-evaluation-request.json", GoType: reflect.TypeOf(PlacementEvaluationRequest{})},
 	{SchemaPath: "api/schemas/operation.json", GoType: reflect.TypeOf(Operation{})},
 	{SchemaPath: "api/schemas/audit-event.json", GoType: reflect.TypeOf(AuditEvent{})},
+
+	// FEATURE-0013 canonical contract schemas
+	{SchemaPath: "api/schemas/decision-record.json", GoType: reflect.TypeOf(decision.DecisionRecord{})},
+	{SchemaPath: "api/schemas/decision-profile.json", GoType: reflect.TypeOf(decision.DecisionProfile{})},
+	{SchemaPath: "api/schemas/evaluation-result.json", GoType: reflect.TypeOf(decision.EvaluationResult{})},
+	{SchemaPath: "api/schemas/decision-profile-bundle.json", GoType: reflect.TypeOf(bundle.Bundle{})},
 }

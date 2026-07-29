@@ -42,7 +42,7 @@ clean:
 
 PHASE_BRANCH ?= phase1-foundation
 
-.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state
+.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-spec-report ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state
 
 ff-start:
 	./scripts/feature-start.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" --phase-branch "$(PHASE_BRANCH)"
@@ -83,6 +83,9 @@ ff-approve-tasks:
 
 ff-spec-flow:
 	./scripts/spec-flow.sh --feature "$(FEATURE)" --mode "$${FEATURE_FACTORY_REVIEW_MODE:-auto}" --kiro-mode "$${FEATURE_FACTORY_KIRO_MODE:-auto}"
+
+ff-spec-report:
+	@cat ".automation/reports/$(FEATURE)/spec-flow-latest.md"
 
 ff-kiro-decision:
 	./scripts/kiro-decision.sh --feature "$(FEATURE)" --stage "$(STAGE)" --question "$(QUESTION)"
@@ -157,6 +160,17 @@ arch-handoff-check:
 	@test -n "$(HANDOFF)" || (echo "HANDOFF is required"; exit 1)
 	./scripts/architecture-handoff-check.sh "$(HANDOFF)"
 
+.PHONY: feature-0013-architecture-boundary-check
+feature-0013-architecture-boundary-check:
+	@test -n "$(STAGE)" || (echo "STAGE is required: requirements, design, or tasks"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
+		--feature FEATURE-0013 --stage "$(STAGE)" --mode "$${MODE:-post}"
+
+.PHONY: feature-0013-architecture-readiness
+feature-0013-architecture-readiness:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
+		--feature FEATURE-0013 --stage requirements --mode readiness
+
 .PHONY: structurizr-lite
 structurizr-lite:
 	./scripts/structurizr-lite.sh
@@ -192,3 +206,11 @@ ff-feature-0012-final-checkpoint:
 
 ff-feature-0012-flow-self-test:
 	./scripts/feature-0012-flow.py --feature FEATURE-0012 --self-test
+
+
+.PHONY: ff-feature-0013-plan ff-feature-0013-flow
+ff-feature-0013-plan:
+	./scripts/feature-0013-flow.py --plan
+
+ff-feature-0013-flow:
+	./scripts/feature-0013-flow.py --human-approved-for-cursor --start-task "$${START_TASK:-}" --stop-after "$${STOP_AFTER:-}" --max-tasks "$${MAX_TASKS:-0}" $${FEATURE_FACTORY_PUSH:+--push}

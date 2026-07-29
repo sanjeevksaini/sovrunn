@@ -1,7 +1,7 @@
 #!/opt/homebrew/bin/bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
-FEATURE=""; STAGE=""; MODE="${FEATURE_FACTORY_REVIEW_MODE:-auto}"; MAX_REVISIONS="${FEATURE_FACTORY_MAX_REVISIONS:-3}"
+FEATURE=""; STAGE=""; MODE="${FEATURE_FACTORY_REVIEW_MODE:-auto}"; MAX_REVISIONS="${FEATURE_FACTORY_MAX_REVISIONS:-5}"; REVIEW_EPOCH="${FEATURE_FACTORY_REVIEW_EPOCH:-}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --feature) FEATURE="$2"; shift 2;;
@@ -14,13 +14,19 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ -n "$STAGE" ]] || fail "--stage required"
 cd "$(repo_root)"; ensure_feature_state "$FEATURE"
+if [[ "$FEATURE" == "FEATURE-0013" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
+fi
 ./scripts/reviewer-stage.sh --feature "$FEATURE" --stage "$STAGE" --mode "$MODE"
 REVIEW_FILE=".automation/reviews/$FEATURE/${STAGE}.review.json"
 [[ -f "$REVIEW_FILE" ]] || fail "missing review file: $REVIEW_FILE"
-python3 - "$FEATURE" "$STAGE" "$REVIEW_FILE" "$MAX_REVISIONS" <<'PY'
-import json, sys
+set +e
+python3 - "$FEATURE" "$STAGE" "$REVIEW_FILE" "$MAX_REVISIONS" "$REVIEW_EPOCH" <<'PY'
+import json, re, sys
 from pathlib import Path
-feature, stage, review_file, max_revisions = sys.argv[1], sys.argv[2], Path(sys.argv[3]), int(sys.argv[4])
+feature, stage, review_file, max_revisions, review_epoch = sys.argv[1], sys.argv[2], Path(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
 review = json.loads(review_file.read_text())
 status = review.get('status')
 token = review.get('approval_token')
@@ -52,7 +58,21 @@ if status == 'NEEDS_REVISION':
             wrapped += f'{i}. {issue}\n'
     wrapped += f'''\nRevision instruction from reviewer:\n{revision_prompt}\n\nDo not change the main scope unless the reviewer explicitly requires it.\nDo not move to the next stage until a later review returns the required approval token.\n'''
     out.write_text(wrapped)
-    count_file = Path(f'.automation/reviews/{feature}/{stage}.revision-count')
+    if review_epoch and not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", review_epoch
+    ):
+        print(
+            f"ERROR: invalid review epoch: {review_epoch!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    count_name = (
+        f"{stage}.{review_epoch}.revision-count"
+        if review_epoch
+        else f"{stage}.revision-count"
+    )
+    count_file = Path(f".automation/reviews/{feature}") / count_name
     old = int(count_file.read_text().strip()) if count_file.exists() else 0
     new = old + 1
     count_file.write_text(str(new))
@@ -68,15 +88,17 @@ print(f'ERROR: unknown review status: {status}', file=sys.stderr)
 sys.exit(1)
 PY
 rc=$?
+set -e
 if [[ $rc -eq 0 ]]; then
   ./scripts/approve-stage.sh --feature "$FEATURE" --stage "$STAGE"
   exit 0
 elif [[ $rc -eq 2 ]]; then
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_revision_required" >/dev/null
-  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false >/dev/null
   info "Revision required. Run the generated revision prompt in Kiro, then rerun this stage review."
   exit 2
 else
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_blocked" >/dev/null || true
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null || true
   exit "$rc"
 fi

@@ -39,4 +39,5 @@ PYAPPROVE
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "$NEXT_STATUS"
 ./scripts/feature-state.py set --feature "$FEATURE" --key current_stage --value "$NEXT_STAGE"
 ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false
+./scripts/feature-state.py set --feature "$FEATURE" --key "${STAGE}_approval_source" --value "openai_machine_review"
 info "$STAGE approved with token $REQUIRED_TOKEN; next stage: $NEXT_STAGE"
