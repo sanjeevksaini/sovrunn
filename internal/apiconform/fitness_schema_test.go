@@ -250,8 +250,11 @@ func TestFitnessSchemaChecksInventory(t *testing.T) {
 	if got := ExternalCanonicalSchemaFiles(); len(got) != 8 {
 		t.Fatalf("ExternalCanonicalSchemaFiles len=%d want 8", len(got))
 	}
-	if got := CommonSubSchemaFiles(); len(got) != 9 {
-		t.Fatalf("CommonSubSchemaFiles len=%d want 9", len(got))
+	if got := CommonSubSchemaFiles(); len(got) != 17 {
+		t.Fatalf("CommonSubSchemaFiles len=%d want 17 (9 FEATURE-0012 + 8 FEATURE-0013)", len(got))
+	}
+	if got := Feature0013CanonicalSchemaFiles(); len(got) != 4 {
+		t.Fatalf("Feature0013CanonicalSchemaFiles len=%d want 4", len(got))
 	}
 }
 

@@ -75,6 +75,18 @@ var allowedGrammarImports = map[string]map[string]struct{}{
 	},
 }
 
+// allowedNonGrammarImports encodes FEATURE-0013 one-way domain imports into
+// apiconform for TypeBinding registration and (later) conformance checks.
+// apiconform remains binding/conformance support only; it must never import
+// decision/validate in a way that creates a cycle (design §5; T-016/T-027).
+var allowedNonGrammarImports = map[string]map[string]struct{}{
+	"apiconform": {
+		modulePath + "/internal/decision":        {},
+		modulePath + "/internal/decision/bundle": {},
+		modulePath + "/internal/decision/graph":  {},
+	},
+}
+
 var yamlAllowedPackages = map[string]struct{}{
 	"apivalid":   {},
 	"apiconform": {},
@@ -132,6 +144,11 @@ func assertImportDirection(t *testing.T, pkg string, imports []importRef) {
 
 		grammarName, ok := grammarImportName(path)
 		if !ok {
+			if extras, ok := allowedNonGrammarImports[pkg]; ok {
+				if _, allowed := extras[path]; allowed {
+					continue
+				}
+			}
 			t.Errorf("%s:%s imports disallowed non-grammar path %q", imp.file, path, path)
 			continue
 		}

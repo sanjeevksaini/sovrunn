@@ -239,14 +239,15 @@ func CheckGeneratedArtifactsMatchCanonicalSchema(moduleRoot string) []FitnessFin
 		return sortFindings(findings)
 	}
 
-	wantCount := len(externalCanonicalSchemaFiles) + len(commonSubSchemaFiles)
+	wantCount := len(externalCanonicalSchemaFiles) + len(feature0013CanonicalSchemaFiles) + len(commonSubSchemaFiles)
 	if len(TypeBindings) != wantCount {
 		findings = append(findings, FitnessFinding{
-			Check:   FitnessCheckGeneratedArtifactsMatchSchema,
-			Schema:  "TypeBindings",
-			Path:    "/",
-			Code:    CodeFitnessTypeBindingCoverage,
-			Message: fmt.Sprintf("TypeBindings count=%d want %d (8 contracts + 9 _common)", len(TypeBindings), wantCount),
+			Check:  FitnessCheckGeneratedArtifactsMatchSchema,
+			Schema: "TypeBindings",
+			Path:   "/",
+			Code:   CodeFitnessTypeBindingCoverage,
+			Message: fmt.Sprintf("TypeBindings count=%d want %d (8 Matrix D + %d FEATURE-0013 + %d _common)",
+				len(TypeBindings), wantCount, len(feature0013CanonicalSchemaFiles), len(commonSubSchemaFiles)),
 		})
 	}
 
