@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/decision-profile-ref.json",
+  "title": "ProfileRef",
+  "description": "Versioned DecisionProfile identity (name + semver). Lookup uses the composite (name, version) key (F13-PROF-001; design section 7.9; closure 8).",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Stable profile id; required non-empty.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "description": "Profile semver; required non-empty. Composite (name, version) is the registry key.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "name",
+    "version"
+  ],
+  "additionalProperties": false
+}
