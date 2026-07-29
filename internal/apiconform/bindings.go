@@ -19,10 +19,11 @@ import (
 // Bindings live in apiconform so apischema stays free of concrete contract
 // types and never imports this package (no cycle). apiconform remains
 // binding/conformance support only; it does not become the canonical domain
-// owner and must not import decision/validate (cycle risk). Each entry maps
-// one canonical schema or _common sub-schema to its derivative Go type.
-// VerifyGoTypeAgainstSchema is the authoritative consistency check;
-// fixture round-tripping is supporting evidence only.
+// owner. Executable checks (T-027) may import decision/validate
+// one-directionally; validate must not import apiconform (design §5 DAG).
+// Each entry maps one canonical schema or _common sub-schema to its
+// derivative Go type. VerifyGoTypeAgainstSchema is the authoritative
+// consistency check; fixture round-tripping is supporting evidence only.
 var TypeBindings = []apischema.TypeBinding{
 	// _common sub-schemas (FEATURE-0012)
 	{SchemaPath: "api/schemas/_common/type-meta.json", GoType: reflect.TypeOf(apimeta.TypeMeta{})},
