@@ -33,8 +33,9 @@ type DecisionBody struct {
 	Composition       *CompositionRef          `json:"composition,omitempty"`
 	Result            DecisionResultBody       `json:"result"`
 	Relationship      *DecisionRelationship    `json:"relationship,omitempty"`
-	RetryKey          string                   `json:"retryKey,omitempty"` // idempotency (F13-SCALE-001)
-	SemanticIdentity  SemanticDecisionIdentity `json:"semanticIdentity"`   // F13-SCALE-002
+	RetryKey          string                   `json:"retryKey,omitempty"` // RetryIdempotencyKey carrier (F13-SCALE-001; AD-036)
+	SemanticIdentity  SemanticDecisionIdentity `json:"semanticIdentity"`   // F13-SCALE-002; AD-036
+	Trust             *TrustCarrier            `json:"trust,omitempty"`    // algorithm-agile structural trust (F13-TRUST-001; RID-08)
 	Sovereignty       *SovereigntyCarrier      `json:"sovereignty,omitempty"`
 	Correlation       Correlation              `json:"correlation"`
 	Finality          Finality                 `json:"finality"` // always FINAL when persisted
@@ -110,14 +111,4 @@ type SovereigntyCarrier struct {
 type DecisionRelationship struct {
 	Kind      RelationshipKind `json:"kind"`      // CORRECTS | SUPERSEDES | REVOKES
 	TargetRef apimeta.TypedRef `json:"targetRef"` // predecessor; uid required at validation
-}
-
-// SemanticDecisionIdentity is the complete semantic identity descriptor
-// (design §7.9; F13-SCALE-002). CanonicalScope is derived from
-// metadata.scopeRef and is never an independent scope authority.
-type SemanticDecisionIdentity struct {
-	Basis          string   `json:"basis"`            // profile-declared identity basis id
-	InputRefs      []string `json:"inputRefs"`        // required non-empty ordered input refs
-	CanonicalScope string   `json:"canonicalScope"`   // derived scope descriptor
-	Digest         string   `json:"digest,omitempty"` // opaque structural carrier; no algorithm executed
 }

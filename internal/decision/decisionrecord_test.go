@@ -126,6 +126,7 @@ func TestDecisionRecordOmitemptyOptionalRefs(t *testing.T) {
 	in.Record.Composition = nil
 	in.Record.Relationship = nil
 	in.Record.Sovereignty = nil
+	in.Record.Trust = nil
 	in.Record.Correlation.OperationRef = nil
 	in.Record.RetryKey = ""
 	in.Record.Result.Rationale = DecisionRationale{}
@@ -143,6 +144,7 @@ func TestDecisionRecordOmitemptyOptionalRefs(t *testing.T) {
 		`"composition"`,
 		`"relationship"`,
 		`"sovereignty"`,
+		`"trust"`,
 		`"operationRef"`,
 		`"retryKey"`,
 		`"subjectRefs"`,
