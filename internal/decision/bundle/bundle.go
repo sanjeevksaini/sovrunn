@@ -342,7 +342,7 @@ func indexEntries(entries []VersionedEntry, basePath string, dst map[VersionKey]
 		if e.Version == "" {
 			return bundleProblem(violationProfileSchemaInvalid, base+"/version", "registry entry version is required")
 		}
-		key := VersionKey{ID: e.ID, Version: e.Version}
+		key := VersionKey(e)
 		if _, exists := dst[key]; exists {
 			return bundleProblem(violationProfileSchemaInvalid, base, "duplicate registry (id,version)")
 		}

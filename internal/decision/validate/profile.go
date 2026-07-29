@@ -162,10 +162,6 @@ func ValidateProfileDocument(p decision.DecisionProfile) *apiproblem.Problem {
 }
 
 func checkProfileLookup(in ProfileInput) *apiproblem.Problem {
-	name := in.Ref.Name
-	if name == "" {
-		name = in.Profile.Spec.Name
-	}
 	if !in.IDExists {
 		return profileProblem(CodeProfileUnknown, ptrProfileRefName,
 			"decision profile is unknown; accepting arbitrary profile URIs is prohibited")
@@ -397,7 +393,7 @@ func checkExceptionScope(p decision.DecisionProfile, exceptionScope *apimeta.Sco
 			return profileProblem(CodeProfileSchemaInvalid, ptrSpecExceptionScope,
 				"non-Platform SecurityExceptionRef.exceptionScopeRef requires uid")
 		}
-		if !containsScopeKind(p.Spec.ScopeSemantics.AllowedScopes, kind) && !(kind == apimeta.ScopePlatform && p.Spec.ScopeSemantics.PlatformAllowed) {
+		if !containsScopeKind(p.Spec.ScopeSemantics.AllowedScopes, kind) && (kind != apimeta.ScopePlatform || !p.Spec.ScopeSemantics.PlatformAllowed) {
 			return profileProblem(CodeProfileSchemaInvalid, ptrSpecExceptionScope,
 				"SecurityExceptionRef.exceptionScopeRef is not compatible with governing profile allowedScopes")
 		}

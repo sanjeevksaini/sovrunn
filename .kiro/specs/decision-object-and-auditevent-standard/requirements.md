@@ -24,7 +24,7 @@ Stage: Requirements
 | Classification | Build / Extend (mixed; see reuse summary) |
 | Status | Draft — pending review |
 
-## FEATURE-0013 reuse summary
+## FEATURE-0013 Reuse Assessment summary
 
 Feature identity: FEATURE-0013 — Decision Record and AuditEvent Standard.
 
