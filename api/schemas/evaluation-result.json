@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/evaluation-result.json",
+  "title": "EvaluationResult",
+  "description": "FEATURE-0013 EvaluationResult (F13-OBJ-004, F13-EVAL-001/002/003/004; design §7.2). EmbeddedValue when captured inside a DecisionRecord; TransientRequestResult semantics when exchanged independently. No TypeMeta/ObjectMeta and no independent durable lifecycle or scope field. Scope is derived from the containing DecisionRecord metadata.scopeRef; evaluator-supplied scopeEvidence is evidence only. No new resource profile is introduced.",
+  "type": "object",
+  "x-sovrunn-profile": "EmbeddedValue",
+  "x-sovrunn-boundary": "adapter-facing",
+  "x-sovrunn-allowed-scopes": [
+    "Platform",
+    "Organization",
+    "OrganizationUnit",
+    "Tenant",
+    "Project",
+    "Provider"
+  ],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "evaluator": {
+      "type": "object",
+      "description": "Registered evaluator identity and version (F13-EVAL-001/002).",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Registered evaluator type id; required non-empty.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "description": "Evaluator version; required non-empty.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["type", "version"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "inputSnapshotRef": {
+      "$ref": "_common/typed-ref.json",
+      "description": "Optional bounded input-snapshot TypedRef (F13-EVAL-001). Pair requiredness with inputIntegrity is enforced by validation (T-020).",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "inputIntegrity": {
+      "type": "object",
+      "description": "Optional opaque integrity carrier for the evaluation input snapshot (F13-EVAL-001/002). Present-but-empty is invalid (RID-08). Structural identifiers only; no digest, signing, or verification.",
+      "properties": {
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Structural trust/integrity state; required when carrier present.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "canonicalizationMethod": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Optional structural canonicalization-method identifier; no execution.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "digestAlgorithm": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Optional structural digest-algorithm identifier; no computation.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "coveredFields": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Optional covered-field descriptor; structural only.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "signatureAlgorithm": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Optional structural signature-algorithm identifier; no signing or verification.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["state"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "resultStatus": {
+      "type": "string",
+      "enum": ["SUCCESS", "NON_MATCH", "INDETERMINATE", "TIMEOUT", "ERROR"],
+      "description": "Closed EvaluationResultStatus vocabulary (F13-EVAL-001).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "result": {
+      "description": "Optional normalized evaluator output; profile-declared opaque JSON (json.RawMessage). Unconstrained schema type so Go↔schema TypeBinding accepts encoding/json.RawMessage.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "timing": {
+      "type": "object",
+      "description": "Evaluation wall-clock timing envelope (F13-EVAL-001).",
+      "properties": {
+        "startedAt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "UTC RFC 3339 start timestamp; required.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "completedAt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "UTC RFC 3339 completion timestamp; required.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional observed duration in milliseconds.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        }
+      },
+      "required": ["startedAt", "completedAt"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "evaluatedAt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Evaluation time; UTC RFC 3339; required.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "executionConfig": {
+      "description": "Optional opaque profile-declared execution configuration (json.RawMessage).",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "trustBoundary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Optional structural trust-boundary identifier.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "safetyPolicyFilters": {
+      "type": "array",
+      "description": "Optional safety/policy filter identifiers applied during evaluation.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "structuralTrustState": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Optional opaque structural trust state captured with the result (F13-EVAL-002). No cryptographic-validity claim.",
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "scopeEvidence": {
+      "$ref": "_common/scope-ref.json",
+      "description": "Optional evaluator-supplied scope metadata for structural comparison only (F13-EVAL-003/004). Evidence only; never a second scope authority. Canonical scope remains the containing DecisionRecord metadata.scopeRef.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["adapter", "governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["evaluator", "resultStatus", "timing", "evaluatedAt"],
+  "additionalProperties": false
+}
