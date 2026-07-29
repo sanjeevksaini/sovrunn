@@ -4,7 +4,7 @@ Status: Approved Phase 2 start baseline.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`
 
-FEATURE-0013 consolidation status: `ADH-2026-017` is the Approved replacement that captures the complete FEATURE-0013 architecture in one content-bound approval envelope. Requirements regeneration is authorized; later stages retain their normal independent gates.
+FEATURE-0013 completion status: `ADH-2026-017` is the Approved replacement that captures the complete FEATURE-0013 architecture in one content-bound approval envelope. FEATURE-0013 is implemented and merged through PR #15 on 2026-07-29.
 
 Historical FEATURE-0013 updates: `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` record the path to the consolidation. They are retained for provenance, excluded from downstream instructions, and normatively superseded by approved `ADH-2026-017`.
 
@@ -140,7 +140,9 @@ Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
 
 Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
 
-Active next stage: `FEATURE-0013: Decision Record and AuditEvent Standard` — consolidated architecture is `APPROVED_FOR_KIRO_REQUIREMENTS`. `ADH-2026-017` is the approved single replacement handoff for the complete FEATURE-0013 architecture. Kiro requirements regeneration is authorized; design, tasks, and implementation remain separately gated.
+Completed and merged: `FEATURE-0013: Decision Record and AuditEvent Standard` — implemented through PR #15 on 2026-07-29. `ADH-2026-017` remains the approved single replacement handoff for the complete FEATURE-0013 architecture.
+
+Active next architecture target: `FEATURE-0014: Provider-Neutral Resource Model`. FEATURE-0014 must consume FEATURE-0011 reuse-assessment governance and FEATURE-0012 API/resource grammar. It must not redefine FEATURE-0013 `DecisionRecord`, `AuditEvent`, `DecisionProfile`, `EvaluationResult`, `metadata.scopeRef`, `ScopeKind`, or ServiceInstance-as-subject semantics. It must not own FEATURE-0015 `ResourcePool`/`ProviderCapability` or FEATURE-0016 adapter interfaces.
 
 ## Approved Consolidated FEATURE-0013 Architecture Baseline
 
@@ -155,7 +157,7 @@ The consolidated scope model preserves FEATURE-0012 semantics:
 
 `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` remain historical decision records. They are normatively superseded and must not be loaded as separate Kiro, reviewer, design, task, or implementation instructions.
 
-No earlier requirements approval token survives this consolidation. A fresh requirements document must be generated from approved `ADH-2026-017` and its exact architecture digest.
+FEATURE-0013 requirements, design, tasks, implementation, conformance fixtures, Matrix E evidence, and final approval were completed from approved `ADH-2026-017` and merged through PR #15. Later features consume the merged contract; they do not reload predecessor FEATURE-0013 handoffs as active instructions.
 
 ## Change Control
 

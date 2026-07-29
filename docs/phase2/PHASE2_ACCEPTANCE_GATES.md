@@ -99,7 +99,7 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 
 - `ADH-2026-017` is the approved single replacement handoff for `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`.
 - ADH-2026-014, ADH-2026-015, and ADH-2026-016 are historical provenance and must not be loaded as separate downstream instructions.
-- Requirements generation is authorized because ADH-2026-017 is Approved and its exact architecture digest is recorded; design, tasks, and implementation remain separately gated.
+- FEATURE-0013 requirements, design, tasks, implementation, conformance fixtures, Matrix E evidence, and final feature approval are complete through merged PR #15 (2026-07-29).
 - AD-001 through AD-045 are preserved; AD-045 owns the public error binding and
   closed violation-code registry.
 - Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
@@ -111,7 +111,7 @@ FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy
 - Security validation is bounded to structural conformance; no secret/credential/PII/malware/DLP/content-scanning engine is introduced; comprehensive semantic content scanning is a later approved feature.
 - Algorithm-agile carrier fields and structural trust metadata are contract-now; canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services remain DEFERRED under ADR-F13-002; RFC 8785 is illustrative only.
 - Architecture section 17 scenarios map one-to-one to stable IDs `F13-CF-01` through `F13-CF-28`; coverage is counted by scenario ID with an explicit coverage-matrix entry per scenario.
-- FEATURE-0013 architecture is approved for requirements generation; ADH-2026-017 grants no design, tasks, or implementation authorization.
+- FEATURE-0013 final gates passed before PR #15 merge; ADH-2026-017 remains the controlling consolidated architecture reference.
 
 ### 6.6 Downstream adoption
 

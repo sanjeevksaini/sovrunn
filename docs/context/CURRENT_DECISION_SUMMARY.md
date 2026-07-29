@@ -9,7 +9,7 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - Reuse before build is mandatory (`DEC-0026`).
 - FEATURE-0012 uses the approved provider-neutral API/resource baseline in `docs/architecture/api-resource-standard.md` (`ADH-2026-012`, `ADH-2026-013`).
 - FEATURE-0012 is implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` (final approval 2026-07-24).
-- FEATURE-0013 architecture is consolidated into one complete baseline in `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` under approved replacement handoff `ADH-2026-017`; fresh requirements generation is authorized and later stages remain separately gated.
+- FEATURE-0013 is implemented and merged through PR #15 (2026-07-29). Its architecture remains consolidated into one complete baseline in `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` under approved replacement handoff `ADH-2026-017`; later Phase 2 features consume this contract and must not redefine its decision, audit, scope, or ServiceInstance-subject semantics.
 - The consolidated architecture uses `DecisionRecord` as the canonical governed-conclusion envelope and preserves FEATURE-0012's six-value `ScopeKind` vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
 - `DecisionRecord` and `AuditEvent` use `metadata.scopeRef` as their sole scope authority. `ServiceInstance` is a typed subject, normally governed by Project scope, and is not a seventh `ScopeKind`.
 - `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` are predecessor history. Approved `ADH-2026-017` supersedes them normatively; they are excluded from downstream generation and review inputs.

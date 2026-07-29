@@ -158,7 +158,7 @@ Phase 2 must not define or invoke the complete plugin execution chain.
 
 A record may reference the others, but they must not be collapsed into one object.
 
-> **FEATURE-0013 consolidation note:** Approved replacement `ADH-2026-017` controls the complete FEATURE-0013 architecture. It retains `DecisionRecord`, makes `metadata.scopeRef` the sole scope authority, preserves FEATURE-0012's six-value `ScopeKind`, and represents `ServiceInstance` as a typed subject rather than a scope. Predecessor handoffs ADH-2026-014, ADH-2026-015, and ADH-2026-016 are provenance only and are not separate downstream instructions. Fresh requirements generation is authorized; design, tasks, and implementation remain separately gated.
+> **FEATURE-0013 consolidation note:** Approved replacement `ADH-2026-017` controls the complete FEATURE-0013 architecture. FEATURE-0013 is implemented and merged through PR #15 (2026-07-29). It retains `DecisionRecord`, makes `metadata.scopeRef` the sole scope authority, preserves FEATURE-0012's six-value `ScopeKind`, and represents `ServiceInstance` as a typed subject rather than a scope. Predecessor handoffs ADH-2026-014, ADH-2026-015, and ADH-2026-016 are provenance only and are not separate downstream instructions. Later Phase 2 features consume this contract and must not redefine its decision, audit, scope, or ServiceInstance-subject semantics.
 
 ### Invariant I — Explainability is structured
 

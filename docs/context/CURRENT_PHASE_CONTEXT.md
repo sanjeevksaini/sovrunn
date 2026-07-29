@@ -4,7 +4,7 @@ Current active phase: Phase 2.
 
 Architecture baseline: `ARCH-2026.07-PHASE2-START`.
 
-FEATURE-0013 consolidated architecture: ADH-2026-017 Approved on 2026-07-28 and bound to the canonical architecture digest. ADH-2026-014/015/016 are historical provenance and not downstream inputs.
+FEATURE-0013 status: implemented and merged through PR #15 on 2026-07-29. ADH-2026-017 remains the approved single replacement architecture handoff; ADH-2026-014/015/016 are historical provenance and not downstream inputs.
 
 ## Phase 2 Goal
 
@@ -35,12 +35,26 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 |---|---|---|
 | FEATURE-0011 Reuse Assessment Standard | Merged | Complete |
 | FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` | Final human approval 2026-07-24 |
+| FEATURE-0013 Decision Record and AuditEvent Standard | Implemented and merged through PR #15 into `phase2-reuse-first-paas-fabric-foundation` | Final human/Codex review 2026-07-29 |
 
 ## Phase 2 Active Feature
 
 | Feature | Status | Controlling handoff |
 |---|---|---|
-| FEATURE-0013 Decision Record and AuditEvent Standard | Architecture approved for fresh Kiro requirements generation | ADH-2026-017 (Approved single replacement; predecessors retained as history only) |
+| FEATURE-0014 Provider-Neutral Resource Model | Pending architecture | Pending handoff; must consume FEATURE-0011/0012 and avoid redefining FEATURE-0013 contracts |
+
+
+## FEATURE-0014 Pre-Architecture Boundary Notes
+
+Before FEATURE-0014 architecture begins, use this focused dependency read:
+
+- FEATURE-0011 controls the mandatory reuse-assessment format and reuse-before-build gate.
+- FEATURE-0012 controls API/resource grammar, metadata, references, status, validation shape, Problem Details envelope, and the six-value `ScopeKind` vocabulary.
+- FEATURE-0013 controls `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, `metadata.scopeRef` as sole scope authority, and the rule that `ServiceInstance` is a typed subject, not a `ScopeKind`.
+- FEATURE-0014 owns only provider-neutral substrate resources: Provider, ProviderLocation/Region, ProviderDatacenter, DatacenterFailureDomain, and IaaSStack.
+- FEATURE-0014 must not own `ResourcePool` or `ProviderCapability`; those belong to FEATURE-0015.
+- FEATURE-0014 must not define adapter interfaces; those belong to FEATURE-0016.
+- FEATURE-0014 must not introduce provider-specific runtime provisioning, plugin execution, placement decisions, policy evaluation, or new decision/audit envelopes.
 
 ## Phase 2 Exit Criteria
 
