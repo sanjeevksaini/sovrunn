@@ -128,6 +128,14 @@ Final guardrails:
 - no internal/api import of internal/server
 - git status clean
 
+For FEATURE-0014, tasks may implement only approved design elements traced to
+approved requirements and the ADH-2026-018 closed decisions. Tasks must preserve
+all F14 decision/risk/evidence traceability and leave no semantic choice to the
+implementer. Do not add FEATURE-0015 ResourcePool/ProviderCapability,
+FEATURE-0016 adapter/integration, FEATURE-0053 connectivity, or FEATURE-0013
+decision/audit/operation work. A missing or contradictory design mapping stops
+the entire stage with `ARCHITECTURE_DECISION_REQUIRED`.
+
 Generate tasks.md only.
 
 ## Phase 2 Reuse and Drift Gates
@@ -149,8 +157,8 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable `DecisionRecord`,
-- defined audit behavior,
+- explainable `DecisionRecord` where the approved feature applicability requires one,
+- defined audit behavior where the approved feature applicability requires it,
 - defined observability behavior,
 - request/operation correlation where applicable,
 - no secret or credential logging,

@@ -171,6 +171,16 @@ feature-0013-architecture-readiness:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
 		--feature FEATURE-0013 --stage requirements --mode readiness
 
+.PHONY: feature-0014-architecture-boundary-check feature-0014-architecture-readiness
+feature-0014-architecture-boundary-check:
+	@test -n "$(STAGE)" || (echo "STAGE is required: requirements, design, or tasks"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
+		--feature FEATURE-0014 --stage "$(STAGE)" --mode "$${MODE:-post}"
+
+feature-0014-architecture-readiness:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
+		--feature FEATURE-0014 --stage requirements --mode readiness
+
 .PHONY: structurizr-lite
 structurizr-lite:
 	./scripts/structurizr-lite.sh

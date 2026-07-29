@@ -142,6 +142,36 @@ Requirements must include the exact active feature identity and `Stage: Requirem
 
 Keep requirements concise, precise, implementation-aware, phase-scoped, and free of scope creep.
 
+## FEATURE-0014 closed architecture boundary
+
+When `{{FEATURE_ID}}` is `FEATURE-0014`, load the exact approved
+`docs/architecture/provider-neutral-resource-model.md` and
+`docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md`
+before writing. Run `make feature-0014-architecture-readiness`; a failure is
+`REPOSITORY_CONTEXT_NOT_READY`, not permission to repair or generate partial
+requirements.
+
+Treat architecture sections 2.1-2.4 and 13-16 as closed generation controls.
+Requirements must enumerate every `F14-AD-001` through `F14-AD-021` and every
+`F14-R01` through `F14-R30` individually; range shorthand is insufficient.
+Every normative requirement must have exactly one owner and one canonical
+semantic key `(owning feature, resource or contract, actor, behavior,
+observable outcome)`. Reference shared obligations instead of copying them.
+
+FEATURE-0014 owns only Provider, ProviderLocation, ProviderDatacenter,
+DatacenterFailureDomain, and InfrastructureStack. It must not define or infer
+ResourcePool, ProviderCapability, capacity, compatibility, placement
+eligibility, connectivity, adapters, discovery, credentials, provider calls,
+plugins, operations, provisioning, runtime execution, or provider-native core
+identity. FEATURE-0013 adoption is exactly `NOT_APPLICABLE`; do not invent an
+explainable decision, AuditEvent behavior, operation behavior, or decision
+projection to satisfy a generic Phase 2 gate.
+
+Requirements may translate closed decisions into testable outcomes only. They
+must not choose routes, field layout, packages, storage, algorithms, internal
+types, implementation files, or other design mechanics. An unresolved semantic
+choice stops the entire stage with `ARCHITECTURE_DECISION_REQUIRED`.
+
 Do not implement code.
 Do not generate design.md.
 Do not generate tasks.md.
@@ -165,6 +195,6 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable `DecisionRecord`,
-- defined audit behavior,
+- explainable `DecisionRecord` where the approved feature applicability requires one,
+- defined audit behavior where the approved feature applicability requires it,
 - preserved adapter boundaries.

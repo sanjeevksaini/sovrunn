@@ -142,7 +142,7 @@ Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validatio
 
 Completed and merged: `FEATURE-0013: Decision Record and AuditEvent Standard` — implemented through PR #15 on 2026-07-29. `ADH-2026-017` remains the approved single replacement handoff for the complete FEATURE-0013 architecture.
 
-Active next architecture target: `FEATURE-0014: Provider-Neutral Resource Model`. FEATURE-0014 must consume FEATURE-0011 reuse-assessment governance and FEATURE-0012 API/resource grammar. It must not redefine FEATURE-0013 `DecisionRecord`, `AuditEvent`, `DecisionProfile`, `EvaluationResult`, `metadata.scopeRef`, `ScopeKind`, or ServiceInstance-as-subject semantics. It must not own FEATURE-0015 `ResourcePool`/`ProviderCapability` or FEATURE-0016 adapter interfaces.
+Approved requirements-ready feature architecture: `FEATURE-0014: Provider-Neutral Resource Model`, controlled by `ADH-2026-018` and `docs/architecture/provider-neutral-resource-model.md`. FEATURE-0014 owns exactly Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack. It reuses FEATURE-0011 governance and FEATURE-0012 resource grammar, declares FEATURE-0013 adoption `NOT_APPLICABLE`, and must not own FEATURE-0015 ResourcePool/ProviderCapability, FEATURE-0016 adapters, or FEATURE-0053 connectivity. The ADH-2026-018 repository-readiness and generated-context preflight passed on 2026-07-29; Kiro may generate `requirements.md` only.
 
 ## Approved Consolidated FEATURE-0013 Architecture Baseline
 

@@ -126,10 +126,9 @@ One concept = one canonical term.
 |---|---|
 | Provider | Operator/business boundary for infrastructure or cloud capacity. |
 | ProviderLocation | Sovereignty/geography boundary where provider resources exist. |
-| ProviderRegion | Region-level provider geography; may map to local provider or hyperscaler terminology. |
 | ProviderDatacenter | Physical site boundary. |
 | DatacenterFailureDomain | Provider-declared failure-isolation boundary inside a datacenter. |
-| IaaSStack | Infrastructure implementation boundary such as Kubernetes, OpenShift, VMware, OpenStack, bare metal, or cloud-native stack. |
+| InfrastructureStack | Uniquely identified deployed infrastructure/substrate stack contained by exactly one DatacenterFailureDomain; technology is descriptive and not identity or capability. |
 | ResourcePool | Consumable placement boundary used by Sovrunn placement. |
 | ProviderCapability | Declared capability of a ResourcePool or provider substrate. |
 | CapabilityStatus | Capability validation state: declared, validated, certified, degraded, or disabled. |

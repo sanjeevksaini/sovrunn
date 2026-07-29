@@ -45,6 +45,12 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable decision object,
-- defined audit behavior,
+- explainable DecisionRecord where the approved feature applicability requires one,
+- defined audit behavior where the approved feature applicability requires it,
 - preserved adapter boundaries.
+
+For FEATURE-0014, FEATURE-0013 adoption is `NOT_APPLICABLE`. Reject any attempt
+to satisfy generic review guidance by adding decision, audit, operation,
+connectivity, capability, adapter, or runtime semantics. Require exact
+F14-AD-001..021 and F14-R01..30 traceability, a single-owner overlap ledger,
+and a requirement-normalization ledger.
