@@ -13,7 +13,7 @@ supersedes_on_approval:
   - ADH-2026-015
   - ADH-2026-016
 canonical_architecture: docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md
-architecture_content_sha256: 09963a919b3f91f8f776c41179a5e017f8a3f026f57902810308f348cab61038
+architecture_content_sha256: b52e83316657fdc8be31db0be954f7a31d72752c6c3584ba1e0f98f40ffdfb74
 dependency_content_sha256:
   "docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md": f9bd5ad9cf0aa10b06175204ed388637e64fe740fadc121d30983e00f0786623
   "docs/features/FEATURE-0011-reuse-assessment-standard.md": ad1f551a9f6f9710dd1e2a9e0ea0a0189e6240716c3fe016a44aa4f32bc34454

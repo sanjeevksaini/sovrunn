@@ -397,9 +397,8 @@ Implementation class: `CONTRACT_NOW` (AD-005, AD-006, AD-037).
 6. **F13-COMP-001**: A composite decision MUST combine bounded evaluation
    results using a versioned, registered strategy declaring: stable
    identifier and version, accepted input types, ordering and precedence,
-   short-circuit behavior, missing/timeout/conflict/error behavior,
-   fail-open or fail-closed posture, deterministic output mapping, resource
-   budgets and maximum fan-out, and explanation/evidence rules.
+   short-circuit behavior, missing/timeout/conflict/error behavior within the governing profile boundary, deterministic output mapping, resource
+   budgets and maximum fan-out, and explanation/evidence rules. Any requested fail-open behavior MUST be governed only by the architecture-defined SecurityExceptionRef contract; strategy metadata is never an independent fail-open authority or approval source.
 
 7. **F13-COMP-002**: An unsupported strategy MUST be rejected with
    `DECISION_COMPOSITION_STRATEGY_UNSUPPORTED`. An invalid graph MUST be

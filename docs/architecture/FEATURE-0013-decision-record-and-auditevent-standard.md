@@ -392,8 +392,17 @@ Every registered profile declares:
 For security, authorization, admission, sovereignty, compliance, privileged
 access, data movement, and break-glass profiles, fail-closed or
 `REQUIRES_APPROVAL` is mandatory. Fail-open is prohibited unless a separately
-approved, time-bounded security exception identifies scope, owner,
-compensating controls, expiry, audit treatment, and reassessment trigger.
+approved, time-bounded `SecurityExceptionRef` is present in the governing
+profile. `SecurityExceptionRef` is a structural approval-evidence reference,
+not a runtime workflow: it must identify the approved exception artifact by
+`apiVersion`, `kind`, `name`, and immutable `uid`; identify the exception scope,
+owner, approving authority, compensating controls, effective interval, audit
+treatment, reassessment trigger, and covered failure modes; and be validated
+only as bounded data. FEATURE-0013 does not approve, issue, revoke, execute, or
+store security exceptions. Missing, expired, out-of-scope, owner-mismatched,
+malformed, or non-uid-pinned exception evidence makes fail-open invalid and the
+profile fails closed. Design and tasks must not invent alternate approval
+fields or workflows.
 
 Profiles and semantic registries must be distributable and verifiable offline.
 Registration requires conformance review; accepting arbitrary profile URIs at
@@ -522,14 +531,19 @@ registered strategy. Every strategy declares:
 - accepted input types;
 - ordering and precedence;
 - short-circuit behavior;
-- missing, timeout, conflict, and error behavior;
-- fail-open or fail-closed posture;
+- missing, timeout, conflict, and error behavior within the governing
+  profile's fail-closed/default posture;
+- any requested fail-open behavior only as a reference to the profile's valid
+  `SecurityExceptionRef`; strategy metadata itself is never an independent
+  fail-open authority or approval source;
 - deterministic output mapping;
 - resource budgets and maximum fan-out;
 - explanation and evidence rules.
 
-Fail-open remains subject to the profile restrictions in section 6.8 and can
-never be selected merely as a runtime fallback.
+Fail-open remains subject to the profile restrictions and structural
+`SecurityExceptionRef` contract in section 6.8 and can never be selected merely
+as a runtime fallback, by strategy metadata alone, or by an implementation
+choice.
 
 The chosen strategy identifier, version, ordered input identities, optional
 opaque integrity carriers, and output are recorded so the result can be
@@ -1266,7 +1280,7 @@ not human acceptance.
 | F13-R11 | Security | Enforcement silently ignores an unknown mandatory obligation | AD-032, AD-043 | 3×5 High | Unknown/unsupported obligation makes allow unenforceable | Obligation capability negative tests | 1×5 Medium | AVOID | Enforcement owner | New obligation vocabulary | PENDING_HUMAN_REVIEW |
 | F13-R12 | Latency/availability | Central authorization or decision service becomes a universal bottleneck | AD-008, AD-039 | 4×5 Critical | Local verified artifacts, policy snapshots, caches, bounded freshness | Central-service outage and horizontal-load tests | 2×4 Medium | MITIGATE | Authorization implementation owner | Production enforcement integration | PENDING_HUMAN_REVIEW |
 | F13-R13 | Security | Revoked or stale cached authorization remains enforceable | AD-039, AD-043 | 3×5 High | Audience/scope/expiry/revocation/freshness validation; fail closed | Cache expiry, revocation, scope-mismatch tests | 2×5 High | MITIGATE | Authorization/security owner | Revocation architecture selection | PENDING_HUMAN_REVIEW |
-| F13-R14 | Security/availability | Fail-open behavior exposes protected resources during dependency failure | AD-005, AD-043 | 3×5 High | Fail-closed high-risk profiles; bounded approved exception | Failure injection and exception-expiry checks | 1×5 Medium | AVOID | Security architecture owner | Any fail-open request | PENDING_HUMAN_REVIEW |
+| F13-R14 | Security/availability | Fail-open behavior exposes protected resources during dependency failure | AD-005, AD-043 | 3×5 High | Fail-closed high-risk profiles; bounded approved `SecurityExceptionRef` structural evidence | Failure injection, exception-reference, scope, expiry, and owner-mismatch checks | 1×5 Medium | AVOID | Security architecture owner | Any fail-open request | PENDING_HUMAN_REVIEW |
 | F13-R15 | Correctness | Correction, supersession, or revocation yields ambiguous effective state | AD-004, AD-034 | 3×4 High | Immutable linked effects; bounded cycle-free deterministic projection | Chain, cycle, fork, and projection fixtures | 1×4 Low | MITIGATE | Read-model owner | New relationship/effective-state semantics | PENDING_HUMAN_REVIEW |
 | F13-R16 | Privacy/security | Decision, rationale, evidence, error, or projection leaks restricted data | AD-019, AD-024 | 4×5 Critical | References/digests, minimization, classification, redaction, purpose projections | Secret/PII/cross-scope negative tests | 1×5 Medium | MITIGATE | Security/privacy owner | New evidence or projection type | PENDING_HUMAN_REVIEW |
 | F13-R17 | Compliance/integrity | Erasure or retention action breaks evidence integrity or legal hold | AD-004, AD-022 | 3×5 High | Structural tombstone and retention/legal-hold contracts now; cryptographic erasure later | Structural hold, erasure-state, opaque-carrier, and tombstone tests | 2×4 Medium | MITIGATE | Evidence/retention owner | Regulated deployment or retention change | PENDING_HUMAN_REVIEW |
@@ -1766,6 +1780,9 @@ architecture and may not reopen them as design questions:
   produces FEATURE-0013 implementation artifacts;
 - conformance coverage uses the stable parent, suffix, and additional IDs in
   section 17;
+- fail-open is available only through the section 6.8 `SecurityExceptionRef`
+  structural approval-evidence contract and never through an implementation-
+  chosen shortcut;
 - pre-ADR-F13-002 trust behavior is structural and opaque only; cryptographic
   selection and execution remain deferred; and
 - FEATURE-0013 defines no adapter interface or production runtime service.
@@ -1780,6 +1797,132 @@ FEATURE-0013. Requirements translate the closed architecture into testable
 obligations. Tasks implement only an approved design. If a downstream stage
 cannot proceed without changing a closed item, it must stop with
 `ARCHITECTURE_DECISION_REQUIRED`.
+
+
+### 27.9 Downstream design closure controls for clean regeneration
+
+The following controls close the architecture gaps that previously caused
+downstream design revisions to leak semantic decisions into requirements,
+design, or tasks. Kiro, reviewer prompts, requirements, design, tasks, and
+Cursor must treat this section as normative architecture.
+
+1. **Fail-open exception representation.** `AD-043` remains `CONTRACT_NOW` only
+   for structural profile validation and conformance of the section 6.8
+   `SecurityExceptionRef` contract. The approved exception identity is the
+   immutable typed reference tuple (`apiVersion`, `kind`, `name`, `uid`) plus
+   bounded metadata fields for scope, owner, approving authority, compensating
+   controls, effective interval, audit treatment, reassessment trigger, and
+   covered failure modes. FEATURE-0013 validates shape, requiredness, scope
+   compatibility, expiry against captured/effective decision time, and uid
+   pinning. It does not implement exception approval, revocation, workflow,
+   persistence, authorization, or runtime enforcement. A fail-open declaration
+   without a valid `SecurityExceptionRef` fails profile validation; design must
+   not remove the approved exception path or invent alternate approval evidence.
+
+2. **Strategy failure posture boundary.** A composition strategy may describe
+   missing, timeout, conflict, and error handling, but it is not an independent
+   authority for fail-open. Any strategy-level fail-open behavior is effective
+   only when the governing profile has a valid `SecurityExceptionRef`; otherwise
+   it fails closed. Strategy metadata must not create a second approval path.
+
+3. **Graph identity and accounting.** Every graph node and every graph edge has
+   a stable, non-empty, profile-bounded identifier. Edge identity is distinct
+   from the `(from, to)` endpoint pair; duplicate edge identifiers are invalid,
+   and duplicate endpoint pairs are invalid unless a profile explicitly permits
+   labelled multi-edges by identifier. Edge orientation is from dependency to
+   dependent. Parallel-group independence means no direct or transitive
+   dependency path exists between group members. Depth, width, fan-out,
+   concurrency, payload, and weighted critical-path calculations must be
+   deterministic, count each node/edge once, and use the most restrictive
+   FEATURE-0012/platform, profile, and evaluator bounds.
+
+4. **Graph version ownership.** Graph reference and version compatibility are
+   validated during graph resolution against the declarative bundle before an
+   in-memory graph is built. The bounded in-memory graph builder receives an
+   already resolved graph definition and must not perform registry/version
+   lookup or invent compatibility policy.
+
+5. **Relationship conflict matrix.** Relationship validation must define a
+   deterministic matrix for same-target, shared-ancestor, correction,
+   supersession, revocation, fork, current-vs-historical, and chain-convergence
+   cases. Cycles emit `DECISION_RELATIONSHIP_CYCLE`; chain excess emits
+   `DECISION_RELATIONSHIP_CHAIN_LIMIT_EXCEEDED`; incompatible relationship
+   combinations emit `DECISION_RELATIONSHIP_CONFLICT`. Requirements enumerate
+   cases; design maps them; tasks implement them. No downstream stage may invent
+   new public relationship codes.
+
+6. **FEATURE-0012 baseline workflow reuse.** FEATURE-0013 schema evolution,
+   AuditEvent compatibility, and schema-diff evidence reuse the exact
+   FEATURE-0012 baseline mechanism: `api/schemas/baseline/BASELINE_MANIFEST.json`,
+   `api/schemas/baseline/BASELINE_APPROVALS.json`, digest recomputation,
+   approval-controlled baseline updates, and protected review. FEATURE-0013 must
+   not introduce `api/schemas/SCHEMA_BASELINE_MANIFEST.json`, `api/schemas/diffs/`,
+   `api/schemas/approvals/`, or another parallel baseline/diff/approval
+   hierarchy without a new approved architecture decision.
+
+7. **AuditEvent package ownership.** FEATURE-0012 owns the generic
+   `ImmutableRecord` envelope, base metadata, strict decoding, TypeBinding, and
+   conformance machinery. FEATURE-0013 owns the domain AuditEvent payload/linkage
+   extension. Canonical FEATURE-0013 AuditEvent value types must live in a
+   FEATURE-0013 domain/shared package, while `apiconform` remains limited to
+   conformance adapters, schema binding registration, and executable checks. A
+   conformance package must not become the canonical domain owner and FEATURE-0013
+   must not copy FEATURE-0012 base fields into a divergent parallel type.
+
+8. **Versioned registry keys.** Declarative semantic registries are keyed by the
+   tuple `(id, version)` when versioned; registries whose values are explicitly
+   unversioned must say so in the profile schema. Duplicate detection, bundle
+   loading, BundleView lookup signatures, fixture identities, and traceability
+   must use the same key rule. Go maps are derivative views of the JSON bundle,
+   not semantic authorities.
+
+9. **TrustCarrier empty-state rule.** A trust or integrity carrier that is
+   absent is different from one that is present but structurally empty. When a
+   carrier is required by profile, bundle, evaluation provenance, synchronization,
+   or import/export semantics, absence or structural emptiness fails closed with
+   the appropriate existing trust/evaluation code. When a carrier is optional, a
+   present but structurally empty value must either be rejected as invalid input
+   or normalized to absent by a single documented rule; it must never satisfy
+   provenance, required trust, identity generation, or compatibility evidence.
+
+10. **Projection pointer target and overlap.** Projection pointers are resolved
+    against the canonical schema/view declared by the governing profile, not
+    against fields that happen to appear in one example record. Pointer overlap
+    includes exact equality and ancestor/descendant containment. Unknown pointers,
+    overlapping includes/excludes, audience mismatch, and prohibited-category
+    exposure fail deterministically with existing projection/profile/evaluation
+    codes; requirements and design must not create executable redaction or
+    projected-output generation.
+
+11. **Requiredness for public contracts.** For every public schema or externally
+    exchanged contract, architecture requires downstream design to enumerate
+    requiredness for every string, boolean, number, object, pointer, map, and
+    slice/array. Required-present slices must state whether empty is allowed;
+    nullable optional references must identify whether `null`, absence, or both
+    are canonical. Go tags, JSON Schema `required`/`minItems`/`nullable`, loaders,
+    validators, fixtures, and error pointers must agree.
+
+12. **Matrix E automation boundary.** Automation may stage architecture-owned
+    risk IDs, inherent ratings, controls, evidence pointers, target residual
+    ratings, treatment, owner, trigger, and blank human-disposition fields. It
+    must not calculate, downgrade, upgrade, infer, or replace residual risk
+    levels from test coverage. Human-only disposition fields remain blank until
+    recorded human review.
+
+13. **Scope pre-scan and decode reuse.** FEATURE-0013 must reuse exported
+    FEATURE-0012 decode/pre-scan primitives where they exist and the package DAG
+    permits. JSON duplicate/parallel-key checks occur on JSON tokens. YAML
+    duplicate/parallel-key checks occur on the `yaml.Node` AST before
+    JSON-compatible normalization. If no exported FEATURE-0012 primitive is
+    available for a required check, FEATURE-0013 may implement a local pure
+    pre-scan only within the approved package import graph and must not claim
+    zero allocation when YAML AST parsing is performed.
+
+14. **Clean regeneration rule.** A regenerated design must treat this
+    consolidated architecture as source of truth and must not reuse superseded or
+    patched design drafts as semantic input. If any item above cannot be mapped
+    to concrete design mechanics without changing architecture, the design must
+    stop with `ARCHITECTURE_DECISION_REQUIRED` and must not proceed to tasks.
 
 ## 28. Lightweight downstream adoption contract
 
