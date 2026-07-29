@@ -7,9 +7,13 @@
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0014",
   "human_gate_required": true,
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+  "requirements_approval_token": "APPROVED_FOR_DESIGN",
+  "requirements_approved_at": "2026-07-29T17:33:34Z",
+  "requirements_approved_by": "Sanjeev Kumar",
+  "requirements_approved_sha256": "13e87da80c7fe085da8e2ee77092e02e42bf286197ff69525beef675936a16b4",
   "slug": "provider-neutral-resource-model",
   "spec_path": ".kiro/specs/provider-neutral-resource-model",
-  "status": "requirements_ready",
+  "status": "requirements_approved",
   "title": "Provider-Neutral Resource Model",
-  "updated_at": "2026-07-29T16:47:10.734614+00:00"
+  "updated_at": "2026-07-29T17:33:34+00:00"
 }
