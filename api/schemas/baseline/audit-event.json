@@ -2,11 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "api/schemas/audit-event.json",
   "title": "AuditEvent",
-  "description": "Governance-only ImmutableRecord under Organization scope (Matrix D). Append-only accountability record; corrections create linked records.",
+  "description": "Governance-only ImmutableRecord (Matrix D). Append-only accountability record; corrections create linked records. Allowed scopes are the six FEATURE-0012 governance ScopeKind values (F13-AUDIT-003; F13-COMPAT-08; AD-015). Optional FEATURE-0013 decision-linkage is additive via _common/decision-linkage.json; Organization-scoped alpha fixtures remain valid (F13-COMPAT-07). Base envelope and fields are preserved unchanged.",
   "type": "object",
   "x-sovrunn-profile": "ImmutableRecord",
   "x-sovrunn-boundary": "governance-only",
-  "x-sovrunn-allowed-scopes": ["Organization"],
+  "x-sovrunn-allowed-scopes": [
+    "Platform",
+    "Organization",
+    "OrganizationUnit",
+    "Tenant",
+    "Project",
+    "Provider"
+  ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
@@ -39,7 +46,7 @@
     },
     "metadata": {
       "$ref": "_common/object-meta.json",
-      "description": "Immutable Organization-scoped record identity.",
+      "description": "Immutable record identity. metadata.scopeRef is the sole scope authority; absent/nil scopeRef = Platform where permitted. Non-Platform scopeRef requires uid (F13-SCOPE-002; validator-enforced).",
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "system",
@@ -53,7 +60,7 @@
     },
     "record": {
       "type": "object",
-      "description": "Append-only audit payload linking actor, request, operation, subject, and version.",
+      "description": "Append-only audit payload linking actor, request, operation, subject, and version. Optional decisionLinkage is the FEATURE-0013 additive extension.",
       "properties": {
         "actorRef": {
           "$ref": "_common/typed-ref.json",
@@ -183,6 +190,20 @@
             "classification": "Internal",
             "authorizedWriter": "system",
             "authorizedReaders": ["governance", "internal"],
+            "mutability": "append-only",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "decisionLinkage": {
+          "$ref": "_common/decision-linkage.json",
+          "description": "Optional FEATURE-0013 AuditEvent decision-linkage extension (F13-AUDIT-003; design §6.2/§7.4). Absent keeps FEATURE-0012 Organization-scoped alpha fixtures valid (F13-COMPAT-07). When present, decisionRef and correlation are required by the referenced sub-schema.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",

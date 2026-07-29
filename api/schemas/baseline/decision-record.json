@@ -1,0 +1,773 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/decision-record.json",
+  "title": "DecisionRecord",
+  "description": "FEATURE-0013 DecisionRecord ImmutableRecord (F13-OBJ-001; design §6.1/§7.1; AD-001). Append-only governance-only canonical decision envelope with no mutable spec or status. metadata.scopeRef is the sole scope authority; canonical Platform form is absent/nil metadata.scopeRef. Approved restricted per-kind delta (F13-SCOPE-002): every non-Platform metadata.scopeRef MUST carry uid (FEATURE-0012 optional uid narrowed to required for this kind; enforced by validators because if/then is outside the supported schema subset). No new resource profile is introduced.",
+  "type": "object",
+  "x-sovrunn-profile": "ImmutableRecord",
+  "x-sovrunn-boundary": "governance-only",
+  "x-sovrunn-allowed-scopes": [
+    "Platform",
+    "Organization",
+    "OrganizationUnit",
+    "Tenant",
+    "Project",
+    "Provider"
+  ],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["governance.sovrunn.io/v1alpha1"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator", "customer"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["DecisionRecord"],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator", "customer"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Immutable record identity. scopeRef is the sole scope authority. Absent/nil scopeRef = Platform where permitted. Non-Platform scopeRef requires uid (F13-SCOPE-002; validator-enforced).",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator"],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "record": {
+      "type": "object",
+      "description": "Append-only DecisionBody payload (design §7.1). Finality is always FINAL when persisted.",
+      "properties": {
+        "profileRef": {
+          "$ref": "_common/decision-profile-ref.json",
+          "description": "Versioned DecisionProfile identity; composite (name, version) key.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator", "customer"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "ADJUDICATION",
+            "SELECTION",
+            "RANKING",
+            "CLASSIFICATION",
+            "RESOLUTION",
+            "ALLOCATION",
+            "PLAN",
+            "ASSESSMENT",
+            "RECOMMENDATION"
+          ],
+          "description": "Closed DecisionForm vocabulary (F13-FORM-001).",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator", "customer"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "authority": {
+          "type": "string",
+          "enum": ["AUTHORITATIVE", "ADVISORY", "RECOMMENDATION", "SIMULATION"],
+          "description": "Closed DecisionAuthority vocabulary (F13-AUTH-001).",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator", "customer"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Decision purpose; required non-empty.",
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "adjudication": {
+          "type": "string",
+          "enum": ["ALLOWED", "DENIED", "REQUIRES_APPROVAL"],
+          "description": "Optional AdjudicationOutcome for adjudication facets only (F13-ADJ-001).",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator", "customer"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "subjectRefs": {
+          "type": "array",
+          "description": "Optional subject TypedRefs; empty allowed where the profile permits. ServiceInstance is a typed subject under Project scopeRef, never a ScopeKind (F13-SCOPE-004).",
+          "items": {
+            "$ref": "_common/typed-ref.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "evaluationResults": {
+          "type": "array",
+          "description": "Optional embedded EvaluationResult values (EmbeddedValue; design §7.1/§7.2).",
+          "items": {
+            "$ref": "evaluation-result.json"
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "composition": {
+          "type": "object",
+          "description": "Optional composition strategy and graph identity for deterministic replay.",
+          "properties": {
+            "strategyName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Composition strategy name; required when composition present.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "strategyVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63,
+              "description": "Composition strategy version; required when composition present.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "graphRef": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Optional graph identity reference.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "graphVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63,
+              "description": "Optional graph version pin.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "inputRefs": {
+              "type": "array",
+              "description": "Optional composition input identity refs.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": ["strategyName", "strategyVersion"],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "result": {
+          "type": "object",
+          "description": "Profile-declared typed result, rationale, and obligations (architecture §6.1).",
+          "properties": {
+            "typedResult": {
+              "description": "Profile-declared opaque typed result (json.RawMessage). Unconstrained schema type for Go↔schema TypeBinding.",
+              "x-sovrunn-field-policy": {
+                "classification": "Tenant-confidential",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "redact",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "rationale": {
+              "type": "object",
+              "description": "Structured DecisionRationale explainability (F13-OBJ-001).",
+              "properties": {
+                "reasonCodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253
+                  },
+                  "x-sovrunn-field-policy": {
+                    "classification": "Internal",
+                    "authorizedWriter": "system",
+                    "authorizedReaders": ["governance", "internal", "operator", "customer"],
+                    "mutability": "immutable",
+                    "retention": "archival",
+                    "redaction": "none",
+                    "residency": "any",
+                    "auditRequired": true
+                  }
+                },
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "x-sovrunn-field-policy": {
+                    "classification": "Tenant-confidential",
+                    "authorizedWriter": "system",
+                    "authorizedReaders": ["governance", "internal", "operator"],
+                    "mutability": "immutable",
+                    "retention": "archival",
+                    "redaction": "redact",
+                    "residency": "any",
+                    "auditRequired": true
+                  }
+                },
+                "alternatives": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "x-sovrunn-field-policy": {
+                    "classification": "Tenant-confidential",
+                    "authorizedWriter": "system",
+                    "authorizedReaders": ["governance", "internal", "operator"],
+                    "mutability": "immutable",
+                    "retention": "archival",
+                    "redaction": "redact",
+                    "residency": "any",
+                    "auditRequired": false
+                  }
+                },
+                "warnings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "x-sovrunn-field-policy": {
+                    "classification": "Internal",
+                    "authorizedWriter": "system",
+                    "authorizedReaders": ["governance", "internal", "operator"],
+                    "mutability": "immutable",
+                    "retention": "archival",
+                    "redaction": "redact",
+                    "residency": "any",
+                    "auditRequired": true
+                  }
+                },
+                "correctiveSuggestions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "x-sovrunn-field-policy": {
+                    "classification": "Internal",
+                    "authorizedWriter": "system",
+                    "authorizedReaders": ["governance", "internal", "operator"],
+                    "mutability": "immutable",
+                    "retention": "archival",
+                    "redaction": "redact",
+                    "residency": "any",
+                    "auditRequired": false
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "x-sovrunn-field-policy": {
+                "classification": "Tenant-confidential",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "redact",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "obligations": {
+              "type": "array",
+              "description": "Required-present obligation list; empty allowed (design §7.6).",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253,
+                    "description": "Obligation vocabulary identity; required non-empty.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "system",
+                      "authorizedReaders": ["governance", "internal", "operator"],
+                      "mutability": "immutable",
+                      "retention": "archival",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "mandatory": {
+                    "type": "boolean",
+                    "description": "Whether the obligation is mandatory; required explicit bool.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "system",
+                      "authorizedReaders": ["governance", "internal", "operator"],
+                      "mutability": "immutable",
+                      "retention": "archival",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "payload": {
+                    "description": "Optional profile-declared opaque obligation payload (json.RawMessage).",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Tenant-confidential",
+                      "authorizedWriter": "system",
+                      "authorizedReaders": ["governance", "internal", "operator"],
+                      "mutability": "immutable",
+                      "retention": "archival",
+                      "redaction": "redact",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  }
+                },
+                "required": ["id", "mandatory"],
+                "additionalProperties": false
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Tenant-confidential",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "redact",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": ["typedResult", "rationale", "obligations"],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Tenant-confidential",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "relationship": {
+          "$ref": "_common/decision-relationship.json",
+          "description": "Optional CORRECTS/SUPERSEDES/REVOKES relationship to a predecessor (F13-IMMUT-002).",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "retryKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Optional retry idempotency key carrier (F13-SCALE-001; AD-036). Distinct from semanticIdentity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "semanticIdentity": {
+          "$ref": "_common/semantic-decision-identity.json",
+          "description": "Complete semantic decision-identity descriptor (F13-SCALE-002; AD-036). CanonicalScope is derived from metadata.scopeRef; never an independent scope authority.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "trust": {
+          "$ref": "_common/trust-carrier.json",
+          "description": "Optional algorithm-agile structural TrustCarrier (F13-TRUST-001; RID-08). Present-but-empty is invalid.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "sovereignty": {
+          "type": "object",
+          "description": "Optional structural SovereigntyCarrier for the seven sovereignty dimensions (AD-016; F13-SOV-001). Tags/references only; must not embed secrets, credentials, or provider-native resource types.",
+          "properties": {
+            "data": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "operational": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "technical": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "legal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "cryptographic": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "softwareSupplyChain": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "aiModel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "correlation": {
+          "type": "object",
+          "description": "Correlation carrier reused with decision-linkage (design §7.1/§7.9; F13-AUDIT-001). auditEventRefs is required non-empty (minItems: 1; validator-enforced; minItems keyword outside supported schema subset).",
+          "properties": {
+            "auditEventRefs": {
+              "type": "array",
+              "description": "Required non-empty AuditEvent identity refs (minItems: 1).",
+              "items": {
+                "$ref": "_common/typed-ref.json"
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "operationRef": {
+              "$ref": "_common/typed-ref.json",
+              "description": "Optional Operation (LongRunningOperation) reference.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "traceRef": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "description": "Optional opaque operational correlation / trace reference. Telemetry is not audit authority (AD-026).",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "system",
+                "authorizedReaders": ["governance", "internal", "operator"],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": false
+              }
+            }
+          },
+          "required": ["auditEventRefs"],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "finality": {
+          "type": "string",
+          "enum": ["FINAL"],
+          "description": "Closed Finality vocabulary. Always FINAL on a persisted DecisionRecord (F13-IMMUT-001).",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "system",
+            "authorizedReaders": ["governance", "internal", "operator", "customer"],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": [
+        "profileRef",
+        "form",
+        "authority",
+        "purpose",
+        "result",
+        "semanticIdentity",
+        "correlation",
+        "finality"
+      ],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["governance", "internal", "operator"],
+        "mutability": "append-only",
+        "retention": "archival",
+        "redaction": "redact",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "record"],
+  "additionalProperties": false
+}

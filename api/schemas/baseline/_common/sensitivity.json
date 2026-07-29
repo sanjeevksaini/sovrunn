@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/sensitivity.json",
+  "title": "Sensitivity",
+  "description": "Closed ordered FEATURE-0013 sensitivity vocabulary PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED (F13-SEC-001; design sections 7.5/12; architecture section 12.4). Coexists with FEATURE-0012 DataClassification and never replaces or lowers it. Profile-bound rules (ceiling, content categories, max field/byte/depth/value-type limits) are declared on DecisionProfile and may raise the classification floor, never lower it. Unmapped, unknown, contradictory, or below-floor values fail closed. Structural typed conformance only; not a content-scanning engine. When referenced as a property, the referencing property declares x-sovrunn-field-policy.",
+  "type": "string",
+  "enum": [
+    "PUBLIC",
+    "INTERNAL",
+    "CONFIDENTIAL",
+    "RESTRICTED"
+  ],
+  "minLength": 1
+}

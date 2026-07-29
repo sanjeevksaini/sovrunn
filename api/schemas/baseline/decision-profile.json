@@ -1,0 +1,2103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/decision-profile.json",
+  "title": "DecisionProfile",
+  "description": "FEATURE-0013 DecisionProfile VersionedDefinition (F13-OBJ-003, F13-PROF-001; design \u00a76.1/\u00a77.3; AD-029). Definition content lives in spec. SecurityExceptionRef is structural approval-evidence only. No new resource profile is introduced.",
+  "type": "object",
+  "x-sovrunn-profile": "VersionedDefinition",
+  "x-sovrunn-boundary": "governance-only",
+  "x-sovrunn-allowed-scopes": [
+    "Platform"
+  ],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": [
+        "governance.sovrunn.io/v1alpha1"
+      ],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "DecisionProfile"
+      ],
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Profile object metadata. metadata.scopeRef is the sole scope authority for the profile object; ExceptionScopeRef inside SecurityExceptionRef is exception-evidence only.",
+      "x-sovrunn-field-policy": {
+        "classification": "Tenant-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "DecisionProfile definition content (VersionedDefinition; F13-OBJ-003, F13-PROF-001). Definition content lives in spec.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Stable profile id; required non-empty. Composite (name, version) registry key.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Decision family; required non-empty.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "description": "Profile semver; required. Composite (name, version) registry key.",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Profile owner identity; required non-empty.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "lifecycleStatus": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "description": "Profile lifecycle status; inactive rejected by validators.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "primaryForm": {
+          "type": "string",
+          "enum": [
+            "ADJUDICATION",
+            "SELECTION",
+            "RANKING",
+            "CLASSIFICATION",
+            "RESOLUTION",
+            "ALLOCATION",
+            "PLAN",
+            "ASSESSMENT",
+            "RECOMMENDATION"
+          ],
+          "description": "Primary DecisionForm (F13-FORM-001).",
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "secondaryFacets": {
+          "type": "array",
+          "description": "Optional secondary DecisionForm facets.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ADJUDICATION",
+              "SELECTION",
+              "RANKING",
+              "CLASSIFICATION",
+              "RESOLUTION",
+              "ALLOCATION",
+              "PLAN",
+              "ASSESSMENT",
+              "RECOMMENDATION"
+            ]
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "allowedAuthorityLevels": {
+          "type": "array",
+          "description": "Allowed DecisionAuthority levels; required-present.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "AUTHORITATIVE",
+              "ADVISORY",
+              "RECOMMENDATION",
+              "SIMULATION"
+            ]
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Public",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator",
+              "customer"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "inputSchemaRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Input schema reference identity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "typedResultSchemaRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Typed-result schema reference identity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "rationaleSchemaRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Rationale schema reference identity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "obligationSchemaRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Obligation schema reference identity.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "acceptedEvaluationTypes": {
+          "type": "array",
+          "description": "Optional accepted evaluator type declarations.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253,
+                "description": "Registered evaluator type id.",
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "standard",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 63,
+                "description": "Optional evaluator version pin.",
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "standard",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              },
+              "limits": {
+                "type": "object",
+                "description": "Optional evaluator-specific ceilings that may only narrow ProfileLimits.",
+                "properties": {
+                  "maxNodes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum graph node count ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxEdges": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum graph edge count ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxDepth": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum graph depth ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxWidth": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum graph width ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxFanOut": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum graph fan-out ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxPayloadBytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum payload bytes ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxFieldCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum field count ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxCalls": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum call count ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxConcurrency": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum concurrency ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxRetries": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum retry ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxLatencyMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum latency milliseconds ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxJurisdictions": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Maximum jurisdiction count ceiling.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  },
+                  "maxCostBudget": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253,
+                    "description": "Opaque structural cost-budget tag.",
+                    "x-sovrunn-field-policy": {
+                      "classification": "Internal",
+                      "authorizedWriter": "creator",
+                      "authorizedReaders": [
+                        "governance",
+                        "internal",
+                        "operator"
+                      ],
+                      "mutability": "immutable",
+                      "retention": "standard",
+                      "redaction": "none",
+                      "residency": "any",
+                      "auditRequired": true
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "archival",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "acceptedCompositionStrategies": {
+          "type": "array",
+          "description": "Optional accepted composition strategy identifiers.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "scopeSemantics": {
+          "type": "object",
+          "description": "Allowed governance scopes for decisions governed by this profile. Does not create a second scope authority on DecisionRecord/AuditEvent.",
+          "properties": {
+            "allowedScopes": {
+              "type": "array",
+              "description": "Allowed ScopeKind values for governed decisions.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Platform",
+                  "Organization",
+                  "OrganizationUnit",
+                  "Tenant",
+                  "Project",
+                  "Provider"
+                ]
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "platformAllowed": {
+              "type": "boolean",
+              "description": "Whether canonical Platform (absent scopeRef) is permitted.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "allowedScopes",
+            "platformAllowed"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "actorSemantics": {
+          "type": "object",
+          "description": "Actor requirements for the profile.",
+          "properties": {
+            "requireActor": {
+              "type": "boolean",
+              "description": "Whether an actor is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireActor"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "subjectSemantics": {
+          "type": "object",
+          "description": "Subject requirements for the profile.",
+          "properties": {
+            "requireSubject": {
+              "type": "boolean",
+              "description": "Whether a subject is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "allowedKinds": {
+              "type": "array",
+              "description": "Optional allowed subject kinds.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxSubjects": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Optional maximum subject count.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireSubject"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "policySemantics": {
+          "type": "object",
+          "description": "Policy-context requirements.",
+          "properties": {
+            "requireEffectivePolicyContext": {
+              "type": "boolean",
+              "description": "Whether effective policy context is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireEffectivePolicyContext"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "evidenceSemantics": {
+          "type": "object",
+          "description": "Evidence requirements.",
+          "properties": {
+            "requireEvidence": {
+              "type": "boolean",
+              "description": "Whether evidence is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "acceptedEvidenceKinds": {
+              "type": "array",
+              "description": "Optional accepted evidence kinds.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireEvidence"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "auditSemantics": {
+          "type": "object",
+          "description": "Audit-linkage requirements for the profile.",
+          "properties": {
+            "requireDurableRecord": {
+              "type": "boolean",
+              "description": "Whether a durable DecisionRecord is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireDurableRecord"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "determinismBehavior": {
+          "type": "object",
+          "description": "Determinism and AI-evaluator posture.",
+          "properties": {
+            "requireDeterministic": {
+              "type": "boolean",
+              "description": "Whether deterministic evaluation is required.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "allowNondeterministicAI": {
+              "type": "boolean",
+              "description": "Whether nondeterministic AI evaluators are allowed.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "requireDeterministic",
+            "allowNondeterministicAI"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "failureBehavior": {
+          "type": "object",
+          "description": "Failure, timeout, and insufficient-evidence posture (design \u00a77.3/\u00a77.7). Fail-open requires a valid SecurityExceptionRef.",
+          "properties": {
+            "failPosture": {
+              "type": "string",
+              "enum": [
+                "FAIL_CLOSED",
+                "REQUIRES_APPROVAL",
+                "FAIL_OPEN"
+              ],
+              "description": "Closed FailPosture vocabulary (F13-PROF-002).",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "timeoutBehavior": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Timeout behavior identifier.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "insufficientEvidence": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Insufficient-evidence behavior identifier.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "declaredFailureModes": {
+              "type": "array",
+              "description": "Optional profile-declared failure modes for exception coverage.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "securityExceptionRef": {
+              "$ref": "_common/security-exception-ref.json",
+              "description": "Optional bounded structural SecurityExceptionRef approval-evidence reference (AD-043). Evidence only; no approval workflow.",
+              "x-sovrunn-field-policy": {
+                "classification": "Tenant-confidential",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "archival",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "failPosture",
+            "timeoutBehavior",
+            "insufficientEvidence"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "validityRules": {
+          "type": "object",
+          "description": "Correction/supersession/revocation and validity carriers (append-only; no in-place rewrite).",
+          "properties": {
+            "defaultValidityMs": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Optional default validity window in milliseconds.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "allowCorrection": {
+              "type": "boolean",
+              "description": "Whether CORRECTS relationships are allowed.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "allowSupersession": {
+              "type": "boolean",
+              "description": "Whether SUPERSEDES relationships are allowed.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "allowRevocation": {
+              "type": "boolean",
+              "description": "Whether REVOKES relationships are allowed.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxChainDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Optional maximum relationship chain depth.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "allowCorrection",
+            "allowSupersession",
+            "allowRevocation"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "sensitivityCeiling": {
+          "type": "string",
+          "enum": [
+            "PUBLIC",
+            "INTERNAL",
+            "CONFIDENTIAL",
+            "RESTRICTED"
+          ],
+          "description": "Closed Sensitivity ceiling PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED (F13-SEC-001). Inlined enum (not $ref) because TypeBinding treats $ref as opaque structs.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "contentCategories": {
+          "type": "array",
+          "description": "Optional content-category identifiers.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "residencyProfile": {
+          "type": "object",
+          "description": "Optional structural residency declaration (jurisdiction tags only).",
+          "properties": {
+            "allowedJurisdictions": {
+              "type": "array",
+              "description": "Optional allowed jurisdiction tags.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "retentionProfile": {
+          "type": "object",
+          "description": "Optional structural retention-class declaration.",
+          "properties": {
+            "retentionClass": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Optional retention class identifier.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "legalHoldProfile": {
+          "type": "object",
+          "description": "Optional structural legal-hold declaration.",
+          "properties": {
+            "allowLegalHold": {
+              "type": "boolean",
+              "description": "Whether legal hold is allowed.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "allowLegalHold"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "projectionRules": {
+          "type": "array",
+          "description": "Optional structural projection rules (F13-SEC-007).",
+          "items": {
+            "type": "object",
+            "description": "Structural audience projection declaration (F13-SEC-007). Conformance is structural only; no redaction execution.",
+            "properties": {
+              "audience": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253,
+                "description": "Profile-declared audience id; required.",
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "standard",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              },
+              "includes": {
+                "type": "array",
+                "description": "RFC 6901 pointers into the canonical view.",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "standard",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              },
+              "excludes": {
+                "type": "array",
+                "description": "RFC 6901 pointers; overlap with includes is invalid.",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "x-sovrunn-field-policy": {
+                  "classification": "Internal",
+                  "authorizedWriter": "creator",
+                  "authorizedReaders": [
+                    "governance",
+                    "internal",
+                    "operator"
+                  ],
+                  "mutability": "immutable",
+                  "retention": "standard",
+                  "redaction": "none",
+                  "residency": "any",
+                  "auditRequired": true
+                }
+              }
+            },
+            "required": [
+              "audience"
+            ],
+            "additionalProperties": false
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "idempotencyIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253,
+          "description": "Idempotency identity basis for the profile.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "limits": {
+          "type": "object",
+          "description": "Profile-owned ceilings within FEATURE-0012 outer bounds (F13-PROF-005). Evaluator ceilings may only narrow.",
+          "properties": {
+            "maxNodes": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum graph node count ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxEdges": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum graph edge count ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum graph depth ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxWidth": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum graph width ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxFanOut": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum graph fan-out ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxPayloadBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum payload bytes ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxFieldCount": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum field count ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxCalls": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum call count ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxConcurrency": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum concurrency ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxRetries": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum retry ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxLatencyMs": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum latency milliseconds ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxJurisdictions": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum jurisdiction count ceiling.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "maxCostBudget": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Opaque structural cost-budget tag.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "archival",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "compatibilityPolicy": {
+          "type": "object",
+          "description": "Version-compatibility and ownership reassessment metadata (F13-PROF-001).",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 253,
+              "description": "Optional compatibility-policy owner.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "minCompatibleVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63,
+              "description": "Optional minimum compatible version.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            },
+            "backwardCompatible": {
+              "type": "boolean",
+              "description": "Whether the profile declares backward compatibility.",
+              "x-sovrunn-field-policy": {
+                "classification": "Internal",
+                "authorizedWriter": "creator",
+                "authorizedReaders": [
+                  "governance",
+                  "internal",
+                  "operator"
+                ],
+                "mutability": "immutable",
+                "retention": "standard",
+                "redaction": "none",
+                "residency": "any",
+                "auditRequired": true
+              }
+            }
+          },
+          "required": [
+            "backwardCompatible"
+          ],
+          "additionalProperties": false,
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "fixtureRefs": {
+          "type": "array",
+          "description": "Optional conformance fixture references.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "reassessmentTriggers": {
+          "type": "array",
+          "description": "Optional reassessment trigger identifiers.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": [
+        "name",
+        "family",
+        "version",
+        "owner",
+        "lifecycleStatus",
+        "primaryForm",
+        "allowedAuthorityLevels",
+        "inputSchemaRef",
+        "typedResultSchemaRef",
+        "rationaleSchemaRef",
+        "obligationSchemaRef",
+        "scopeSemantics",
+        "actorSemantics",
+        "subjectSemantics",
+        "policySemantics",
+        "evidenceSemantics",
+        "auditSemantics",
+        "determinismBehavior",
+        "failureBehavior",
+        "validityRules",
+        "sensitivityCeiling",
+        "idempotencyIdentity",
+        "limits",
+        "compatibilityPolicy"
+      ],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "archival",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "additionalProperties": false
+}

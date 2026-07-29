@@ -1,0 +1,463 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/_common/decision-graph.json",
+  "title": "DecisionGraphDefinition",
+  "description": "Bounded decision-requirements graph definition (F13-COMP-003/004; design section 7.8; closures 3/4). Node and edge IDs are unique; edge id is distinct from (from, to). Approved node kinds are exactly input | evaluation | composition | decision. Orientation is dependency → dependent. Empty edges are allowed only for a single-node decision graph. Version/reference resolution belongs to bundle.ResolveGraph before Build; this schema is structural only.",
+  "type": "object",
+  "properties": {
+    "ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "description": "Graph identity/reference; required non-empty.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "description": "Graph version; (ref, version) resolved in bundle.ResolveGraph before Build.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Required non-empty graph nodes (minItems: 1).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "Stable node ID; unique within the graph.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "input",
+              "evaluation",
+              "composition",
+              "decision"
+            ],
+            "description": "Closed node-kind vocabulary.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          },
+          "payloadBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Optional bounded payload accounting; validated against bounds.maxPayloadBytes.",
+            "x-sovrunn-field-policy": {
+              "classification": "Internal",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Required-present edge list; empty allowed only for a single-node decision graph. Each edge has a stable id distinct from from/to.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "Stable edge ID; unique within the graph and distinct from from/to endpoints.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "Dependency node ID.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "Dependent node ID.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "parallelGroups": {
+      "type": "array",
+      "description": "Optional parallel groups of mutually independent node IDs.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "Stable parallel-group ID.",
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          },
+          "nodeIds": {
+            "type": "array",
+            "description": "Required non-empty member node IDs (minItems: 1); members must be mutually independent.",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63
+            },
+            "x-sovrunn-field-policy": {
+              "classification": "Public",
+              "authorizedWriter": "creator",
+              "authorizedReaders": [
+                "governance",
+                "internal",
+                "operator",
+                "customer"
+              ],
+              "mutability": "immutable",
+              "retention": "standard",
+              "redaction": "none",
+              "residency": "any",
+              "auditRequired": true
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nodeIds"
+        ],
+        "additionalProperties": false
+      },
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator",
+          "customer"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": false
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "description": "Required graph ceilings applied by Build under the inherited limit hierarchy.",
+      "properties": {
+        "maxNodes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum node count.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "maxEdges": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum edge count.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum dependency-path depth in edges.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "maxWidth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum width (nodes at any depth level).",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "maxFanOut": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum outbound fan-out from any node.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        },
+        "maxPayloadBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum total payload bytes across nodes.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "creator",
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": [
+        "maxNodes",
+        "maxEdges",
+        "maxDepth",
+        "maxWidth",
+        "maxFanOut",
+        "maxPayloadBytes"
+      ],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Internal",
+        "authorizedWriter": "creator",
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": [
+    "ref",
+    "version",
+    "nodes",
+    "edges",
+    "bounds"
+  ],
+  "additionalProperties": false
+}
