@@ -23,20 +23,21 @@ type DecisionRecord struct {
 
 // DecisionBody is the append-only DecisionRecord payload (design §7.1).
 type DecisionBody struct {
-	ProfileRef       ProfileRef               `json:"profileRef"`
-	Form             DecisionForm             `json:"form"`
-	Authority        DecisionAuthority        `json:"authority"`
-	Purpose          string                   `json:"purpose"`
-	Adjudication     *AdjudicationOutcome     `json:"adjudication,omitempty"` // adjudication facets only
-	SubjectRefs      []apimeta.TypedRef       `json:"subjectRefs,omitempty"`
-	Composition      *CompositionRef          `json:"composition,omitempty"`
-	Result           DecisionResultBody       `json:"result"`
-	Relationship     *DecisionRelationship    `json:"relationship,omitempty"`
-	RetryKey         string                   `json:"retryKey,omitempty"` // idempotency (F13-SCALE-001)
-	SemanticIdentity SemanticDecisionIdentity `json:"semanticIdentity"`   // F13-SCALE-002
-	Sovereignty      *SovereigntyCarrier      `json:"sovereignty,omitempty"`
-	Correlation      Correlation              `json:"correlation"`
-	Finality         Finality                 `json:"finality"` // always FINAL when persisted
+	ProfileRef        ProfileRef               `json:"profileRef"`
+	Form              DecisionForm             `json:"form"`
+	Authority         DecisionAuthority        `json:"authority"`
+	Purpose           string                   `json:"purpose"`
+	Adjudication      *AdjudicationOutcome     `json:"adjudication,omitempty"` // adjudication facets only
+	SubjectRefs       []apimeta.TypedRef       `json:"subjectRefs,omitempty"`
+	EvaluationResults []EvaluationResult       `json:"evaluationResults,omitempty"` // EmbeddedValue (design §7.1/§7.2)
+	Composition       *CompositionRef          `json:"composition,omitempty"`
+	Result            DecisionResultBody       `json:"result"`
+	Relationship      *DecisionRelationship    `json:"relationship,omitempty"`
+	RetryKey          string                   `json:"retryKey,omitempty"` // idempotency (F13-SCALE-001)
+	SemanticIdentity  SemanticDecisionIdentity `json:"semanticIdentity"`   // F13-SCALE-002
+	Sovereignty       *SovereigntyCarrier      `json:"sovereignty,omitempty"`
+	Correlation       Correlation              `json:"correlation"`
+	Finality          Finality                 `json:"finality"` // always FINAL when persisted
 }
 
 // ProfileRef is the versioned DecisionProfile identity (design §7.9).

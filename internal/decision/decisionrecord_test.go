@@ -146,6 +146,7 @@ func TestDecisionRecordOmitemptyOptionalRefs(t *testing.T) {
 		`"operationRef"`,
 		`"retryKey"`,
 		`"subjectRefs"`,
+		`"evaluationResults"`,
 		`"reasonCodes"`,
 		`"reasons"`,
 		`"alternatives"`,
