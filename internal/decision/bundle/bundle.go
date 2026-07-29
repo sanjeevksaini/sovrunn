@@ -133,6 +133,34 @@ func (v BundleView) Profile(id, version string) (decision.DecisionProfile, bool)
 	return p, ok
 }
 
+// ProfileIDExists reports whether any version of the profile id exists in the
+// derivative view (F13-PROF-007 unknown vs version-unsupported split).
+func (v BundleView) ProfileIDExists(id string) bool {
+	if v.profiles == nil || id == "" {
+		return false
+	}
+	for k := range v.profiles {
+		if k.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// KnownObligations returns obligation vocabulary identities present in the
+// registry as supported=true. Used by ValidateDecisionRecord orchestration
+// when no explicit SupportedObligations map is supplied.
+func (v BundleView) KnownObligations() map[string]bool {
+	if v.obligations == nil {
+		return nil
+	}
+	out := make(map[string]bool, len(v.obligations))
+	for k := range v.obligations {
+		out[k.ID] = true
+	}
+	return out
+}
+
 // Graph looks up a resolved graph Definition by composite (ref, version).
 func (v BundleView) Graph(ref, version string) (graph.Definition, bool) {
 	if v.graphs == nil {
