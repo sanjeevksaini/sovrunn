@@ -1,0 +1,52 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "DecisionRecord",
+  "metadata": {
+    "name": "f13-scope-08",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Platform",
+      "name": "platform",
+      "uid": "platform"
+    },
+    "uid": "decision-uid-f13-scope-08"
+  },
+  "record": {
+    "authority": "AUTHORITATIVE",
+    "correlation": {
+      "auditEventRefs": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "AuditEvent",
+          "name": "audit-f13-scope-08",
+          "uid": "audit-uid-f13-scope-08"
+        }
+      ]
+    },
+    "finality": "FINAL",
+    "form": "SELECTION",
+    "profileRef": {
+      "name": "FixtureLocalDecision",
+      "version": "1.0.0"
+    },
+    "purpose": "explicit-platform-normalizes-absent",
+    "result": {
+      "obligations": [],
+      "rationale": {
+        "reasonCodes": [
+          "CAPACITY_FIT"
+        ]
+      },
+      "typedResult": {
+        "selected": "pool-a"
+      }
+    },
+    "semanticIdentity": {
+      "basis": "fixture-local-v1",
+      "canonicalScope": "Platform",
+      "inputRefs": [
+        "input-1"
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@ package apiconform
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -414,19 +415,13 @@ func boundFixture(check DecisionCheck, run DecisionCheckRun) (DecisionCheckFixtu
 		if err != nil {
 			continue
 		}
-		switch {
-		case strings.Contains(rel, "negative/decision") || strings.HasPrefix(rel, "negative/"):
-			fx.DecisionRecordJSON = raw
-			fx.DecisionRecordPath = abs
-		case strings.Contains(rel, "decision/positive") || strings.Contains(rel, "decision-record"):
-			fx.DecisionRecordJSON = raw
-			fx.DecisionRecordPath = abs
-		case strings.Contains(rel, "audit-event"):
-			fx.AuditEventJSON = raw
-			fx.AuditEventPath = abs
-		case strings.Contains(rel, "bundle"):
+		switch classifyConformanceFixture(rel, raw) {
+		case fixtureClassBundle:
 			fx.BundleJSON = raw
 			fx.BundlePath = abs
+		case fixtureClassAuditEvent:
+			fx.AuditEventJSON = raw
+			fx.AuditEventPath = abs
 		default:
 			fx.DecisionRecordJSON = raw
 			fx.DecisionRecordPath = abs
@@ -436,6 +431,52 @@ func boundFixture(check DecisionCheck, run DecisionCheckRun) (DecisionCheckFixtu
 		return DecisionCheckFixture{}, false
 	}
 	return fx, true
+}
+
+const (
+	fixtureClassRecord     = "record"
+	fixtureClassAuditEvent = "audit"
+	fixtureClassBundle     = "bundle"
+)
+
+// classifyConformanceFixture prefers JSON kind sniffing so AuditEvent and
+// DecisionProfileBundle bodies under decision/positive/ load correctly
+// (T-029; RID-07). Path conventions remain the fallback.
+func classifyConformanceFixture(rel string, raw []byte) string {
+	switch sniffJSONKind(raw) {
+	case "DecisionProfileBundle":
+		return fixtureClassBundle
+	case "AuditEvent":
+		return fixtureClassAuditEvent
+	case "DecisionRecord":
+		return fixtureClassRecord
+	}
+	switch {
+	case strings.Contains(rel, "bundle"):
+		return fixtureClassBundle
+	case strings.Contains(rel, "audit-event"):
+		return fixtureClassAuditEvent
+	case strings.Contains(rel, "negative/decision") || strings.HasPrefix(rel, "negative/"):
+		return fixtureClassRecord
+	case strings.Contains(rel, "decision/positive") || strings.Contains(rel, "decision-record"):
+		return fixtureClassRecord
+	default:
+		return fixtureClassRecord
+	}
+}
+
+func sniffJSONKind(raw []byte) string {
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) == 0 || trimmed[0] != '{' {
+		return ""
+	}
+	var meta struct {
+		Kind string `json:"kind"`
+	}
+	if err := json.Unmarshal(trimmed, &meta); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(meta.Kind)
 }
 
 func fixtureBytes(inline []byte, path, moduleRoot string) ([]byte, error) {
@@ -722,6 +763,11 @@ func buildDecisionScenarioRegistry() []DecisionCheck {
 	return out
 }
 
+// SharedFixtureLocalBundlePath is the fixture-local DecisionProfileBundle used
+// by positive DecisionRecord scenarios (T-029). Profiles declare explicit
+// fixture-local values; no FEATURE-0013 defaults, fallbacks, or hidden maximums.
+const SharedFixtureLocalBundlePath = "decision/positive/_shared-bundle.json"
+
 func defaultFixturePathsFor(id DecisionScenarioID, kind DecisionCheckKind) []string {
 	name := string(id)
 	switch kind {
@@ -729,13 +775,17 @@ func defaultFixturePathsFor(id DecisionScenarioID, kind DecisionCheckKind) []str
 		return []string{"negative/decision/" + name + ".json"}
 	case DecisionCheckCompat:
 		if strings.HasPrefix(name, "F13-COMPAT-07") || strings.HasPrefix(name, "F13-COMPAT-08") {
-			return []string{"audit-event.json", "decision/positive/" + name + ".json"}
+			return []string{
+				"audit-event.json",
+				"decision/positive/" + name + ".json",
+				SharedFixtureLocalBundlePath,
+			}
 		}
-		return []string{"decision/positive/" + name + ".json"}
+		return []string{"decision/positive/" + name + ".json", SharedFixtureLocalBundlePath}
 	case DecisionCheckSchema, DecisionCheckReplay:
 		return nil
 	default:
-		return []string{"decision/positive/" + name + ".json"}
+		return []string{"decision/positive/" + name + ".json", SharedFixtureLocalBundlePath}
 	}
 }
 

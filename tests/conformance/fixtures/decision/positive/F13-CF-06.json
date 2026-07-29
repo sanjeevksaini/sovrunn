@@ -1,0 +1,61 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "DecisionRecord",
+  "metadata": {
+    "name": "f13-cf-06",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Project",
+      "name": "payments-production",
+      "uid": "project-123"
+    },
+    "uid": "decision-uid-f13-cf-06"
+  },
+  "record": {
+    "authority": "AUTHORITATIVE",
+    "composition": {
+      "graphRef": "fixture-graph",
+      "graphVersion": "1.0.0",
+      "inputRefs": [
+        "input-1"
+      ],
+      "strategyName": "all-of-v1",
+      "strategyVersion": "1.0.0"
+    },
+    "correlation": {
+      "auditEventRefs": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "AuditEvent",
+          "name": "audit-f13-cf-06",
+          "uid": "audit-uid-f13-cf-06"
+        }
+      ]
+    },
+    "finality": "FINAL",
+    "form": "SELECTION",
+    "profileRef": {
+      "name": "FixtureLocalDecision",
+      "version": "1.0.0"
+    },
+    "purpose": "bounded-hierarchical-composite",
+    "result": {
+      "obligations": [],
+      "rationale": {
+        "reasonCodes": [
+          "CAPACITY_FIT"
+        ]
+      },
+      "typedResult": {
+        "selected": "pool-a"
+      }
+    },
+    "semanticIdentity": {
+      "basis": "fixture-local-v1",
+      "canonicalScope": "Project:project-123",
+      "inputRefs": [
+        "input-1"
+      ]
+    }
+  }
+}

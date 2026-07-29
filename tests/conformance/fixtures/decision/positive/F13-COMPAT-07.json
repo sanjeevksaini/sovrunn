@@ -1,0 +1,52 @@
+{
+  "apiVersion": "governance.sovrunn.io/v1alpha1",
+  "kind": "DecisionRecord",
+  "metadata": {
+    "name": "f13-compat-07",
+    "scopeRef": {
+      "apiVersion": "tenancy.sovrunn.io/v1alpha1",
+      "kind": "Organization",
+      "name": "acme-org",
+      "uid": "6d7e8f901a2b3c4d5e6f708192a3b4c5"
+    },
+    "uid": "decision-uid-f13-compat-07"
+  },
+  "record": {
+    "authority": "AUTHORITATIVE",
+    "correlation": {
+      "auditEventRefs": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "AuditEvent",
+          "name": "audit-f13-compat-07",
+          "uid": "audit-uid-f13-compat-07"
+        }
+      ]
+    },
+    "finality": "FINAL",
+    "form": "SELECTION",
+    "profileRef": {
+      "name": "FixtureLocalDecision",
+      "version": "1.0.0"
+    },
+    "purpose": "organization-audit-regression-companion",
+    "result": {
+      "obligations": [],
+      "rationale": {
+        "reasonCodes": [
+          "CAPACITY_FIT"
+        ]
+      },
+      "typedResult": {
+        "selected": "pool-a"
+      }
+    },
+    "semanticIdentity": {
+      "basis": "fixture-local-v1",
+      "canonicalScope": "Organization:6d7e8f901a2b3c4d5e6f708192a3b4c5",
+      "inputRefs": [
+        "input-1"
+      ]
+    }
+  }
+}
