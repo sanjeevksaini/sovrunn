@@ -19,11 +19,35 @@ Inputs:
 For FEATURE-0013, load the approved consolidated architecture and only its
 approved ADH-2026-017 consolidation handoff. ADH-2026-014/015/016 are
 historical provenance, not instructions.
-Architecture section 27.8 is closed. Tasks may implement only approved
-`CONTRACT_NOW` design components and must not introduce a semantic choice,
-runtime for an `INVARIANT_FOR_LATER` item, or work for a `DEFERRED` item. Stop
-with `ARCHITECTURE_DECISION_REQUIRED` if the approved design is incomplete or
-contradicts the closed architecture.
+Architecture section 27.8 and section 27.9 are closed. Tasks may implement only
+approved `CONTRACT_NOW` design components and must not introduce a semantic
+choice, runtime for an `INVARIANT_FOR_LATER` item, or work for a `DEFERRED`
+item. Stop with `ARCHITECTURE_DECISION_REQUIRED` if the approved design is
+incomplete or contradicts the closed architecture.
+
+FEATURE-0013 section 27.9 anti-wandering controls are mandatory for tasks:
+- Plan implementation of `SecurityExceptionRef` only as structural evidence; do
+  not create a security-exception approval workflow or service.
+- Preserve strategy fail-open gating through the governing profile
+  `SecurityExceptionRef`; no independent strategy approval path.
+- Plan `GraphEdge` with stable edge ID distinct from `from`/`to`; graph version
+  validation belongs to bundle resolution before in-memory graph build.
+- Use only approved relationship codes and the deterministic relationship
+  conflict matrix from design.
+- Reuse `api/schemas/baseline/BASELINE_MANIFEST.json` and
+  `api/schemas/baseline/BASELINE_APPROVALS.json`; do not create
+  `api/schemas/SCHEMA_BASELINE_MANIFEST.json`, `api/schemas/diffs/`, or
+  `api/schemas/approvals/`.
+- Keep FEATURE-0013 AuditEvent domain extension types in the FEATURE-0013
+  domain/shared package; `apiconform` is binding/conformance support only.
+- Use `(id, version)` registry keys where design says versioned.
+- Enforce the design-selected present-empty `TrustCarrier` rule.
+- Keep projection conformance structural only; no redaction/projection runtime.
+- Matrix E tasks may stage architecture-owned values and blank human fields only;
+  do not calculate, infer, downgrade, or upgrade residual risk.
+- Reuse FEATURE-0012 decode/pre-scan primitives where package DAG permits; YAML
+  checks occur on `yaml.Node` before normalization.
+- Do not use superseded or patched design drafts as task input.
 
 Tasks must preserve and test the inherited limit hierarchy: FEATURE-0012
 platform/schema ceiling >= DecisionProfile ceiling >= evaluator-specific
@@ -86,7 +110,7 @@ Task generation rules:
   traceability row for every `AD-001` through `AD-045`, reproducing the exact
   class from architecture section 19. Generate implementation tasks only for
   `CONTRACT_NOW`; `INVARIANT_FOR_LATER` and `DEFERRED` rows produce no source
-  task.
+  task. Only `CONTRACT_NOW` items produce implementation tasks.
 - Final task must include full Docker verification, guardrails, artifact cleanup, and clean git status.
 
 Standard Docker verification command:

@@ -30,12 +30,36 @@ Use these repo context files:
 For FEATURE-0013, load the approved consolidated architecture and only its
 approved ADH-2026-017 consolidation handoff. ADH-2026-014/015/016 are
 historical provenance, not instructions.
-Architecture section 27.8 is closed. Resolve only representation and
-implementation mechanics explicitly delegated to design. If requirements ask
-design to choose a closed semantic, ownership, vocabulary, mapping, public
-error family, resource profile, scope authority, conformance identity, or
-cryptographic selection, stop with `ARCHITECTURE_DECISION_REQUIRED` instead of
-resolving it.
+Architecture section 27.8 and section 27.9 are closed. Resolve only
+representation and implementation mechanics explicitly delegated to design. If
+requirements ask design to choose a closed semantic, ownership, vocabulary,
+mapping, public error family, resource profile, scope authority, conformance
+identity, or cryptographic selection, stop with
+`ARCHITECTURE_DECISION_REQUIRED` instead of resolving it.
+
+FEATURE-0013 section 27.9 anti-wandering controls are mandatory:
+- `SecurityExceptionRef` is the only approved fail-open exception evidence
+  representation; strategy metadata is not an independent fail-open authority.
+- `GraphEdge` requires a stable edge ID distinct from `from`/`to`; graph version
+  validation belongs to bundle graph resolution before in-memory graph build.
+- Relationship conflict behavior must be deterministic and use only approved
+  `DECISION_RELATIONSHIP_*` codes.
+- Reuse the FEATURE-0012 baseline workflow exactly: `BASELINE_MANIFEST.json`
+  and `BASELINE_APPROVALS.json`; do not introduce parallel baseline paths.
+- FEATURE-0013 AuditEvent domain extension types live in a FEATURE-0013
+  domain/shared package; `apiconform` is binding/conformance support only.
+- Versioned registries use `(id, version)` keys unless explicitly unversioned.
+- Present-empty `TrustCarrier` never satisfies provenance, required trust,
+  identity generation, or compatibility evidence.
+- Projection pointers resolve against the profile-declared canonical view;
+  overlap includes equality and ancestor/descendant containment.
+- Matrix E automation must not calculate, infer, downgrade, or upgrade residual
+  risk levels.
+- JSON pre-scan uses JSON tokens; YAML pre-scan uses `yaml.Node` before
+  normalization.
+Do not read, copy, summarize, or reuse
+`.kiro/specs/decision-object-and-auditevent-standard/design.superseded-patched-draft.md`
+as a design source.
 
 Preserve the inherited limit hierarchy in every relevant component:
 FEATURE-0012 platform/schema ceiling >= DecisionProfile ceiling >=

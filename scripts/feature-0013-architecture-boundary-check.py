@@ -112,6 +112,14 @@ REQUIRED_AGENT_RESOURCES = (
 REQUIRED_ARCHITECTURE_CONTROLS = (
     "### 5.4 FEATURE-0012 resource-profile and boundary inheritance",
     "### 27.8 Closed architecture boundary for downstream stages",
+    "### 27.9 Downstream design closure controls for clean regeneration",
+    "SecurityExceptionRef",
+    "FEATURE-0012 baseline workflow reuse",
+    "AuditEvent package ownership",
+    "Versioned registry keys",
+    "TrustCarrier empty-state rule",
+    "Matrix E automation boundary",
+    "Scope pre-scan and decode reuse",
     "## 29. Architecture decision history",
     "FEATURE-0013 deliberately defines no new universal numeric decision-domain",
     "F13-SCOPE-01",
@@ -781,6 +789,103 @@ def validate_closed_runtime_wording(text: str, artifact: str) -> None:
             )
 
 
+
+def validate_known_forbidden_paths(text: str, artifact: str) -> None:
+    """Prevent regenerated artifacts from introducing parallel workflows."""
+    forbidden_paths = (
+        "api/schemas/SCHEMA_BASELINE_MANIFEST.json",
+        "api/schemas/diffs/",
+        "api/schemas/approvals/",
+    )
+    negation = re.compile(
+        r"\b(?:no|not|never|must not|shall not|prohibit(?:ed|s)?|"
+        r"without|do not|does not|is not|are not)\b",
+        re.I,
+    )
+    lines = text.splitlines()
+    for line_number, line in enumerate(lines, 1):
+        for forbidden_path in forbidden_paths:
+            if forbidden_path not in line:
+                continue
+            context = " ".join(lines[max(0, line_number - 2) : line_number + 1])
+            if not negation.search(context):
+                fail(
+                    f"{artifact} introduces forbidden parallel baseline path "
+                    f"{forbidden_path} at line {line_number}"
+                )
+
+
+def validate_feature_0013_tasks_guardrails(text: str) -> None:
+    """Make tasks generation fail closed before Cursor can wander."""
+    required_markers = (
+        "ADH-2026-017",
+        "section 27.9",
+        "SecurityExceptionRef",
+        "GraphEdge",
+        "BASELINE_MANIFEST.json",
+        "BASELINE_APPROVALS.json",
+        "metadata.scopeRef",
+        "calling-domain-owned",
+        "DecisionRequest",
+        "pending-decision",
+        "CONTRACT_NOW",
+        "INVARIANT_FOR_LATER",
+        "DEFERRED",
+        "Architecture traceability",
+    )
+    for marker in required_markers:
+        if marker not in text:
+            fail(f"tasks guardrail missing required marker: {marker}")
+
+    forbidden_task_patterns = (
+        (
+            r"(?:create|implement|add|define|generate).{0,80}"
+            r"(?:shared|canonical|common).{0,40}DecisionRequest",
+            "shared DecisionRequest implementation",
+        ),
+        (
+            r"(?:create|implement|add|define|generate).{0,80}"
+            r"(?:PendingDecision|DeferredDecision|DecisionPending|pending[- ]decision)",
+            "pending-decision response implementation",
+        ),
+        (
+            r"(?:create|implement|add|define|generate).{0,80}"
+            r"(?:AuditScope|second scope|parallel scope)",
+            "parallel scope authority implementation",
+        ),
+        (
+            r"(?:create|implement|add|define|generate).{0,80}"
+            r"(?:SCHEMA_BASELINE_MANIFEST|api/schemas/diffs|api/schemas/approvals)",
+            "parallel baseline workflow implementation",
+        ),
+        (
+            r"(?:create|implement|add|define|generate).{0,80}"
+            r"(?:approval workflow|security exception workflow|exception approval service)",
+            "runtime approval workflow implementation",
+        ),
+        (
+            r"(?:calculate|derive|infer|recompute|downgrade|upgrade).{0,80}"
+            r"(?:residual risk|Matrix E risk|risk level)",
+            "automated Matrix E residual-risk calculation",
+        ),
+    )
+    negation = re.compile(
+        r"\b(?:no|not|never|must not|shall not|prohibit(?:ed|s)?|"
+        r"without|do not|does not|is not|are not)\b",
+        re.I,
+    )
+    lines = text.splitlines()
+    for line_number, line in enumerate(lines, 1):
+        context = " ".join(lines[max(0, line_number - 2) : line_number + 1])
+        for pattern, meaning in forbidden_task_patterns:
+            if re.search(pattern, line, re.I) and not negation.search(context):
+                fail(f"tasks may plan {meaning} at line {line_number}")
+
+    if "Only `CONTRACT_NOW`" not in text and "only `CONTRACT_NOW`" not in text:
+        fail("tasks must state that only CONTRACT_NOW items produce implementation tasks")
+    if not re.search(r"no\s+source\s+task|produce\s+no\s+source\s+task", text, re.I):
+        fail("tasks must state INVARIANT_FOR_LATER/DEFERRED rows produce no source task")
+
 def architecture_preflight(*, require_approval: bool = True) -> None:
     architecture = require_file(ARCHITECTURE)
     for marker in REQUIRED_ARCHITECTURE_CONTROLS:
@@ -929,6 +1034,9 @@ def post_generation(stage: str) -> None:
     validate_request_response_boundary(text, stage)
     validate_risk_namespace(text, stage)
     validate_closed_runtime_wording(text, stage)
+    validate_known_forbidden_paths(text, stage)
+    if stage == "tasks":
+        validate_feature_0013_tasks_guardrails(text)
 
     if "SUPERSEDED DRAFT" in text:
         fail(f"active {stage} artifact is a superseded draft")
