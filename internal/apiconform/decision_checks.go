@@ -62,6 +62,11 @@ type DecisionCheckFixture struct {
 	WantViolationCode  apiproblem.ViolationCode
 	WantViolationField string
 
+	// Optional orchestration context for ValidateDecisionRecordWith (T-030
+	// negative envelopes may carry ParallelScopeFields, sensitivity, trust,
+	// relationship Established, and SupportedObligations).
+	RecordOptions validate.DecisionRecordOptions
+
 	// Replay kernel inputs (DecisionCheckReplay).
 	CapturedEvaluations []decision.EvaluationResult
 	Strategy            compose.Strategy
@@ -276,7 +281,23 @@ func CheckDecisionRecordNegative(
 	wantCode apiproblem.ViolationCode,
 	wantField string,
 ) *apiproblem.Problem {
-	_, prob := CheckDecisionRecordConformance(data, mode, view)
+	return CheckDecisionRecordNegativeWith(data, mode, view, validate.DecisionRecordOptions{}, wantCode, wantField)
+}
+
+// CheckDecisionRecordNegativeWith is CheckDecisionRecordNegative with optional
+// orchestration context (T-030 negative envelopes).
+func CheckDecisionRecordNegativeWith(
+	data []byte,
+	mode apivalid.DecodeMode,
+	view bundle.BundleView,
+	opts validate.DecisionRecordOptions,
+	wantCode apiproblem.ViolationCode,
+	wantField string,
+) *apiproblem.Problem {
+	if mode == 0 {
+		mode = apivalid.ModeReadRepresentation
+	}
+	_, prob := validate.DecodeAndValidateDecisionRecordWith(data, mode, view, opts)
 	return assertSingleDecisionViolation(prob, wantCode, wantField)
 }
 
@@ -378,7 +399,9 @@ func runNegative(check DecisionCheck, fx DecisionCheckFixture, mode apivalid.Dec
 		res.Detail = err.Error()
 		return res
 	}
-	if assertProb := CheckDecisionRecordNegative(data, mode, view, fx.WantViolationCode, fx.WantViolationField); assertProb != nil {
+	if assertProb := CheckDecisionRecordNegativeWith(
+		data, mode, view, fx.RecordOptions, fx.WantViolationCode, fx.WantViolationField,
+	); assertProb != nil {
 		res.Problem = assertProb
 		res.Detail = assertProb.Detail
 		return res
@@ -416,6 +439,19 @@ func boundFixture(check DecisionCheck, run DecisionCheckRun) (DecisionCheckFixtu
 			continue
 		}
 		switch classifyConformanceFixture(rel, raw) {
+		case fixtureClassNegativeEnvelope:
+			env, err := parseNegativeDecisionFixture(raw)
+			if err != nil {
+				continue
+			}
+			fx.DecisionRecordJSON = env.DecisionRecordJSON
+			fx.WantViolationCode = env.WantViolationCode
+			fx.WantViolationField = env.WantViolationField
+			fx.RecordOptions = env.RecordOptions
+			if len(env.BundleJSON) > 0 {
+				fx.BundleJSON = env.BundleJSON
+			}
+			fx.DecisionRecordPath = abs
 		case fixtureClassBundle:
 			fx.BundleJSON = raw
 			fx.BundlePath = abs
@@ -427,6 +463,12 @@ func boundFixture(check DecisionCheck, run DecisionCheckRun) (DecisionCheckFixtu
 			fx.DecisionRecordPath = abs
 		}
 	}
+	if check.Kind == DecisionCheckNegative {
+		if fx.WantViolationCode == "" || len(fx.DecisionRecordJSON) == 0 {
+			return DecisionCheckFixture{}, false
+		}
+		return fx, true
+	}
 	if len(fx.DecisionRecordJSON) == 0 && len(fx.AuditEventJSON) == 0 && len(fx.BundleJSON) == 0 {
 		return DecisionCheckFixture{}, false
 	}
@@ -434,9 +476,10 @@ func boundFixture(check DecisionCheck, run DecisionCheckRun) (DecisionCheckFixtu
 }
 
 const (
-	fixtureClassRecord     = "record"
-	fixtureClassAuditEvent = "audit"
-	fixtureClassBundle     = "bundle"
+	fixtureClassRecord           = "record"
+	fixtureClassAuditEvent       = "audit"
+	fixtureClassBundle           = "bundle"
+	fixtureClassNegativeEnvelope = "negative-envelope"
 )
 
 // classifyConformanceFixture prefers JSON kind sniffing so AuditEvent and
@@ -444,6 +487,8 @@ const (
 // (T-029; RID-07). Path conventions remain the fallback.
 func classifyConformanceFixture(rel string, raw []byte) string {
 	switch sniffJSONKind(raw) {
+	case "DecisionNegativeFixture":
+		return fixtureClassNegativeEnvelope
 	case "DecisionProfileBundle":
 		return fixtureClassBundle
 	case "AuditEvent":
@@ -457,6 +502,15 @@ func classifyConformanceFixture(rel string, raw []byte) string {
 	case strings.Contains(rel, "audit-event"):
 		return fixtureClassAuditEvent
 	case strings.Contains(rel, "negative/decision") || strings.HasPrefix(rel, "negative/"):
+		// Prefer envelope when present; otherwise treat as bare DecisionRecord
+		// (legacy inline unit-test payloads).
+		if sniffJSONKind(raw) == "DecisionNegativeFixture" {
+			return fixtureClassNegativeEnvelope
+		}
+		// Heuristic: wrapper objects carry wantViolationCode.
+		if bytes.Contains(bytes.TrimSpace(raw), []byte(`"wantViolationCode"`)) {
+			return fixtureClassNegativeEnvelope
+		}
 		return fixtureClassRecord
 	case strings.Contains(rel, "decision/positive") || strings.Contains(rel, "decision-record"):
 		return fixtureClassRecord

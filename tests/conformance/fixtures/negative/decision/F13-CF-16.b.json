@@ -1,0 +1,264 @@
+{
+  "kind": "DecisionNegativeFixture",
+  "wantViolationCode": "DECISION_COMPOSITION_LIMIT_EXCEEDED",
+  "wantViolationField": "/bounds/maxDepth",
+  "bundle": {
+    "apiVersion": "governance.sovrunn.io/v1alpha1",
+    "kind": "DecisionProfileBundle",
+    "spec": {
+      "expectedTrustState": "TRUSTED",
+      "graphs": [
+        {
+          "bounds": {
+            "maxDepth": 8,
+            "maxEdges": 32,
+            "maxFanOut": 4,
+            "maxNodes": 16,
+            "maxPayloadBytes": 65536,
+            "maxWidth": 8
+          },
+          "edges": [
+            {
+              "from": "in-1",
+              "id": "e1",
+              "to": "eval-1"
+            },
+            {
+              "from": "in-1",
+              "id": "e2",
+              "to": "eval-2"
+            },
+            {
+              "from": "eval-1",
+              "id": "e3",
+              "to": "comp-1"
+            },
+            {
+              "from": "eval-2",
+              "id": "e4",
+              "to": "comp-1"
+            },
+            {
+              "from": "comp-1",
+              "id": "e5",
+              "to": "dec-1"
+            }
+          ],
+          "nodes": [
+            {
+              "id": "in-1",
+              "kind": "input"
+            },
+            {
+              "id": "eval-1",
+              "kind": "evaluation"
+            },
+            {
+              "id": "eval-2",
+              "kind": "evaluation"
+            },
+            {
+              "id": "comp-1",
+              "kind": "composition"
+            },
+            {
+              "id": "dec-1",
+              "kind": "decision"
+            }
+          ],
+          "parallelGroups": [
+            {
+              "id": "pg-1",
+              "nodeIds": [
+                "eval-1",
+                "eval-2"
+              ]
+            }
+          ],
+          "ref": "fixture-graph",
+          "version": "1.0.0"
+        }
+      ],
+      "obligations": [
+        {
+          "id": "audit-retain",
+          "version": "1.0.0"
+        },
+        {
+          "id": "notify-owner",
+          "version": "1.0.0"
+        }
+      ],
+      "profiles": [
+        {
+          "apiVersion": "governance.sovrunn.io/v1alpha1",
+          "kind": "DecisionProfile",
+          "metadata": {
+            "name": "fixture-local-decision",
+            "scopeRef": {
+              "apiVersion": "core.sovrunn.io/v1alpha1",
+              "kind": "Project",
+              "name": "payments-production",
+              "uid": "project-123"
+            },
+            "uid": "profile-uid-fixture-local-1"
+          },
+          "spec": {
+            "acceptedCompositionStrategies": [
+              "all-of-v1"
+            ],
+            "acceptedEvaluationTypes": [
+              {
+                "type": "capacity-evaluator",
+                "version": "1.2.0"
+              },
+              {
+                "limits": {
+                  "maxDepth": 1,
+                  "maxEdges": 16,
+                  "maxFanOut": 2,
+                  "maxLatencyMs": 1000,
+                  "maxNodes": 8,
+                  "maxPayloadBytes": 32768,
+                  "maxWidth": 4
+                },
+                "type": "narrowing-evaluator",
+                "version": "1.0.0"
+              }
+            ],
+            "allowedAuthorityLevels": [
+              "AUTHORITATIVE",
+              "ADVISORY",
+              "RECOMMENDATION",
+              "SIMULATION"
+            ],
+            "failureBehavior": {
+              "declaredFailureModes": [
+                "timeout",
+                "evaluator-unavailable"
+              ],
+              "failPosture": "FAIL_CLOSED",
+              "insufficientEvidence": "fail-closed",
+              "timeoutBehavior": "fail-closed"
+            },
+            "family": "conformance",
+            "idempotencyIdentity": "fixture-local-v1",
+            "inputSchemaRef": "schemas/fixture-input@1",
+            "lifecycleStatus": "Active",
+            "limits": {
+              "maxDepth": 1,
+              "maxEdges": 32,
+              "maxFanOut": 4,
+              "maxLatencyMs": 2000,
+              "maxNodes": 16,
+              "maxPayloadBytes": 65536,
+              "maxWidth": 8
+            },
+            "name": "FixtureLocalDecision",
+            "obligationSchemaRef": "schemas/fixture-obligation@1",
+            "owner": "platform-governance",
+            "primaryForm": "SELECTION",
+            "rationaleSchemaRef": "schemas/fixture-rationale@1",
+            "scopeSemantics": {
+              "allowedScopes": [
+                "Organization",
+                "OrganizationUnit",
+                "Tenant",
+                "Project",
+                "Provider"
+              ],
+              "platformAllowed": true
+            },
+            "secondaryFacets": [
+              "ADJUDICATION",
+              "RANKING",
+              "CLASSIFICATION",
+              "RESOLUTION",
+              "ALLOCATION",
+              "PLAN",
+              "ASSESSMENT",
+              "RECOMMENDATION"
+            ],
+            "sensitivityCeiling": "INTERNAL",
+            "typedResultSchemaRef": "schemas/fixture-result@1",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "strategies": [
+        {
+          "id": "all-of-v1",
+          "version": "1.0.0"
+        }
+      ],
+      "trust": {
+        "canonicalizationMethod": "fixture-canon-v1",
+        "coveredFields": "/spec",
+        "digestAlgorithm": "fixture-digest-v1",
+        "signatureAlgorithm": "fixture-sig-v1",
+        "state": "TRUSTED"
+      }
+    }
+  },
+  "decisionRecord": {
+    "apiVersion": "governance.sovrunn.io/v1alpha1",
+    "kind": "DecisionRecord",
+    "metadata": {
+      "name": "f13-cf-16-b",
+      "scopeRef": {
+        "apiVersion": "core.sovrunn.io/v1alpha1",
+        "kind": "Project",
+        "name": "payments-production",
+        "uid": "project-123"
+      },
+      "uid": "decision-uid-f13-cf-16-b"
+    },
+    "record": {
+      "authority": "AUTHORITATIVE",
+      "composition": {
+        "graphRef": "fixture-graph",
+        "graphVersion": "1.0.0",
+        "inputRefs": [
+          "input-1"
+        ],
+        "strategyName": "all-of-v1",
+        "strategyVersion": "1.0.0"
+      },
+      "correlation": {
+        "auditEventRefs": [
+          {
+            "apiVersion": "governance.sovrunn.io/v1alpha1",
+            "kind": "AuditEvent",
+            "name": "audit-f13-cf-16-b",
+            "uid": "audit-uid-f13-cf-16-b"
+          }
+        ]
+      },
+      "finality": "FINAL",
+      "form": "SELECTION",
+      "profileRef": {
+        "name": "FixtureLocalDecision",
+        "version": "1.0.0"
+      },
+      "purpose": "conformance-negative-f13-cf-16-b",
+      "result": {
+        "obligations": [],
+        "rationale": {
+          "reasonCodes": [
+            "CAPACITY_FIT"
+          ]
+        },
+        "typedResult": {
+          "selected": "pool-a"
+        }
+      },
+      "semanticIdentity": {
+        "basis": "fixture-local-v1",
+        "canonicalScope": "Project:project-123",
+        "inputRefs": [
+          "input-1"
+        ]
+      }
+    }
+  }
+}
