@@ -24,12 +24,10 @@ import (
 // 29–31). Stateful stages remain CONTRACT_ONLY / NO_TASK and are proven only
 // over explicitly supplied in-memory values — no production store/handlers.
 //
-// This file intentionally does not import internal/validation (imports_test.go
-// allowlists that dependency only for feature0014_positive_test.go). Offline
-// rejection uses structural validation, apiref constraints, DecodeJSON, and
-// local deterministic checks equivalent to the locked FEATURE-0014 semantics.
-// Topology/deletion assertions reuse Task 20 same-package helpers over
-// supplied fixture state.
+// Topology/completeness evaluation reuses the Task 20 same-package surface and
+// its narrow wrappers around the canonical Task 17/18 helpers. This file does
+// not import internal/validation and does not reimplement those hierarchy or
+// child-existence rules.
 
 const feature0014NegativeFixturesDir = "tests/conformance/fixtures/negative/feature0014"
 
@@ -221,8 +219,14 @@ func TestFeature0014NegativeFixturesRejectedWithStableCodeAndPointer(t *testing.
 					t.Fatalf("DecodeJSON: %#v", prob)
 				}
 				v := feature0014ValidateGeo(loc.Spec.Geo)
-				if v == nil || v.Field != "/spec/geo/subdivisionCode" {
-					t.Fatalf("expected prefix mismatch at /spec/geo/subdivisionCode, got %#v", v)
+				if v == nil {
+					t.Fatal("expected geo prefix mismatch violation")
+				}
+				if v.Field != "/spec/geo/subdivisionCode" {
+					t.Fatalf("field = %q, want /spec/geo/subdivisionCode", v.Field)
+				}
+				if v.Code != apiproblem.ViolationCode(apiproblem.CodeValidationFailed) {
+					t.Fatalf("violation code = %q, want VALIDATION_FAILED", v.Code)
 				}
 				return string(apiproblem.CodeValidationFailed), v.Field
 			},
@@ -269,7 +273,7 @@ func TestFeature0014NegativeFixturesRejectedWithStableCodeAndPointer(t *testing.
 						return string(v.Code), v.Field
 					}
 				}
-				t.Fatalf("missing /status/history UNKNOWN_FIELD in %#v", violations)
+				t.Fatalf("missing exact UNKNOWN_FIELD at /status/history in %#v", violations)
 				return "", ""
 			},
 		},
@@ -333,18 +337,102 @@ func TestFeature0014BoundaryUnassignedGeoAcceptedWithoutInference(t *testing.T) 
 	}
 }
 
+func TestFeature0014IsolationCrossScopeOperationMatrix(t *testing.T) {
+	t.Parallel()
+
+	root := moduleRoot(t)
+	set := mustLoadFeature0014CompletenessSet(t, root)
+	provider := findFeature0014ByKind(t, set, resources.KindProvider)
+	loc := findFeature0014ByKind(t, set, resources.KindProviderLocation)
+	if !feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		loc.Kind, loc.UID, loc.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must accept the same-provider parent/child link")
+	}
+
+	// Cross-provider / cross-owner supplied state: CompletenessValue projections
+	// already carry ProviderScopeUID from CompletenessValueFrom*; a mismatched
+	// scope UID is isolation evidence without reimplementing EvaluateScopeAndHierarchy.
+	crossLoc := loc
+	crossLoc.ProviderScopeUID = "provider-uid-other-owner"
+	if feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		crossLoc.Kind, crossLoc.UID, crossLoc.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must reject the cross-owner Provider scope UID")
+	}
+
+	absent := apiproblem.New(apiproblem.CodeResourceNotFound)
+	absentJSON, err := json.Marshal(absent)
+	if err != nil {
+		t.Fatalf("marshal absent: %v", err)
+	}
+
+	// Live get/list/reference handlers are CONTRACT_ONLY / NO_TASK. This table
+	// therefore verifies their shared response contract; it does not claim to
+	// execute three production paths.
+	operations := []string{"get", "list", "reference"}
+
+	for _, operation := range operations {
+		operation := operation
+		t.Run(operation, func(t *testing.T) {
+			t.Parallel()
+			denied := apivalid.SafeDenial(apivalid.DenyNotDisclosed)
+			if denied == nil {
+				t.Fatal("denial Problem must be non-nil")
+			}
+			deniedJSON, err := json.Marshal(denied)
+			if err != nil {
+				t.Fatalf("marshal denial: %v", err)
+			}
+			if denied.Status != absent.Status || denied.Code != absent.Code {
+				t.Fatalf("%s denial status/code = %d %q, want %d %q",
+					operation, denied.Status, denied.Code, absent.Status, absent.Code)
+			}
+			if !bytes.Equal(deniedJSON, absentJSON) {
+				t.Fatalf("%s denial body must be byte-identical to genuinely absent target:\ndenied=%s\nabsent=%s",
+					operation, deniedJSON, absentJSON)
+			}
+			if len(denied.Violations) != 0 {
+				t.Fatalf("%s denial must not disclose target existence: %#v", operation, denied.Violations)
+			}
+			lower := strings.ToLower(string(deniedJSON))
+			for _, banned := range []string{
+				"password", "token", "private_key", "credential", "secret",
+				"endpoint", "nativeid", "provider-uid-other-owner",
+				strings.ToLower(crossLoc.UID), strings.ToLower(provider.UID),
+			} {
+				if banned != "" && strings.Contains(lower, banned) {
+					t.Fatalf("%s denial must not embed target/native/secret detail %q", operation, banned)
+				}
+			}
+		})
+	}
+}
+
 func TestFeature0014IsolationCrossProviderNoExistenceDisclosure(t *testing.T) {
 	t.Parallel()
 
-	providerA := feature0014Topo{Kind: resources.KindProvider, UID: "provider-uid-a", ProviderScopeUID: "provider-uid-a"}
-	providerB := feature0014Topo{Kind: resources.KindProvider, UID: "provider-uid-b", ProviderScopeUID: "provider-uid-b"}
-	locUnderB := feature0014Topo{Kind: resources.KindProviderLocation, UID: "location-uid-b", ProviderScopeUID: providerB.ProviderScopeUID}
+	root := moduleRoot(t)
+	set := mustLoadFeature0014CompletenessSet(t, root)
+	provider := findFeature0014ByKind(t, set, resources.KindProvider)
+	loc := findFeature0014ByKind(t, set, resources.KindProviderLocation)
 
-	if feature0014ScopeAndHierarchyAgree(providerA, locUnderB) {
-		t.Fatal("cross-provider parent/child must not agree")
+	if !feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		loc.Kind, loc.UID, loc.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must accept the same-provider path")
 	}
-	if !feature0014ScopeAndHierarchyAgree(providerB, locUnderB) {
-		t.Fatal("same-provider path must agree")
+
+	cross := loc
+	cross.ProviderScopeUID = "provider-uid-b"
+	if feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		cross.Kind, cross.UID, cross.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must reject cross-provider scope UIDs")
 	}
 
 	denied := apivalid.SafeDenial(apivalid.DenyNotDisclosed)
@@ -377,16 +465,33 @@ func TestFeature0014IsolationCrossProviderNoExistenceDisclosure(t *testing.T) {
 func TestFeature0014IsolationScopeUIDMismatchRejected(t *testing.T) {
 	t.Parallel()
 
-	parent := feature0014Topo{Kind: resources.KindProviderLocation, UID: "loc-uid-a", ProviderScopeUID: "provider-uid-a"}
-	child := feature0014Topo{Kind: resources.KindProviderDatacenter, UID: "dc-uid-cross", ProviderScopeUID: "provider-uid-b"}
-	if feature0014ScopeAndHierarchyAgree(parent, child) {
-		t.Fatal("parent/child Provider scope-UID mismatch must reject")
+	root := moduleRoot(t)
+	set := mustLoadFeature0014CompletenessSet(t, root)
+	parent := findFeature0014ByKind(t, set, resources.KindProviderLocation)
+	child := findFeature0014ByKind(t, set, resources.KindProviderDatacenter)
+
+	if child.ParentUID != parent.UID {
+		t.Fatalf("authorized CompletenessValue must link datacenter ParentUID to location uid")
+	}
+	mismatched := child
+	mismatched.ProviderScopeUID = "provider-uid-b"
+	if feature0014CanonicalScopeAndHierarchyAgree(
+		parent.Kind, parent.UID, parent.ProviderScopeUID,
+		mismatched.Kind, mismatched.UID, mismatched.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must reject parent/child Provider scope-UID mismatch")
 	}
 
 	denied := apivalid.SafeDenial(apivalid.DenyNotDisclosed)
 	absent := apiproblem.New(apiproblem.CodeResourceNotFound)
-	dj, _ := json.Marshal(denied)
-	aj, _ := json.Marshal(absent)
+	dj, err := json.Marshal(denied)
+	if err != nil {
+		t.Fatalf("marshal denial: %v", err)
+	}
+	aj, err := json.Marshal(absent)
+	if err != nil {
+		t.Fatalf("marshal absent: %v", err)
+	}
 	if !bytes.Equal(dj, aj) {
 		t.Fatal("scope-UID mismatch denial must be byte-identical to absent 404")
 	}
@@ -427,18 +532,22 @@ func TestFeature0014ConnectivityDenyListAndNoInference(t *testing.T) {
 		}
 	}
 
-	providerA := feature0014Topo{Kind: resources.KindProvider, UID: "prov-a", ProviderScopeUID: "prov-a"}
-	providerB := feature0014Topo{Kind: resources.KindProvider, UID: "prov-b", ProviderScopeUID: "prov-b"}
-	locA := feature0014Topo{Kind: resources.KindProviderLocation, UID: "loc-a", ProviderScopeUID: "prov-a"}
-	locB := feature0014Topo{Kind: resources.KindProviderLocation, UID: "loc-b", ProviderScopeUID: "prov-b"}
-	if feature0014ScopeAndHierarchyAgree(providerA, locB) {
-		t.Fatal("cross-provider must not imply hierarchy agreement or connectivity")
+	set := mustLoadFeature0014CompletenessSet(t, root)
+	provider := findFeature0014ByKind(t, set, resources.KindProvider)
+	loc := findFeature0014ByKind(t, set, resources.KindProviderLocation)
+	if !feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		loc.Kind, loc.UID, loc.ProviderScopeUID,
+	) {
+		t.Fatal("canonical Task 17 helper must accept same-provider topology")
 	}
-	if !feature0014ScopeAndHierarchyAgree(providerA, locA) {
-		t.Fatal("same-provider hierarchy agreement is topology only, not connectivity")
-	}
-	if feature0014ScopeAndHierarchyAgree(providerB, locA) {
-		t.Fatal("cross-provider under shared owner must not agree")
+	cross := loc
+	cross.ProviderScopeUID = "prov-b"
+	if feature0014CanonicalScopeAndHierarchyAgree(
+		provider.Kind, provider.UID, provider.ProviderScopeUID,
+		cross.Kind, cross.UID, cross.ProviderScopeUID,
+	) {
+		t.Fatal("cross-provider under shared owner must not agree or imply connectivity")
 	}
 }
 
@@ -508,8 +617,8 @@ func TestFeature0014DeletionBlockedWithChildrenNoCascade(t *testing.T) {
 	set := mustLoadFeature0014CompletenessSet(t, root)
 	provider := findFeature0014ByKind(t, set, resources.KindProvider)
 
-	if !feature0014HasImmediateChildrenFromSet(provider.UID, provider.ProviderScopeUID, provider.Kind, set) {
-		t.Fatal("provider with children must report child existence")
+	if !feature0014CanonicalHasImmediateChildren(provider, set) {
+		t.Fatal("canonical Task 18 helper must report the Provider's immediate child")
 	}
 
 	prob := apiproblem.New(apiproblem.CodeDeleteBlocked).
@@ -523,10 +632,11 @@ func TestFeature0014DeletionBlockedWithChildrenNoCascade(t *testing.T) {
 		t.Fatalf("delete-blocked problem = %#v", prob)
 	}
 
-	before := make(map[string]string, len(set))
+	before := map[string]string{}
 	for _, v := range set {
 		before[v.UID] = v.ParentUID
 	}
+	// Blocked delete mutates nothing: no cascade and no silent reparenting.
 	for _, v := range set {
 		if before[v.UID] != v.ParentUID {
 			t.Fatalf("blocked delete must not reparent %s", v.UID)
@@ -534,8 +644,8 @@ func TestFeature0014DeletionBlockedWithChildrenNoCascade(t *testing.T) {
 	}
 
 	stack := findFeature0014ByKind(t, set, resources.KindInfrastructureStack)
-	if feature0014HasImmediateChildrenFromSet(stack.UID, stack.ProviderScopeUID, stack.Kind, set) {
-		t.Fatal("leaf stack must not be delete-blocked by topology children")
+	if feature0014CanonicalHasImmediateChildren(stack, set) {
+		t.Fatal("canonical Task 18 helper must not report children for the leaf stack")
 	}
 }
 
@@ -580,31 +690,195 @@ func TestFeature0014ConcurrentDeleteCreateDeterministic(t *testing.T) {
 	t.Parallel()
 
 	root := moduleRoot(t)
-	set := mustLoadFeature0014CompletenessSet(t, root)
-	provider := findFeature0014ByKind(t, set, resources.KindProvider)
-	wantChildren := feature0014HasImmediateChildrenFromSet(provider.UID, provider.ProviderScopeUID, provider.Kind, set)
-	if !wantChildren {
+	base := mustLoadFeature0014CompletenessSet(t, root)
+	provider := findFeature0014ByKind(t, base, resources.KindProvider)
+	stack := findFeature0014ByKind(t, base, resources.KindInfrastructureStack)
+
+	if !feature0014CanonicalHasImmediateChildren(provider, base) {
 		t.Fatal("fixture provider must have children for concurrency proof")
 	}
-	currentRV := "rv-provider-1"
 
+	// Mutable ledger over CompletenessValue projections so competing
+	// delete/create transitions run without a production store.
+	var mu sync.Mutex
+	live := append(base[:0:0], base...)
+	versions := make(map[string]string, len(base))
+	retired := make(map[string]struct{})
+	parents := make(map[string]string, len(base))
+	for _, v := range base {
+		versions[v.UID] = "rv-1"
+		parents[v.UID] = v.ParentUID
+	}
+
+	findIndexLocked := func(uid string) int {
+		for i, v := range live {
+			if v.UID == uid {
+				return i
+			}
+		}
+		return -1
+	}
+	deleteLocked := func(uid string) {
+		out := live[:0]
+		for _, v := range live {
+			if v.UID == uid {
+				continue
+			}
+			out = append(out, v)
+		}
+		live = out
+		delete(versions, uid)
+		retired[uid] = struct{}{}
+	}
+	parentsUnchangedLocked := func() bool {
+		for _, v := range live {
+			if parents[v.UID] != v.ParentUID {
+				return false
+			}
+		}
+		return true
+	}
+
+	tryDelete := func(uid, ifMatch string) string {
+		mu.Lock()
+		defer mu.Unlock()
+		index := findIndexLocked(uid)
+		if index < 0 {
+			return string(apiproblem.CodeResourceNotFound)
+		}
+		if prob := apivalid.CheckIfMatch(ifMatch, versions[uid]); prob != nil {
+			return string(prob.Code)
+		}
+		if feature0014CanonicalHasImmediateChildren(live[index], live) {
+			if !parentsUnchangedLocked() {
+				return "CASCADE_OR_REPARENT"
+			}
+			return string(apiproblem.CodeDeleteBlocked)
+		}
+		deleteLocked(uid)
+		if !parentsUnchangedLocked() {
+			return "CASCADE_OR_REPARENT"
+		}
+		return "OK"
+	}
+
+	tryCreateReuse := func(uid string) string {
+		mu.Lock()
+		defer mu.Unlock()
+		if _, wasRetired := retired[uid]; wasRetired {
+			return "UID_REUSE_REJECTED"
+		}
+		if findIndexLocked(uid) >= 0 {
+			return "ALREADY_EXISTS"
+		}
+		candidate := stack
+		candidate.UID = uid
+		live = append(live, candidate)
+		versions[uid] = "rv-1"
+		parents[uid] = stack.ParentUID
+		return "OK"
+	}
+
+	tryStaleReplace := func(uid string) string {
+		mu.Lock()
+		defer mu.Unlock()
+		current, ok := versions[uid]
+		if !ok {
+			return string(apiproblem.CodeResourceNotFound)
+		}
+		if prob := apivalid.CheckIfMatch("rv-stale", current); prob == nil {
+			return "STALE_ACCEPTED"
+		}
+		return string(apiproblem.CodeStaleResourceVersion)
+	}
+
+	const workers = 32
 	var wg sync.WaitGroup
-	errCh := make(chan string, 64)
-	for i := 0; i < 32; i++ {
+	errCh := make(chan string, workers*8)
+
+	// Phase 1: compete while children exist — parent deletes block; stale writes conflict.
+	for i := 0; i < workers; i++ {
+		wg.Add(3)
+		go func() {
+			defer wg.Done()
+			if code := tryDelete(provider.UID, "rv-1"); code != string(apiproblem.CodeDeleteBlocked) {
+				errCh <- "parent delete expected DELETE_BLOCKED, got " + code
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			if code := tryStaleReplace(provider.UID); code != string(apiproblem.CodeStaleResourceVersion) {
+				errCh <- "stale replace expected STALE_RESOURCE_VERSION, got " + code
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			if code := tryDelete(provider.UID, "rv-stale"); code != string(apiproblem.CodeStaleResourceVersion) {
+				errCh <- "stale parent delete expected STALE_RESOURCE_VERSION, got " + code
+			}
+		}()
+	}
+	wg.Wait()
+
+	// Phase 2: deletion of the live leaf and recreation of the same UID start
+	// together. Whichever obtains the lock first, creation must be rejected:
+	// either the UID is still live or it has already been permanently retired.
+	start := make(chan struct{})
+	deleteResult := make(chan string, 1)
+	createResult := make(chan string, 1)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		<-start
+		deleteResult <- tryDelete(stack.UID, "rv-1")
+	}()
+	go func() {
+		defer wg.Done()
+		<-start
+		createResult <- tryCreateReuse(stack.UID)
+	}()
+	close(start)
+	wg.Wait()
+	if code := <-deleteResult; code != "OK" {
+		t.Fatalf("competing leaf delete: got %s want OK", code)
+	}
+	if code := <-createResult; code != "ALREADY_EXISTS" && code != "UID_REUSE_REJECTED" {
+		t.Fatalf("competing recreation must be rejected, got %s", code)
+	}
+
+	// Finish the valid leaf-first deletion order after the leaf race.
+	order := []string{
+		resources.KindDatacenterFailureDomain,
+		resources.KindProviderDatacenter,
+		resources.KindProviderLocation,
+		resources.KindProvider,
+	}
+	deletedStackUID := stack.UID
+	for _, kind := range order {
+		var uid string
+		mu.Lock()
+		for _, v := range live {
+			if v.Kind == kind {
+				uid = v.UID
+				break
+			}
+		}
+		mu.Unlock()
+		if uid == "" {
+			t.Fatalf("missing live kind %s during leaf-first concurrency phase", kind)
+		}
+		if code := tryDelete(uid, "rv-1"); code != "OK" {
+			t.Fatalf("leaf-first delete of %s: got %s want OK", kind, code)
+		}
+	}
+
+	// Permanent retirement remains stable under concurrent later attempts.
+	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if got := feature0014HasImmediateChildrenFromSet(provider.UID, provider.ProviderScopeUID, provider.Kind, set); got != wantChildren {
-				errCh <- "child-existence diverged under concurrency"
-				return
-			}
-			if prob := apivalid.CheckIfMatch("rv-stale", currentRV); prob == nil ||
-				prob.Code != apiproblem.CodeStaleResourceVersion {
-				errCh <- "stale-version rejection diverged under concurrency"
-				return
-			}
-			if prob := apivalid.CheckIfMatch(currentRV, currentRV); prob != nil {
-				errCh <- "matching If-Match diverged under concurrency"
+			if code := tryCreateReuse(deletedStackUID); code != "UID_REUSE_REJECTED" {
+				errCh <- "deleted UID reuse expected UID_REUSE_REJECTED, got " + code
 			}
 		}()
 	}
@@ -613,78 +887,14 @@ func TestFeature0014ConcurrentDeleteCreateDeterministic(t *testing.T) {
 	for msg := range errCh {
 		t.Fatal(msg)
 	}
-}
 
-// --- local helpers (no internal/validation import) ---
-
-type feature0014Topo struct {
-	Kind             string
-	UID              string
-	ProviderScopeUID string
-}
-
-func feature0014RequiredParentKind(childKind string) (string, bool) {
-	switch childKind {
-	case resources.KindProviderLocation:
-		return resources.KindProvider, true
-	case resources.KindProviderDatacenter:
-		return resources.KindProviderLocation, true
-	case resources.KindDatacenterFailureDomain:
-		return resources.KindProviderDatacenter, true
-	case resources.KindInfrastructureStack:
-		return resources.KindDatacenterFailureDomain, true
-	default:
-		return "", false
+	mu.Lock()
+	defer mu.Unlock()
+	if len(live) != 0 {
+		t.Fatalf("after leaf-first deletes live set must be empty, got %d", len(live))
 	}
-}
-
-func feature0014ScopeAndHierarchyAgree(parent, child feature0014Topo) bool {
-	required, ok := feature0014RequiredParentKind(child.Kind)
-	if !ok || parent.Kind != required {
-		return false
-	}
-	if parent.ProviderScopeUID == "" || child.ProviderScopeUID == "" {
-		return false
-	}
-	return parent.ProviderScopeUID == child.ProviderScopeUID
-}
-
-func feature0014HasImmediateChildrenFromSet(parentUID, parentScopeUID, parentKind string, set any) bool {
-	rv := reflect.ValueOf(set)
-	if rv.Kind() != reflect.Slice {
-		return false
-	}
-	requiredChild, ok := feature0014RequiredChildKind(parentKind)
-	if !ok {
-		return false
-	}
-	for i := 0; i < rv.Len(); i++ {
-		item := rv.Index(i)
-		if item.Kind() == reflect.Pointer {
-			item = item.Elem()
-		}
-		kind := item.FieldByName("Kind").String()
-		parent := item.FieldByName("ParentUID").String()
-		scope := item.FieldByName("ProviderScopeUID").String()
-		if parent == parentUID && kind == requiredChild && scope == parentScopeUID && scope != "" {
-			return true
-		}
-	}
-	return false
-}
-
-func feature0014RequiredChildKind(parentKind string) (string, bool) {
-	switch parentKind {
-	case resources.KindProvider:
-		return resources.KindProviderLocation, true
-	case resources.KindProviderLocation:
-		return resources.KindProviderDatacenter, true
-	case resources.KindProviderDatacenter:
-		return resources.KindDatacenterFailureDomain, true
-	case resources.KindDatacenterFailureDomain:
-		return resources.KindInfrastructureStack, true
-	default:
-		return "", false
+	if _, ok := retired[deletedStackUID]; !ok {
+		t.Fatal("deleted stack UID must remain permanently retired")
 	}
 }
 
@@ -695,7 +905,7 @@ func feature0014ValidateGeo(geo *resources.ProviderLocationGeo) *apiproblem.Viol
 	if len(geo.CountryCode) != 2 || !feature0014GeoCountryRe.MatchString(geo.CountryCode) {
 		return &apiproblem.Violation{
 			Field:   "/spec/geo/countryCode",
-			Code:    apiproblem.ViolationCode(apischema.CodePatternMismatch),
+			Code:    apiproblem.ViolationOutOfRange,
 			Message: "countryCode must be two uppercase ASCII letters",
 		}
 	}
@@ -712,7 +922,7 @@ func feature0014ValidateGeo(geo *resources.ProviderLocationGeo) *apiproblem.Viol
 	if geo.SubdivisionCode[:2] != geo.CountryCode {
 		return &apiproblem.Violation{
 			Field:   "/spec/geo/subdivisionCode",
-			Code:    apiproblem.ViolationCode("VALIDATION_FAILED"),
+			Code:    apiproblem.ViolationCode(apiproblem.CodeValidationFailed),
 			Message: "subdivisionCode country prefix must equal countryCode",
 		}
 	}
@@ -824,22 +1034,12 @@ func feature0014StructuralCodeField(
 		t.Fatalf("Validate: %v", err)
 	}
 	for _, v := range violations {
-		if v.Field != wantField {
-			continue
-		}
-		if wantVCode != "" && string(v.Code) != wantVCode {
-			continue
-		}
-		return string(apiproblem.CodeValidationFailed), v.Field
-	}
-	// Fall back: accept any structural code at the expected field when the
-	// schema may report PATTERN_MISMATCH or OUT_OF_RANGE interchangeably.
-	for _, v := range violations {
-		if v.Field == wantField {
+		if v.Field == wantField && string(v.Code) == wantVCode {
 			return string(apiproblem.CodeValidationFailed), v.Field
 		}
 	}
-	t.Fatalf("expected structural violation at %s, got %#v", wantField, violations)
+	t.Fatalf("expected exact structural violation field=%s code=%s, got %#v",
+		wantField, wantVCode, violations)
 	return "", ""
 }
 
