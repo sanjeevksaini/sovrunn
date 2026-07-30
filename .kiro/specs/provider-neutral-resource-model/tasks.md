@@ -468,15 +468,24 @@ Risks: F14-R03, F14-R04
 Implementation class: IMPLEMENT
 Files: `internal/validation/provider.go`, `internal/validation/provider_test.go`
 Notes:
+- Reuse the corrected Task 12 pattern: inject `apivalid.StructuralValidator`,
+  validate the canonical Provider schema, adapt to `apivalid.CommonSemantic`,
+  and use `apiref.Constraint` for any explicit scope reference. Do not duplicate
+  FEATURE-0012 name, label, annotation, typed-reference, or limit validation.
 - Structural: required fields, DNS-style name, unknown/duplicate-field
   rejection, bounds, status-not-user-authored (§6.4, F14-REQ-22).
 - Semantic: `metadata.scopeRef.kind` must be exactly `Platform` or
   `Organization`; reject any owner field or `ownerRef` used as governance scope
-  (F14-REQ-05); `spec` must contain no domain field.
+  (F14-REQ-05); `spec` must contain no domain field. Preserve FEATURE-0012's
+  canonical Platform representation: absent/nil `scopeRef` is Platform, while
+  an explicit complete Platform reference is an accepted input alternate;
+  Organization requires a complete typed reference. Configure common semantic
+  validation to allow canonical Platform scope.
 - Reuse `internal/apivalid`; emit inherited Problem Details; redact native
   values/secrets (F14-REQ-31). Pure offline validator; no cross-resource lookup.
 Tests:
-- Positive: Platform-scoped and Organization-scoped `Provider` both pass.
+- Positive: canonical nil/absent Platform scope, explicit complete Platform
+  scope, and Organization scope each pass.
 - Negative: `scopeRef.kind` other than Platform/Organization; owner field or
   `ownerRef`-as-scope; any domain `spec` field; user-authored `status` — each
   rejected.

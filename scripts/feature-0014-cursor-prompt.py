@@ -24,14 +24,25 @@ CORE = [
     ".kiro/specs/provider-neutral-resource-model/design.md",
 ]
 
+VALIDATOR_REUSE_CONTEXT = [
+    "internal/validation/providerlocation.go",
+    "internal/validation/providerlocation_test.go",
+    "internal/apivalid/structural.go",
+    "internal/apivalid/stage_semantic.go",
+    "internal/apivalid/limits.go",
+    "internal/apivalid/translate.go",
+    "internal/apiref/constraints.go",
+    "internal/apimeta/scope.go",
+]
+
 CONTEXT_BY_TASK = {
     **{n: ["internal/resources/organization.go", "internal/apimeta/objectmeta.go", "internal/apimeta/typemeta.go", "internal/apimeta/scope.go", "internal/apiref/reference.go"] for n in range(1, 6)},
     **{n: ["api/schemas/project.json", "api/schemas/_common/object-meta.json", "api/schemas/_common/scope-ref.json", "api/schemas/_common/typed-ref.json", "api/schemas/_common/condition.json"] for n in range(6, 11)},
     12: ["internal/resources/providerlocation.go", "internal/validation/organization.go", "internal/apivalid/structural.go", "internal/apivalid/limits.go"],
-    13: ["internal/resources/provider.go", "internal/validation/organization.go", "internal/apivalid/structural.go", "internal/apivalid/limits.go"],
-    14: ["internal/resources/providerdatacenter.go", "internal/validation/organization.go", "internal/apivalid/structural.go", "internal/apivalid/limits.go"],
-    15: ["internal/resources/datacenterfailuredomain.go", "internal/validation/organization.go", "internal/apivalid/structural.go", "internal/apivalid/limits.go"],
-    16: ["internal/resources/infrastructurestack.go", "internal/validation/organization.go", "internal/apivalid/structural.go", "internal/apivalid/limits.go"],
+    13: ["internal/resources/provider.go", "api/schemas/provider.json", *VALIDATOR_REUSE_CONTEXT],
+    14: ["internal/resources/providerdatacenter.go", "api/schemas/provider-datacenter.json", *VALIDATOR_REUSE_CONTEXT],
+    15: ["internal/resources/datacenterfailuredomain.go", "api/schemas/datacenter-failure-domain.json", *VALIDATOR_REUSE_CONTEXT],
+    16: ["internal/resources/infrastructurestack.go", "api/schemas/infrastructure-stack.json", *VALIDATOR_REUSE_CONTEXT],
     17: ["internal/resources/provider.go", "internal/resources/providerlocation.go", "internal/resources/providerdatacenter.go", "internal/resources/datacenterfailuredomain.go", "internal/resources/infrastructurestack.go", "internal/apiref/constraints.go", "internal/apimeta/scope.go"],
     18: ["internal/resources/provider.go", "internal/resources/providerlocation.go", "internal/resources/providerdatacenter.go", "internal/resources/datacenterfailuredomain.go", "internal/resources/infrastructurestack.go", "internal/validation/topology.go", "internal/apicond/condition.go", "internal/apimeta/uid.go"],
     19: ["internal/resources/provider.go", "internal/resources/providerlocation.go", "internal/resources/providerdatacenter.go", "internal/resources/datacenterfailuredomain.go", "internal/resources/infrastructurestack.go", "api/schemas/provider.json", "api/schemas/provider-location.json", "api/schemas/provider-datacenter.json", "api/schemas/datacenter-failure-domain.json", "api/schemas/infrastructure-stack.json", "internal/apiconform/bindings.go", "internal/apiconform/bindings_test.go", "internal/apiconform/schemaregistry.go"],
