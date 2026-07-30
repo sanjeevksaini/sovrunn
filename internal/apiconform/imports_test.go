@@ -75,11 +75,12 @@ var allowedGrammarImports = map[string]map[string]struct{}{
 	},
 }
 
-// allowedNonGrammarImports encodes FEATURE-0013 one-way domain imports into
+// allowedNonGrammarImports encodes approved one-way domain imports into
 // apiconform for TypeBinding registration and executable conformance checks.
-// apiconform remains binding/conformance support only; it may import
-// decision/validate one-directionally (validate must not import apiconform;
-// design §5 DAG; T-016/T-027).
+// apiconform remains binding/conformance support only: domain packages must
+// not import apiconform. FEATURE-0013 authorizes decision-domain imports
+// (design §5 DAG; T-016/T-027); FEATURE-0014 authorizes resources solely for
+// schema-to-Go type binding (design §3.1 I-6; Task 19).
 var allowedNonGrammarImports = map[string]map[string]struct{}{
 	"apiconform": {
 		modulePath + "/internal/decision":          {},
@@ -87,6 +88,7 @@ var allowedNonGrammarImports = map[string]map[string]struct{}{
 		modulePath + "/internal/decision/graph":    {},
 		modulePath + "/internal/decision/compose":  {},
 		modulePath + "/internal/decision/validate": {},
+		modulePath + "/internal/resources":         {},
 	},
 }
 

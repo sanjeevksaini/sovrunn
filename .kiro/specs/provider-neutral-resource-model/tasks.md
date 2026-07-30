@@ -706,6 +706,11 @@ Notes:
   `bindings.go`/`schemaregistry.go`); reuse the shared primitives (`apimeta`,
   `apiref`, `apicond`, `apiproblem`, `apischema`, `apivalid`) unchanged
   (F14-REQ-21).
+- The repository import guardrail authorizes the same one-way binding direction
+  used by the conformance harness: `internal/apiconform` may import
+  `internal/resources` only to bind the five concrete Go contract types;
+  `internal/resources` must not import `internal/apiconform`. Do not duplicate
+  resource structs or weaken any other grammar-package import boundary.
 - Assert the FEATURE-0014 kind inventory resolves to exactly the five kinds and
   their collections (design §5), with no alias kind and no active superseded
   stack-kind name (F14-REQ-01, F14-REQ-02, F14-REQ-03).
