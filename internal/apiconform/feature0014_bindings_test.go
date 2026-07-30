@@ -133,6 +133,54 @@ func TestFeature0014ProviderNeutrality(t *testing.T) {
 	}
 }
 
+func TestFeature0014ProviderNeutralityRejectsEndpointFields(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{
+		"endpoint",
+		"endpoints",
+		"apiEndpoint",
+		"providerEndpoint",
+		"managementEndpoints",
+		"baseURL",
+		"serviceUrl",
+	} {
+		name := name
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if !isFeature0014EndpointField(name) {
+				t.Fatalf("endpoint-bearing field %q was accepted", name)
+			}
+		})
+	}
+
+	for _, name := range []string{"technology", "countryCode", "providerLocationRef"} {
+		if isFeature0014EndpointField(name) {
+			t.Fatalf("ordinary FEATURE-0014 field %q was rejected as an endpoint", name)
+		}
+	}
+
+	type nestedEndpoint struct {
+		APIEndpoint string `json:"apiEndpoint"`
+	}
+	type contractWithEndpoint struct {
+		Spec nestedEndpoint `json:"spec"`
+	}
+	if err := checkGoTypeNoFeature0014EndpointFields(reflect.TypeOf(contractWithEndpoint{})); err == nil {
+		t.Fatal("recursive Go-type scan accepted apiEndpoint")
+	}
+
+	type nestedURL struct {
+		BaseURL string `json:"baseURL"`
+	}
+	type contractWithURL struct {
+		Items []nestedURL `json:"items"`
+	}
+	if err := checkGoTypeNoFeature0014EndpointFields(reflect.TypeOf(contractWithURL{})); err == nil {
+		t.Fatal("recursive Go-type scan accepted baseURL")
+	}
+}
+
 func TestFeature0014BindingsLoadViaSchemaRegistry(t *testing.T) {
 	t.Parallel()
 

@@ -265,6 +265,15 @@ func CheckFeature0014ProviderNeutrality(moduleRoot string) []FitnessFinding {
 					Message: fmt.Sprintf("property %q embeds provider-native token %q", prop, token),
 				})
 			}
+			if isFeature0014EndpointField(prop) {
+				findings = append(findings, FitnessFinding{
+					Check:   FitnessCheckNoProviderSDKInCoreCustomer,
+					Schema:  binding.SchemaPath,
+					Path:    "/" + prop,
+					Code:    CodeFitnessProviderNativeField,
+					Message: fmt.Sprintf("property %q embeds provider endpoint semantics", prop),
+				})
+			}
 		}
 		if err := checkGoTypeNoProviderSDK(binding.GoType); err != nil {
 			findings = append(findings, FitnessFinding{
@@ -284,8 +293,74 @@ func CheckFeature0014ProviderNeutrality(moduleRoot string) []FitnessFinding {
 				Message: err.Error(),
 			})
 		}
+		if err := checkGoTypeNoFeature0014EndpointFields(binding.GoType); err != nil {
+			findings = append(findings, FitnessFinding{
+				Check:   FitnessCheckNoProviderSDKInCoreCustomer,
+				Schema:  binding.SchemaPath,
+				Path:    "/",
+				Code:    CodeFitnessProviderNativeField,
+				Message: err.Error(),
+			})
+		}
 	}
 	return findings
+}
+
+// isFeature0014EndpointField rejects endpoint-bearing contract field names.
+// FEATURE-0014 owns descriptive topology only; endpoint and URL fields belong
+// to the adjacent integration/runtime boundary (F14-REQ-18, F14-REQ-25).
+func isFeature0014EndpointField(name string) bool {
+	norm := normalizeFitnessIdent(name)
+	return strings.Contains(norm, "endpoint") || strings.HasSuffix(norm, "url")
+}
+
+func checkGoTypeNoFeature0014EndpointFields(t reflect.Type) error {
+	seen := map[reflect.Type]struct{}{}
+	var walk func(reflect.Type) error
+	walk = func(tt reflect.Type) error {
+		if tt == nil {
+			return nil
+		}
+		for tt.Kind() == reflect.Pointer {
+			tt = tt.Elem()
+		}
+		if _, ok := seen[tt]; ok {
+			return nil
+		}
+		seen[tt] = struct{}{}
+
+		switch tt.Kind() {
+		case reflect.Struct:
+			for i := 0; i < tt.NumField(); i++ {
+				field := tt.Field(i)
+				name := field.Name
+				if tag := field.Tag.Get("json"); tag != "" {
+					jsonName, _, _ := strings.Cut(tag, ",")
+					if jsonName == "-" {
+						continue
+					}
+					if jsonName != "" {
+						name = jsonName
+					}
+				}
+				if isFeature0014EndpointField(name) {
+					return fmt.Errorf("Go field %q embeds provider endpoint semantics", name)
+				}
+				if err := walk(field.Type); err != nil {
+					return err
+				}
+			}
+		case reflect.Slice, reflect.Array:
+			return walk(tt.Elem())
+		case reflect.Map:
+			if err := walk(tt.Key()); err != nil {
+				return err
+			}
+			return walk(tt.Elem())
+		}
+		return nil
+	}
+	return walk(t)
 }
 
 func assertFeature0014StatusConditionGrammar(goType reflect.Type) error {
