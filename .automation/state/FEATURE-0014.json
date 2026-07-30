@@ -10,7 +10,7 @@
   "feature_id": "FEATURE-0014",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0014",
   "human_gate_required": "false",
-  "last_committed_task": "22",
+  "last_committed_task": "21",
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "requirements_approval_source": "openai_machine_review",
   "requirements_approval_token": "APPROVED_FOR_DESIGN",
@@ -19,11 +19,11 @@
   "requirements_approved_sha256": "6d70789bf8e5979d8bea59669093e63261beb693c3c4bd4806d7d21142aaff7e",
   "slug": "provider-neutral-resource-model",
   "spec_path": ".kiro/specs/provider-neutral-resource-model",
-  "status": "cursor_task_22_committed",
-  "tasks_approval_source": "openai_machine_review",
+  "status": "cursor_task_22_revision_ready",
+  "tasks_approval_source": "user_approved_task22_execution_gate_correction",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
-  "tasks_approved_at": "2026-07-30T10:46:36Z",
-  "tasks_approved_sha256": "dd40e56670ef44caa1fe37a8c1006e28233a00d3b504963bfa2ae271918f6426",
+  "tasks_approved_at": "2026-07-30T11:46:33Z",
+  "tasks_approved_sha256": "0f21163fe8675727c36f698bad1e495c5534d77e4abaae7d0bc85d36a2af4ac9",
   "title": "Provider-Neutral Resource Model",
-  "updated_at": "2026-07-30T11:39:02.390884+00:00"
+  "updated_at": "2026-07-30T11:55:37.557394+00:00"
 }

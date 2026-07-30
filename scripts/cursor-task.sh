@@ -217,6 +217,14 @@ if [[ "$SUCCESS" != "1" ]]; then
   fail "Cursor CLI failed for all recommended models. See $LOG_FILE"
 fi
 
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  mapfile -t TASK_RECEIPTS < <(grep -E '^TASK_STATUS: (COMPLETE|BLOCKED)$' "$LOG_FILE" || true)
+  if [[ "${#TASK_RECEIPTS[@]}" != "1" || "${TASK_RECEIPTS[0]:-}" != "TASK_STATUS: COMPLETE" ]]; then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_task_${TASK}_blocked" >/dev/null || true
+    fail "Cursor task did not produce exactly one COMPLETE receipt; refusing verification and commit. See $LOG_FILE"
+  fi
+fi
+
 if [[ "$VERIFY_AFTER" == "1" ]]; then
   info "Running post-Cursor verification"
   ./scripts/verify.sh | tee -a "$LOG_FILE"

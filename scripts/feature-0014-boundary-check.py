@@ -135,7 +135,7 @@ def ids(text: str, pattern: str) -> set[str]:
     return set(re.findall(pattern, text))
 
 
-def check_repository(c: Check, stage: str) -> None:
+def check_repository(c: Check, stage: str, mode: str) -> None:
     for path in REQUIRED_CONTEXT:
         c.require_file(path)
 
@@ -187,8 +187,9 @@ def check_repository(c: Check, stage: str) -> None:
         data = json.loads(read(state))
         c.require(data.get("slug") == SLUG and data.get("feature_branch") == "feature-0014-provider-neutral-resource-model",
                   "FEATURE-0014 automation state resolves slug and branch")
-        c.require(data.get("current_stage") == stage,
-                  f"FEATURE-0014 automation state matches requested stage {stage}")
+        expected_stage = "cursor" if mode == "execution" else stage
+        c.require(data.get("current_stage") == expected_stage,
+                  f"FEATURE-0014 automation state matches requested stage {expected_stage}")
     if config.is_file():
         c.require(f"feature_id={FEATURE}" in read(config) and f"slug={SLUG}" in read(config),
                   "Kiro config resolves FEATURE-0014 identity")
@@ -264,6 +265,20 @@ def check_tasks_authorization(c: Check) -> None:
               "tasks input has APPROVED_FOR_TASKS token")
     c.require(state.get("design_approved_sha256") == digest,
               "approved design digest matches current tasks input")
+
+
+def check_cursor_authorization(c: Check) -> None:
+    state_path = Path(f".automation/state/{FEATURE}.json")
+    tasks_path = SPEC_DIR / "tasks.md"
+    if not state_path.is_file() or not tasks_path.is_file():
+        c.require(False, "cursor execution requires approval state and tasks")
+        return
+    state = json.loads(read(state_path))
+    digest = hashlib.sha256(tasks_path.read_bytes()).hexdigest()
+    c.require(state.get("tasks_approval_token") == "APPROVED_FOR_CURSOR",
+              "cursor execution has APPROVED_FOR_CURSOR token")
+    c.require(state.get("tasks_approved_sha256") == digest,
+              "approved tasks digest matches current cursor input")
 
 
 def check_design_changed_files(c: Check) -> None:
@@ -426,13 +441,20 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--feature", default=FEATURE)
     parser.add_argument("--stage", choices=("requirements", "design", "tasks"), default="requirements")
-    parser.add_argument("--mode", choices=("readiness", "pre", "prompt", "post", "review"), default="readiness")
+    parser.add_argument(
+        "--mode",
+        choices=("readiness", "pre", "prompt", "post", "review", "execution"),
+        default="readiness",
+    )
     args = parser.parse_args()
     if args.feature != FEATURE:
         raise SystemExit(f"ERROR: validator supports only {FEATURE}")
 
+    if args.mode == "execution" and args.stage != "tasks":
+        raise SystemExit("ERROR: execution mode is valid only for the approved tasks artifact")
+
     c = Check()
-    check_repository(c, args.stage)
+    check_repository(c, args.stage, args.mode)
     check_changed_files(c)
     if args.stage == "design":
         check_design_authorization(c)
@@ -449,6 +471,9 @@ def main() -> None:
             check_design_changed_files(c)
         elif args.stage == "tasks":
             check_tasks_changed_files(c)
+    elif args.mode == "execution":
+        check_cursor_authorization(c)
+        check_stage(c, args.stage, True)
     elif args.mode == "pre":
         check_stage(c, args.stage, False)
     c.finish()

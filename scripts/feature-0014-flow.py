@@ -105,12 +105,25 @@ def main() -> None:
         writable = paths(block)
         print(f"\n=== FEATURE-0014 Task {task_id} ===", flush=True)
         run(["make", "ff-cursor-task-auto", "FEATURE=FEATURE-0014", f"TASK={task_id}"])
+        completed_state = json.loads(STATE.read_text())
+        if completed_state.get("status") != f"cursor_task_{task_id}_completed":
+            raise SystemExit(
+                f"Task {task_id} has no verified COMPLETE receipt; "
+                f"status={completed_state.get('status')!r}"
+            )
         changed = changed_paths()
         outside = [p for p in changed if not allowed(p, writable)]
         if outside:
             raise SystemExit(f"Task {task_id} changed out-of-scope paths: {outside}")
         run(["make", "ff-guardrails", "FEATURE=FEATURE-0014"])
         run(["make", "feature-0014-cursor-boundary-check", f"TASK={task_id}"])
+        if task_id == 22:
+            run([
+                "make",
+                "feature-0014-architecture-boundary-check",
+                "STAGE=tasks",
+                "MODE=execution",
+            ])
         run(["make", "ff-verify", "FEATURE=FEATURE-0014"])
         run(["make", "ff-commit-task", "FEATURE=FEATURE-0014", f"TASK={task_id}", f"MESSAGE={commit_message(block)}"])
 

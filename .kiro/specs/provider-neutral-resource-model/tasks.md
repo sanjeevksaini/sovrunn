@@ -846,7 +846,10 @@ Notes:
 - Run, from the engineering guardrails and `Makefile`, in this order: `make fmt`;
   `make vet`; `make test`; `make test-race` (equivalently `go test -race
   ./...`); `make build`; `make ff-guardrails FEATURE=FEATURE-0014`; and
-  `make feature-0014-architecture-boundary-check STAGE=tasks`. Also run the
+  `make feature-0014-architecture-boundary-check STAGE=tasks MODE=execution`.
+  Execution mode preserves the strict tasks-stage post-generation gate while
+  requiring `current_stage=cursor`, `APPROVED_FOR_CURSOR`, and the approved
+  `tasks.md` digest for implementation closure. Also run the
   Docker verification `./scripts/verify.sh` (image `golang:1.22`, which runs
   `gofmt -l .`, `go vet ./...`, `go test ./...`).
 - Artifact cleanup before the changed-file check: `find . -name ".DS_Store"
@@ -864,7 +867,7 @@ Notes:
   apply to the committed FEATURE-0014 changes.
 Tests:
 - Positive: all Go packages build; `make test` and `make test-race` pass; the
-  boundary check passes for `STAGE=tasks`; guardrails pass.
+  boundary check passes for `STAGE=tasks MODE=execution`; guardrails pass.
 - Negative: an injected out-of-boundary change (for example an added
   connectivity field, an alias kind, or the superseded stack-kind name) causes
   the boundary check or a conformance deny-list test to fail (confirming the
@@ -874,7 +877,8 @@ Tests:
 Acceptance criteria: all listed commands pass for the committed FEATURE-0014
 changes, the working tree contains only approved FEATURE-0014 paths plus this
 feature's committed changes, no build artifact or generated file is staged, and
-the FEATURE-0014 boundary check passes for the tasks stage.
+the FEATURE-0014 boundary check passes for the approved tasks artifact during
+the cursor execution stage.
 Commit message: `chore(FEATURE-0014): run approved verification, guardrail, and boundary checks`
 
 ---

@@ -33,6 +33,13 @@ Implement only `FEATURE-0014` Task `{{TASK_ID}}`.
 6. Run `git diff --name-only HEAD` and stop if any changed path is outside **Writable paths** or the pre-existing automation-state change.
 7. Report files changed, tests run/results, boundary confirmation, security considerations, and any blocker. Do not commit.
 
+End the response with exactly one machine-readable receipt line:
+
+- `TASK_STATUS: COMPLETE` only when every task acceptance command passed and no blocker remains.
+- `TASK_STATUS: BLOCKED` when any required command failed, an architecture decision is required, or the writable boundary prevents completion.
+
+Never report `COMPLETE` alongside `ARCHITECTURE_DECISION_REQUIRED`, `BOUNDARY_CHANGE_REQUIRED`, or an unresolved failed acceptance command.
+
 ## Approved task block
 
 {{TASK_BLOCK}}
