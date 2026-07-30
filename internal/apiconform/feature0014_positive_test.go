@@ -606,6 +606,38 @@ func mustLoadFeature0014CompletenessSet(t *testing.T, root string) []validation.
 	return set
 }
 
+// feature0014CanonicalScopeAndHierarchyAgree is the narrow test-only surface
+// through which Task 21 conformance tests exercise the canonical Task 17
+// helper. Keeping the validation import here preserves the exact file-scoped
+// grammar-boundary exception authorized for Task 20.
+func feature0014CanonicalScopeAndHierarchyAgree(
+	parentKind, parentUID, parentProviderScopeUID string,
+	childKind, childUID, childProviderScopeUID string,
+) bool {
+	return validation.EvaluateScopeAndHierarchy(
+		validation.TopologyValue{
+			Kind:             parentKind,
+			UID:              parentUID,
+			ProviderScopeUID: parentProviderScopeUID,
+		},
+		validation.TopologyValue{
+			Kind:             childKind,
+			UID:              childUID,
+			ProviderScopeUID: childProviderScopeUID,
+		},
+	)
+}
+
+// feature0014CanonicalHasImmediateChildren is the narrow test-only surface
+// through which Task 21 conformance tests exercise the canonical Task 18
+// child-existence helper over explicitly supplied in-memory values.
+func feature0014CanonicalHasImmediateChildren(
+	parent validation.CompletenessValue,
+	set []validation.CompletenessValue,
+) bool {
+	return validation.HasImmediateTopologyChildren(parent, set)
+}
+
 func findFeature0014ByKind(t *testing.T, set []validation.CompletenessValue, kind string) validation.CompletenessValue {
 	t.Helper()
 	for _, v := range set {
