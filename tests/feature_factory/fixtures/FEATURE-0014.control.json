@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0",
+  "feature": {
+    "id": "FEATURE-0014",
+    "slug": "provider-neutral-resource-model",
+    "title": "Provider-Neutral Resource Model",
+    "tier": "A",
+    "phase": 2,
+    "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+    "feature_branch": "feature-0014-provider-neutral-resource-model",
+    "feature_file": "docs/features/FEATURE-0014-provider-neutral-resource-model.md",
+    "architecture": "docs/architecture/provider-neutral-resource-model.md",
+    "handoffs": [
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md"
+    ],
+    "spec_path": ".kiro/specs/provider-neutral-resource-model"
+  },
+  "ownership": {
+    "owned_resources": [
+      "Provider",
+      "ProviderLocation",
+      "ProviderDatacenter",
+      "DatacenterFailureDomain",
+      "InfrastructureStack"
+    ],
+    "previous_features": [
+      {
+        "id": "FEATURE-0011",
+        "relationship": "Owns the mandatory reuse-assessment grammar.",
+        "context": {
+          "requirements": ["docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md"],
+          "design": ["docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md"],
+          "tasks": ["docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md"],
+          "review": ["docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0012",
+        "relationship": "Owns API, resource, status, reference, validation, and error grammar reused unchanged.",
+        "context": {
+          "requirements": ["docs/architecture/api-resource-standard.md"],
+          "design": ["docs/architecture/api-resource-standard.md"],
+          "tasks": ["docs/architecture/api-resource-standard.md"],
+          "implementation": ["docs/architecture/api-resource-standard.md"],
+          "review": ["docs/architecture/api-resource-standard.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0013",
+        "relationship": "Owns decision and audit contracts; FEATURE-0014 adoption remains NOT_APPLICABLE.",
+        "context": {
+          "requirements": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"],
+          "design": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"],
+          "tasks": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"],
+          "review": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"]
+        }
+      }
+    ],
+    "excluded_features": [
+      {"id": "FEATURE-0015", "concepts": ["ResourcePool", "ProviderCapability", "capacity", "placement"]},
+      {"id": "FEATURE-0016", "concepts": ["adapter interfaces", "provider clients", "credentials"]},
+      {"id": "FEATURE-0053", "concepts": ["connectivity", "reachability", "network health"]}
+    ],
+    "forbidden_concepts": ["ResourcePool", "ProviderCapability", "connected", "provider client"]
+  },
+  "context": {
+    "always": [
+      "AGENTS.md",
+      "docs/foundation/constitution.md",
+      "docs/decisions/DECISION_INDEX.md",
+      "docs/glossary.md",
+      "docs/engineering/ai-context-loading-standard.md"
+    ],
+    "stages": {
+      "requirements": ["docs/phase2/PHASE2_EXECUTION_STRATEGY.md", "docs/features/FEATURE_INDEX.md"],
+      "design": ["docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md"],
+      "tasks": ["docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md"],
+      "implementation": ["internal/resources/provider.go", "internal/validation/provider.go"],
+      "review": ["docs/context/CURRENT_ARCHITECTURE_BASELINE.md", "docs/traceability/FEATURE_TRACEABILITY_MATRIX.md"]
+    },
+    "budgets": {
+      "requirements": 500000,
+      "design": 500000,
+      "tasks": 500000,
+      "implementation": 500000,
+      "review": 600000
+    }
+  },
+  "guardrails": {
+    "kiro": {
+      "writable_by_stage": {
+        "requirements": [".kiro/specs/provider-neutral-resource-model/requirements.md"],
+        "design": [".kiro/specs/provider-neutral-resource-model/design.md"],
+        "tasks": [".kiro/specs/provider-neutral-resource-model/tasks.md"]
+      },
+      "forbidden_outputs": ["internal/", "cmd/", "api/schemas/"]
+    },
+    "cursor": {
+      "go_context": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/engineering/go-version-standard.md",
+        "docs/engineering/go-observability-standard.md"
+      ],
+      "require_complete_receipt": true,
+      "verify_commands": ["make fmt", "make vet", "make test", "make test-race", "make build"]
+    },
+    "stop_conditions": [
+      "ARCHITECTURE_DECISION_REQUIRED",
+      "REQUIREMENT_CLARIFICATION_REQUIRED",
+      "BOUNDARY_CHANGE_REQUIRED",
+      "DEPENDENCY_APPROVAL_REQUIRED",
+      "SECURITY_REVIEW_REQUIRED"
+    ]
+  },
+  "execution": {
+    "human_gates": ["architecture", "executable_plan", "final"],
+    "tasks_per_run": 2,
+    "require_clean_tree": true,
+    "commit_per_task": true,
+    "max_stage_revisions": 2
+  },
+  "models": {
+    "architecture": "architecture",
+    "requirements": "requirements",
+    "design": "design",
+    "tasks": "tasks",
+    "review": "review",
+    "implementation": "implementation",
+    "mechanical": "deterministic_first"
+  },
+  "closeout": {
+    "mode": "prepare_only",
+    "metadata_targets": [
+      "docs/features/FEATURE_INDEX.md",
+      "docs/context/CURRENT_PHASE_CONTEXT.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/context/CURRENT_DECISION_SUMMARY.md",
+      "docs/traceability/FEATURE_TRACEABILITY_MATRIX.md"
+    ],
+    "commit": false,
+    "push": false
+  }
+}

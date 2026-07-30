@@ -9,6 +9,11 @@ ai_summary: Defines the repeatable workflow used by AI and humans to develop Sov
 
 # AI Feature Factory
 
+For manifest-controlled FEATURE-0015-and-later execution, the approved Phase 2
+workflow is `docs/engineering/generic-feature-factory.md`. This document remains
+the broader factory overview; the generic workflow owns stage automation,
+context budgets, human gates, semantic-delta review, and prepare-only closeout.
+
 ## 1. Purpose
 
 The AI Feature Factory is the repeatable model for developing Sovrunn features.

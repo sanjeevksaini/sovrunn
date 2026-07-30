@@ -23,6 +23,13 @@ case "$MODE" in prompt|manual|auto) ;; *) fail "unsupported mode: $MODE";; esac
 
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
+CONTROL_FILE=".automation/features/${FEATURE}.control.json"
+
+if [[ -f "$CONTROL_FILE" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/generic-kiro-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode pre
+fi
 
 if [[ "$FEATURE" == "FEATURE-0013" ]]; then
   if [[ -n "${KIRO_AGENT:-}" && "${KIRO_AGENT}" != "sovrunn-spec" ]]; then
@@ -43,6 +50,12 @@ fi
 # Render the prompt first. render-prompt.py prints the generated file path.
 PROMPT_PATH="$(./scripts/render-prompt.py --feature "$FEATURE" --stage "$STAGE" | tail -n 1)"
 [[ -f "$PROMPT_PATH" ]] || fail "generated prompt not found: $PROMPT_PATH"
+
+if [[ -f "$CONTROL_FILE" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/generic-kiro-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode prompt
+fi
 
 if [[ "$FEATURE" == "FEATURE-0014" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
@@ -95,6 +108,9 @@ PY
 )
 
 KIRO_MODEL="${KIRO_MODEL:-}"
+if [[ -f "$CONTROL_FILE" && -z "$KIRO_MODEL" ]]; then
+  KIRO_MODEL="$REC_MODEL"
+fi
 if [[ "$FEATURE" == "FEATURE-0013" && -z "$KIRO_MODEL" ]]; then
   KIRO_MODEL="claude-opus-4.8"
 fi
@@ -140,6 +156,14 @@ if [[ $STATUS -ne 0 ]]; then
   fail "Kiro CLI failed for $STAGE. See $LOG_FILE"
 fi
 
+if [[ -f "$CONTROL_FILE" ]]; then
+  mapfile -t STAGE_RECEIPTS < <(grep -E '^STAGE_STATUS: (COMPLETE|BLOCKED)( [A-Z_]+)?$' "$LOG_FILE" || true)
+  if [[ "${#STAGE_RECEIPTS[@]}" != "1" || "${STAGE_RECEIPTS[0]:-}" != "STAGE_STATUS: COMPLETE" ]]; then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "kiro_${STAGE}_blocked" >/dev/null || true
+    fail "Kiro stage did not produce exactly one COMPLETE receipt; refusing stage acceptance. See $LOG_FILE"
+  fi
+fi
+
 if [[ ! -f "$EXPECTED_DOC" ]]; then
   echo "WARNING: expected Kiro output file not found: $EXPECTED_DOC" >&2
   echo "Check Kiro log: $LOG_FILE" >&2
@@ -156,6 +180,12 @@ fi
 if [[ "$FEATURE" == "FEATURE-0014" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
     ./scripts/feature-0014-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
+fi
+
+if [[ -f "$CONTROL_FILE" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/generic-kiro-boundary-check.py \
     --feature "$FEATURE" --stage "$STAGE" --mode post
 fi
 

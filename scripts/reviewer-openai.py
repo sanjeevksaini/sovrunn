@@ -117,7 +117,7 @@ def call_openai(prompt: str) -> dict:
         raise SystemExit("ERROR: OPENAI_API_KEY is required for reviewer-openai.py")
     # Balanced quality/cost default for repeated semantic review. Pin with
     # FEATURE_FACTORY_REVIEWER_MODEL when reproducibility requires a snapshot.
-    model = os.environ.get("FEATURE_FACTORY_REVIEWER_MODEL", "gpt-5.6-terra")
+    model = os.environ.get("FEATURE_FACTORY_REVIEWER_MODEL", "gpt-5.5-thinking")
     body = {
         "model": model,
         "store": False,

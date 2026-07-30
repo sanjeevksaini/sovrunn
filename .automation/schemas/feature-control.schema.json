@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrunn.io/schemas/feature-control-1.0.json",
+  "title": "Sovrunn Feature Control Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "feature",
+    "ownership",
+    "context",
+    "guardrails",
+    "execution",
+    "models",
+    "closeout"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "slug", "title", "tier", "phase", "phase_branch", "feature_branch", "feature_file", "architecture", "handoffs", "spec_path"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^FEATURE-[0-9]{4}$"},
+        "slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "title": {"type": "string", "minLength": 1},
+        "tier": {"enum": ["A", "B", "C"]},
+        "phase": {"type": "integer", "minimum": 1},
+        "phase_branch": {"type": "string", "minLength": 1},
+        "feature_branch": {"type": "string", "minLength": 1},
+        "feature_file": {"$ref": "#/$defs/repoPath"},
+        "architecture": {"$ref": "#/$defs/repoPath"},
+        "handoffs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+        "spec_path": {"$ref": "#/$defs/repoPath"}
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owned_resources", "previous_features", "excluded_features", "forbidden_concepts"],
+      "properties": {
+        "owned_resources": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "previous_features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "relationship", "context"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^FEATURE-[0-9]{4}$"},
+              "relationship": {"type": "string", "minLength": 1},
+              "context": {"$ref": "#/$defs/stagePaths"}
+            }
+          }
+        },
+        "excluded_features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "concepts"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^FEATURE-[0-9]{4}$"},
+              "concepts": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+            }
+          }
+        },
+        "forbidden_concepts": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["always", "stages", "budgets"],
+      "properties": {
+        "always": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+        "stages": {"$ref": "#/$defs/stagePaths"},
+        "budgets": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 1024}
+        }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kiro", "cursor", "stop_conditions"],
+      "properties": {
+        "kiro": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["writable_by_stage", "forbidden_outputs"],
+          "properties": {
+            "writable_by_stage": {"$ref": "#/$defs/stagePaths"},
+            "forbidden_outputs": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true}
+          }
+        },
+        "cursor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["go_context", "require_complete_receipt", "verify_commands"],
+          "properties": {
+            "go_context": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+            "require_complete_receipt": {"const": true},
+            "verify_commands": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "stop_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"enum": ["ARCHITECTURE_DECISION_REQUIRED", "REQUIREMENT_CLARIFICATION_REQUIRED", "BOUNDARY_CHANGE_REQUIRED", "DEPENDENCY_APPROVAL_REQUIRED", "SECURITY_REVIEW_REQUIRED"]},
+          "uniqueItems": true
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human_gates", "tasks_per_run", "require_clean_tree", "commit_per_task", "max_stage_revisions"],
+      "properties": {
+        "human_gates": {"type": "array", "const": ["architecture", "executable_plan", "final"]},
+        "tasks_per_run": {"type": "integer", "minimum": 1, "maximum": 4},
+        "require_clean_tree": {"const": true},
+        "commit_per_task": {"const": true},
+        "max_stage_revisions": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "requirements", "design", "tasks", "review", "implementation", "mechanical"],
+      "properties": {
+        "architecture": {"const": "architecture"},
+        "requirements": {"const": "requirements"},
+        "design": {"const": "design"},
+        "tasks": {"const": "tasks"},
+        "review": {"const": "review"},
+        "implementation": {"const": "implementation"},
+        "mechanical": {"const": "deterministic_first"}
+      }
+    },
+    "closeout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "metadata_targets", "commit", "push"],
+      "properties": {
+        "mode": {"const": "prepare_only"},
+        "metadata_targets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+        "commit": {"const": false},
+        "push": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "repoPath": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!\\.git(?:/|$)).+"},
+    "pathArray": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+    "stagePaths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {"$ref": "#/$defs/pathArray"},
+        "requirements": {"$ref": "#/$defs/pathArray"},
+        "design": {"$ref": "#/$defs/pathArray"},
+        "tasks": {"$ref": "#/$defs/pathArray"},
+        "implementation": {"$ref": "#/$defs/pathArray"},
+        "review": {"$ref": "#/$defs/pathArray"}
+      }
+    }
+  }
+}
