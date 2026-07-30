@@ -1,0 +1,51 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "DatacenterFailureDomain",
+  "metadata": {
+    "name": "datacenter-failure-domain-1",
+    "uid": "a5000000000000000000000000000001",
+    "displayName": "Failure Domain 1",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a",
+      "uid": "a2000000000000000000000000000001"
+    },
+    "labels": {
+      "sovrunn.io/topology": "failure-domain"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-datacenter-failure-domain-1",
+    "createdAt": "2026-07-30T10:03:00Z",
+    "updatedAt": "2026-07-30T10:03:00Z"
+  },
+  "spec": {
+    "providerDatacenterRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "ProviderDatacenter",
+      "name": "provider-datacenter-1",
+      "uid": "a4000000000000000000000000000001"
+    }
+  },
+  "status": {
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Valid",
+        "status": "True",
+        "reason": "ValidationSucceeded",
+        "message": "DatacenterFailureDomain is registered and valid.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:03:00Z"
+      },
+      {
+        "type": "TopologyComplete",
+        "status": "True",
+        "reason": "PathComplete",
+        "message": "Unbroken path to InfrastructureStack exists.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:05:00Z"
+      }
+    ]
+  }
+}

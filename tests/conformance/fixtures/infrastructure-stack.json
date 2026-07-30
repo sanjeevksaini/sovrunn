@@ -1,0 +1,52 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "InfrastructureStack",
+  "metadata": {
+    "name": "infrastructure-stack-cloudstack-a",
+    "uid": "a6000000000000000000000000000001",
+    "displayName": "CloudStack Stack A",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a",
+      "uid": "a2000000000000000000000000000001"
+    },
+    "labels": {
+      "sovrunn.io/topology": "infrastructure-stack"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-infrastructure-stack-1",
+    "createdAt": "2026-07-30T10:04:00Z",
+    "updatedAt": "2026-07-30T10:04:00Z"
+  },
+  "spec": {
+    "datacenterFailureDomainRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "DatacenterFailureDomain",
+      "name": "datacenter-failure-domain-1",
+      "uid": "a5000000000000000000000000000001"
+    },
+    "technology": "Apache CloudStack"
+  },
+  "status": {
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Valid",
+        "status": "True",
+        "reason": "ValidationSucceeded",
+        "message": "InfrastructureStack is registered and valid.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:04:00Z"
+      },
+      {
+        "type": "TopologyComplete",
+        "status": "True",
+        "reason": "LeafValid",
+        "message": "Leaf stack is Valid; required path terminates here.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:04:00Z"
+      }
+    ]
+  }
+}
