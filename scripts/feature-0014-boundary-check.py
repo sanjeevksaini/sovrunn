@@ -16,6 +16,7 @@ FEATURE = "FEATURE-0014"
 SLUG = "provider-neutral-resource-model"
 ARCH = Path("docs/architecture/provider-neutral-resource-model.md")
 ADH = Path("docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md")
+ADH_GEO = Path("docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md")
 SPEC_DIR = Path(".kiro/specs") / SLUG
 OLD_TERMS = ("IaaSStack", "ProviderRegion", "ProviderLocation/Region", "ProviderLocation / ProviderRegion")
 DECISIONS = {f"F14-AD-{i:03d}" for i in range(1, 22)}
@@ -49,6 +50,7 @@ DESIGN_CONTEXT = {
     "docs/architecture/api-resource-standard.md",
     str(ARCH),
     str(ADH),
+    str(ADH_GEO),
     "docs/features/FEATURE-0014-provider-neutral-resource-model.md",
     str(SPEC_DIR / "requirements.md"),
 }
@@ -59,6 +61,7 @@ TASKS_CONTEXT = {
     "docs/architecture/api-resource-standard.md",
     str(ARCH),
     str(ADH),
+    str(ADH_GEO),
     str(SPEC_DIR / "requirements.md"),
     str(SPEC_DIR / "design.md"),
 }
@@ -138,9 +141,11 @@ def check_repository(c: Check, stage: str) -> None:
 
     arch = read(ARCH)
     adh = read(ADH)
+    adh_geo = read(ADH_GEO)
     c.require("status: approved-pending-repository-alignment" in arch or "status: approved-for-kiro-requirements" in arch,
               "architecture has an approved readiness status")
     c.require("- Approval status: Approved" in adh, "ADH-2026-018 is human-approved")
+    c.require("- Approval status: Approved" in adh_geo, "ADH-2026-019 is human-approved")
     c.require(ids(arch, r"F14-AD-\d{3}") == DECISIONS, "architecture enumerates exactly F14-AD-001..021")
     c.require(ids(arch, r"F14-R\d{2}") == RISKS, "architecture enumerates exactly F14-R01..30")
     c.require(all(kind in arch for kind in KINDS), "architecture contains exactly the approved kind vocabulary")
@@ -197,6 +202,7 @@ def check_manifest(c: Check, path: Path, stage: str) -> None:
     manifest_paths = {item["path"] for item in data.get("files", [])}
     c.require(str(ARCH) in manifest_paths, f"{path} includes canonical architecture")
     c.require(str(ADH) in manifest_paths, f"{path} includes ADH-2026-018")
+    c.require(str(ADH_GEO) in manifest_paths, f"{path} includes ADH-2026-019")
     for old in ("ADH-2026-014", "ADH-2026-015", "ADH-2026-016"):
         c.require(not any(old in item for item in manifest_paths), f"{path} excludes {old}")
     if stage == "tasks":
@@ -396,6 +402,10 @@ def check_changed_files(c: Check) -> None:
         "Makefile",
         "docs/",
         "scripts/feature-0014-boundary-check.py",
+        "scripts/feature-0014-cursor-boundary-check.py",
+        "scripts/feature-0014-cursor-prompt.py",
+        "scripts/feature-0014-flow.py",
+        "scripts/cursor-task.sh",
         "scripts/feature-gate.sh",
         "scripts/kiro-stage.sh",
         "scripts/approve-stage.sh",

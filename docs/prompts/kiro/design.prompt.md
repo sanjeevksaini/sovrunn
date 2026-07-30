@@ -120,7 +120,8 @@ Hard constraints:
 - internal/api must not import internal/server.
 - Do not add unrelated future scope.
 
-For FEATURE-0014, load only the approved architecture and ADH-2026-018 package
+For FEATURE-0014, load only the approved architecture and ADH-2026-018 plus
+ADH-2026-019 replacement-clarification package
 plus approved requirements and inherited context allowed by architecture
 section 2.2. Design may choose only representation mechanics delegated by
 architecture sections 14 and 15. It must enumerate every F14 decision and risk,

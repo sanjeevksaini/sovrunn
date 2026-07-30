@@ -99,8 +99,9 @@ Notes:
   inherited immutable `metadata.scopeRef` (design §4.2, DD-08).
 - `spec.geo` is optional and shaped `{ countryCode, subdivisionCode? }` as
   descriptive declared topology only (DD-04); it carries no residency,
-  compliance, or placement meaning. Format validation and membership belong to
-  Tasks 11–12, not to the type.
+  compliance, authoritative-assignment, or placement meaning. Syntax and
+  country-prefix validation belongs to Task 12, not to the type; no dataset or
+  membership lookup is authorized.
 - Reuse `internal/apimeta`/`internal/apicond` unchanged; add no connectivity,
   capacity, or native field.
 Tests:
@@ -275,8 +276,8 @@ Notes:
 - Constrain `metadata.scopeRef.kind` to exactly `Provider`.
 - `spec.geo` optional object: `countryCode` `^[A-Z]{2}$` (exactly 2 chars),
   optional `subdivisionCode` `^[A-Z]{2}-[A-Z0-9]{1,3}$` (≤ 6 chars) whose
-  country prefix must equal `countryCode` (design §6.2). Format only; dataset
-  membership is enforced in Task 12.
+  country prefix must equal `countryCode` (design §6.2). Format only; no
+  authoritative membership is asserted or checked.
 - No alias location term, no parent field, no connectivity/capacity/native
   field; reject unknown/duplicate fields; §6.4 bounds.
 Tests:
@@ -404,49 +405,11 @@ Commit message: `feat(FEATURE-0014): add InfrastructureStack canonical JSON Sche
 
 ---
 
-## Task 11 — Embedded ISO 3166 geographic-code dataset, manifest, and membership lookup
-
-Objective: Provide a pinned, embedded ISO 3166-1 alpha-2 and ISO 3166-2 dataset
-with a version manifest and a pure, network-free membership lookup used by the
-ProviderLocation geo validator.
-
-Requirements: F14-REQ-27
-Design: DD-04, §6.2
-Decisions: F14-AD-011
-Risks: F14-R16
-Implementation class: IMPLEMENT
-Files: `internal/validation/iso3166_countries.json`, `internal/validation/iso3166_subdivisions.json`, `internal/validation/iso3166_manifest.json`, `internal/validation/geocode.go`, `internal/validation/geocode_test.go`
-Notes:
-- The dataset is a build-time data asset committed to the repository and loaded
-  via `//go:embed`; the lookup performs a pure membership test with no network
-  or runtime fetch (design §6.2).
-- `iso3166_manifest.json` records the ISO 3166 publication date the snapshot was
-  taken from as the version identifier, beside the data files.
-- Provide a deterministic lookup: `countryCode` membership and
-  `subdivisionCode` membership; a code absent from the embedded snapshot is
-  "unknown". Refreshing the dataset is an explicit reviewed change that replaces
-  the snapshot and bumps the manifest version; it changes no resource meaning
-  and is never user-authored input.
-- File paths are the delegated package-layout choice (DD-04/DD-07) within the
-  approved `internal/validation` package; no subpackage is introduced.
-Tests:
-- Positive: a known country code and a known subdivision code resolve as
-  members; the manifest version parses.
-- Negative: an unknown/absent code resolves as non-member.
-- Boundary: a syntactically valid but not-in-snapshot code is non-member;
-  membership is deterministic across calls (no ordering/hashing dependence).
-Acceptance criteria: the embedded dataset loads at build time, the manifest
-version is readable, membership is a pure deterministic offline test, and tests
-pass.
-Commit message: `feat(FEATURE-0014): embed pinned ISO 3166 dataset and membership lookup`
-
----
-
 ## Task 12 — ProviderLocation offline validator (structural + semantic, incl. geo)
 
 Objective: Implement the offline structural and semantic validator for
 `ProviderLocation`, including `scopeRef.kind`, bounds, status-not-user-authored,
-and geo format plus embedded-snapshot membership.
+and deterministic geo syntax plus country-prefix agreement.
 
 Requirements: F14-REQ-02, F14-REQ-06, F14-REQ-21, F14-REQ-22, F14-REQ-27, F14-REQ-28, F14-REQ-31
 Design: §7.1 (stages 1–2, offline IMPLEMENT), DD-04, §6.2, §6.4, §4.3
@@ -461,8 +424,9 @@ Notes:
   field rejection, bounded sizes, and rejection of user-authored `status`,
   `resourceVersion`, `generation`, and timestamps (F14-REQ-22, guardrails §10).
 - Semantic: `metadata.scopeRef.kind` must be `Provider`; `spec.geo` (when
-  present) must pass the §6.2 format and the Task 11 membership test; an invalid
-  or unknown code is rejected as malformed/unknown (F14-REQ-27).
+  present) must pass the §6.2 format and country-prefix agreement checks.
+  Malformed or prefix-inconsistent values are rejected; syntactically valid
+  unassigned values are accepted without authoritative meaning (F14-REQ-27).
 - Emit inherited RFC 9457 Problem Details with stable codes and RFC 6901 paths;
   responses/errors carry no native identifiers or secrets (F14-REQ-31).
 - This is a pure offline validator over a supplied resource value; it performs
@@ -470,14 +434,17 @@ Notes:
 Tests:
 - Positive: a valid `ProviderLocation` with and without a valid `geo` passes.
 - Negative: wrong `scopeRef.kind`; user-authored `status`; unknown field;
-  malformed/absent-in-snapshot geo code — each rejected with the correct stable
-  code and pointer.
+  malformed or prefix-inconsistent geo descriptor — each rejected with the
+  correct stable code and pointer.
+- Boundary: a syntactically valid unassigned descriptor is accepted and carries
+  no authoritative, residency, compliance, or placement inference.
 - Boundary: geo `countryCode` exactly 2 chars; `subdivisionCode` ≤ 6 chars with
   matching country prefix; label/annotation/name bounds at the §6.4 edges.
-Acceptance criteria: the validator accepts conforming values and rejects each
-negative case with the inherited stable error contract; geo validation is a
-pure offline membership test; tests pass.
-Commit message: `feat(FEATURE-0014): add ProviderLocation offline validator with geo membership check`
+Acceptance criteria: the validator accepts conforming and syntactically valid
+unassigned values, rejects malformed and prefix-inconsistent values with the
+inherited stable error contract, performs no dataset/library lookup, and tests
+pass.
+Commit message: `feat(FEATURE-0014): add ProviderLocation offline validator with geo syntax checks`
 
 ---
 
@@ -807,8 +774,10 @@ Notes:
   `AuditEvent`, rationale, obligation, actor, subject, linkage, projection,
   composition) outside non-goal/ownership text (F14-REQ-23, F14-REQ-24,
   F14-REQ-25).
-- Field rejection: invalid/unknown geo code; malformed/over-length/non-ASCII
-  technology; status-history in `status` (F14-REQ-22, F14-REQ-27, F14-REQ-17).
+- Field handling: malformed or country-prefix-inconsistent geo descriptors are
+  rejected while syntactically valid unassigned descriptors are accepted
+  without authoritative meaning; malformed/over-length/non-ASCII technology and
+  status-history in `status` are rejected (F14-REQ-22, F14-REQ-27, F14-REQ-17).
 - Deletion/concurrency contract (proven over supplied state; live executor is
   `CONTRACT_ONLY / NO_TASK`): deleting a parent with existing children yields a
   child-existence (delete-blocked) conflict with no cascade or silent
@@ -854,7 +823,7 @@ Notes:
   build-artifact check passes; do not commit `site/`, generated prompts, or zip
   archives.
 - Changed-file check: confirm the working tree changes are limited to the
-  FEATURE-0014 approved paths from Tasks 1–21 (`internal/resources/*`,
+  FEATURE-0014 approved paths from Tasks 1–10 and Tasks 12–21 (`internal/resources/*`,
   `internal/validation/*`, `api/schemas/*.json`, `internal/apiconform/*`,
   `tests/conformance/fixtures/*`) and that `gofmt -l .` reports no unformatted
   file. `internal/api` must not import `internal/server` (guardrail) and no
@@ -912,7 +881,7 @@ Every `F14-REQ-01`–`F14-REQ-31` maps to one or more task IDs or an explicit
 | F14-REQ-24 | Task 6, Task 10, Task 21, Task 22 |
 | F14-REQ-25 | Task 21, Task 22 |
 | F14-REQ-26 | Task 18, Task 20, Task 21 |
-| F14-REQ-27 | Task 2, Task 7, Task 11, Task 12, Task 20, Task 21 |
+| F14-REQ-27 | Task 2, Task 7, Task 12, Task 20, Task 21 |
 | F14-REQ-28 | Task 6, Task 7, Task 8, Task 9, Task 10, Task 12, Task 13, Task 14, Task 15, Task 16, Task 22 |
 | F14-REQ-29 | Task 18, Task 21, Task 22 |
 | F14-REQ-30 | Task 17, Task 20, Task 21 |
@@ -941,7 +910,7 @@ Every `F14-AD-001`–`F14-AD-021`, enumerated individually.
 | F14-AD-008 | Task 3, Task 4, Task 5, Task 8, Task 9, Task 10, Task 14, Task 15, Task 16, Task 21 |
 | F14-AD-009 | Task 5, Task 16, Task 20 |
 | F14-AD-010 | Task 5, Task 10, Task 16, Task 20 |
-| F14-AD-011 | Task 2, Task 5, Task 7, Task 10, Task 11, Task 12, Task 16, Task 21 |
+| F14-AD-011 | Task 2, Task 5, Task 7, Task 10, Task 12, Task 16, Task 21 |
 | F14-AD-012 | Task 9, Task 15, Task 21 |
 | F14-AD-013 | Task 6, Task 7, Task 8, Task 9, Task 10, Task 15, Task 21 |
 | F14-AD-014 | Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7, Task 8, Task 9, Task 10, Task 12, Task 13, Task 14, Task 15, Task 16, Task 19, Task 22 |
@@ -977,7 +946,7 @@ renumbered, or closed here.
 | F14-R13 | Child-existence delete-blocked and leaf-first fixtures; concurrent/stale/retry tests (Task 18, Task 20, Task 21). |
 | F14-R14 | Status current-fact-only validator checks; status-history negative scan (Task 12–16, Task 21). |
 | F14-R15 | Cross-scope no-existence-disclosure and redaction fixtures (Task 21). |
-| F14-R16 | Invalid/unknown geo-code negatives; no-residency-inference review (Task 11, Task 12, Task 20, Task 21). |
+| F14-R16 | Malformed/prefix-mismatch negatives, valid-unassigned acceptance, and no-authority/no-residency-inference review (Task 12, Task 20, Task 21). |
 | F14-R17 | Finite-bounds and technology-length boundary tests (Task 12, Task 16); §6.4 bounds in schemas (Task 6–10). |
 | F14-R18 | Stale-version and deterministic-recompute concurrency tests (Task 18, Task 21). |
 | F14-R19 | Old-name absence in types/schemas (Task 5, Task 10); inventory conformance and boundary old-name scan (Task 19, Task 22). |
@@ -1046,8 +1015,8 @@ intentionally produce no implementation task.
   structural validators) → Tasks 12–16; I-4 (offline semantic validators) →
   Tasks 12–16; I-5 (pure deterministic helpers) → Tasks 17–18; I-6 (schema/type-
   binding + conformance fixtures) → Tasks 19–21; I-7 (contract and excluded-
-  semantics tests) → tests within Tasks 1–21 and Task 22. The embedded ISO 3166
-  dataset required by DD-04/§6.2 maps to Task 11.
+  semantics tests) → tests within Tasks 1–10 and Tasks 12–22. Geographic
+  descriptors require syntax and prefix validation only; no dataset task exists.
 - Every design `CONTRACT_ONLY / NO_TASK` (C-1…C-8) and `EXCLUDED` (X-1…X-7)
   element maps to an explicit No-task ledger entry, with its contract outcome (
   where applicable) proven by a mapped helper/fixture task.

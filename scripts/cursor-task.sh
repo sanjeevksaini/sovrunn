@@ -30,6 +30,18 @@ OUT="$OUT_DIR/cursor-task-${TASK}.prompt.md"
 TASKS_PATH="$SPEC_PATH/tasks.md"
 [[ -f "$TASKS_PATH" ]] || fail "missing tasks.md: $TASKS_PATH"
 
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  CONTEXT_MANIFEST="$OUT_DIR/cursor-task-${TASK}.context.json"
+  python3 ./scripts/feature-0014-cursor-prompt.py \
+    --task "$TASK" --output "$OUT" --manifest "$CONTEXT_MANIFEST"
+  if [[ -z "${FEATURE_FACTORY_ALLOWED_PATHS:-}" ]]; then
+    FEATURE_FACTORY_ALLOWED_PATHS="$(python3 - "$CONTEXT_MANIFEST" <<'PY'
+import json, sys
+print("\n".join(json.load(open(sys.argv[1]))["writable_paths"]))
+PY
+)"
+  fi
+else
 python3 - "$FEATURE" "$TASK" "$SPEC_PATH" "$OUT" <<'PYCURSOR'
 from pathlib import Path
 import subprocess, sys
@@ -53,6 +65,7 @@ rendered = (template
 Path(out).write_text(rendered)
 print(out)
 PYCURSOR
+fi
 
 ./scripts/feature-state.py set --feature "$FEATURE" --key current_task --value "$TASK" >/dev/null
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_prompt_generated" >/dev/null

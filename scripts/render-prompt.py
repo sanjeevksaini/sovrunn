@@ -23,6 +23,7 @@ FEATURE_0014_DESIGN_CONTEXT = [
     Path('docs/architecture/api-resource-standard.md'),
     Path('docs/architecture/provider-neutral-resource-model.md'),
     Path('docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md'),
+    Path('docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md'),
     Path('docs/features/FEATURE-0014-provider-neutral-resource-model.md'),
     Path('.kiro/specs/provider-neutral-resource-model/requirements.md'),
 ]
@@ -33,6 +34,7 @@ FEATURE_0014_TASKS_CONTEXT = [
     Path('docs/architecture/api-resource-standard.md'),
     Path('docs/architecture/provider-neutral-resource-model.md'),
     Path('docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md'),
+    Path('docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md'),
     Path('.kiro/specs/provider-neutral-resource-model/requirements.md'),
     Path('.kiro/specs/provider-neutral-resource-model/design.md'),
 ]
@@ -75,6 +77,7 @@ def write_feature_0014_context_manifest(out_dir, stage):
         Path('docs/reviews/architecture-decision-handoffs/ADH-2026-017-feature-0013-consolidated-architecture.md'),
         Path('docs/architecture/provider-neutral-resource-model.md'),
         Path('docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md'),
+        Path('docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md'),
         Path('docs/features/FEATURE-0014-provider-neutral-resource-model.md'),
         Path('docs/features/FEATURE_INDEX.md'),
         Path('docs/context/CURRENT_ARCHITECTURE_BASELINE.md'),

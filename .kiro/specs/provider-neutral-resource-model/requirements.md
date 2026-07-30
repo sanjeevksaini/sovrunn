@@ -410,14 +410,17 @@ proceed leaf-first (`F14-AD-020`).
 
 **F14-REQ-27 — Geographic descriptors are declared topology only.**
 Where a normalized geographic/sovereignty descriptor is carried, it MUST use a
-mature normalized code where applicable and MUST be treated as declared
-topology, not as residency proof, compliance evidence, or a policy outcome
-(`F14-AD-011`).
-- Positive: a valid normalized geographic code is accepted as topology
-  metadata.
-- Negative: an invalid or unknown code is rejected.
-- Boundary: geography carries no residency, compliance, or placement
-  inference.
+bounded normalized shape and MUST be treated as declared topology, not as an
+authoritative assignment, residency proof, compliance evidence, or policy
+outcome (`F14-AD-011`, `ADH-2026-019`). FEATURE-0014 MUST validate syntax and
+country-prefix agreement only and MUST NOT own or consult a geographic dataset,
+library, membership lookup, or refresh lifecycle.
+- Positive: a syntactically valid descriptor with a matching country prefix is
+  accepted as declared topology metadata, even when assignment is unknown.
+- Negative: malformed syntax or a subdivision/country prefix mismatch is
+  rejected.
+- Boundary: geography carries no authoritative-assignment, residency,
+  compliance, or placement inference.
 
 **F14-REQ-28 — Finite bounds and pagination inherited.**
 All collections, strings, and payloads MUST be finite and MUST inherit
@@ -522,8 +525,9 @@ case introduces no new normative obligation.
   cross-provider relationships — including two Providers governed by the same
   owner `Organization` — keep connectivity `Unknown` with no inference of
   reachability or isolation (F14-REQ-19, F14-REQ-20).
-- **EC-12** — Invalid or unknown geographic code: rejected; valid code carries
-  no residency/compliance inference (F14-REQ-27).
+- **EC-12** — Malformed or country-prefix-inconsistent geographic descriptor:
+  rejected; a syntactically valid unassigned descriptor is accepted without
+  authoritative, residency, or compliance inference (F14-REQ-27).
 - **EC-13** — Attempt to mutate an immediate-parent reference or Provider
   scope: rejected; requires recreate-and-migrate (F14-REQ-06, F14-REQ-09).
 - **EC-14** — Superseded stack-kind name in an active contract: fails
@@ -550,8 +554,9 @@ requirement.
 - **SEC-04** — Redaction of provider-native identifiers, credentials,
   endpoints, and secrets from metadata, errors, conditions, and audit-adjacent
   text: owned by F14-REQ-31 (`F14-AD-019`).
-- **SEC-05** — Geographic descriptors are not residency or compliance evidence:
-  owned by F14-REQ-27 (`F14-AD-011`).
+- **SEC-05** — Geographic descriptors are neither authoritative assignments nor
+  residency/compliance evidence: owned by F14-REQ-27 (`F14-AD-011`,
+  `ADH-2026-019`).
 - **SEC-06** — Multi-owner isolation of one external operator, with
   authorization never keyed on external operator name or native ID: owned by
   F14-REQ-30 (`F14-AD-003`, `F14-AD-004`, `F14-AD-009`).
@@ -683,7 +688,7 @@ merges, renumbers, or closes no risk.
 
 | Risk | Requirement(s) | Mitigation outcome preserved | Evidence obligation | Target residual | Owner | Reassessment trigger |
 |---|---|---|---|---:|---|---|
-| `F14-R16` | F14-REQ-27 | Geography declared topology, not compliance proof | Invalid/unknown code fixtures; no-residency-inference review | 2×4 Medium | Sovereignty/domain owner | Geography becomes policy/placement/attestation input |
+| `F14-R16` | F14-REQ-27 | Geography is syntax-normalized declared topology, not authoritative assignment or compliance proof | Malformed/prefix-mismatch fixtures; syntactically valid unassigned-code fixture; no-authority/no-residency-inference review | 2×4 Medium | Sovereignty/domain owner | Authoritative geography becomes policy/placement/attestation input |
 | `F14-R17` | F14-REQ-28 | Finite bounds/pagination; no unbounded traversal | Boundary/property tests; pagination/max-size benchmarks | 2×3 Medium | API/performance owner | Provider topology exceeds reviewed limits |
 | `F14-R18` | F14-REQ-29 | Immutable parents; resourceVersion/ETag/If-Match | Concurrency/stale-write/condition-consistency tests | 2×3 Medium | API/lifecycle owner | Multi-writer or external synchronization introduced |
 | `F14-R19` | F14-REQ-03 | One atomic migration; no alias/dual-name | Old-name scan; schema/API diff; docs consistency | 1×4 Low | Architecture/API owner | Deployed external consumer needs compat migration |

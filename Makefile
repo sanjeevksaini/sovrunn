@@ -106,6 +106,16 @@ ff-cursor-task:
 ff-cursor-task-auto:
 	FEATURE_FACTORY_CURSOR_MODE=auto ./scripts/cursor-task.sh --feature "$(FEATURE)" --task "$(TASK)" --mode auto
 
+.PHONY: ff-feature-0014-prompt ff-feature-0014-run feature-0014-cursor-boundary-check
+ff-feature-0014-prompt:
+	FEATURE_FACTORY_CURSOR_MODE=prompt ./scripts/cursor-task.sh --feature "FEATURE-0014" --task "$(TASK)" --mode prompt
+
+ff-feature-0014-run:
+	./scripts/feature-0014-flow.py --start-task "$${START_TASK:-1}" $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
+
+feature-0014-cursor-boundary-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-cursor-boundary-check.py --task "$(TASK)"
+
 ff-verify:
 	./scripts/verify.sh
 

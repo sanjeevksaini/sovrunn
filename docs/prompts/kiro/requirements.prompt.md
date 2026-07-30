@@ -147,6 +147,8 @@ Keep requirements concise, precise, implementation-aware, phase-scoped, and free
 When `{{FEATURE_ID}}` is `FEATURE-0014`, load the exact approved
 `docs/architecture/provider-neutral-resource-model.md` and
 `docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md`
+and its approved geographic-descriptor replacement clarification
+`docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md`
 before writing. Run `make feature-0014-architecture-readiness`; a failure is
 `REPOSITORY_CONTEXT_NOT_READY`, not permission to repair or generate partial
 requirements.

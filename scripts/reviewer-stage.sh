@@ -87,6 +87,7 @@ elif feature == "FEATURE-0014":
         Path("docs/reviews/architecture-decision-handoffs/ADH-2026-013-operation-allowed-scopes.md"),
         Path("docs/architecture/provider-neutral-resource-model.md"),
         Path("docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md"),
+        Path("docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md"),
         Path("docs/features/FEATURE-0014-provider-neutral-resource-model.md"),
         Path("docs/rfc/RFC-0024-provider-neutral-resource-model.md"),
     ]

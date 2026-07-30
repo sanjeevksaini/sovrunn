@@ -12,7 +12,8 @@ other repository file.
 
 {{CONTEXT_FILES}}
 
-Source precedence is: approved FEATURE-0014 architecture plus ADH-2026-018;
+Source precedence is: approved FEATURE-0014 architecture plus ADH-2026-018 and
+the approved replacement clarification ADH-2026-019;
 approved requirements; inherited FEATURE-0012 contracts; global repository
 rules; supporting scope and reuse records. Lower-precedence context cannot add
 or override semantics.
@@ -94,4 +95,3 @@ must use descriptive design language and cite their originating requirement.
 
 After writing, read the whole file back and verify that only `design.md` was
 created or modified.
-

@@ -129,7 +129,8 @@ Final guardrails:
 - git status clean
 
 For FEATURE-0014, tasks may implement only approved design elements traced to
-approved requirements and the ADH-2026-018 closed decisions. Tasks must preserve
+approved requirements and the ADH-2026-018 closed decisions as clarified by
+ADH-2026-019. Tasks must preserve
 all F14 decision/risk/evidence traceability and leave no semantic choice to the
 implementer. Do not add FEATURE-0015 ResourcePool/ProviderCapability,
 FEATURE-0016 adapter/integration, FEATURE-0053 connectivity, or FEATURE-0013

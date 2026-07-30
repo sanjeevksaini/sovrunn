@@ -184,7 +184,10 @@ boundary (architecture section 15).
   named in the reuse assessment (architecture section 10).
 - **Boundary.** Geography is not residency proof, compliance evidence, or a policy
   outcome, and drives no placement (F14-REQ-27, `F14-AD-011`). The field is
-  optional; its absence carries no inference.
+  optional; its absence carries no inference. Validation is deliberately limited
+  to syntax, bounds, and country-prefix agreement. FEATURE-0014 owns no ISO
+  dataset, library, membership lookup, generator, manifest, or refresh lifecycle
+  (`ADH-2026-019`).
 
 ### DD-05 — Bounded descriptive infrastructure-technology representation (resolves DQ-05; F14-REQ-17)
 
@@ -538,19 +541,13 @@ Binding rules (all inherited from FEATURE-0012, F14-REQ-21):
   `<countryCode>-<subdivision>`, where `<subdivision>` is 1–3 uppercase ASCII
   letters or digits (`^[A-Z]{2}-[A-Z0-9]{1,3}$`; total length ≤ 6). When present,
   its two-letter country prefix MUST equal `countryCode`.
-- **Authoritative dataset.** Validation accepts only codes present in a pinned,
-  embedded snapshot of the ISO 3166-1 alpha-2 country list and the ISO 3166-2
-  subdivision list. The snapshot is a build-time data asset committed to the
-  repository; its version is recorded as the ISO 3166 publication date the
-  snapshot was taken from, stored in a manifest beside the data file. Validation
-  performs no network lookup and no runtime fetch — it is a pure membership test
-  against the embedded snapshot.
-- **Update mechanism.** Refreshing the dataset is an explicit, reviewed change
-  that replaces the embedded snapshot and bumps its recorded version identifier.
-  "Unknown" codes are exactly those absent from the currently embedded snapshot.
-  A dataset refresh changes no resource meaning and is never user-authored input.
-- Descriptive only; a value that fails the format check or is absent from the
-  embedded snapshot is rejected as malformed/unknown (F14-REQ-27).
+- **Validation boundary.** Validation checks only the two formats, finite bounds,
+  and country-prefix agreement. It performs no authoritative membership lookup,
+  network fetch, runtime lookup, or dependency call. A syntactically valid but
+  unassigned value is accepted as declared metadata and carries no claim of ISO
+  assignment (`ADH-2026-019`).
+- Descriptive only; malformed syntax or a mismatched country prefix is rejected
+  (F14-REQ-27).
 
 ### 6.3 Technology descriptor (`InfrastructureStack.spec.technology`; DD-05)
 
@@ -713,8 +710,9 @@ or state provider (sections 1.3, 3.1):
   relationships (including two Providers under one owner Organization) carry no
   connectivity semantics; schema deny-list finds no connectivity field
   (F14-REQ-19, F14-REQ-20).
-- invalid/unknown geographic code rejected; valid code carries no residency
-  inference (F14-REQ-27).
+- malformed or country-prefix-inconsistent geographic descriptor rejected;
+  syntactically valid unassigned descriptor accepted with no authoritative or
+  residency inference (F14-REQ-27).
 - parent deletion with children returns a child-existence conflict; leaf-first
   deletion succeeds; UID non-reuse (F14-REQ-26).
 - stale-version write rejected; deterministic completeness recomputation after
@@ -767,7 +765,7 @@ state, not by live lookup or persistence.
 | F14-REQ-24 | No ResourcePool/capability/capacity fields (4.3) | structural | field deny-list scan | No |
 | F14-REQ-25 | No adapter/integration interfaces or deps (3) | boundary scan | interface/dependency/SDK scan | No |
 | F14-REQ-26 | Child-existence query behavior for deletion rejection; no cascade (7.1 stage 6, CONTRACT_ONLY) | deletion | child-existence conflict; UID non-reuse fixtures | No |
-| F14-REQ-27 | `geo` normalized code, descriptive only (DD-04, 6.2) | structural + semantic | invalid/unknown-code + no-residency-inference fixtures | No |
+| F14-REQ-27 | `geo` syntax-normalized descriptor, descriptive only (DD-04, 6.2) | structural + semantic | malformed/prefix-mismatch + valid-unassigned + no-authority/no-residency-inference fixtures | No |
 | F14-REQ-28 | Finite limits + pagination (DD-06, 6.4) | structural | boundary/pagination tests | No |
 | F14-REQ-29 | ETag/If-Match; deterministic recompute (7.3) | concurrency | stale-write + recompute tests | No |
 | F14-REQ-30 | Independent scoped identity; no name/native authz (9.1) | authorization | same-operator/different-owner isolation tests | No |
@@ -831,7 +829,7 @@ provider is introduced by any control below.
 | `F14-R13` | Deletion stage 6 rejects with children; leaf-first | child-existence conflict; concurrent/stale/retry tests | 2×4 Medium | Lifecycle/API owner |
 | `F14-R14` | Status = current Sovrunn facts only (8) | staleness/unknown-state fixtures; writer review | 2×3 Medium | Operator/domain owner |
 | `F14-R15` | Operator-facing; no-existence disclosure (9.1) | cross-scope list/get/reference + redaction tests | 1×5 Medium | Security owner |
-| `F14-R16` | `geo` declared topology, not compliance (DD-04) | invalid/unknown-code + no-residency-inference review | 2×4 Medium | Sovereignty/domain owner |
+| `F14-R16` | `geo` syntax-normalized declared topology, not authoritative assignment or compliance (DD-04) | malformed/prefix-mismatch + valid-unassigned + no-authority/no-residency-inference review | 2×4 Medium | Sovereignty/domain owner |
 | `F14-R17` | Finite bounds/pagination (DD-06, 6.4) | boundary/property + pagination benchmarks | 2×3 Medium | API/performance owner |
 | `F14-R18` | Immutable parents + ETag/If-Match (7.3) | concurrency/stale-write/condition-consistency tests | 2×3 Medium | API/lifecycle owner |
 | `F14-R19` | Single active name (DD-01) | old-name scan; schema/API diff | 1×4 Low | Architecture/API owner |
