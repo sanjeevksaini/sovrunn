@@ -34,9 +34,21 @@ if [[ "$FEATURE" == "FEATURE-0013" ]]; then
     --feature "$FEATURE" --stage "$STAGE" --mode pre
 fi
 
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0014-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode pre
+fi
+
 # Render the prompt first. render-prompt.py prints the generated file path.
 PROMPT_PATH="$(./scripts/render-prompt.py --feature "$FEATURE" --stage "$STAGE" | tail -n 1)"
 [[ -f "$PROMPT_PATH" ]] || fail "generated prompt not found: $PROMPT_PATH"
+
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0014-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode prompt
+fi
 
 SPEC_PATH="$(get_feature_value "$FEATURE" spec_path)"
 EXPECTED_DOC="$SPEC_PATH/$STAGE.md"
@@ -138,6 +150,12 @@ fi
 if [[ "$FEATURE" == "FEATURE-0013" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
     ./scripts/feature-0013-architecture-boundary-check.py \
+    --feature "$FEATURE" --stage "$STAGE" --mode post
+fi
+
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/feature-0014-boundary-check.py \
     --feature "$FEATURE" --stage "$STAGE" --mode post
 fi
 

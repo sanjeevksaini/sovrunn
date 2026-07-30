@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/datacenter-failure-domain.json",
+  "title": "DatacenterFailureDomain",
+  "description": "Operator-facing ManagedResource under Provider scope (FEATURE-0014). Immutable immediate parent is exactly one spec.providerDatacenterRef of kind ProviderDatacenter. No connectivity, capacity, capability, adapter, or provider-native fields.",
+  "type": "object",
+  "x-sovrunn-profile": "ManagedResource",
+  "x-sovrunn-boundary": "operator-facing",
+  "x-sovrunn-allowed-scopes": ["Provider"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["fabric.sovrunn.io/v1alpha1"],
+      "description": "Contract group and maturity version for DatacenterFailureDomain.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["DatacenterFailureDomain"],
+      "description": "Singular PascalCase resource kind. Collection: datacenter-failure-domains.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "$ref": "_common/object-meta.json",
+      "description": "Common ObjectMeta. The offline semantic validator requires an immutable Provider scopeRef identifying the containing Provider.",
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Desired topology state for DatacenterFailureDomain. Exactly one immutable providerDatacenterRef; no connectivity, capacity, or native field.",
+      "properties": {
+        "providerDatacenterRef": {
+          "$ref": "_common/typed-ref.json",
+          "description": "Exactly one immutable typed reference. The offline semantic validator requires the immediate parent kind to be ProviderDatacenter.",
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "creator",
+            "authorizedReaders": ["operator", "internal", "governance"],
+            "mutability": "immutable",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "required": ["providerDatacenterRef"],
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "System-owned observed state for DatacenterFailureDomain. Current-fact conditions only; no phase vocabulary.",
+      "properties": {
+        "observedGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Desired-state generation last observed by the status owner.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "description": "Current-fact conditions (Valid, TopologyComplete); not event history.",
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}

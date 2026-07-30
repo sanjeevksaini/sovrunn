@@ -59,7 +59,7 @@ Phase 2 features are executable Phase 2 scope and should be developed in order u
 | FEATURE-0011 | Reuse Assessment Standard | Executable | Require Reuse / Wrap / Extend / Build decision for every feature. |
 | FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Executable | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
 | FEATURE-0013 | Decision Record and AuditEvent Standard | Executable | Define common decision and audit event structure. |
-| FEATURE-0014 | Provider-Neutral Resource Model | Executable | Define Provider, ProviderLocation/Region, ProviderDatacenter, DatacenterFailureDomain, and IaaSStack. |
+| FEATURE-0014 | Provider-Neutral Resource Model | Executable | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack only. |
 | FEATURE-0015 | ResourcePool and ProviderCapability Model | Executable | Define ResourcePool as placement boundary and ProviderCapability as compatibility boundary. |
 | FEATURE-0016 | Adapter Boundary Foundation | Executable | Define adapter interfaces for policy, identity, secrets, operations, observability, events, and repositories. |
 | FEATURE-0017 | Policy Evaluation Abstraction | Executable | Define OPA/Cedar-ready policy input, evaluation result, and engine adapter contracts. |
@@ -113,7 +113,7 @@ Phase 5 should be revalidated after MVP feedback. It expands from one executable
 | FEATURE-0044 | Plugin CredentialPolicy Integration | Roadmap Placeholder | Connect plugin credentials to SecretRef/CredentialRef and approved secret providers. |
 | FEATURE-0045 | Provider Capability Validation Workflow | Roadmap Placeholder | Move capabilities from declared to validated/certified/degraded/disabled. |
 | FEATURE-0046 | Plugin Certification Test Harness | Roadmap Placeholder | Run conformance tests for provider, service management, and runtime plugins. |
-| FEATURE-0047 | Provider Onboarding Workflow | Roadmap Placeholder | Guide provider/MSP through provider, location, IaaSStack, ResourcePool, and capability onboarding. |
+| FEATURE-0047 | Provider Onboarding Workflow | Roadmap Placeholder | Guide provider/MSP through Provider, ProviderLocation, InfrastructureStack, ResourcePool, and capability onboarding. |
 | FEATURE-0048 | Plugin Versioning and Compatibility Checks | Roadmap Placeholder | Manage plugin compatibility with Sovrunn API and resource versions. |
 | FEATURE-0049 | Plugin Health and Degradation Model | Roadmap Placeholder | Represent plugin health, degraded capability states, and disabled execution paths. |
 

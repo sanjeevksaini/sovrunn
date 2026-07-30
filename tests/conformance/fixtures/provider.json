@@ -1,0 +1,44 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "Provider",
+  "metadata": {
+    "name": "provider-operator-a",
+    "uid": "a2000000000000000000000000000001",
+    "displayName": "ProviderOperator-A",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Organization",
+      "name": "owner-organization-a",
+      "uid": "a1000000000000000000000000000001"
+    },
+    "labels": {
+      "sovrunn.io/role": "provider-operator"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-provider-1",
+    "createdAt": "2026-07-30T10:00:00Z",
+    "updatedAt": "2026-07-30T10:00:00Z"
+  },
+  "spec": {},
+  "status": {
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Valid",
+        "status": "True",
+        "reason": "ValidationSucceeded",
+        "message": "Provider is registered and valid.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:00:00Z"
+      },
+      {
+        "type": "TopologyComplete",
+        "status": "True",
+        "reason": "PathComplete",
+        "message": "Unbroken path to InfrastructureStack exists.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:05:00Z"
+      }
+    ]
+  }
+}

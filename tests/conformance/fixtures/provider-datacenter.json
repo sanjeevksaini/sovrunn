@@ -1,0 +1,51 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderDatacenter",
+  "metadata": {
+    "name": "provider-datacenter-1",
+    "uid": "a4000000000000000000000000000001",
+    "displayName": "Datacenter 1",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a",
+      "uid": "a2000000000000000000000000000001"
+    },
+    "labels": {
+      "sovrunn.io/topology": "datacenter"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-provider-datacenter-1",
+    "createdAt": "2026-07-30T10:02:00Z",
+    "updatedAt": "2026-07-30T10:02:00Z"
+  },
+  "spec": {
+    "providerLocationRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "ProviderLocation",
+      "name": "provider-location-mumbai",
+      "uid": "a3000000000000000000000000000001"
+    }
+  },
+  "status": {
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Valid",
+        "status": "True",
+        "reason": "ValidationSucceeded",
+        "message": "ProviderDatacenter is registered and valid.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:02:00Z"
+      },
+      {
+        "type": "TopologyComplete",
+        "status": "True",
+        "reason": "PathComplete",
+        "message": "Unbroken path to InfrastructureStack exists.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:05:00Z"
+      }
+    ]
+  }
+}

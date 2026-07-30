@@ -41,20 +41,22 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 
 | Feature | Status | Controlling handoff |
 |---|---|---|
-| FEATURE-0014 Provider-Neutral Resource Model | Pending architecture | Pending handoff; must consume FEATURE-0011/0012 and avoid redefining FEATURE-0013 contracts |
+| FEATURE-0014 Provider-Neutral Resource Model | Requirements ready | ADH-2026-018; repository readiness and generated-context preflight passed 2026-07-29 |
 
 
-## FEATURE-0014 Pre-Architecture Boundary Notes
+## FEATURE-0014 Approved Architecture Boundary
 
-Before FEATURE-0014 architecture begins, use this focused dependency read:
+Before FEATURE-0014 requirements generation, use the approved architecture and this focused dependency read:
 
 - FEATURE-0011 controls the mandatory reuse-assessment format and reuse-before-build gate.
 - FEATURE-0012 controls API/resource grammar, metadata, references, status, validation shape, Problem Details envelope, and the six-value `ScopeKind` vocabulary.
 - FEATURE-0013 controls `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, `metadata.scopeRef` as sole scope authority, and the rule that `ServiceInstance` is a typed subject, not a `ScopeKind`.
-- FEATURE-0014 owns only provider-neutral substrate resources: Provider, ProviderLocation/Region, ProviderDatacenter, DatacenterFailureDomain, and IaaSStack.
+- FEATURE-0014 owns only provider-neutral substrate resources: Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack.
 - FEATURE-0014 must not own `ResourcePool` or `ProviderCapability`; those belong to FEATURE-0015.
 - FEATURE-0014 must not define adapter interfaces; those belong to FEATURE-0016.
 - FEATURE-0014 must not introduce provider-specific runtime provisioning, plugin execution, placement decisions, policy evaluation, or new decision/audit envelopes.
+- FEATURE-0014 is `NOT_APPLICABLE` under the FEATURE-0013 adoption contract and must not invent decision, audit, or operation behavior.
+- Physical containment implies neither network connectivity nor isolation; explicit connectivity remains outside FEATURE-0014.
 
 ## Phase 2 Exit Criteria
 

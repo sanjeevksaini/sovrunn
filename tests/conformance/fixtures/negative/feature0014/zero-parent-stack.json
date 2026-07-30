@@ -1,0 +1,13 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "InfrastructureStack",
+  "metadata": {
+    "name": "stack-zero-parent",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {}
+}

@@ -120,6 +120,18 @@ Hard constraints:
 - internal/api must not import internal/server.
 - Do not add unrelated future scope.
 
+For FEATURE-0014, load only the approved architecture and ADH-2026-018 plus
+ADH-2026-019 replacement-clarification package
+plus approved requirements and inherited context allowed by architecture
+section 2.2. Design may choose only representation mechanics delegated by
+architecture sections 14 and 15. It must enumerate every F14 decision and risk,
+map every requirement to representation/validation/evidence, preserve the
+single-owner and normalization ledgers, and add no uncited normative behavior.
+Do not design ResourcePool, ProviderCapability, connectivity, adapters,
+discovery, provider calls, decision/audit/operation behavior, or speculative
+extension points. A semantic gap stops the entire stage with
+`ARCHITECTURE_DECISION_REQUIRED`.
+
 Generate design.md only.
 
 ## Phase 2 Reuse and Drift Gates
@@ -141,6 +153,6 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable `DecisionRecord`,
-- defined audit behavior,
+- explainable `DecisionRecord` where the approved feature applicability requires one,
+- defined audit behavior where the approved feature applicability requires it,
 - preserved adapter boundaries.

@@ -1,0 +1,19 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "DatacenterFailureDomain",
+  "metadata": {
+    "name": "fd-wrong-kind-parent",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "providerDatacenterRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "InfrastructureStack",
+      "name": "infrastructure-stack-cloudstack-a"
+    }
+  }
+}

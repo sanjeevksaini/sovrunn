@@ -1,0 +1,7 @@
+feature_id: FEATURE-0014
+slug: provider-neutral-resource-model
+title: Provider-Neutral Resource Model
+phase_branch: phase2-reuse-first-paas-fabric-foundation
+feature_branch: feature-0014-provider-neutral-resource-model
+spec_path: .kiro/specs/provider-neutral-resource-model
+status: requirements_approved

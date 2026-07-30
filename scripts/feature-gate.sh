@@ -28,6 +28,12 @@ fi
 
 echo "==> Sovrunn Feature Gate: $FEATURE"
 
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  echo "==> Running FEATURE-0014 architecture boundary check"
+  PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
+    --feature "$FEATURE" --stage tasks --mode post
+fi
+
 if [[ "$LEGACY_PHASE1" == "true" ]]; then
   echo "INFO: $FEATURE is Phase 1 legacy baseline; using legacy validation mode"
 else

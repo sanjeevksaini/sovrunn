@@ -30,6 +30,18 @@ OUT="$OUT_DIR/cursor-task-${TASK}.prompt.md"
 TASKS_PATH="$SPEC_PATH/tasks.md"
 [[ -f "$TASKS_PATH" ]] || fail "missing tasks.md: $TASKS_PATH"
 
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  CONTEXT_MANIFEST="$OUT_DIR/cursor-task-${TASK}.context.json"
+  python3 ./scripts/feature-0014-cursor-prompt.py \
+    --task "$TASK" --output "$OUT" --manifest "$CONTEXT_MANIFEST"
+  if [[ -z "${FEATURE_FACTORY_ALLOWED_PATHS:-}" ]]; then
+    FEATURE_FACTORY_ALLOWED_PATHS="$(python3 - "$CONTEXT_MANIFEST" <<'PY'
+import json, sys
+print("\n".join(json.load(open(sys.argv[1]))["writable_paths"]))
+PY
+)"
+  fi
+else
 python3 - "$FEATURE" "$TASK" "$SPEC_PATH" "$OUT" <<'PYCURSOR'
 from pathlib import Path
 import subprocess, sys
@@ -53,6 +65,7 @@ rendered = (template
 Path(out).write_text(rendered)
 print(out)
 PYCURSOR
+fi
 
 ./scripts/feature-state.py set --feature "$FEATURE" --key current_task --value "$TASK" >/dev/null
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_prompt_generated" >/dev/null
@@ -141,10 +154,13 @@ MODELS_TO_TRY=()
 if [[ -n "${CURSOR_SELECTED_MODEL:-}" ]]; then
   MODELS_TO_TRY+=("${CURSOR_SELECTED_MODEL}")
 fi
-for row in "${MODEL_ROWS[@]}"; do
-  IFS=$'\t' read -r model label effort <<< "$row"
-  [[ -n "$model" ]] && MODELS_TO_TRY+=("$model")
-done
+if [[ "${CURSOR_REQUIRE_SELECTED_MODEL:-0}" != "1" ]]; then
+  for row in "${MODEL_ROWS[@]}"; do
+    IFS=$'\t' read -r model label effort <<< "$row"
+    [[ -n "$model" ]] && MODELS_TO_TRY+=("$model")
+  done
+fi
+[[ "${#MODELS_TO_TRY[@]}" -gt 0 ]] || fail "no Cursor model selected"
 
 SUCCESS=0
 SELECTED_MODEL=""
@@ -163,6 +179,7 @@ for idx in "${!MODELS_TO_TRY[@]}"; do
   SELECTED_MODEL="$model"
   # Find effort from recommendation list where possible.
   SELECTED_EFFORT="Medium"
+  [[ "$model" == *-high* ]] && SELECTED_EFFORT="high"
   for row in "${MODEL_ROWS[@]}"; do
     IFS=$'\t' read -r rec_model rec_label rec_effort <<< "$row"
     if [[ "$rec_model" == "$model" || "$rec_label" == "$model" ]]; then
@@ -198,6 +215,14 @@ done
 if [[ "$SUCCESS" != "1" ]]; then
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_task_${TASK}_failed" >/dev/null || true
   fail "Cursor CLI failed for all recommended models. See $LOG_FILE"
+fi
+
+if [[ "$FEATURE" == "FEATURE-0014" ]]; then
+  mapfile -t TASK_RECEIPTS < <(grep -E '^TASK_STATUS: (COMPLETE|BLOCKED)$' "$LOG_FILE" || true)
+  if [[ "${#TASK_RECEIPTS[@]}" != "1" || "${TASK_RECEIPTS[0]:-}" != "TASK_STATUS: COMPLETE" ]]; then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_task_${TASK}_blocked" >/dev/null || true
+    fail "Cursor task did not produce exactly one COMPLETE receipt; refusing verification and commit. See $LOG_FILE"
+  fi
 fi
 
 if [[ "$VERIFY_AFTER" == "1" ]]; then

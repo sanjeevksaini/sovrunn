@@ -130,7 +130,7 @@ Phase 2 must not perform real provider provisioning or real PostgreSQL runtime p
 | FEATURE-0011 | Reuse Assessment Standard | Force every feature to decide Reuse / Wrap / Extend / Build. |
 | FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Establish Kubernetes-inspired resource conventions, status, conditions, references, validation errors, and API boundary classification. |
 | FEATURE-0013 | Decision Record and AuditEvent Standard | Define common decision, reason, rejected alternative, suggested action, and audit event structure. |
-| FEATURE-0014 | Provider-Neutral Resource Model | Define Provider, ProviderLocation/Region, ProviderDatacenter, DatacenterFailureDomain, and IaaSStack. |
+| FEATURE-0014 | Provider-Neutral Resource Model | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack only, controlled by ADH-2026-018. |
 | FEATURE-0015 | ResourcePool and ProviderCapability Model | Define ResourcePool as placement boundary and ProviderCapability as compatibility boundary. |
 | FEATURE-0016 | Adapter Boundary Foundation | Define adapter interfaces for policy, identity, secrets, operations, observability, events, and repositories. |
 | FEATURE-0017 | Policy Evaluation Abstraction | Define PolicyEvaluationRequest/Result and OPA/Cedar-ready PolicyEngineAdapter. |

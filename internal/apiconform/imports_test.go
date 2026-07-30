@@ -75,11 +75,12 @@ var allowedGrammarImports = map[string]map[string]struct{}{
 	},
 }
 
-// allowedNonGrammarImports encodes FEATURE-0013 one-way domain imports into
+// allowedNonGrammarImports encodes approved one-way domain imports into
 // apiconform for TypeBinding registration and executable conformance checks.
-// apiconform remains binding/conformance support only; it may import
-// decision/validate one-directionally (validate must not import apiconform;
-// design §5 DAG; T-016/T-027).
+// apiconform remains binding/conformance support only: domain packages must
+// not import apiconform. FEATURE-0013 authorizes decision-domain imports
+// (design §5 DAG; T-016/T-027); FEATURE-0014 authorizes resources solely for
+// schema-to-Go type binding (design §3.1 I-6; Task 19).
 var allowedNonGrammarImports = map[string]map[string]struct{}{
 	"apiconform": {
 		modulePath + "/internal/decision":          {},
@@ -87,6 +88,20 @@ var allowedNonGrammarImports = map[string]map[string]struct{}{
 		modulePath + "/internal/decision/graph":    {},
 		modulePath + "/internal/decision/compose":  {},
 		modulePath + "/internal/decision/validate": {},
+		modulePath + "/internal/resources":         {},
+	},
+}
+
+// allowedTestOnlyNonGrammarImports is an exact file-scoped exception list for
+// conformance tests that exercise lower-layer production helpers. It never
+// authorizes the same dependency from production apiconform files. Task 20's
+// positive fixture test consumes the pure, supplied-state validation helpers;
+// internal/validation must not import apiconform in production.
+var allowedTestOnlyNonGrammarImports = map[string]map[string]map[string]struct{}{
+	"apiconform": {
+		"feature0014_positive_test.go": {
+			modulePath + "/internal/validation": {},
+		},
 	},
 }
 
@@ -152,6 +167,9 @@ func assertImportDirection(t *testing.T, pkg string, imports []importRef) {
 					continue
 				}
 			}
+			if isAllowedTestOnlyNonGrammarImport(pkg, imp.file, path) {
+				continue
+			}
 			t.Errorf("%s:%s imports disallowed non-grammar path %q", imp.file, path, path)
 			continue
 		}
@@ -172,6 +190,41 @@ func assertImportDirection(t *testing.T, pkg string, imports []importRef) {
 		}
 		if pkg == "apischema" && grammarName == "apiproblem" {
 			t.Errorf("%s:%s: apischema MUST NOT import apiproblem", imp.file, path)
+		}
+	}
+}
+
+func isAllowedTestOnlyNonGrammarImport(pkg, file, importPath string) bool {
+	files, ok := allowedTestOnlyNonGrammarImports[pkg]
+	if !ok {
+		return false
+	}
+	extras, ok := files[file]
+	if !ok {
+		return false
+	}
+	_, allowed := extras[importPath]
+	return allowed
+}
+
+func TestFeature0014ValidationImportExceptionIsTestOnly(t *testing.T) {
+	t.Parallel()
+
+	validationPath := modulePath + "/internal/validation"
+	if !isAllowedTestOnlyNonGrammarImport(
+		"apiconform",
+		"feature0014_positive_test.go",
+		validationPath,
+	) {
+		t.Fatal("Task 20 positive conformance test must be allowed to import validation")
+	}
+	for _, file := range []string{
+		"feature0014_positive.go",
+		"feature0014_bindings.go",
+		"another_test.go",
+	} {
+		if isAllowedTestOnlyNonGrammarImport("apiconform", file, validationPath) {
+			t.Fatalf("validation import unexpectedly allowed from %s", file)
 		}
 	}
 }

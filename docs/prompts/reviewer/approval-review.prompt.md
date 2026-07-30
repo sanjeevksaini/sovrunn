@@ -81,9 +81,15 @@ Architecture drift checks:
 - no custom policy engine embedded in handlers,
 - no raw secret storage,
 - no customer-facing IaaS leakage,
-- explainable decision object,
-- defined audit behavior,
+- explainable DecisionRecord where the approved feature applicability requires one,
+- defined audit behavior where the approved feature applicability requires it,
 - preserved adapter boundaries.
+
+For FEATURE-0014, FEATURE-0013 adoption is `NOT_APPLICABLE`. Reject any attempt
+to satisfy generic review guidance by adding decision, audit, operation,
+connectivity, capability, adapter, or runtime semantics. Require exact
+F14-AD-001..021 and F14-R01..30 traceability, a single-owner overlap ledger,
+and a requirement-normalization ledger.
 
 
 ## Observability Review Gate
@@ -93,9 +99,9 @@ Reject or request revision when:
 - Go code lacks required structured logging for request, operation, decision, or plugin lifecycle paths.
 - request_id or operation_id is not propagated where applicable.
 - errors do not expose stable reason codes where the API/operation surface requires them.
-- audit-worthy actions are only logged but not emitted as AuditEvents.
+- audit-worthy actions are only logged but not emitted as AuditEvents where the approved feature applicability requires AuditEvent production.
 - secrets, credentials, tokens, private keys, connection strings, or raw sensitive payloads can be logged.
-- the implementation summary does not describe observability and audit behavior.
+- the implementation summary does not describe applicable observability behavior and, where required by approved applicability, audit behavior.
 
 Use:
 

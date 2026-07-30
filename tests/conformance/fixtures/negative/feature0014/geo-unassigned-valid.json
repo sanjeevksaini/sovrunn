@@ -1,0 +1,18 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderLocation",
+  "metadata": {
+    "name": "loc-geo-unassigned-valid",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "geo": {
+      "countryCode": "XZ",
+      "subdivisionCode": "XZ-A1"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderLocation",
+  "metadata": {
+    "name": "provider-location-mumbai",
+    "uid": "a3000000000000000000000000000001",
+    "displayName": "Mumbai Location",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a",
+      "uid": "a2000000000000000000000000000001"
+    },
+    "labels": {
+      "sovrunn.io/topology": "location"
+    },
+    "generation": 1,
+    "resourceVersion": "rv-provider-location-1",
+    "createdAt": "2026-07-30T10:01:00Z",
+    "updatedAt": "2026-07-30T10:01:00Z"
+  },
+  "spec": {
+    "geo": {
+      "countryCode": "IN",
+      "subdivisionCode": "IN-MH"
+    }
+  },
+  "status": {
+    "observedGeneration": 1,
+    "conditions": [
+      {
+        "type": "Valid",
+        "status": "True",
+        "reason": "ValidationSucceeded",
+        "message": "ProviderLocation is registered and valid.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:01:00Z"
+      },
+      {
+        "type": "TopologyComplete",
+        "status": "True",
+        "reason": "PathComplete",
+        "message": "Unbroken path to InfrastructureStack exists.",
+        "observedGeneration": 1,
+        "lastTransitionTime": "2026-07-30T10:05:00Z"
+      }
+    ]
+  }
+}

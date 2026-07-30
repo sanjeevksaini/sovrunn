@@ -106,6 +106,16 @@ ff-cursor-task:
 ff-cursor-task-auto:
 	FEATURE_FACTORY_CURSOR_MODE=auto ./scripts/cursor-task.sh --feature "$(FEATURE)" --task "$(TASK)" --mode auto
 
+.PHONY: ff-feature-0014-prompt ff-feature-0014-run feature-0014-cursor-boundary-check
+ff-feature-0014-prompt:
+	FEATURE_FACTORY_CURSOR_MODE=prompt ./scripts/cursor-task.sh --feature "FEATURE-0014" --task "$(TASK)" --mode prompt
+
+ff-feature-0014-run:
+	CURSOR_SELECTED_MODEL="$${CURSOR_SELECTED_MODEL:-cursor-grok-4.5-high-fast}" CURSOR_REQUIRE_SELECTED_MODEL=1 ./scripts/feature-0014-flow.py --start-task "$${START_TASK:-1}" $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
+
+feature-0014-cursor-boundary-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-cursor-boundary-check.py --task "$(TASK)"
+
 ff-verify:
 	./scripts/verify.sh
 
@@ -170,6 +180,16 @@ feature-0013-architecture-boundary-check:
 feature-0013-architecture-readiness:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0013-architecture-boundary-check.py \
 		--feature FEATURE-0013 --stage requirements --mode readiness
+
+.PHONY: feature-0014-architecture-boundary-check feature-0014-architecture-readiness
+feature-0014-architecture-boundary-check:
+	@test -n "$(STAGE)" || (echo "STAGE is required: requirements, design, or tasks"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
+		--feature FEATURE-0014 --stage "$(STAGE)" --mode "$${MODE:-post}"
+
+feature-0014-architecture-readiness:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
+		--feature FEATURE-0014 --stage requirements --mode readiness
 
 .PHONY: structurizr-lite
 structurizr-lite:
