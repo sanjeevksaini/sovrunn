@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sanjeevksaini/sovrunn/internal/apicond"
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 	"github.com/sanjeevksaini/sovrunn/internal/apiref"
@@ -198,30 +199,25 @@ func TestFeature0014FullPathCompleteAndEmptyParentsIncomplete(t *testing.T) {
 
 	root := moduleRoot(t)
 	set := mustLoadFeature0014CompletenessSet(t, root)
-	provider := findFeature0014ByKind(t, set, resources.KindProvider)
 
-	got := validation.EvaluateTopologyCompleteness(provider, set)
-	if !got.Complete || got.Reason != validation.ReasonPathComplete {
-		t.Fatalf("full five-level path: complete=%v reason=%q", got.Complete, got.Reason)
+	completePath := []struct {
+		kind       string
+		fixture    string
+		wantReason string
+	}{
+		{resources.KindProvider, fixtureProvider, validation.ReasonPathComplete},
+		{resources.KindProviderLocation, fixtureProviderLocation, validation.ReasonPathComplete},
+		{resources.KindProviderDatacenter, fixtureProviderDatacenter, validation.ReasonPathComplete},
+		{resources.KindDatacenterFailureDomain, fixtureDatacenterFailureDomain, validation.ReasonPathComplete},
+		{resources.KindInfrastructureStack, fixtureInfrastructureStack, validation.ReasonLeafValid},
 	}
-
-	for _, kind := range []string{
-		resources.KindProvider,
-		resources.KindProviderLocation,
-		resources.KindProviderDatacenter,
-		resources.KindDatacenterFailureDomain,
-	} {
-		v := findFeature0014ByKind(t, set, kind)
+	for _, tc := range completePath {
+		v := findFeature0014ByKind(t, set, tc.kind)
 		ev := validation.EvaluateTopologyCompleteness(v, set)
-		if !ev.Complete || ev.Reason != validation.ReasonPathComplete {
-			t.Fatalf("%s: complete=%v reason=%q want PathComplete", kind, ev.Complete, ev.Reason)
+		if !ev.Complete || ev.Reason != tc.wantReason {
+			t.Fatalf("%s: complete=%v reason=%q want %q", tc.kind, ev.Complete, ev.Reason, tc.wantReason)
 		}
-	}
-
-	stack := findFeature0014ByKind(t, set, resources.KindInfrastructureStack)
-	leaf := validation.EvaluateTopologyCompleteness(stack, set)
-	if !leaf.Complete || leaf.Reason != validation.ReasonLeafValid {
-		t.Fatalf("leaf stack: complete=%v reason=%q want LeafValid", leaf.Complete, leaf.Reason)
+		mustAssertFeature0014TopologyCondition(t, root, tc.fixture, ev)
 	}
 
 	// Boundary: empty registered parent at each hierarchy level is
@@ -421,6 +417,70 @@ func TestFeature0014MultiOwnerIsolationIndependentScopeUIDs(t *testing.T) {
 	}
 	if validation.EvaluateScopeAndHierarchy(tvB, locUnderA) {
 		t.Fatal("cross-owner Provider scope must not agree")
+	}
+}
+
+func mustAssertFeature0014TopologyCondition(
+	t *testing.T,
+	root string,
+	fixture string,
+	evaluation validation.TopologyCompletenessEvaluation,
+) {
+	t.Helper()
+
+	var envelope struct {
+		Metadata struct {
+			Generation int64 `json:"generation"`
+		} `json:"metadata"`
+		Status struct {
+			ObservedGeneration int64               `json:"observedGeneration"`
+			Conditions         []apicond.Condition `json:"conditions"`
+		} `json:"status"`
+	}
+	if err := json.Unmarshal(mustReadFeature0014Fixture(t, root, fixture), &envelope); err != nil {
+		t.Fatalf("unmarshal topology condition from %s: %v", fixture, err)
+	}
+	if envelope.Status.ObservedGeneration != envelope.Metadata.Generation {
+		t.Fatalf(
+			"%s status.observedGeneration=%d want current metadata.generation=%d",
+			fixture,
+			envelope.Status.ObservedGeneration,
+			envelope.Metadata.Generation,
+		)
+	}
+
+	var topologyConditions []apicond.Condition
+	for _, condition := range envelope.Status.Conditions {
+		if condition.Type == validation.ConditionTypeTopologyComplete {
+			topologyConditions = append(topologyConditions, condition)
+		}
+	}
+	if len(topologyConditions) != 1 {
+		t.Fatalf("%s has %d TopologyComplete conditions; want exactly one", fixture, len(topologyConditions))
+	}
+
+	condition := topologyConditions[0]
+	wantStatus := apicond.ConditionFalse
+	if evaluation.Complete {
+		wantStatus = apicond.ConditionTrue
+	}
+	if condition.Status != wantStatus || condition.Reason != evaluation.Reason {
+		t.Fatalf(
+			"%s TopologyComplete status=%q reason=%q want status=%q reason=%q",
+			fixture,
+			condition.Status,
+			condition.Reason,
+			wantStatus,
+			evaluation.Reason,
+		)
+	}
+	if condition.ObservedGeneration != envelope.Metadata.Generation {
+		t.Fatalf(
+			"%s TopologyComplete observedGeneration=%d want current metadata.generation=%d",
+			fixture,
+			condition.ObservedGeneration,
+			envelope.Metadata.Generation,
+		)
 	}
 }
 
