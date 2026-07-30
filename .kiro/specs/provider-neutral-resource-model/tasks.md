@@ -752,6 +752,11 @@ Notes:
   UIDs/parents, and leaf-first deletion of a complete path succeeding
   (F14-REQ-12–16, F14-REQ-26) — all evaluated with the Task 17/18 helpers over
   supplied fixture state (the live handlers/store are `CONTRACT_ONLY / NO_TASK`).
+- The repository import guardrail permits `feature0014_positive_test.go` alone
+  to import `internal/validation` so the conformance test can exercise the pure
+  Task 17/18 helpers. This is a file-scoped test-only dependency; production
+  `internal/apiconform` must not import `internal/validation`, and no broader
+  grammar-boundary exception is authorized.
 - Include a valid `geo` code fixture carrying no residency/compliance inference
   (F14-REQ-27) and a multi-owner isolation fixture (F14-REQ-30).
 Tests:

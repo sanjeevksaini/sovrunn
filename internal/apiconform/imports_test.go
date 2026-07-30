@@ -92,6 +92,19 @@ var allowedNonGrammarImports = map[string]map[string]struct{}{
 	},
 }
 
+// allowedTestOnlyNonGrammarImports is an exact file-scoped exception list for
+// conformance tests that exercise lower-layer production helpers. It never
+// authorizes the same dependency from production apiconform files. Task 20's
+// positive fixture test consumes the pure, supplied-state validation helpers;
+// internal/validation must not import apiconform in production.
+var allowedTestOnlyNonGrammarImports = map[string]map[string]map[string]struct{}{
+	"apiconform": {
+		"feature0014_positive_test.go": {
+			modulePath + "/internal/validation": {},
+		},
+	},
+}
+
 var yamlAllowedPackages = map[string]struct{}{
 	"apivalid":   {},
 	"apiconform": {},
@@ -154,6 +167,9 @@ func assertImportDirection(t *testing.T, pkg string, imports []importRef) {
 					continue
 				}
 			}
+			if isAllowedTestOnlyNonGrammarImport(pkg, imp.file, path) {
+				continue
+			}
 			t.Errorf("%s:%s imports disallowed non-grammar path %q", imp.file, path, path)
 			continue
 		}
@@ -174,6 +190,41 @@ func assertImportDirection(t *testing.T, pkg string, imports []importRef) {
 		}
 		if pkg == "apischema" && grammarName == "apiproblem" {
 			t.Errorf("%s:%s: apischema MUST NOT import apiproblem", imp.file, path)
+		}
+	}
+}
+
+func isAllowedTestOnlyNonGrammarImport(pkg, file, importPath string) bool {
+	files, ok := allowedTestOnlyNonGrammarImports[pkg]
+	if !ok {
+		return false
+	}
+	extras, ok := files[file]
+	if !ok {
+		return false
+	}
+	_, allowed := extras[importPath]
+	return allowed
+}
+
+func TestFeature0014ValidationImportExceptionIsTestOnly(t *testing.T) {
+	t.Parallel()
+
+	validationPath := modulePath + "/internal/validation"
+	if !isAllowedTestOnlyNonGrammarImport(
+		"apiconform",
+		"feature0014_positive_test.go",
+		validationPath,
+	) {
+		t.Fatal("Task 20 positive conformance test must be allowed to import validation")
+	}
+	for _, file := range []string{
+		"feature0014_positive.go",
+		"feature0014_bindings.go",
+		"another_test.go",
+	} {
+		if isAllowedTestOnlyNonGrammarImport("apiconform", file, validationPath) {
+			t.Fatalf("validation import unexpectedly allowed from %s", file)
 		}
 	}
 }
