@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -19,12 +20,37 @@ SPEC_DIR = Path(".kiro/specs") / SLUG
 OLD_TERMS = ("IaaSStack", "ProviderRegion", "ProviderLocation/Region", "ProviderLocation / ProviderRegion")
 DECISIONS = {f"F14-AD-{i:03d}" for i in range(1, 22)}
 RISKS = {f"F14-R{i:02d}" for i in range(1, 31)}
+REQUIREMENTS = {f"F14-REQ-{i:02d}" for i in range(1, 32)}
 KINDS = {
     "Provider",
     "ProviderLocation",
     "ProviderDatacenter",
     "DatacenterFailureDomain",
     "InfrastructureStack",
+}
+
+DESIGN_CONTEXT = {
+    "AGENTS.md",
+    "README.md",
+    "docs/engineering/ai-context-loading-standard.md",
+    "docs/foundation/constitution.md",
+    "docs/decisions/DECISION_INDEX.md",
+    "docs/glossary.md",
+    "docs/features/FEATURE_SEQUENCE.md",
+    "docs/resource-specs/RESOURCE_MODEL_PHASE1.md",
+    "docs/api/API_CONTRACT_PHASE1.md",
+    ".kiro/steering/product.md",
+    ".kiro/steering/architecture.md",
+    ".kiro/steering/engineering.md",
+    "docs/engineering/go-coding-guardrails.md",
+    "docs/engineering/go-version-standard.md",
+    "docs/phase2/PHASE2_SCOPE.md",
+    "docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md",
+    "docs/architecture/api-resource-standard.md",
+    str(ARCH),
+    str(ADH),
+    "docs/features/FEATURE-0014-provider-neutral-resource-model.md",
+    str(SPEC_DIR / "requirements.md"),
 }
 
 ACTIVE_CONTEXT = [
@@ -124,6 +150,7 @@ def check_repository(c: Check) -> None:
     prompt_checks = {
         Path("docs/prompts/kiro/requirements.prompt.md"): "## FEATURE-0014 closed architecture boundary",
         Path("docs/prompts/kiro/design.prompt.md"): "For FEATURE-0014",
+        Path("docs/prompts/kiro/feature-0014-design.prompt.md"): "## Exact context boundary",
         Path("docs/prompts/kiro/tasks.prompt.md"): "For FEATURE-0014",
         Path("docs/prompts/reviewer/spec-review.prompt.md"): "For FEATURE-0014",
         Path("docs/prompts/reviewer/approval-review.prompt.md"): "For FEATURE-0014",
@@ -150,7 +177,7 @@ def check_repository(c: Check) -> None:
                   "Kiro config resolves FEATURE-0014 identity")
 
 
-def check_manifest(c: Check, path: Path) -> None:
+def check_manifest(c: Check, path: Path, stage: str) -> None:
     c.require_file(path)
     if not path.is_file():
         return
@@ -160,6 +187,53 @@ def check_manifest(c: Check, path: Path) -> None:
     c.require(str(ADH) in manifest_paths, f"{path} includes ADH-2026-018")
     for old in ("ADH-2026-014", "ADH-2026-015", "ADH-2026-016"):
         c.require(not any(old in item for item in manifest_paths), f"{path} excludes {old}")
+    for item in data.get("files", []):
+        candidate = Path(item["path"])
+        digest = hashlib.sha256(candidate.read_bytes()).hexdigest() if candidate.is_file() else ""
+        c.require(digest == item.get("sha256"), f"{path} hash matches {candidate}")
+    if stage == "design" and "generated-prompts" in str(path):
+        c.require(manifest_paths == DESIGN_CONTEXT,
+                  f"{path} is the exact minimal FEATURE-0014 design context")
+        c.require(not any("FEATURE-0013" in item or "ADH-2026-017" in item for item in manifest_paths),
+                  f"{path} excludes FEATURE-0013 semantic payload")
+        prompt = read(Path(f"docs/generated-prompts/{FEATURE}/design.prompt.md"))
+        c.require(all(f"`{item}`" in prompt for item in DESIGN_CONTEXT),
+                  "rendered design prompt lists every manifest input")
+        c.require("existing implementations for similar resources" not in prompt.lower(),
+                  "rendered design prompt has no open-ended implementation search")
+        c.require("SecurityExceptionRef" not in prompt and "GraphEdge" not in prompt,
+                  "rendered design prompt excludes FEATURE-0013 design instructions")
+
+
+def check_design_authorization(c: Check) -> None:
+    state_path = Path(f".automation/state/{FEATURE}.json")
+    requirements_path = SPEC_DIR / "requirements.md"
+    if not state_path.is_file() or not requirements_path.is_file():
+        c.require(False, "design requires approval state and requirements")
+        return
+    state = json.loads(read(state_path))
+    digest = hashlib.sha256(requirements_path.read_bytes()).hexdigest()
+    c.require(state.get("requirements_approval_token") == "APPROVED_FOR_DESIGN",
+              "design input has APPROVED_FOR_DESIGN token")
+    c.require(state.get("requirements_approved_sha256") == digest,
+              "approved requirements digest matches current design input")
+
+
+def check_design_changed_files(c: Check) -> None:
+    result = subprocess.run(["git", "status", "--porcelain"], text=True, capture_output=True, check=True)
+    permitted = {
+        f".automation/state/{FEATURE}.json",
+        str(SPEC_DIR / "design.md"),
+    }
+    changed = set()
+    for line in result.stdout.splitlines():
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        changed.add(path)
+    c.require(changed <= permitted,
+              "design stage changed only design.md and automation state"
+              + (f": {sorted(changed - permitted)}" if changed - permitted else ""))
 
 
 def check_stage(c: Check, stage: str, require_output: bool) -> None:
@@ -181,8 +255,27 @@ def check_stage(c: Check, stage: str, require_output: bool) -> None:
         c.require("not_applicable" in lower, "requirements preserve FEATURE-0013 NOT_APPLICABLE")
     elif stage == "design":
         c.require((SPEC_DIR / "requirements.md").is_file(), "design has approved requirements input")
+        c.require(ids(text, r"F14-REQ-\d{2}") == REQUIREMENTS,
+                  "design maps exactly F14-REQ-01..31")
         c.require(ids(text, r"F14-AD-\d{3}") == DECISIONS, "design traces exactly all F14 decisions")
         c.require(ids(text, r"F14-R\d{2}") == RISKS, "design traces exactly all F14 risks")
+        lower = text.lower()
+        c.require("field" in lower and "writer" in lower and "mutability" in lower,
+                  "design contains field ownership/writer/mutability ledger")
+        c.require("requirement traceability" in lower and "orphan" in lower,
+                  "design contains requirement traceability and orphan report")
+        c.require("risk" in lower and "control" in lower and "evidence" in lower,
+                  "design maps risk controls to evidence")
+        c.require("not_applicable" in lower, "design preserves FEATURE-0013 NOT_APPLICABLE")
+        c.require("absence ledger" in lower, "design contains adjacent-feature absence ledger")
+        normative_paragraphs = [
+            paragraph for paragraph in re.split(r"\n\s*\n", text)
+            if re.search(r"\b(?:MUST|SHALL|MUST NOT|SHALL NOT)\b", paragraph)
+        ]
+        uncited = [paragraph.splitlines()[0][:100] for paragraph in normative_paragraphs
+                   if not re.search(r"F14-REQ-\d{2}", paragraph)]
+        c.require(not uncited, "design has no uncited normative paragraph"
+                  + (f": {uncited}" if uncited else ""))
     elif stage == "tasks":
         c.require((SPEC_DIR / "requirements.md").is_file() and (SPEC_DIR / "design.md").is_file(),
                   "tasks have approved requirements and design inputs")
@@ -226,13 +319,17 @@ def main() -> None:
     c = Check()
     check_repository(c)
     check_changed_files(c)
+    if args.stage == "design":
+        check_design_authorization(c)
     if args.mode == "prompt":
-        check_manifest(c, Path(f"docs/generated-prompts/{FEATURE}/{args.stage}.context.json"))
+        check_manifest(c, Path(f"docs/generated-prompts/{FEATURE}/{args.stage}.context.json"), args.stage)
     elif args.mode == "review":
-        check_manifest(c, Path(f".automation/reviews/{FEATURE}/{args.stage}-review.context.json"))
+        check_manifest(c, Path(f".automation/reviews/{FEATURE}/{args.stage}-review.context.json"), args.stage)
         check_stage(c, args.stage, True)
     elif args.mode == "post":
         check_stage(c, args.stage, True)
+        if args.stage == "design":
+            check_design_changed_files(c)
     elif args.mode == "pre":
         check_stage(c, args.stage, False)
     c.finish()
