@@ -40,29 +40,8 @@
       }
     },
     "metadata": {
-      "allOf": [
-        {
-          "$ref": "_common/object-meta.json"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "scopeRef": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": ["Provider"],
-                  "description": "ProviderDatacenter primary scope is exactly Provider; ownerRef is not scope."
-                }
-              },
-              "required": ["kind"]
-            }
-          },
-          "required": ["scopeRef"]
-        }
-      ],
-      "description": "Common ObjectMeta with immutable Provider scopeRef identifying the containing Provider.",
+      "$ref": "_common/object-meta.json",
+      "description": "Common ObjectMeta. The offline semantic validator requires an immutable Provider scopeRef identifying the containing Provider.",
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "creator",
@@ -79,23 +58,8 @@
       "description": "Desired topology state for ProviderDatacenter. Exactly one immutable providerLocationRef; no connectivity, capacity, or native field.",
       "properties": {
         "providerLocationRef": {
-          "allOf": [
-            {
-              "$ref": "_common/typed-ref.json"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": ["ProviderLocation"],
-                  "description": "Immediate parent kind is exactly ProviderLocation; not an array."
-                }
-              },
-              "required": ["kind"]
-            }
-          ],
-          "description": "Exactly one immutable typed reference to the immediate ProviderLocation parent.",
+          "$ref": "_common/typed-ref.json",
+          "description": "Exactly one immutable typed reference. The offline semantic validator requires the immediate parent kind to be ProviderLocation.",
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "creator",

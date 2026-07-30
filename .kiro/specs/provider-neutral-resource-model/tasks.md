@@ -237,8 +237,9 @@ Notes:
 - JSON Schema 2020-12 composing `api/schemas/_common/` fragments (`type-meta`,
   `object-meta`, `scope-ref`, `condition`), adding no new common grammar
   (F14-REQ-21).
-- Constrain `metadata.scopeRef.kind` to exactly `Platform` or `Organization`;
-  no seventh scope kind, no owner field as scope.
+- Reference `_common/object-meta.json` directly. The offline Provider validator
+  (Task 13) constrains `metadata.scopeRef.kind` to exactly `Platform` or
+  `Organization`; the schema introduces no `allOf` or duplicated common grammar.
 - `spec` has no domain property. Reject unknown and duplicate fields
   (`additionalProperties: false` per fragment convention).
 - Encode the §6.4 finite bounds already carried by the shared fragments; add no
@@ -246,16 +247,15 @@ Notes:
 Tests:
 - Executed by the Task 19 conformance harness against this schema; a JSON
   schema hosts no Go test itself.
-- Positive: a minimal `Provider` with `scopeRef.kind: Platform` and with
-  `scopeRef.kind: Organization` validates.
-- Negative: `scopeRef.kind: Tenant` (or any non-Platform/Organization value),
-  an owner field used as scope, an unknown/duplicate field, and any domain
-  `spec` property each fail validation.
-- Boundary: `metadata.name` at 253 chars validates and 254 fails; the schema
+- Positive: a minimal structurally valid `Provider` resolves the shared metadata
+  fragment; Task 13 proves Platform/Organization semantic scope acceptance.
+- Negative: an owner field, unknown/duplicate field, and any domain `spec`
+  property fail structurally; Task 13 rejects all other scope kinds.
+- Boundary: `metadata.name` at 63 chars validates and 64 fails; the schema
   resolves all `_common` `$ref`s.
 Acceptance criteria: `provider.json` validates as 2020-12, resolves all
-`_common` `$ref`s, constrains `scopeRef.kind` to Platform/Organization, exposes
-no domain `spec` field, and is accepted by the Task 19 registry/type-binding.
+`_common` `$ref`s, exposes no domain `spec` field, delegates the narrower scope
+kind rule to Task 13, and is accepted by the Task 19 registry/type-binding.
 Commit message: `feat(FEATURE-0014): add Provider canonical JSON Schema`
 
 ---
@@ -273,25 +273,28 @@ Implementation class: IMPLEMENT
 Files: `api/schemas/provider-location.json`
 Notes:
 - Kind fixed to `ProviderLocation`; collection `provider-locations` (design §5).
-- Constrain `metadata.scopeRef.kind` to exactly `Provider`.
+- Reference `_common/object-meta.json` directly; Task 12 constrains
+  `metadata.scopeRef.kind` to exactly `Provider` without schema `allOf`.
 - `spec.geo` optional object: `countryCode` `^[A-Z]{2}$` (exactly 2 chars),
   optional `subdivisionCode` `^[A-Z]{2}-[A-Z0-9]{1,3}$` (≤ 6 chars) whose
-  country prefix must equal `countryCode` (design §6.2). Format only; no
-  authoritative membership is asserted or checked.
+  country prefix is checked against `countryCode` by Task 12 (design §6.2).
+  The schema checks the two field formats independently; no authoritative
+  membership is asserted or checked.
 - No alias location term, no parent field, no connectivity/capacity/native
   field; reject unknown/duplicate fields; §6.4 bounds.
 Tests:
 - Executed by the Task 19 conformance harness against this schema.
-- Positive: a `ProviderLocation` with `scopeRef.kind: Provider`, with and
-  without a well-formed `spec.geo`, validates.
-- Negative: a non-`Provider` scope kind, an alternate location-term field, a
-  parent field, `countryCode` not `^[A-Z]{2}$`, a `subdivisionCode` whose
-  country prefix differs from `countryCode`, or any unknown field fails.
+- Positive: a structurally valid `ProviderLocation`, with and without a
+  well-formed `spec.geo`, validates; Task 12 proves Provider scope semantics.
+- Negative: an alternate location-term field, parent field, malformed
+  `countryCode`/`subdivisionCode`, or unknown field fails structurally; Task 12
+  rejects a non-Provider scope and a mismatched country prefix.
 - Boundary: `countryCode` exactly 2 chars validates; `subdivisionCode` at 6
   chars validates and 7 fails.
-Acceptance criteria: `provider-location.json` validates as 2020-12, constrains
-`scopeRef.kind` to `Provider`, encodes the geo format constraints, has no
-alias/parent/connectivity field, and is accepted by the Task 19 registry.
+Acceptance criteria: `provider-location.json` validates in the FEATURE-0012
+supported subset, encodes the independent geo format constraints, has no
+alias/parent/connectivity field, delegates scope and prefix agreement to Task
+12, and is accepted by the Task 19 registry.
 Commit message: `feat(FEATURE-0014): add ProviderLocation canonical JSON Schema`
 
 ---
@@ -309,21 +312,22 @@ Implementation class: IMPLEMENT
 Files: `api/schemas/provider-datacenter.json`
 Notes:
 - Kind `ProviderDatacenter`; collection `provider-datacenters`.
-- Constrain `metadata.scopeRef.kind` to `Provider`.
-- `spec.providerLocationRef` required, composing `_common/typed-ref`, with
-  `kind` fixed to `ProviderLocation`; exactly one reference (no array).
+- Reference `_common/object-meta.json` directly; Task 14 constrains scope to
+  `Provider`.
+- `spec.providerLocationRef` is one required non-array reference directly to
+  `_common/typed-ref.json`; Task 14 constrains its `kind` to `ProviderLocation`.
 - No connectivity/capacity/native field; reject unknown/duplicate fields; §6.4
   bounds.
 Tests:
 - Executed by the Task 19 conformance harness against this schema.
-- Positive: a `ProviderDatacenter` with `scopeRef.kind: Provider` and one
-  `providerLocationRef` of `kind: ProviderLocation` validates.
-- Negative: a missing reference, two references (array), a wrong-kind
-  reference, a non-`Provider` scope, or any unknown field fails.
+- Positive: a structurally valid `ProviderDatacenter` with one typed
+  `providerLocationRef` validates; Task 14 proves its scope and parent kind.
+- Negative: a missing reference, array/two references, or unknown field fails
+  structurally; Task 14 rejects wrong scope and wrong parent kind.
 - Boundary: exactly one reference is accepted; zero and two are rejected.
 Acceptance criteria: `provider-datacenter.json` validates as 2020-12, requires a
-single `providerLocationRef` constrained to `ProviderLocation`, and is accepted
-by the Task 19 registry.
+single typed `providerLocationRef`, delegates its kind constraint to Task 14,
+and is accepted by the Task 19 registry.
 Commit message: `feat(FEATURE-0014): add ProviderDatacenter canonical JSON Schema`
 
 ---
@@ -341,23 +345,25 @@ Implementation class: IMPLEMENT
 Files: `api/schemas/datacenter-failure-domain.json`
 Notes:
 - Kind `DatacenterFailureDomain`; collection `datacenter-failure-domains`.
-- Constrain `metadata.scopeRef.kind` to `Provider`.
-- `spec.providerDatacenterRef` required, composing `_common/typed-ref`, `kind`
-  fixed to `ProviderDatacenter`; exactly one reference.
+- Reference `_common/object-meta.json` directly; Task 15 constrains scope to
+  `Provider`.
+- `spec.providerDatacenterRef` is one required non-array reference directly to
+  `_common/typed-ref.json`; Task 15 constrains its kind to `ProviderDatacenter`.
 - Deny-list: no `connected` boolean, adjacency, route, peer, reachability,
   latency, bandwidth, trust, health, quorum, correlated-risk, or resilience
   field (F14-REQ-19, F14-REQ-20). Reject unknown/duplicate fields; §6.4 bounds.
 Tests:
 - Executed by the Task 19 conformance harness against this schema.
-- Positive: a `DatacenterFailureDomain` with `scopeRef.kind: Provider` and one
-  `providerDatacenterRef` of `kind: ProviderDatacenter` validates.
-- Negative: a missing/duplicate/wrong-kind reference, a non-`Provider` scope,
-  or any connectivity/isolation/resilience field fails.
+- Positive: a structurally valid `DatacenterFailureDomain` with one typed
+  `providerDatacenterRef` validates; Task 15 proves its scope and parent kind.
+- Negative: a missing/duplicate/array reference or any connectivity/isolation/
+  resilience field fails structurally; Task 15 rejects wrong scope/kind.
 - Boundary: exactly one reference accepted; the connectivity deny-list scan
   finds no matching property anywhere in the schema.
 Acceptance criteria: `datacenter-failure-domain.json` validates as 2020-12,
-requires a single `providerDatacenterRef`, contains no connectivity/isolation
-field, and is accepted by the Task 19 registry.
+requires a single typed `providerDatacenterRef`, contains no connectivity or
+isolation field, delegates its kind constraint to Task 15, and is accepted by
+the Task 19 registry.
 Commit message: `feat(FEATURE-0014): add DatacenterFailureDomain canonical JSON Schema`
 
 ---
@@ -378,29 +384,31 @@ Notes:
 - Active kind name only: `InfrastructureStack`; collection
   `infrastructure-stacks`. The superseded stack-kind name must not appear as an
   active `kind`, `$id`, `title`, property, or enum value (F14-REQ-03).
-- Constrain `metadata.scopeRef.kind` to `Provider`.
-- `spec.datacenterFailureDomainRef` required, composing `_common/typed-ref`,
-  `kind` fixed to `DatacenterFailureDomain`; exactly one reference (no array,
-  no spanning).
+- Reference `_common/object-meta.json` directly; Task 16 constrains scope to
+  `Provider`.
+- `spec.datacenterFailureDomainRef` is one required non-array reference directly
+  to `_common/typed-ref.json`; Task 16 constrains its kind to
+  `DatacenterFailureDomain` and rejects spanning.
 - `spec.technology` optional string `^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,99}$`
   (≤ 100 chars); not an enum, not identity, not a reference key (F14-REQ-17).
 - No capability/capacity/placement/adapter/native/connectivity field; reject
   unknown/duplicate fields; §6.4 bounds.
 Tests:
 - Executed by the Task 19 conformance harness against this schema.
-- Positive: an `InfrastructureStack` with `scopeRef.kind: Provider`, one
-  `datacenterFailureDomainRef` of `kind: DatacenterFailureDomain`, and with/
-  without a valid `technology` validates.
-- Negative: a missing/duplicate/wrong-kind reference, a non-`Provider` scope,
-  the superseded stack-kind name as `kind`/`$id`/property/enum, a `technology`
-  over 100 chars or with a disallowed character, or any capability/capacity/
-  connectivity field fails.
+- Positive: a structurally valid `InfrastructureStack` with one typed
+  `datacenterFailureDomainRef`, with/without valid `technology`, validates;
+  Task 16 proves its scope and parent kind.
+- Negative: a missing/duplicate/array reference, the superseded stack-kind name
+  as `kind`/`$id`/property/enum, invalid `technology`, or any capability/
+  capacity/connectivity field fails structurally; Task 16 rejects wrong scope/
+  parent kind and spanning.
 - Boundary: `technology` at exactly 100 chars validates and 101 fails; exactly
   one failure-domain reference is accepted.
-Acceptance criteria: `infrastructure-stack.json` validates as 2020-12, uses only
-the active kind name, requires a single `datacenterFailureDomainRef`, encodes
-`technology` as a bounded non-enum string, and is accepted by the Task 19
-registry.
+Acceptance criteria: `infrastructure-stack.json` validates in the FEATURE-0012
+supported subset, uses only the active kind name, requires a single typed
+`datacenterFailureDomainRef`, encodes `technology` as a bounded non-enum string,
+delegates its kind/no-spanning constraint to Task 16, and is accepted by the
+Task 19 registry.
 Commit message: `feat(FEATURE-0014): add InfrastructureStack canonical JSON Schema`
 
 ---

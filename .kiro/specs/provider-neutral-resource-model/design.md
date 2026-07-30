@@ -448,6 +448,15 @@ reused unchanged and are not redefined here.
 Typed reference shape (inherited FEATURE-0012 section 6.6): `{ apiVersion, kind,
 name, uid? }`, constrained to the required parent kind and to `Provider` scope.
 
+Schema composition uses only the closed FEATURE-0012 supported subset: shared
+`ObjectMeta` and `TypedRef` shapes are referenced directly with `$ref`; this
+feature does not introduce `allOf` or duplicate/narrow those shared schemas.
+The per-kind `metadata.scopeRef.kind`, immediate-parent `kind`, and geographic
+country-prefix rules in this inventory are semantic constraints enforced by the
+offline validators (section 7.1 stages 1–2) and conformance fixtures. Root schema
+annotations still declare allowed scopes for inventory and review, but do not
+replace semantic validation.
+
 ### 4.3 Authoritative writer and mutability ledger
 
 Every field and condition has exactly one authoritative writer (architecture
@@ -541,8 +550,9 @@ Binding rules (all inherited from FEATURE-0012, F14-REQ-21):
   `<countryCode>-<subdivision>`, where `<subdivision>` is 1–3 uppercase ASCII
   letters or digits (`^[A-Z]{2}-[A-Z0-9]{1,3}$`; total length ≤ 6). When present,
   its two-letter country prefix MUST equal `countryCode`.
-- **Validation boundary.** Validation checks only the two formats, finite bounds,
-  and country-prefix agreement. It performs no authoritative membership lookup,
+- **Validation boundary.** JSON Schema checks each field's syntax and finite
+  bound independently. The offline semantic validator checks country-prefix
+  agreement. Validation performs no authoritative membership lookup,
   network fetch, runtime lookup, or dependency call. A syntactically valid but
   unassigned value is accepted as declared metadata and carries no claim of ISO
   assignment (`ADH-2026-019`).
@@ -573,7 +583,7 @@ Binding rules (all inherited from FEATURE-0012, F14-REQ-21):
 |---|---|---|
 | whole-object size | ≤ 1,048,576 bytes (1 MiB) | F14-REQ-28 |
 | JSON nesting depth | ≤ 32 levels | F14-REQ-28 |
-| `metadata.name` length | ≤ 253 characters | F14-REQ-21, F14-REQ-28 |
+| `metadata.name` length | ≤ 63 characters | F14-REQ-21, F14-REQ-28 |
 | `metadata.displayName` length | ≤ 253 characters | F14-REQ-28 |
 | `metadata.labels` entries | ≤ 64 entries | F14-REQ-28 |
 | label key length | ≤ 63 characters | F14-REQ-28 |

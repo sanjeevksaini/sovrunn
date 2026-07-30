@@ -40,29 +40,8 @@
       }
     },
     "metadata": {
-      "allOf": [
-        {
-          "$ref": "_common/object-meta.json"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "scopeRef": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": ["Platform", "Organization"],
-                  "description": "Provider primary scope is exactly Platform or Organization; ownerRef is not scope."
-                }
-              },
-              "required": ["kind"]
-            }
-          },
-          "required": ["scopeRef"]
-        }
-      ],
-      "description": "Common ObjectMeta with immutable Platform or Organization scopeRef. ownerRef must not replace scope.",
+      "$ref": "_common/object-meta.json",
+      "description": "Common ObjectMeta. The offline semantic validator requires an immutable Platform or Organization scopeRef; ownerRef must not replace scope.",
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "creator",

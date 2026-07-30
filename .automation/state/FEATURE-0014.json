@@ -4,8 +4,8 @@
   "current_task": "10",
   "design_approval_source": "openai_machine_review",
   "design_approval_token": "APPROVED_FOR_TASKS",
-  "design_approved_at": "2026-07-30T07:36:34Z",
-  "design_approved_sha256": "67474914b6180bed250bbeb049ae387e4aa2e53147c5c58ea0282ad609b33199",
+  "design_approved_at": "2026-07-30T08:43:50Z",
+  "design_approved_sha256": "49e6c34ed2f4e603d95884ea493f85fb90549976799a52d3ab107488ce78d298",
   "feature_branch": "feature-0014-provider-neutral-resource-model",
   "feature_id": "FEATURE-0014",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0014",
@@ -22,8 +22,8 @@
   "status": "cursor_task_10_committed",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
-  "tasks_approved_at": "2026-07-30T07:38:26Z",
-  "tasks_approved_sha256": "da436be3fbc3cfd0fe893256ab6f1059b50a88dd3c95e907025dcb098775e0e1",
+  "tasks_approved_at": "2026-07-30T08:43:50Z",
+  "tasks_approved_sha256": "98359104c4c213980b8ba7f5b295d106896b1333f9cf41969cf3344225f87342",
   "title": "Provider-Neutral Resource Model",
-  "updated_at": "2026-07-30T08:25:09.100273+00:00"
+  "updated_at": "2026-07-30T08:43:51.141997+00:00"
 }
