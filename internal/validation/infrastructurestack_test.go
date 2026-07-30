@@ -202,25 +202,19 @@ func TestValidateInfrastructureStack_NegativeTechnology(t *testing.T) {
 			name:      "control-character",
 			tech:      "Apache\tCloudStack",
 			wantField: "/spec/technology",
-			wantCode:  apiproblem.ViolationCode(apischema.CodePatternMismatch),
+			wantCode:  apiproblem.ViolationOutOfRange,
 		},
 		{
 			name:      "non-ascii",
 			tech:      "Apache Café",
 			wantField: "/spec/technology",
-			wantCode:  apiproblem.ViolationCode(apischema.CodePatternMismatch),
+			wantCode:  apiproblem.ViolationOutOfRange,
 		},
 		{
 			name:      "over-100-chars",
 			tech:      strings.Repeat("a", 101),
 			wantField: "/spec/technology",
 			wantCode:  apiproblem.ViolationOutOfRange,
-		},
-		{
-			name:      "leading-trailing-space-after-normalization",
-			tech:      " Apache CloudStack ",
-			wantField: "/spec/technology",
-			wantCode:  apiproblem.ViolationCode(apischema.CodePatternMismatch),
 		},
 	}
 
@@ -304,6 +298,22 @@ func TestValidateInfrastructureStack_BoundaryTechnologyLengthAndSpaces(t *testin
 		raw := mustInfrastructureStackJSON(t, validInfrastructureStackDoc("stack-tech-dbl", "fd-bangalore-az1", "Apache  CloudStack"))
 		if prob := ValidateInfrastructureStack(ctx, raw, structural); prob != nil {
 			t.Fatalf("double-space technology must pass after normalization: %#v", prob)
+		}
+	})
+
+	t.Run("canonical-value-returned", func(t *testing.T) {
+		t.Parallel()
+		raw := mustInfrastructureStackJSON(t, validInfrastructureStackDoc(
+			"stack-tech-canonical",
+			"fd-bangalore-az1",
+			"  Apache  CloudStack  ",
+		))
+		stack, prob := ValidateAndNormalizeInfrastructureStack(ctx, raw, structural)
+		if prob != nil {
+			t.Fatalf("normalizable technology must pass: %#v", prob)
+		}
+		if got, want := stack.Spec.Technology, "Apache CloudStack"; got != want {
+			t.Fatalf("normalized technology = %q, want %q", got, want)
 		}
 	})
 }

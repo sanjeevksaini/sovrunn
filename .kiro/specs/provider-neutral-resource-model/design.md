@@ -567,15 +567,18 @@ Binding rules (all inherited from FEATURE-0012, F14-REQ-21):
   `. _ + -`, and starting with a letter or digit. No control characters, no
   non-ASCII/Unicode characters, and no leading or trailing space (after
   normalization) are permitted.
-- **Deterministic normalization**, applied before validation and storage in this
+- **Deterministic normalization**, applied before canonical-value validation in this
   fixed order: (1) reject the value if it contains any character outside the
   ASCII set above; (2) trim leading and trailing ASCII spaces; (3) collapse each
   internal run of spaces to a single space. Case is preserved (not folded),
   because the descriptor is not identity and case-folding would imply an equality
   contract.
-- The normalized value is stored verbatim. It is not matched against a closed
-  enum, not case-folded for comparison, and not used as identity or a
-  reference/lookup key (F14-REQ-17, F14-REQ-18, F14-REQ-15).
+- The offline validator exposes the normalized in-memory resource value to its
+  caller; an error-only compatibility wrapper may discard that value. FEATURE-0014
+  defines no storage mechanism. Any later authorized writer that consumes this
+  contract must use the returned normalized value verbatim. The value is not
+  matched against a closed enum, not case-folded for comparison, and not used as
+  identity or a reference/lookup key (F14-REQ-17, F14-REQ-18, F14-REQ-15).
 
 ### 6.4 Reviewed initial finite limits (DD-06; F14-REQ-28)
 

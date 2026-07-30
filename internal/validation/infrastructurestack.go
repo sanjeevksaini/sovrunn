@@ -94,8 +94,8 @@ func (c infrastructureStackSemanticCarrier) DataClassification() (apimeta.DataCl
 // FEATURE-0014 identity, Provider-constrained scopeRef via apiref.Constraint,
 // exactly one datacenterFailureDomainRef of kind DatacenterFailureDomain,
 // and optional bounded descriptive technology with design §6.3 deterministic
-// normalization. Technology is stored/validated as the normalized verbatim
-// string; it is not an enum, identity, or lookup key (F14-REQ-15, F14-REQ-17).
+// normalization. Technology is validated as the normalized verbatim string;
+// it is not an enum, identity, or lookup key (F14-REQ-15, F14-REQ-17).
 //
 // Returns nil on success. Failures use inherited RFC 9457 Problem Details
 // with stable codes and RFC 6901 paths. Messages carry no native identifiers
@@ -106,16 +106,34 @@ func ValidateInfrastructureStack(
 	data []byte,
 	structural apivalid.StructuralValidator,
 ) *apiproblem.Problem {
+	_, prob := ValidateAndNormalizeInfrastructureStack(ctx, data, structural)
+	return prob
+}
+
+// ValidateAndNormalizeInfrastructureStack performs the same pure offline
+// validation as ValidateInfrastructureStack and returns the canonical decoded
+// resource on success. The returned value carries technology after design §6.3
+// normalization, making the canonical representation available without adding
+// storage, lookup, registry, or runtime ownership to FEATURE-0014.
+//
+// On failure the returned resource is the zero value and prob describes the
+// failure. Callers must use the returned resource, rather than the input bytes,
+// when a later separately authorized component needs the canonical value.
+func ValidateAndNormalizeInfrastructureStack(
+	ctx context.Context,
+	data []byte,
+	structural apivalid.StructuralValidator,
+) (resources.InfrastructureStack, *apiproblem.Problem) {
 	lim := apivalid.DefaultLimits()
 	pol := apivalid.PolicyFor(apivalid.ModeCreateRequest)
 
 	var stack resources.InfrastructureStack
 	if prob := apivalid.DecodeJSON(data, lim, pol, &stack); prob != nil {
-		return prob
+		return resources.InfrastructureStack{}, prob
 	}
 
 	if structural == nil {
-		return apiproblem.New(apiproblem.CodeInternalError).
+		return resources.InfrastructureStack{}, apiproblem.New(apiproblem.CodeInternalError).
 			WithDetail("structural validator is unavailable")
 	}
 
@@ -124,27 +142,38 @@ func ValidateInfrastructureStack(
 	// zero-value objects and hide REQUIRED_FIELD findings.
 	var raw any
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return apiproblem.New(apiproblem.CodeMalformedRequest).
+		return resources.InfrastructureStack{}, apiproblem.New(apiproblem.CodeMalformedRequest).
 			WithDetail("malformed JSON")
 	}
+
+	// Normalize technology before canonical-value validation, as required by
+	// design §6.3. Update both the typed result and the raw structural input so
+	// leading/trailing or repeated ASCII spaces are evaluated in canonical form.
+	normalizedTechnology, technologyViolations := normalizeAndValidateTechnology(stack.Spec.Technology)
+	if len(technologyViolations) > 0 {
+		return resources.InfrastructureStack{}, validationFailedProblem(technologyViolations, lim)
+	}
+	stack.Spec.Technology = normalizedTechnology
+	setNormalizedTechnology(raw, normalizedTechnology)
+
 	structViolations, err := structural.Validate(raw, infrastructureStackSchemaID)
 	if err != nil {
-		return apiproblem.New(apiproblem.CodeInternalError).
+		return resources.InfrastructureStack{}, apiproblem.New(apiproblem.CodeInternalError).
 			WithDetail("structural validator is unavailable")
 	}
 	if len(structViolations) > 0 {
-		return validationFailedProblem(structViolations, lim)
+		return resources.InfrastructureStack{}, validationFailedProblem(structViolations, lim)
 	}
 
 	violations, err := validateInfrastructureStackSemantic(ctx, stack, lim)
 	if err != nil {
-		return apiproblem.New(apiproblem.CodeInternalError).
+		return resources.InfrastructureStack{}, apiproblem.New(apiproblem.CodeInternalError).
 			WithDetail("semantic validator is unavailable")
 	}
 	if len(violations) == 0 {
-		return nil
+		return stack, nil
 	}
-	return validationFailedProblem(violations, lim)
+	return resources.InfrastructureStack{}, validationFailedProblem(violations, lim)
 }
 
 func validateInfrastructureStackSemantic(
@@ -204,15 +233,20 @@ func validateInfrastructureStackParentRef(ref resources.DatacenterFailureDomainR
 // validateInfrastructureStackTechnology applies design §6.3 deterministic
 // normalization in fixed order, then validates the accepted pattern.
 // Absent/empty technology is allowed (optional field). The normalized value
-// is the form that would be stored verbatim; it is not an enum or identity.
+// is the canonical in-memory form; it is not an enum or identity.
 func validateInfrastructureStackTechnology(tech string) []apiproblem.Violation {
+	_, violations := normalizeAndValidateTechnology(tech)
+	return violations
+}
+
+func normalizeAndValidateTechnology(tech string) (string, []apiproblem.Violation) {
 	if tech == "" {
-		return nil
+		return "", nil
 	}
 
 	normalized, ok := normalizeTechnology(tech)
 	if !ok {
-		return []apiproblem.Violation{{
+		return "", []apiproblem.Violation{{
 			Field:   "/spec/technology",
 			Code:    apiproblem.ViolationOutOfRange,
 			Message: "technology must use only ASCII letters, digits, space, and ._+-",
@@ -223,13 +257,30 @@ func validateInfrastructureStackTechnology(tech string) []apiproblem.Violation {
 		normalized[len(normalized)-1] == ' ' ||
 		len(normalized) > maxTechnologyChars ||
 		!technologyRe.MatchString(normalized) {
-		return []apiproblem.Violation{{
+		return "", []apiproblem.Violation{{
 			Field:   "/spec/technology",
 			Code:    apiproblem.ViolationOutOfRange,
 			Message: "technology must be 1–100 characters matching the bounded descriptive pattern after normalization",
 		}}
 	}
-	return nil
+	return normalized, nil
+}
+
+// setNormalizedTechnology updates the already-decoded raw document only when
+// spec.technology was present in the input. Presence remains a schema concern:
+// an absent optional value is not synthesized.
+func setNormalizedTechnology(raw any, normalized string) {
+	doc, ok := raw.(map[string]any)
+	if !ok {
+		return
+	}
+	spec, ok := doc["spec"].(map[string]any)
+	if !ok {
+		return
+	}
+	if _, present := spec["technology"]; present {
+		spec["technology"] = normalized
+	}
 }
 
 // normalizeTechnology applies design §6.3 normalization in fixed order:

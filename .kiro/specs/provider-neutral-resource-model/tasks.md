@@ -579,19 +579,23 @@ Notes:
 - `spec.technology` (when present): apply the design §6.3 deterministic
   normalization in the fixed order (reject non-ASCII outside the allowed set;
   trim leading/trailing ASCII spaces; collapse internal space runs; preserve
-  case) then validate `^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,99}$`; store verbatim; do
-  not match against an enum or use as identity/lookup key (F14-REQ-17,
-  F14-REQ-15).
+  case) then validate `^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,99}$`. Expose the
+  normalized in-memory resource to the caller through a pure offline API while
+  retaining the conventional error-only validator wrapper. FEATURE-0014 adds no
+  storage mechanism; any later authorized writer must consume the returned
+  normalized value verbatim. Do not match against an enum or use as
+  identity/lookup key (F14-REQ-17, F14-REQ-15).
 - The superseded stack-kind name must not be introduced by this validator.
 Tests:
 - Positive: a stack with one valid parent reference and with/without a valid
   normalized `technology` passes; two stacks with identical technology validate
   independently (identity is `uid`, not technology).
 - Negative: missing/multiple/cross-kind parent; wrong scope; `technology` with
-  a control/non-ASCII character, over 100 chars, or leading/trailing space after
-  normalization; user-authored status — each rejected.
-- Boundary: `technology` exactly 100 chars accepted; 101 rejected; single
-  internal space preserved, double collapsed.
+  a control/non-ASCII character, over 100 characters after normalization, or
+  empty after normalization; user-authored status — each rejected.
+- Boundary: normalized `technology` exactly 100 chars accepted and 101 rejected;
+  leading/trailing ASCII spaces trimmed; single internal space preserved; double
+  spaces collapsed; the normalized value is returned to the caller.
 Acceptance criteria: the validator enforces a single failure-domain parent and
 bounded descriptive technology with deterministic normalization and the
 inherited error contract; tests pass.
