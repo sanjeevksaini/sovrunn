@@ -429,6 +429,83 @@ func TestCompletenessValueFromResources_Projection(t *testing.T) {
 	}
 }
 
+func TestCompletenessValueFromInfrastructureStack_ValidMustBeCurrentGeneration(t *testing.T) {
+	t.Parallel()
+
+	makeStack := func(metadataGeneration, statusObservedGeneration, conditionObservedGeneration int64) resources.InfrastructureStack {
+		stack := resources.InfrastructureStack{
+			Metadata: apimeta.ObjectMeta{
+				UID:        "stack-generation-uid",
+				Generation: metadataGeneration,
+			},
+			Status: resources.InfrastructureStackStatus{
+				ObservedGeneration: statusObservedGeneration,
+				Conditions: []apicond.Condition{{
+					Type:               ConditionTypeValid,
+					Status:             apicond.ConditionTrue,
+					Reason:             "ValidationSucceeded",
+					ObservedGeneration: conditionObservedGeneration,
+				}},
+			},
+		}
+		stack.Kind = resources.KindInfrastructureStack
+		return stack
+	}
+
+	cases := []struct {
+		name                        string
+		metadataGeneration          int64
+		statusObservedGeneration    int64
+		conditionObservedGeneration int64
+		wantValid                   bool
+	}{
+		{
+			name:                        "all-current",
+			metadataGeneration:          2,
+			statusObservedGeneration:    2,
+			conditionObservedGeneration: 2,
+			wantValid:                   true,
+		},
+		{
+			name:                        "stale-status-and-condition",
+			metadataGeneration:          2,
+			statusObservedGeneration:    1,
+			conditionObservedGeneration: 1,
+		},
+		{
+			name:                        "stale-status",
+			metadataGeneration:          2,
+			statusObservedGeneration:    1,
+			conditionObservedGeneration: 2,
+		},
+		{
+			name:                        "stale-condition",
+			metadataGeneration:          2,
+			statusObservedGeneration:    2,
+			conditionObservedGeneration: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			value := CompletenessValueFromInfrastructureStack(makeStack(
+				tc.metadataGeneration,
+				tc.statusObservedGeneration,
+				tc.conditionObservedGeneration,
+			))
+			if value.Valid != tc.wantValid {
+				t.Fatalf("Valid = %v, want %v", value.Valid, tc.wantValid)
+			}
+			evaluation := EvaluateTopologyCompleteness(value, []CompletenessValue{value})
+			if evaluation.Complete != tc.wantValid {
+				t.Fatalf("Complete = %v, want %v", evaluation.Complete, tc.wantValid)
+			}
+		})
+	}
+}
+
 func fullCompletePathSet(providerUID string) []CompletenessValue {
 	locUID := providerUID + "-loc"
 	dcUID := providerUID + "-dc"

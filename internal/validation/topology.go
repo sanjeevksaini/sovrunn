@@ -67,12 +67,8 @@ func EvaluateScopeAndHierarchy(parent, child TopologyValue) bool {
 // TopologyValueFromProvider projects a supplied Provider into a TopologyValue.
 // The Provider's own UID is the Provider scope UID.
 func TopologyValueFromProvider(p resources.Provider) TopologyValue {
-	kind := p.Kind
-	if kind == "" {
-		kind = resources.KindProvider
-	}
 	return TopologyValue{
-		Kind:             kind,
+		Kind:             p.Kind,
 		UID:              p.Metadata.UID,
 		ProviderScopeUID: p.Metadata.UID,
 	}
@@ -80,12 +76,8 @@ func TopologyValueFromProvider(p resources.Provider) TopologyValue {
 
 // TopologyValueFromProviderLocation projects a supplied ProviderLocation.
 func TopologyValueFromProviderLocation(loc resources.ProviderLocation) TopologyValue {
-	kind := loc.Kind
-	if kind == "" {
-		kind = resources.KindProviderLocation
-	}
 	return TopologyValue{
-		Kind:             kind,
+		Kind:             loc.Kind,
 		UID:              loc.Metadata.UID,
 		ProviderScopeUID: providerScopeUIDFromScopeRef(loc.Metadata.ScopeRef),
 	}
@@ -93,12 +85,8 @@ func TopologyValueFromProviderLocation(loc resources.ProviderLocation) TopologyV
 
 // TopologyValueFromProviderDatacenter projects a supplied ProviderDatacenter.
 func TopologyValueFromProviderDatacenter(dc resources.ProviderDatacenter) TopologyValue {
-	kind := dc.Kind
-	if kind == "" {
-		kind = resources.KindProviderDatacenter
-	}
 	return TopologyValue{
-		Kind:             kind,
+		Kind:             dc.Kind,
 		UID:              dc.Metadata.UID,
 		ProviderScopeUID: providerScopeUIDFromScopeRef(dc.Metadata.ScopeRef),
 	}
@@ -107,12 +95,8 @@ func TopologyValueFromProviderDatacenter(dc resources.ProviderDatacenter) Topolo
 // TopologyValueFromDatacenterFailureDomain projects a supplied
 // DatacenterFailureDomain.
 func TopologyValueFromDatacenterFailureDomain(fd resources.DatacenterFailureDomain) TopologyValue {
-	kind := fd.Kind
-	if kind == "" {
-		kind = resources.KindDatacenterFailureDomain
-	}
 	return TopologyValue{
-		Kind:             kind,
+		Kind:             fd.Kind,
 		UID:              fd.Metadata.UID,
 		ProviderScopeUID: providerScopeUIDFromScopeRef(fd.Metadata.ScopeRef),
 	}
@@ -120,12 +104,8 @@ func TopologyValueFromDatacenterFailureDomain(fd resources.DatacenterFailureDoma
 
 // TopologyValueFromInfrastructureStack projects a supplied InfrastructureStack.
 func TopologyValueFromInfrastructureStack(stack resources.InfrastructureStack) TopologyValue {
-	kind := stack.Kind
-	if kind == "" {
-		kind = resources.KindInfrastructureStack
-	}
 	return TopologyValue{
-		Kind:             kind,
+		Kind:             stack.Kind,
 		UID:              stack.Metadata.UID,
 		ProviderScopeUID: providerScopeUIDFromScopeRef(stack.Metadata.ScopeRef),
 	}

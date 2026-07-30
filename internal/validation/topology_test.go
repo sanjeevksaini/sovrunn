@@ -321,6 +321,66 @@ func TestTopologyValueFromResources_Projection(t *testing.T) {
 	}
 }
 
+func TestTopologyValueFromResources_MissingKindFailsClosed(t *testing.T) {
+	t.Parallel()
+
+	providerUID := "provider-uid-missing-kind"
+	providerScope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+		Kind: string(apimeta.ScopeProvider),
+		UID:  providerUID,
+	}}
+
+	values := []struct {
+		name  string
+		value TopologyValue
+	}{
+		{
+			name: "provider",
+			value: TopologyValueFromProvider(resources.Provider{
+				Metadata: apimeta.ObjectMeta{UID: providerUID},
+			}),
+		},
+		{
+			name: "provider-location",
+			value: TopologyValueFromProviderLocation(resources.ProviderLocation{
+				Metadata: apimeta.ObjectMeta{UID: "loc-uid", ScopeRef: providerScope},
+			}),
+		},
+		{
+			name: "provider-datacenter",
+			value: TopologyValueFromProviderDatacenter(resources.ProviderDatacenter{
+				Metadata: apimeta.ObjectMeta{UID: "dc-uid", ScopeRef: providerScope},
+			}),
+		},
+		{
+			name: "datacenter-failure-domain",
+			value: TopologyValueFromDatacenterFailureDomain(resources.DatacenterFailureDomain{
+				Metadata: apimeta.ObjectMeta{UID: "fd-uid", ScopeRef: providerScope},
+			}),
+		},
+		{
+			name: "infrastructure-stack",
+			value: TopologyValueFromInfrastructureStack(resources.InfrastructureStack{
+				Metadata: apimeta.ObjectMeta{UID: "stack-uid", ScopeRef: providerScope},
+			}),
+		},
+	}
+
+	for _, tc := range values {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if tc.value.Kind != "" {
+				t.Fatalf("projection repaired missing kind as %q", tc.value.Kind)
+			}
+		})
+	}
+
+	if EvaluateScopeAndHierarchy(values[0].value, values[1].value) {
+		t.Fatal("missing required kinds must fail hierarchy evaluation")
+	}
+}
+
 func TestEvaluateScopeAndHierarchy_ConcurrentRace(t *testing.T) {
 	t.Parallel()
 

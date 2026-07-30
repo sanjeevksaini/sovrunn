@@ -99,7 +99,12 @@ func CompletenessValueFromProvider(p resources.Provider) CompletenessValue {
 		UID:              tv.UID,
 		ProviderScopeUID: tv.ProviderScopeUID,
 		ParentUID:        "",
-		Valid:            conditionStatusTrue(p.Status.Conditions, ConditionTypeValid),
+		Valid: conditionStatusTrueAtGeneration(
+			p.Status.Conditions,
+			ConditionTypeValid,
+			p.Metadata.Generation,
+			p.Status.ObservedGeneration,
+		),
 	}
 }
 
@@ -112,7 +117,12 @@ func CompletenessValueFromProviderLocation(loc resources.ProviderLocation) Compl
 		UID:              tv.UID,
 		ProviderScopeUID: tv.ProviderScopeUID,
 		ParentUID:        tv.ProviderScopeUID,
-		Valid:            conditionStatusTrue(loc.Status.Conditions, ConditionTypeValid),
+		Valid: conditionStatusTrueAtGeneration(
+			loc.Status.Conditions,
+			ConditionTypeValid,
+			loc.Metadata.Generation,
+			loc.Status.ObservedGeneration,
+		),
 	}
 }
 
@@ -124,7 +134,12 @@ func CompletenessValueFromProviderDatacenter(dc resources.ProviderDatacenter) Co
 		UID:              tv.UID,
 		ProviderScopeUID: tv.ProviderScopeUID,
 		ParentUID:        dc.Spec.ProviderLocationRef.UID,
-		Valid:            conditionStatusTrue(dc.Status.Conditions, ConditionTypeValid),
+		Valid: conditionStatusTrueAtGeneration(
+			dc.Status.Conditions,
+			ConditionTypeValid,
+			dc.Metadata.Generation,
+			dc.Status.ObservedGeneration,
+		),
 	}
 }
 
@@ -137,7 +152,12 @@ func CompletenessValueFromDatacenterFailureDomain(fd resources.DatacenterFailure
 		UID:              tv.UID,
 		ProviderScopeUID: tv.ProviderScopeUID,
 		ParentUID:        fd.Spec.ProviderDatacenterRef.UID,
-		Valid:            conditionStatusTrue(fd.Status.Conditions, ConditionTypeValid),
+		Valid: conditionStatusTrueAtGeneration(
+			fd.Status.Conditions,
+			ConditionTypeValid,
+			fd.Metadata.Generation,
+			fd.Status.ObservedGeneration,
+		),
 	}
 }
 
@@ -149,7 +169,12 @@ func CompletenessValueFromInfrastructureStack(stack resources.InfrastructureStac
 		UID:              tv.UID,
 		ProviderScopeUID: tv.ProviderScopeUID,
 		ParentUID:        stack.Spec.DatacenterFailureDomainRef.UID,
-		Valid:            conditionStatusTrue(stack.Status.Conditions, ConditionTypeValid),
+		Valid: conditionStatusTrueAtGeneration(
+			stack.Status.Conditions,
+			ConditionTypeValid,
+			stack.Metadata.Generation,
+			stack.Status.ObservedGeneration,
+		),
 	}
 }
 
@@ -244,7 +269,21 @@ func requiredImmediateChildKind(parentKind string) (childKind string, ok bool) {
 	}
 }
 
-func conditionStatusTrue(conds []apicond.Condition, condType string) bool {
+// conditionStatusTrueAtGeneration accepts a True condition only when both the
+// resource status and the condition observed the current desired-state
+// generation. A stale current-fact condition must not make a topology complete
+// after concurrent change (design §7.3/§8; F14-REQ-29).
+func conditionStatusTrueAtGeneration(
+	conds []apicond.Condition,
+	condType string,
+	metadataGeneration int64,
+	statusObservedGeneration int64,
+) bool {
+	if statusObservedGeneration != metadataGeneration {
+		return false
+	}
 	c, ok := apicond.GetCondition(conds, condType)
-	return ok && c.Status == apicond.ConditionTrue
+	return ok &&
+		c.Status == apicond.ConditionTrue &&
+		c.ObservedGeneration == metadataGeneration
 }
