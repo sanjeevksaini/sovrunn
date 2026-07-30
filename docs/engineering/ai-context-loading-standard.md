@@ -195,6 +195,8 @@ If file-local metadata differs from this table, this table wins.
 | `docs/api/API_CONTRACT_PHASE1.md` | `always` | API behavior | Phase 1 API contract |
 | `docs/engineering/ai-context-loading-standard.md` | `always` | context loading | Authoritative context registry and loading matrix |
 | `docs/engineering/go-coding-guardrails.md` | `go-implementation` | Go implementation | Go coding rules and guardrails |
+| `.automation/features/FEATURE-*.control.json` | `feature` | feature execution control | Load only the current feature manifest; it selects exact stage and dependency context |
+| `docs/engineering/generic-feature-factory.md` | `reference` | feature workflow | Manifest-controlled stages, gates, semantic delta, and closeout behavior |
 | `docs/architecture/controller-reconciliation-model.md` | `go-implementation` | controller model | Reconciliation and lifecycle behavior |
 | `docs/architecture/observability-and-audit-baseline.md` | `go-implementation` | observability/audit | Logs, request IDs, audit, and operation expectations |
 | `docs/features/FEATURE-*.md` | `feature` | feature scope | Current feature scope, non-goals, and acceptance criteria |

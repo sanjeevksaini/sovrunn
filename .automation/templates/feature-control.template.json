@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0",
+  "feature": {
+    "id": "FEATURE-XXXX",
+    "slug": "feature-slug",
+    "title": "Feature Title",
+    "tier": "A",
+    "phase": 2,
+    "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+    "feature_branch": "feature-xxxx-feature-slug",
+    "feature_file": "docs/features/FEATURE-XXXX-feature-slug.md",
+    "architecture": "docs/architecture/feature-slug.md",
+    "handoffs": ["docs/reviews/architecture-decision-handoffs/ADH-YYYY-NNN-feature-xxxx.md"],
+    "spec_path": ".kiro/specs/feature-slug"
+  },
+  "ownership": {
+    "owned_resources": ["OwnedResource"],
+    "previous_features": [],
+    "excluded_features": [],
+    "forbidden_concepts": []
+  },
+  "context": {
+    "always": [
+      "AGENTS.md",
+      "docs/foundation/constitution.md",
+      "docs/decisions/DECISION_INDEX.md",
+      "docs/glossary.md",
+      "docs/engineering/ai-context-loading-standard.md"
+    ],
+    "stages": {
+      "requirements": [],
+      "design": [],
+      "tasks": [],
+      "implementation": [],
+      "review": []
+    },
+    "budgets": {
+      "requirements": 180000,
+      "design": 150000,
+      "tasks": 120000,
+      "implementation": 100000,
+      "review": 180000
+    }
+  },
+  "guardrails": {
+    "kiro": {
+      "writable_by_stage": {
+        "requirements": [".kiro/specs/feature-slug/requirements.md"],
+        "design": [".kiro/specs/feature-slug/design.md"],
+        "tasks": [".kiro/specs/feature-slug/tasks.md"]
+      },
+      "forbidden_outputs": ["internal/", "cmd/", "api/schemas/"]
+    },
+    "cursor": {
+      "go_context": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/engineering/go-version-standard.md",
+        "docs/engineering/go-observability-standard.md"
+      ],
+      "require_complete_receipt": true,
+      "verify_commands": ["make fmt", "make vet", "make test"]
+    },
+    "stop_conditions": [
+      "ARCHITECTURE_DECISION_REQUIRED",
+      "REQUIREMENT_CLARIFICATION_REQUIRED",
+      "BOUNDARY_CHANGE_REQUIRED",
+      "DEPENDENCY_APPROVAL_REQUIRED",
+      "SECURITY_REVIEW_REQUIRED"
+    ]
+  },
+  "execution": {
+    "human_gates": ["architecture", "executable_plan", "final"],
+    "tasks_per_run": 2,
+    "require_clean_tree": true,
+    "commit_per_task": true,
+    "max_stage_revisions": 2
+  },
+  "models": {
+    "architecture": "architecture",
+    "requirements": "requirements",
+    "design": "design",
+    "tasks": "tasks",
+    "review": "review",
+    "implementation": "implementation",
+    "mechanical": "deterministic_first"
+  },
+  "closeout": {
+    "mode": "prepare_only",
+    "metadata_targets": [
+      "docs/features/FEATURE_INDEX.md",
+      "docs/context/CURRENT_PHASE_CONTEXT.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/context/CURRENT_DECISION_SUMMARY.md",
+      "docs/traceability/FEATURE_TRACEABILITY_MATRIX.md"
+    ],
+    "commit": false,
+    "push": false
+  }
+}

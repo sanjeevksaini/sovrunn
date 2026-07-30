@@ -25,6 +25,13 @@ def extract_task_text(tasks_path, task_id):
     if not p.exists():
         return ''
     text = p.read_text()
+    # Capture generic manifest-controlled tasks such as `## Task 4 — Title`.
+    generic = re.compile(
+        rf'(?ms)^## Task {re.escape(task_id)}\b.*?(?=^## Task \d+\b|^## [^#]|\Z)'
+    )
+    m = generic.search(text)
+    if m:
+        return m.group(0)
     # Capture FEATURE-0013-style heading tasks such as `### T-001 — Title`.
     heading = re.compile(
         rf'(?ms)^### {re.escape(task_id)}\s+[—-].*?(?=^### T-\d{{3}}\s+[—-]|\Z)'
@@ -71,7 +78,7 @@ def as_markdown(tool, profile, recs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--tool', required=True, choices=['kiro','cursor'])
-    ap.add_argument('--stage', choices=['requirements','design','tasks','revision'])
+    ap.add_argument('--stage', choices=['requirements','design','tasks','revision','implementation'])
     ap.add_argument('--task')
     ap.add_argument('--tasks-path')
     ap.add_argument('--format', choices=['markdown','json'], default='markdown')

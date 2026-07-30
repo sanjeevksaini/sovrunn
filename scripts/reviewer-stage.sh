@@ -27,6 +27,16 @@ case "$STAGE" in
   *) fail "stage must be requirements, design, or tasks";;
 esac
 [[ -f "$TARGET" ]] || fail "missing file to review: $TARGET"
+CONTROL_FILE=".automation/features/${FEATURE}.control.json"
+if [[ -f "$CONTROL_FILE" ]]; then
+  python3 ./scripts/generic-review-prompt.py \
+    --feature "$FEATURE" \
+    --title "$TITLE" \
+    --stage "$STAGE" \
+    --target "$TARGET" \
+    --prompt-out "$PROMPT_OUT" \
+    --context-out "$CONTEXT_OUT"
+else
 python3 - "$FEATURE" "$TITLE" "$STAGE" "$TARGET" "$PROMPT_OUT" "$CONTEXT_OUT" <<'PYREVIEW'
 from pathlib import Path
 import hashlib
@@ -161,6 +171,7 @@ rendered += '''\n\n## Controlling review context\n\nThe following files are evid
 Path(out).write_text(rendered)
 print(out)
 PYREVIEW
+fi
 info "Review prompt generated: $PROMPT_OUT"
 if [[ "$FEATURE" == "FEATURE-0014" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
@@ -183,6 +194,10 @@ case "$MODE" in
     cp "$RAW_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.openai.raw.json"
     cp "$PROMPT_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.review.prompt.md"
     cp "$CONTEXT_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.context.json"
+    cp "$TARGET" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.document.md"
+    if [[ -f "$OUT_DIR/${STAGE}.semantic-delta.json" ]]; then
+      cp "$OUT_DIR/${STAGE}.semantic-delta.json" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.semantic-delta.json"
+    fi
     info "Review JSON written: $REVIEW_OUT"
     ;;
   *)

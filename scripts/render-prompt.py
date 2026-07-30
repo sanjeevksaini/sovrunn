@@ -2,6 +2,11 @@
 import argparse, hashlib, json, subprocess
 from pathlib import Path
 TEMPLATES={'requirements':'docs/prompts/kiro/requirements.prompt.md','design':'docs/prompts/kiro/design.prompt.md','tasks':'docs/prompts/kiro/tasks.prompt.md'}
+GENERIC_TEMPLATES={
+    'requirements':'docs/prompts/kiro/generic-requirements.prompt.md',
+    'design':'docs/prompts/kiro/generic-design.prompt.md',
+    'tasks':'docs/prompts/kiro/generic-tasks.prompt.md',
+}
 
 FEATURE_0014_DESIGN_CONTEXT = [
     Path('AGENTS.md'),
@@ -102,13 +107,31 @@ def write_feature_0014_context_manifest(out_dir, stage):
 def main():
     parser=argparse.ArgumentParser(); parser.add_argument('--feature',required=True); parser.add_argument('--stage',required=True,choices=TEMPLATES.keys()); args=parser.parse_args()
     state=load_state(args.feature); template_path=Path(TEMPLATES[args.stage])
+    control_path = Path(f'.automation/features/{args.feature}.control.json')
+    out_dir=Path(state['generated_prompt_path']); out_dir.mkdir(parents=True,exist_ok=True)
+    if control_path.is_file():
+        template_path = Path(GENERIC_TEMPLATES[args.stage])
+        context_out = out_dir / f'{args.stage}.context.json'
+        subprocess.check_call([
+            './scripts/feature-control.py', 'context', '--feature', args.feature,
+            '--stage', args.stage, '--output', str(context_out),
+        ])
+        control_fragment = subprocess.check_output([
+            './scripts/feature-control.py', 'prompt-fragment', '--feature', args.feature,
+            '--stage', args.stage,
+        ], text=True)
+        context_files = [Path(item['path']) for item in json.loads(context_out.read_text())['files']]
+        values={'FEATURE_ID':state['feature_id'],'FEATURE_SLUG':state['slug'],'FEATURE_TITLE':state['title'],'PHASE_BRANCH':state['phase_branch'],'FEATURE_BRANCH':state['feature_branch'],'SPEC_PATH':state['spec_path'],'REQUIREMENTS_PATH':f"{state['spec_path']}/requirements.md",'DESIGN_PATH':f"{state['spec_path']}/design.md",'TASKS_PATH':f"{state['spec_path']}/tasks.md",'MODEL_RECOMMENDATIONS':model_recommendation(args.stage),'CONTEXT_FILES':'\n'.join(f'- `{path}`' for path in context_files),'CONTROL_FRAGMENT':control_fragment}
+        out_file=out_dir/f'{args.stage}.prompt.md'
+        out_file.write_text(render(template_path.read_text(), values))
+        print(out_file)
+        return
     if args.feature == 'FEATURE-0014' and args.stage == 'design':
         template_path = Path('docs/prompts/kiro/feature-0014-design.prompt.md')
     elif args.feature == 'FEATURE-0014' and args.stage == 'tasks':
         template_path = Path('docs/prompts/kiro/feature-0014-tasks.prompt.md')
     context_files = FEATURE_0014_TASKS_CONTEXT if args.feature == 'FEATURE-0014' and args.stage == 'tasks' else FEATURE_0014_DESIGN_CONTEXT
     values={'FEATURE_ID':state['feature_id'],'FEATURE_SLUG':state['slug'],'FEATURE_TITLE':state['title'],'PHASE_BRANCH':state['phase_branch'],'FEATURE_BRANCH':state['feature_branch'],'SPEC_PATH':state['spec_path'],'REQUIREMENTS_PATH':f"{state['spec_path']}/requirements.md",'DESIGN_PATH':f"{state['spec_path']}/design.md",'TASKS_PATH':f"{state['spec_path']}/tasks.md",'MODEL_RECOMMENDATIONS':model_recommendation(args.stage),'CONTEXT_FILES':'\n'.join(f'- `{path}`' for path in context_files)}
-    out_dir=Path(state['generated_prompt_path']); out_dir.mkdir(parents=True,exist_ok=True)
     out_file=out_dir/f'{args.stage}.prompt.md'; out_file.write_text(render(template_path.read_text(), values))
     if args.feature == 'FEATURE-0014':
         write_feature_0014_context_manifest(out_dir, args.stage)

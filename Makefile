@@ -42,7 +42,7 @@ clean:
 
 PHASE_BRANCH ?= phase1-foundation
 
-.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-spec-report ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state
+.PHONY: ff-start ff-kiro-stage ff-kiro-stage-auto ff-prompt-requirements ff-prompt-design ff-prompt-tasks ff-review ff-review-auto ff-review-route ff-approve-requirements ff-approve-design ff-approve-tasks ff-spec-flow ff-spec-report ff-kiro-decision ff-model-recommend ff-model-record ff-commit-spec ff-cursor-task ff-verify ff-guardrails ff-commit-task ff-final ff-pr ff-state ff-feature-control ff-approve-human-gate ff-controlled-run ff-semantic-delta ff-closeout ff-feature-factory-test
 
 ff-start:
 	./scripts/feature-start.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" --phase-branch "$(PHASE_BRANCH)"
@@ -133,6 +133,24 @@ ff-pr:
 
 ff-state:
 	./scripts/feature-state.py get --feature "$(FEATURE)"
+
+ff-feature-control:
+	./scripts/feature-control.py validate --feature "$(FEATURE)"
+
+ff-approve-human-gate:
+	./scripts/human-gate.py --feature "$(FEATURE)" --gate "$(GATE)" --approved-by "$(APPROVED_BY)" --approve
+
+ff-controlled-run:
+	./scripts/feature-orchestrator.py --feature "$(FEATURE)" $${START_TASK:+--start-task "$${START_TASK}"} $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
+
+ff-semantic-delta:
+	./scripts/semantic-delta.py --current "$(CURRENT)" $${BASELINE:+--baseline "$${BASELINE}"} --json-out "$(JSON_OUT)" --markdown-out "$(MARKDOWN_OUT)"
+
+ff-closeout:
+	./scripts/feature-closeout.py --feature "$(FEATURE)" --pr "$(PR)" $${APPLY:+--apply}
+
+ff-feature-factory-test:
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/feature_factory -p 'test_*.py'
 
 
 .PHONY: ff-task-flow

@@ -1,4 +1,5 @@
 {
+  "default_cursor_profile": "implementation",
   "tools": {
     "kiro": {
       "profiles": {
@@ -57,10 +58,10 @@
         "implementation": [
           {
             "priority": 1,
-            "label": "Cursor auto model",
-            "model": "auto",
-            "effort": "medium",
-            "why": "Uses an available Cursor model under the current account limits."
+            "label": "Primary guarded Cursor coding model",
+            "model": "cursor-grok-4.5-high-fast",
+            "effort": "high",
+            "why": "Founder-approved default for fast, high-reasoning implementation under manifest path and task guardrails."
           },
           {
             "priority": 2,

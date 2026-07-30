@@ -29,6 +29,15 @@ done
 command -v kiro-cli >/dev/null 2>&1 || command -v kiro >/dev/null 2>&1 || fail "Kiro CLI is not available"
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
+if [[ -f ".automation/features/${FEATURE}.control.json" && -z "${FEATURE_FACTORY_MAX_REVISIONS:-}" ]]; then
+  MAX_REVISIONS="$(python3 - "$FEATURE" <<'PY'
+import json, sys
+from pathlib import Path
+control = json.loads(Path(f'.automation/features/{sys.argv[1]}.control.json').read_text())
+print(control['execution']['max_stage_revisions'])
+PY
+)"
+fi
 if [[ "$FEATURE" == "FEATURE-0013" ]]; then
   if [[ -n "${KIRO_AGENT:-}" && "${KIRO_AGENT}" != "sovrunn-spec" ]]; then
     fail "FEATURE-0013 requires KIRO_AGENT=sovrunn-spec; refusing override: ${KIRO_AGENT}"
@@ -141,9 +150,33 @@ run_stage() {
   done
 }
 
-run_stage requirements "$SPEC_PATH/requirements.md"
-run_stage design "$SPEC_PATH/design.md"
-run_stage tasks "$SPEC_PATH/tasks.md"
+CONTROL_FILE=".automation/features/${FEATURE}.control.json"
+if [[ -f "$CONTROL_FILE" ]]; then
+  PLAN_TOKEN="$(python3 - "$FEATURE" <<'PY'
+import json, sys
+from pathlib import Path
+state = json.loads(Path(f'.automation/state/{sys.argv[1]}.json').read_text())
+print(state.get('executable_plan_approval_token', ''))
+PY
+)"
+  if [[ "$PLAN_TOKEN" != "APPROVED_EXECUTABLE_PLAN" ]]; then
+    run_stage requirements "$SPEC_PATH/requirements.md"
+    run_stage design "$SPEC_PATH/design.md"
+    ./scripts/executable-plan-report.py --feature "$FEATURE"
+    ./scripts/feature-state.py set --feature "$FEATURE" --key current_stage --value executable_plan >/dev/null
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value executable_plan_human_review_required >/dev/null
+    ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null
+    FLOW_STATUS="HUMAN_ACTION_REQUIRED"
+    ACTION_REQUIRED="Review approved requirements and design together, then run make ff-approve-human-gate FEATURE=$FEATURE GATE=executable_plan APPROVED_BY='<name>'."
+    info "$ACTION_REQUIRED"
+    exit 3
+  fi
+  run_stage tasks "$SPEC_PATH/tasks.md"
+else
+  run_stage requirements "$SPEC_PATH/requirements.md"
+  run_stage design "$SPEC_PATH/design.md"
+  run_stage tasks "$SPEC_PATH/tasks.md"
+fi
 FLOW_STATUS="COMPLETE"
 ACTION_REQUIRED=""
 info "Spec flow complete. Status:"

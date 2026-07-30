@@ -84,6 +84,7 @@ nav:
       - Governed PostgreSQL MVP: rfc/RFC-0029-governed-postgresql-mvp.md
   - Engineering:
       - AI Controlled Development: engineering/ai-controlled-development.md
+      - Generic Feature Factory: engineering/generic-feature-factory.md
       - Context Engineering Standard: engineering/context-engineering-standard.md
       - AI Context Loading Standard: engineering/ai-context-loading-standard.md
       - Go Version Standard: engineering/go-version-standard.md
