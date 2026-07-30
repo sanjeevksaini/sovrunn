@@ -4,8 +4,8 @@
   "current_task": null,
   "design_approval_source": "openai_machine_review",
   "design_approval_token": "APPROVED_FOR_TASKS",
-  "design_approved_at": "2026-07-30T04:10:09Z",
-  "design_approved_sha256": "842c614592103643564bdfe1e5b0d03c8f92521d41012252abd00815daaa3343",
+  "design_approved_at": "2026-07-30T05:01:26Z",
+  "design_approved_sha256": "c6336fd679cc53bc7465f73a3cc6baa4549dbe7310d726fc557a1ed83f5a7eb7",
   "feature_branch": "feature-0014-provider-neutral-resource-model",
   "feature_id": "FEATURE-0014",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0014",
@@ -19,5 +19,5 @@
   "spec_path": ".kiro/specs/provider-neutral-resource-model",
   "status": "design_approved",
   "title": "Provider-Neutral Resource Model",
-  "updated_at": "2026-07-30T04:10:09.425045+00:00"
+  "updated_at": "2026-07-30T05:01:26.566269+00:00"
 }

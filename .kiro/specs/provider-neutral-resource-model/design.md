@@ -30,6 +30,19 @@ F14-REQ-04). The design binds these resources to the FEATURE-0012
 references, ordered validation, RFC 9457 Problem Details, and optimistic
 concurrency (`F14-AD-014`, `F14-AD-015`, F14-REQ-21, F14-REQ-22).
 
+FEATURE-0014 is a contract-only feature. It defines the five provider-neutral
+resource contracts and their deterministic semantics — resource shapes, the API
+group and routes, operations, `status`/conditions, errors, pagination,
+concurrency, deletion rules, and observable outcomes — but it does not implement
+live state ownership, CRUD execution, repositories, registries, persistence,
+storage engines, lookup interfaces, authoritative child queries, or runtime
+reconciliation. Every requirement below remains an owned contract obligation.
+Where a behavior depends on authoritative live state, FEATURE-0014 owns the
+contract definition and the conformance expectation only and supplies no
+production state mechanism. Section 1.3 and the section 3.1
+implementation-classification ledger draw this line precisely; no requirement is
+weakened or removed because its production execution is deferred.
+
 ### 1.2 Design boundary
 
 This design is the single authorized output of the Design stage
@@ -60,6 +73,37 @@ Within the closed boundary this design:
   provider call, provider SDK type, repository, persistence engine, plugin,
   provisioning, runtime execution, or speculative extension point (`F14-AD-016`–
   `F14-AD-019`, F14-REQ-23, F14-REQ-24, F14-REQ-25).
+
+### 1.3 Contract ownership versus implementation ownership
+
+This design distinguishes two kinds of ownership and never conflates them:
+
+- **Contract ownership.** FEATURE-0014 owns the definition and the required
+  observable outcome of every behavior in the requirements, including behaviors
+  whose production execution depends on authoritative live state: parent
+  existence and same-`Provider` resolution, multi-owner isolation, complete
+  five-level path evaluation, child-existence deletion protection, live
+  ETag/`If-Match` behavior, UID non-reuse after deletion, paginated live
+  collection reads, and no-existence disclosure based on authoritative state.
+  These remain required contract outcomes and are expressed here through the
+  resource contracts, the canonical JSON Schemas, conformance fixtures,
+  explicitly supplied test state, and conformance assertions — not through
+  production state code.
+- **Implementation ownership.** FEATURE-0014 implements only the components in
+  the section 3.1 `IMPLEMENT` list: the five Go resource representations, the
+  five canonical JSON Schemas, offline structural and semantic validators, pure
+  deterministic validation/evaluation helpers over explicitly supplied in-memory
+  resource values (implying no lookup, no state ownership, and no persistence),
+  schema/type-binding and conformance fixtures, and tests proving both contract
+  behavior and excluded semantics.
+
+No requirement is weakened, deleted, or downgraded because its production
+execution is deferred. A deferred production mechanism is recorded as
+`CONTRACT_ONLY / NO_TASK` and a permanently foreign mechanism is recorded as
+`EXCLUDED`, both in section 3.1. This design introduces and assumes no
+repository, registry, persistence engine, storage component, lookup/resolver
+interface, state-provider abstraction, adapter interface, controller,
+reconciler, or new public snapshot resource, kind, schema, or API.
 
 ## 2. Resolved delegated design decisions
 
@@ -187,19 +231,25 @@ boundary (architecture section 15).
   FEATURE-0012 type-metadata, `ObjectMeta`, reference, and status/condition
   fragments (under `api/schemas/_common/`) and adds only the FEATURE-0014 `spec`
   fields. Schema files and Go packages follow the live repository conventions in
-  section 3. Logical query behaviors (section 4.4) support unique identity, child
-  lookup for deletion and completeness, and paginated reads. This design
-  specifies those required query behaviors but names no storage component and
-  defines no registry, repository, persistence engine, or adapter interface.
+  section 3. The identity, child-lookup, completeness, and paginated-read query
+  behaviors (section 4.4) are contract obligations and conformance targets; this
+  design names no storage component and defines no registry, repository,
+  persistence engine, lookup/resolver interface, state-provider abstraction, or
+  adapter interface to satisfy them. Where such a query behavior is exercised as
+  an implementable helper, that helper is a pure deterministic evaluation over
+  explicitly supplied in-memory resource values that implies no lookup, no state
+  ownership, and no persistence.
 - **Rationale.** Architecture delegates "schema composition, indexes, package
   layout, and internal implementation structure." Composition over the shared
   `api/schemas/_common/` fragments enforces grammar reuse without forking it.
   Schema filenames (`api/schemas/*.json`) and Go packages (`internal/resources`,
-  `internal/validation`, `internal/api`) follow the live conventions used by the
-  existing Phase 1 resources and the Go guardrails (short meaningful names).
+  `internal/validation`) follow the live conventions used by the existing Phase 1
+  resources and the Go guardrails (short meaningful names).
 - **Boundary.** No storage component, registry, repository, persistence engine,
-  or adapter interface is designed or assumed to pre-exist; only the required
-  query behaviors are stated (closed design boundary).
+  lookup/resolver interface, state-provider abstraction, or adapter interface is
+  designed, created, or assumed to pre-exist; only the required contract query
+  behaviors are stated, and their live execution against authoritative state is
+  classified `CONTRACT_ONLY / NO_TASK` in section 3.1 (closed design boundary).
 
 ### DD-08 — Immediate-parent representation and `ownerRef` mirroring (resolves DQ-08; F14-REQ-06, F14-REQ-08, F14-REQ-09, F14-REQ-10)
 
@@ -227,37 +277,50 @@ boundary (architecture section 15).
 
 Every approved requirement is representable using only the DD-01–DD-08 delegated
 choices. No requirement required a semantic choice outside the section 13 closed
-register or the section 14–15 delegation matrix. Result:
-`NO_UNRESOLVED_SEMANTIC_GAP`. No `ARCHITECTURE_DECISION_REQUIRED` condition was
-encountered while authoring this design.
+register or the section 14–15 delegation matrix. The contract-only implementation
+classification (sections 1.3, 3.1) records implementation ownership versus
+contract ownership and changes no requirement's meaning, observable outcome,
+ownership, cardinality, scope, hierarchy, identity, connectivity posture, or
+deletion semantics; every requirement remains an owned contract obligation.
+Result: `NO_UNRESOLVED_SEMANTIC_GAP`. No `ARCHITECTURE_DECISION_REQUIRED`
+condition was encountered while authoring this design.
 
 ## 3. Component and package architecture
 
 The design adds FEATURE-0014-only components. It creates no adjacent-feature
 scaffolding (no pool, capability, adapter, discovery, connectivity, decision, or
-audit package).
+audit package) and, consistent with section 1.3, no live handler, CRUD executor,
+repository, registry, persistence engine, storage component, lookup/resolver
+interface, state-provider abstraction, controller, or reconciler.
+
+The layout below marks each entry with its implementation classification
+(section 3.1). Only `IMPLEMENT` entries are FEATURE-0014 implementation targets.
 
 ```text
-cmd/sovrunn-api/          # entrypoint (inherited; no FEATURE-0014 logic)
-internal/resources/       # five resource structs, one file per kind: provider.go, providerlocation.go,
+cmd/sovrunn-api/          # inherited entrypoint; no FEATURE-0014 logic added
+internal/resources/       # IMPLEMENT: five resource structs, one file per kind: provider.go, providerlocation.go,
                           #   providerdatacenter.go, datacenterfailuredomain.go, infrastructurestack.go
-internal/validation/      # per-kind offline structural/semantic validators + stateful reference/scope/
-                          #   deletion validators, one file per kind (provider.go, providerlocation.go, …)
-internal/api/             # per-kind HTTP handlers + decoders binding the DD-01 routes, one pair per kind
-                          #   (provider_handler.go + provider_decode.go, …)
-api/schemas/              # one canonical JSON Schema per kind: provider.json, provider-location.json,
+internal/validation/      # IMPLEMENT: per-kind offline structural/semantic validators + pure deterministic
+                          #   evaluation helpers over explicitly supplied in-memory resource values, one file per
+                          #   kind (provider.go, providerlocation.go, …). No stateful/authoritative-lookup
+                          #   validator is implemented here (see section 3.1 CONTRACT_ONLY list).
+api/schemas/              # IMPLEMENT: one canonical JSON Schema per kind: provider.json, provider-location.json,
                           #   provider-datacenter.json, datacenter-failure-domain.json, infrastructure-stack.json
                           #   (composing api/schemas/_common/ fragments; described here, authored in tasks/impl)
-tests/conformance/        # conformance fixtures under tests/conformance/fixtures/, checks in internal/apiconform
-                          #   (described in section 9; authored in tasks/impl)
+tests/conformance/        # IMPLEMENT: conformance fixtures under tests/conformance/fixtures/, checks in
+                          #   internal/apiconform (described in section 9; authored in tasks/impl)
+internal/api/             # CONTRACT_ONLY / NO_TASK: the DD-01/section 5 routes are contract definitions and
+                          #   conformance targets only; FEATURE-0014 authors no live HTTP handler or decoder here.
 ```
 
 The layout follows the live flat per-kind file convention used by the existing
-Phase 1 resources (for example `internal/resources/organization.go`,
-`internal/validation/organization.go`, `internal/api/org_handler.go`) and the
-existing flat schema directory (`api/schemas/*.json` with shared fragments in
-`api/schemas/_common/`). No per-feature subpackage is introduced, so no path
-deviates from the live repository conventions.
+Phase 1 resources (for example `internal/resources/organization.go` and
+`internal/validation/organization.go`) and the existing flat schema directory
+(`api/schemas/*.json` with shared fragments in `api/schemas/_common/`). No
+per-feature subpackage is introduced, so no path deviates from the live
+repository conventions. The `internal/api` FEATURE-0014 route definitions
+describe a contract surface and conformance target; they are not an
+implementation deliverable of this feature (section 3.1).
 
 Inherited, not designed here:
 
@@ -267,28 +330,89 @@ Inherited, not designed here:
   schema/route support (`internal/apischema`), strict decoding and ordered
   validation (`internal/apivalid`), and conformance checks
   (`internal/apiconform`), plus the shared `api/schemas/_common/` fragments.
-- Logical lookup behavior: the schemas, validators, handlers, and conformance
-  fixtures express the identity, parent-child, scope, and pagination behaviors
-  listed in section 4.4. FEATURE-0014 defines no repository, persistence
-  mechanism, storage component, or production-persistence task; those remain
-  outside this feature boundary.
+- Contract query behavior: the schemas, offline validators, deterministic
+  helpers, and conformance fixtures express the identity, parent-child, scope,
+  and pagination behaviors listed in section 4.4 as contract obligations proven
+  over explicitly supplied in-memory fixture state. FEATURE-0014 defines no
+  repository, persistence mechanism, storage component, lookup/resolver
+  interface, or production-persistence task; the live execution of these
+  behaviors against authoritative state is `CONTRACT_ONLY / NO_TASK`
+  (section 3.1) and remains outside this feature boundary.
 
 Component responsibilities:
 
-- `internal/resources` — declares the five typed structs (one file per kind)
-  with explicit JSON tags, embedding the shared `apimeta` metadata/status types
-  and the `apicond` condition type; declares the three typed constrained
-  parent-reference aliases over `apiref` (DD-08).
-- `internal/validation` — implements the ordered validation pipeline of
-  section 7.1 (one validator file per kind), split into offline
-  (structural/semantic) validators callable without external state and stateful
-  (reference/scope/authorization/concurrency/deletion) validators that read
-  existing resource state (architecture section 16.4).
-- `internal/api` — thin, context-aware handlers and decoders (one pair per kind)
-  that decode safely, invoke validators, perform the section 4.4 logical lookups,
-  recompute `Valid`/`TopologyComplete`, and emit inherited Problem Details;
-  handlers hold no business logic beyond wiring (go-coding-guardrails sections 8,
-  34).
+- `internal/resources` (IMPLEMENT) — declares the five typed structs (one file
+  per kind) with explicit JSON tags, embedding the shared `apimeta`
+  metadata/status types and the `apicond` condition type; declares the three
+  typed constrained parent-reference aliases over `apiref` (DD-08). These are
+  pure type representations and hold no state ownership.
+- `internal/validation` (IMPLEMENT) — implements the **offline** stages of the
+  section 7.1 pipeline (structural and semantic checks, one validator file per
+  kind) plus pure deterministic evaluation helpers that operate only over
+  explicitly supplied in-memory resource values (for example, evaluating
+  same-`Provider` scope agreement, hierarchy-level ordering, or path
+  completeness across a set of resources handed to the helper). These helpers
+  perform no lookup, own no state, and read no store. The **stateful** stages of
+  section 7.1 (reference resolution, authorization, concurrency, deletion) are
+  contract definitions verified by conformance fixtures and are not implemented
+  as production lookup or state-reading code (section 3.1).
+
+FEATURE-0014 authors no `internal/api` handler, decoder, CRUD executor, or
+state-mutating component. The routes and operations of section 5 are the
+contract and conformance surface; their live execution belongs to a later,
+separately approved feature and is recorded as `CONTRACT_ONLY / NO_TASK` in
+section 3.1.
+
+### 3.1 Implementation-classification ledger
+
+This ledger states, unambiguously, what FEATURE-0014 implements, what it owns as
+contract only with no task, and what it excludes entirely. It changes no
+requirement's meaning; it records implementation ownership versus contract
+ownership (section 1.3). It introduces no new normative requirement, kind,
+schema, interface, or API.
+
+**IMPLEMENT** — FEATURE-0014 implementation targets:
+
+| # | Component | Notes |
+|---|---|---|
+| I-1 | Five Go resource representations | `internal/resources` structs for the five kinds; pure types, no state ownership. |
+| I-2 | Five canonical JSON Schemas | `api/schemas/*.json` composing `_common/` fragments; structural/semantic contract. |
+| I-3 | Offline structural validators | Required fields, DNS name, unknown/duplicate-field rejection, bounded sizes, status-not-user-authored; no external state. |
+| I-4 | Offline semantic validators | `scopeRef.kind` per kind, required parent-reference kind, `geo` normalization, `technology` bound, no skipped/reordered level; no external state. |
+| I-5 | Pure deterministic evaluation helpers | Evaluate same-`Provider` agreement, hierarchy ordering, and path completeness **only over explicitly supplied in-memory resource values**; no lookup, no state ownership, no persistence. |
+| I-6 | Schema/type-binding + conformance fixtures | Fixtures under `tests/conformance/fixtures/`; type/schema binding checks in `internal/apiconform`. |
+| I-7 | Tests proving contract behavior and excluded semantics | Positive, negative, boundary, isolation, deny-list, and excluded-semantics tests over supplied fixture state. |
+
+**CONTRACT_ONLY / NO_TASK** — owned as contract and conformance expectation, but
+FEATURE-0014 supplies no production mechanism and generates no task:
+
+| # | Behavior | Owned as |
+|---|---|---|
+| C-1 | Live create/get/list/replace/delete handlers | `internal/api` route + operation contract; conformance target only. |
+| C-2 | Target lookup / parent resolution against authoritative state | Contract outcome; proven with supplied fixture state, not live resolver. |
+| C-3 | Authoritative child lookup | Contract outcome; deletion-protection and completeness proven over fixtures. |
+| C-4 | Production topology-completeness recomputation | Contract outcome; deterministic helper runs over supplied values only. |
+| C-5 | Production deletion execution | Child-existence rejection contract; no live executor. |
+| C-6 | Stateful / live pagination | Pagination contract (envelope, tokens, ordering, bounds); no live reader. |
+| C-7 | Persistence-backed concurrency and UID history | ETag/`If-Match`/`resourceVersion` and UID non-reuse contract; no store. |
+| C-8 | No-existence disclosure based on authoritative state | Response-shape contract; proven with fixtures, not a live store. |
+
+**EXCLUDED** — outside FEATURE-0014 entirely; not implemented, not owned as a
+contract surface, and enforced absent by deny-list scans:
+
+| # | Mechanism | Owner / enforcement |
+|---|---|---|
+| X-1 | Repositories, registries | Later infrastructure; interface/dependency scan (F14-REQ-25). |
+| X-2 | Persistence engines, storage components | Later infrastructure / FEATURE-0016+; deny-list scan (F14-REQ-25). |
+| X-3 | Lookup/resolver interfaces, state-provider abstractions | Later infrastructure; interface scan (F14-REQ-25). |
+| X-4 | Adapters, provider connectivity | FEATURE-0016; interface/SDK scan (F14-REQ-25). |
+| X-5 | Capability / capacity / placement | FEATURE-0015; field deny-list (F14-REQ-24). |
+| X-6 | Decision / audit / operation | FEATURE-0013 (`NOT_APPLICABLE`); forbidden-concept scan (F14-REQ-23). |
+| X-7 | Provisioning, controllers, reconcilers | Later work; changed-file/interface scan (F14-REQ-25). |
+
+No `IMPLEMENT` entry depends on any `CONTRACT_ONLY` or `EXCLUDED` mechanism, so
+the implementable set is self-contained and requires no lookup, store, or state
+provider.
 
 ## 4. Resource and field model
 
@@ -346,24 +470,37 @@ No connectivity, capacity, capability, adapter, credential, endpoint, or
 provider-native field exists in any inventory above (F14-REQ-18, F14-REQ-20,
 F14-REQ-24, F14-REQ-25, F14-REQ-31).
 
-### 4.4 Logical indexes (DD-07)
+### 4.4 Logical contract query behaviors (DD-07)
 
-- Unique identity index on `(apiVersion group, kind, scope UID, name)` — enforces
-  FEATURE-0012 identity uniqueness (F14-REQ-21).
-- Parent index on the immediate-parent reference UID — supports child lookup for
-  deletion rejection (F14-REQ-26) and `TopologyComplete` recomputation
-  (F14-REQ-14, F14-REQ-29).
-- Scope index on `Provider` scope UID — supports same-scope resolution
-  (F14-REQ-10) and scoped, paginated list reads (F14-REQ-28).
+The following are **contract query behaviors** the resource contract requires.
+They define required observable outcomes; they are not an implementation of
+storage, indexing, or lookup. Their live execution against authoritative state
+is `CONTRACT_ONLY / NO_TASK` (section 3.1). Where exercised as an implementable
+helper, evaluation runs only over explicitly supplied in-memory resource values.
 
-These are logical lookup and conformance behaviors required by the resource
-contract; FEATURE-0014 defines no storage or persistence implementation.
+- Unique identity behavior over `(apiVersion group, kind, scope UID, name)` —
+  the FEATURE-0012 identity-uniqueness contract (F14-REQ-21).
+- Parent lookup behavior on the immediate-parent reference UID — the contract
+  basis for child-existence deletion rejection (F14-REQ-26) and
+  `TopologyComplete` evaluation (F14-REQ-14, F14-REQ-29).
+- Scope lookup behavior on `Provider` scope UID — the contract basis for
+  same-scope resolution (F14-REQ-10) and scoped, paginated list reads
+  (F14-REQ-28).
+
+These are contract and conformance behaviors of the resource model; FEATURE-0014
+defines no index, storage, persistence, or lookup implementation to realize them
+and performs no authoritative child or parent query. They are proven by
+conformance fixtures and by pure deterministic helpers over supplied test state
+(sections 3.1, 9).
 
 ## 5. API routes and FEATURE-0012 binding
 
 Routes follow DD-01. Each kind exposes the FEATURE-0012 initial normative
 operations (create, get, list, full replace, delete) plus a separately authorized
-status path (FEATURE-0012 sections 6.12, 6.13).
+status path (FEATURE-0012 sections 6.12, 6.13). These routes and operations are
+**contract definitions and conformance targets**; FEATURE-0014 authors no live
+HTTP handler, decoder, or CRUD executor for them (sections 3, 3.1). Their live
+execution against authoritative state is `CONTRACT_ONLY / NO_TASK`.
 
 | Collection | Kind | List envelope |
 |---|---|---|
@@ -464,18 +601,29 @@ not user-authored input (go-coding-guardrails section 25).
 ### 7.1 Ordered validation pipeline
 
 The pipeline mirrors FEATURE-0012 section 6.10, split into offline and stateful
-stages (architecture section 16.4). Structural and semantic checks are safe for
-offline schema validation; reference, authorization, concurrency, and deletion
-checks require access to existing resource state.
+stages (architecture section 16.4). The **offline** stages (structural, semantic)
+are FEATURE-0014 implementation targets (`IMPLEMENT`, section 3.1): they run
+without external state and are realized as the offline validators plus pure
+deterministic helpers over explicitly supplied in-memory values. The **stateful**
+stages (reference, authorization, concurrency, deletion) require access to
+authoritative live state; they are `CONTRACT_ONLY / NO_TASK` (section 3.1) —
+FEATURE-0014 defines the required outcome and error behavior and proves it with
+conformance fixtures and supplied test state, and implements no live
+lookup/state-reading validator.
 
-| Order | Stage | Offline / stateful | FEATURE-0014 checks | Inherited stable error behavior |
+| Order | Stage | Classification | FEATURE-0014 checks | Inherited stable error behavior |
 |---|---|---|---|---|
-| 1 | Structural | Offline | required fields, DNS name, unknown/duplicate-field rejection, bounded sizes (section 6.4), status not user-authored | 400 malformed / 422 `VALIDATION_FAILED` with RFC 6901 path (F14-REQ-21, F14-REQ-22) |
-| 2 | Semantic | Offline | `scopeRef.kind` allowed per kind; required parent-reference kind correct; `geo` normalized; `technology` bounded/descriptive; hierarchy has no skipped/reordered level | 422 `VALIDATION_FAILED` (F14-REQ-05, F14-REQ-08, F14-REQ-17, F14-REQ-27) |
-| 3 | Reference | Stateful | parent reference resolves to an existing resource of the required kind; parent and child resolve to the same `Provider` scope UID; cross-provider rejected | 422/404 with no-existence disclosure (F14-REQ-07, F14-REQ-09, F14-REQ-10) |
-| 4 | Authorization | Stateful | caller authorized for the resolved `scopeRef`; multi-owner isolation; cross-scope denied without disclosure | 403 / no-existence disclosure (F14-REQ-05, F14-REQ-30) |
-| 5 | Concurrency | Stateful | `If-Match` / `resourceVersion` checked on replace and delete; immutable `scopeRef` and parent reference enforced against stored version | 412 stale version; 422 on immutable-field mutation (F14-REQ-06, F14-REQ-09, F14-REQ-29) |
-| 6 | Deletion | Stateful | reject deletion while children exist (via parent index); no cascade; no silent reparenting; leaf-first | 409 delete-blocked conflict (F14-REQ-26) |
+| 1 | Structural | Offline — IMPLEMENT | required fields, DNS name, unknown/duplicate-field rejection, bounded sizes (section 6.4), status not user-authored | 400 malformed / 422 `VALIDATION_FAILED` with RFC 6901 path (F14-REQ-21, F14-REQ-22) |
+| 2 | Semantic | Offline — IMPLEMENT | `scopeRef.kind` allowed per kind; required parent-reference kind correct; `geo` normalized; `technology` bounded/descriptive; hierarchy has no skipped/reordered level | 422 `VALIDATION_FAILED` (F14-REQ-05, F14-REQ-08, F14-REQ-17, F14-REQ-27) |
+| 3 | Reference | Stateful — CONTRACT_ONLY | parent reference resolves to an existing resource of the required kind; parent and child resolve to the same `Provider` scope UID; cross-provider rejected | 422/404 with no-existence disclosure (F14-REQ-07, F14-REQ-09, F14-REQ-10) |
+| 4 | Authorization | Stateful — CONTRACT_ONLY | caller authorized for the resolved `scopeRef`; multi-owner isolation; cross-scope denied without disclosure | 403 / no-existence disclosure (F14-REQ-05, F14-REQ-30) |
+| 5 | Concurrency | Stateful — CONTRACT_ONLY | `If-Match` / `resourceVersion` checked on replace and delete; immutable `scopeRef` and parent reference enforced against stored version | 412 stale version; 422 on immutable-field mutation (F14-REQ-06, F14-REQ-09, F14-REQ-29) |
+| 6 | Deletion | Stateful — CONTRACT_ONLY | reject deletion while children exist (child-existence query behavior, section 4.4); no cascade; no silent reparenting; leaf-first | 409 delete-blocked conflict (F14-REQ-26) |
+
+The offline stages (1–2) are proven by unit tests and offline schema validation;
+the stateful stages (3–6) are proven by conformance fixtures with explicitly
+supplied test state and by pure deterministic helpers, never by a live store,
+resolver, or authoritative query (sections 3.1, 9).
 
 ### 7.2 Inherited error behavior (no new error family)
 
@@ -489,10 +637,15 @@ endpoints, or secrets (F14-REQ-31).
 
 ### 7.3 Concurrency and deterministic recomputation
 
-Immutable parents plus `resourceVersion`/ETag/`If-Match` provide conflict-safe
-onboarding and decommissioning; `TopologyComplete` is recomputed deterministically
-from the parent index after concurrent create/delete so that completeness facts
-converge (F14-REQ-14, F14-REQ-29).
+As a contract, immutable parents plus `resourceVersion`/ETag/`If-Match` provide
+conflict-safe onboarding and decommissioning, and `TopologyComplete` recomputes
+deterministically from the child-existence query behavior (section 4.4) after
+concurrent create/delete so that completeness facts converge (F14-REQ-14,
+F14-REQ-29). Live, persistence-backed concurrency and recomputation against
+authoritative state are `CONTRACT_ONLY / NO_TASK` (section 3.1); FEATURE-0014
+proves the required outcome with conformance fixtures and a pure deterministic
+completeness helper over explicitly supplied in-memory resource values, and
+implements no store or authoritative recomputation loop.
 
 ## 8. Current-fact condition behavior
 
@@ -506,7 +659,11 @@ capability, capacity, or audit (F14-REQ-22, `F14-AD-015`).
   required child path to at least one `InfrastructureStack` currently exists
   beneath the resource; on an `InfrastructureStack` it is `True` when the stack is
   `Valid` (DD-03, F14-REQ-14). It carries no capability, capacity, placement, or
-  readiness meaning.
+  readiness meaning. This is a contract-defined condition: FEATURE-0014 evaluates
+  it only with a pure deterministic helper over explicitly supplied in-memory
+  resource values and proves it with fixtures; production computation of the
+  condition against authoritative live state is `CONTRACT_ONLY / NO_TASK`
+  (section 3.1).
 - Absence of a connectivity assertion is represented as no field and no condition;
   connectivity is `Unknown` by absence and is never inferred from ancestry,
   proximity, sibling order, or shared owner `Organization` (F14-REQ-19,
@@ -532,7 +689,12 @@ capability, capacity, or audit (F14-REQ-22, `F14-AD-015`).
 ### 9.2 Conformance fixtures and verification mechanisms
 
 Fixtures (described here; authored during implementation) realize the architecture
-section 11 fitness checks and the risk evidence obligations:
+section 11 fitness checks and the risk evidence obligations. They supply explicit
+in-memory test state and conformance assertions; they prove the `CONTRACT_ONLY`
+state-dependent behaviors of section 3.1 (reference resolution, authorization,
+concurrency, deletion, live pagination, no-existence disclosure) as required
+contract outcomes without introducing any production store, resolver, repository,
+or state provider (sections 1.3, 3.1):
 
 - exactly-five-kinds and zero-alias schema/kind inventory (F14-REQ-01, F14-REQ-03).
 - distinct-owner/operator case (`Organization: OwnerOrganization-A` →
@@ -570,7 +732,12 @@ design authors none of these; it specifies what they verify.
 
 Exactly one row per requirement. Each row maps the requirement to its
 representation, validator, error/evidence behavior, and confirms no new normative
-behavior is introduced (architecture section 16.4).
+behavior is introduced (architecture section 16.4). The "Validator (section 7.1
+stage)" column names the contract stage that owns the check; for stateful stages
+(reference, authorization, concurrency, deletion, status recomputation) the entry
+is a contract and conformance target classified `CONTRACT_ONLY / NO_TASK`
+(section 3.1), proven by fixtures and deterministic helpers over supplied test
+state, not by live lookup or persistence.
 
 | Requirement | Representation | Validator (section 7.1 stage) | Error / evidence behavior | New norm? |
 |---|---|---|---|---|
@@ -583,7 +750,7 @@ behavior is introduced (architecture section 16.4).
 | F14-REQ-07 | Typed constrained ref; no-existence disclosure | reference | cross-provider denial fixture (no disclosure) | No |
 | F14-REQ-08 | Exact hierarchy via required parent-ref kind (4.2) | semantic | skipped/reordered-level negative fixtures | No |
 | F14-REQ-09 | One immutable typed parent ref (DD-08) | semantic + concurrency | zero/multiple/wrong-kind + mutation tests | No |
-| F14-REQ-10 | Parent/child same Provider scope UID (4.4 scope index) | reference | scope-UID mismatch fixture | No |
+| F14-REQ-10 | Parent/child same Provider scope UID (4.4 scope query behavior) | reference (CONTRACT_ONLY) | scope-UID mismatch fixture | No |
 | F14-REQ-11 | Role-specific `Organization` and `Provider` resources | semantic | same-party/distinct-party fixtures | No |
 | F14-REQ-12 | `Valid` condition; registered ≠ complete (DD-03) | status recomputation | empty-parent accepted-incomplete fixture | No |
 | F14-REQ-13 | Zero-child registration allowed; skips rejected | semantic | register-before-children + skip-reject fixtures | No |
@@ -599,7 +766,7 @@ behavior is introduced (architecture section 16.4).
 | F14-REQ-23 | No FEATURE-0013 machinery; `NOT_APPLICABLE` (1.2, 8) | boundary scan | forbidden-concept scan; applicability check | No |
 | F14-REQ-24 | No ResourcePool/capability/capacity fields (4.3) | structural | field deny-list scan | No |
 | F14-REQ-25 | No adapter/integration interfaces or deps (3) | boundary scan | interface/dependency/SDK scan | No |
-| F14-REQ-26 | Parent index deletion rejection; no cascade (7.1 stage 6) | deletion | child-existence conflict; UID non-reuse fixtures | No |
+| F14-REQ-26 | Child-existence query behavior for deletion rejection; no cascade (7.1 stage 6, CONTRACT_ONLY) | deletion | child-existence conflict; UID non-reuse fixtures | No |
 | F14-REQ-27 | `geo` normalized code, descriptive only (DD-04, 6.2) | structural + semantic | invalid/unknown-code + no-residency-inference fixtures | No |
 | F14-REQ-28 | Finite limits + pagination (DD-06, 6.4) | structural | boundary/pagination tests | No |
 | F14-REQ-29 | ETag/If-Match; deterministic recompute (7.3) | concurrency | stale-write + recompute tests | No |
@@ -640,7 +807,12 @@ design disposition.
 Each risk maps to a concrete design component, schema constraint, validation,
 fixture, or review mechanism. Ratings, owners, and residual-risk acceptance are
 copied unchanged from architecture section 12 and are not modified here
-(architecture section 12.1).
+(architecture section 12.1). Where a control depends on state-dependent behavior
+(reference/authorization/concurrency/deletion, live pagination, or authoritative
+recomputation), its realization is a contract definition proven by conformance
+fixtures and pure deterministic helpers over supplied test state, classified
+`CONTRACT_ONLY / NO_TASK` in section 3.1; no production store, resolver, or state
+provider is introduced by any control below.
 
 | Risk | Design control realization | Evidence mechanism | Target residual (unchanged) | Owner (unchanged) |
 |---|---|---|---|---|
@@ -689,7 +861,7 @@ the enforcing mechanism only.
 |---|---|---|
 | FEATURE-0013 | `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, rationale, obligation, actor, subject, linkage, projection, composition | `NOT_APPLICABLE` (1.2); status is current-fact conditions only (8); forbidden-concept scan (F14-REQ-23) |
 | FEATURE-0015 | `ResourcePool`, `ProviderCapability`, capacity, compatibility, eligibility, placement, matching | No such field in any inventory (4.3); field deny-list (F14-REQ-24) |
-| FEATURE-0016 | adapter interfaces, provider clients, discovery, credentials, endpoints, provider calls, repositories, plugins, provisioning, runtime execution | No such package/interface/dependency (3); interface/SDK scan (F14-REQ-25) |
+| FEATURE-0016 | adapter interfaces, provider clients, discovery, credentials, endpoints, provider calls, repositories, registries, persistence/storage engines, lookup/resolver interfaces, state-provider abstractions, controllers, reconcilers, plugins, provisioning, runtime execution | No such package/interface/dependency (3, 3.1 EXCLUDED); interface/SDK scan (F14-REQ-25) |
 | FEATURE-0053 | connectivity boolean, adjacency, route, peer, reachability, latency, bandwidth, trust, health, `NetworkConnectivityProfile` | No connectivity field; `Unknown` by absence (4.3, 8); schema deny-list (F14-REQ-19, F14-REQ-20) |
 
 ## 14. Non-goals and unresolved semantic-gap result
@@ -699,8 +871,10 @@ the enforcing mechanism only.
   acceptance criteria of their owning requirements (sections 10–12) and by the
   absence ledger (section 13). This design adds no independent normative
   obligation.
-- No generic operation, audit, adapter, repository/storage, or provider
-  integration section is designed (architecture section 16.4).
+- No generic operation, audit, adapter, repository, registry, persistence/storage
+  engine, lookup/resolver interface, state-provider abstraction, controller,
+  reconciler, live handler, CRUD executor, or provider integration section is
+  designed (architecture section 16.4; sections 1.3, 3.1).
 - Unresolved semantic-gap result: `NO_UNRESOLVED_SEMANTIC_GAP` (section 2.1). No
   `ARCHITECTURE_DECISION_REQUIRED` and no `REPOSITORY_CONTEXT_NOT_READY` condition
   was encountered while authoring this design against the approved package.
@@ -722,8 +896,20 @@ Deterministic completeness self-check (architecture section 16.6):
   requirement.
 - No ResourcePool, ProviderCapability, capacity, eligibility, compatibility,
   adapter, discovery, credential, endpoint, provider-call, plugin, operation,
-  provisioning, runtime, or connectivity semantic appears outside marked
-  non-goal/ownership/absence text (sections 13–14).
+  provisioning, runtime, connectivity, repository, registry, persistence/storage
+  engine, lookup/resolver interface, state-provider abstraction, controller, or
+  reconciler semantic appears outside marked non-goal/ownership/absence/
+  classification text (sections 3.1, 13–14).
+- Contract-only classification is complete and consistent: section 3.1
+  enumerates every `IMPLEMENT`, `CONTRACT_ONLY / NO_TASK`, and `EXCLUDED` item,
+  and no requirement was weakened or deleted because its production execution is
+  deferred. Removing live handlers, CRUD execution, authoritative lookup,
+  persistence, production completeness/deletion evaluation, and runtime
+  pagination from the implementation set orphans no requirement, because each
+  such behavior retains contract ownership (sections 1.3, 3.1) proven by schemas,
+  offline validators, deterministic helpers, and conformance fixtures. No
+  unresolved state-provider, resolver, repository, registry, or persistence
+  assumption remains.
 - FEATURE-0013 adoption is exactly `NOT_APPLICABLE`; no decision/audit/operation
   semantic was introduced (F14-REQ-23).
 - No new normative requirement, kind, relationship, status meaning, condition
