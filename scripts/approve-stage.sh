@@ -40,4 +40,10 @@ PYAPPROVE
 ./scripts/feature-state.py set --feature "$FEATURE" --key current_stage --value "$NEXT_STAGE"
 ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false
 ./scripts/feature-state.py set --feature "$FEATURE" --key "${STAGE}_approval_source" --value "openai_machine_review"
+TARGET_PATH="$(get_feature_value "$FEATURE" spec_path)/${STAGE}.md"
+APPROVED_SHA256="$(shasum -a 256 "$TARGET_PATH" | awk '{print $1}')"
+APPROVED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+./scripts/feature-state.py set --feature "$FEATURE" --key "${STAGE}_approval_token" --value "$REQUIRED_TOKEN"
+./scripts/feature-state.py set --feature "$FEATURE" --key "${STAGE}_approved_sha256" --value "$APPROVED_SHA256"
+./scripts/feature-state.py set --feature "$FEATURE" --key "${STAGE}_approved_at" --value "$APPROVED_AT"
 info "$STAGE approved with token $REQUIRED_TOKEN; next stage: $NEXT_STAGE"

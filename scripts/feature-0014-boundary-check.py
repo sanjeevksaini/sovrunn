@@ -52,6 +52,16 @@ DESIGN_CONTEXT = {
     "docs/features/FEATURE-0014-provider-neutral-resource-model.md",
     str(SPEC_DIR / "requirements.md"),
 }
+TASKS_CONTEXT = {
+    "AGENTS.md",
+    "docs/engineering/go-coding-guardrails.md",
+    "docs/engineering/go-version-standard.md",
+    "docs/architecture/api-resource-standard.md",
+    str(ARCH),
+    str(ADH),
+    str(SPEC_DIR / "requirements.md"),
+    str(SPEC_DIR / "design.md"),
+}
 
 ACTIVE_CONTEXT = [
     ARCH,
@@ -151,6 +161,7 @@ def check_repository(c: Check, stage: str) -> None:
         Path("docs/prompts/kiro/requirements.prompt.md"): "## FEATURE-0014 closed architecture boundary",
         Path("docs/prompts/kiro/design.prompt.md"): "For FEATURE-0014",
         Path("docs/prompts/kiro/feature-0014-design.prompt.md"): "## Exact context boundary",
+        Path("docs/prompts/kiro/feature-0014-tasks.prompt.md"): "## Exact context boundary",
         Path("docs/prompts/kiro/tasks.prompt.md"): "For FEATURE-0014",
         Path("docs/prompts/reviewer/spec-review.prompt.md"): "For FEATURE-0014",
         Path("docs/prompts/reviewer/approval-review.prompt.md"): "For FEATURE-0014",
@@ -188,6 +199,10 @@ def check_manifest(c: Check, path: Path, stage: str) -> None:
     c.require(str(ADH) in manifest_paths, f"{path} includes ADH-2026-018")
     for old in ("ADH-2026-014", "ADH-2026-015", "ADH-2026-016"):
         c.require(not any(old in item for item in manifest_paths), f"{path} excludes {old}")
+    if stage == "tasks":
+        c.require(not any("FEATURE-0013" in item or "ADH-2026-017" in item
+                          for item in manifest_paths),
+                  f"{path} excludes FEATURE-0013 semantic payload")
     for item in data.get("files", []):
         candidate = Path(item["path"])
         digest = hashlib.sha256(candidate.read_bytes()).hexdigest() if candidate.is_file() else ""
@@ -204,6 +219,17 @@ def check_manifest(c: Check, path: Path, stage: str) -> None:
                   "rendered design prompt has no open-ended implementation search")
         c.require("SecurityExceptionRef" not in prompt and "GraphEdge" not in prompt,
                   "rendered design prompt excludes FEATURE-0013 design instructions")
+    elif stage == "tasks" and "generated-prompts" in str(path):
+        c.require(manifest_paths == TASKS_CONTEXT,
+                  f"{path} is the exact minimal FEATURE-0014 tasks context")
+        c.require(not any("FEATURE-0013" in item or "ADH-2026-017" in item
+                          for item in manifest_paths),
+                  f"{path} excludes FEATURE-0013 semantic payload")
+        prompt = read(Path(f"docs/generated-prompts/{FEATURE}/tasks.prompt.md"))
+        c.require(all(f"`{item}`" in prompt for item in TASKS_CONTEXT),
+                  "rendered tasks prompt lists every manifest input")
+        c.require("SecurityExceptionRef" not in prompt and "GraphEdge" not in prompt,
+                  "rendered tasks prompt excludes FEATURE-0013 task instructions")
 
 
 def check_design_authorization(c: Check) -> None:
@@ -220,6 +246,20 @@ def check_design_authorization(c: Check) -> None:
               "approved requirements digest matches current design input")
 
 
+def check_tasks_authorization(c: Check) -> None:
+    state_path = Path(f".automation/state/{FEATURE}.json")
+    design_path = SPEC_DIR / "design.md"
+    if not state_path.is_file() or not design_path.is_file():
+        c.require(False, "tasks require approval state and design")
+        return
+    state = json.loads(read(state_path))
+    digest = hashlib.sha256(design_path.read_bytes()).hexdigest()
+    c.require(state.get("design_approval_token") == "APPROVED_FOR_TASKS",
+              "tasks input has APPROVED_FOR_TASKS token")
+    c.require(state.get("design_approved_sha256") == digest,
+              "approved design digest matches current tasks input")
+
+
 def check_design_changed_files(c: Check) -> None:
     result = subprocess.run(["git", "status", "--porcelain"], text=True, capture_output=True, check=True)
     permitted = {
@@ -234,6 +274,23 @@ def check_design_changed_files(c: Check) -> None:
         changed.add(path)
     c.require(changed <= permitted,
               "design stage changed only design.md and automation state"
+              + (f": {sorted(changed - permitted)}" if changed - permitted else ""))
+
+
+def check_tasks_changed_files(c: Check) -> None:
+    result = subprocess.run(["git", "status", "--porcelain"], text=True, capture_output=True, check=True)
+    permitted = {
+        f".automation/state/{FEATURE}.json",
+        str(SPEC_DIR / "tasks.md"),
+    }
+    changed = set()
+    for line in result.stdout.splitlines():
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        changed.add(path)
+    c.require(changed <= permitted,
+              "tasks stage changed only tasks.md and automation state"
               + (f": {sorted(changed - permitted)}" if changed - permitted else ""))
 
 
@@ -283,8 +340,51 @@ def check_stage(c: Check, stage: str, require_output: bool) -> None:
     elif stage == "tasks":
         c.require((SPEC_DIR / "requirements.md").is_file() and (SPEC_DIR / "design.md").is_file(),
                   "tasks have approved requirements and design inputs")
+        c.require(ids(text, r"F14-REQ-\d{2}") == REQUIREMENTS,
+                  "tasks map exactly F14-REQ-01..31")
         c.require(ids(text, r"F14-AD-\d{3}") == DECISIONS, "tasks trace exactly all F14 decisions")
         c.require(ids(text, r"F14-R\d{2}") == RISKS, "tasks trace exactly all F14 risks")
+        lower = text.lower()
+        for heading in ("requirement-to-task ledger", "decision-to-task ledger",
+                        "risk-to-evidence ledger", "no-task ledger", "orphan report"):
+            c.require(f"## {heading}" in lower, f"tasks contain {heading}")
+        c.require("not_applicable" in lower, "tasks preserve FEATURE-0013 NOT_APPLICABLE")
+        task_blocks = re.split(r"(?m)^## Task ", text)[1:]
+        c.require(bool(task_blocks), "tasks contain at least one implementation task")
+        labels = ("Objective", "Requirements", "Design", "Decisions", "Risks",
+                  "Implementation class", "Files", "Notes", "Tests",
+                  "Acceptance criteria", "Commit message")
+        for number, block in enumerate(task_blocks, 1):
+            body = re.split(r"(?m)^## ", block, maxsplit=1)[0]
+            for label in labels:
+                label_pattern = rf"(?mi)^\s*-?\s*(?:\*\*)?{re.escape(label)}(?::\*\*|\*\*:|:)"
+                c.require(re.search(label_pattern, body) is not None,
+                          f"task {number} contains {label} label")
+            c.require(re.search(r"Implementation class(?::\*\*|\*\*:|:)\s*IMPLEMENT\b", body, re.I) is not None,
+                      f"task {number} is implementation class IMPLEMENT")
+            c.require(re.search(r"F14-REQ-\d{2}", body) is not None,
+                      f"task {number} cites a requirement")
+            c.require(re.search(r"(?:DD-\d{2}|section\s+\d)", body, re.I) is not None,
+                      f"task {number} cites an exact design decision or section")
+        c.require("no_orphans" in lower,
+                  "tasks orphan report declares no orphan tasks or design elements")
+        active_lines = "\n".join(
+            line for block in task_blocks
+            for index, line in enumerate(re.split(r"(?m)^## ", block, maxsplit=1)[0].splitlines())
+            if index == 0 or re.search(r"(?i)Objective|Files|Implementation class", line)
+        )
+        prohibited = re.findall(
+            r"ResourcePool|ProviderCapability|NetworkConnectivityProfile|DecisionRecord|AuditEvent|"
+            r"SecurityExceptionRef|GraphEdge|adapter[_/-]|repository[_/-]|persistence[_/-]",
+            active_lines,
+        )
+        c.require(not prohibited,
+                  "implementation task objectives/files exclude adjacent-feature artifacts"
+                  + (f": {sorted(set(prohibited))}" if prohibited else ""))
+        unresolved = re.findall(r"\bTBD\b|\bTODO\b|implementation-defined|as appropriate", text, re.I)
+        c.require(not unresolved,
+                  "tasks contain no unresolved implementation choices"
+                  + (f": {sorted(set(item.lower() for item in unresolved))}" if unresolved else ""))
 
 
 def check_changed_files(c: Check) -> None:
@@ -298,6 +398,7 @@ def check_changed_files(c: Check) -> None:
         "scripts/feature-0014-boundary-check.py",
         "scripts/feature-gate.sh",
         "scripts/kiro-stage.sh",
+        "scripts/approve-stage.sh",
         "scripts/reviewer-stage.sh",
         "scripts/render-prompt.py",
     )
@@ -325,6 +426,8 @@ def main() -> None:
     check_changed_files(c)
     if args.stage == "design":
         check_design_authorization(c)
+    elif args.stage == "tasks":
+        check_tasks_authorization(c)
     if args.mode == "prompt":
         check_manifest(c, Path(f"docs/generated-prompts/{FEATURE}/{args.stage}.context.json"), args.stage)
     elif args.mode == "review":
@@ -334,6 +437,8 @@ def main() -> None:
         check_stage(c, args.stage, True)
         if args.stage == "design":
             check_design_changed_files(c)
+        elif args.stage == "tasks":
+            check_tasks_changed_files(c)
     elif args.mode == "pre":
         check_stage(c, args.stage, False)
     c.finish()

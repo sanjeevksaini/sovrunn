@@ -26,6 +26,16 @@ FEATURE_0014_DESIGN_CONTEXT = [
     Path('docs/features/FEATURE-0014-provider-neutral-resource-model.md'),
     Path('.kiro/specs/provider-neutral-resource-model/requirements.md'),
 ]
+FEATURE_0014_TASKS_CONTEXT = [
+    Path('AGENTS.md'),
+    Path('docs/engineering/go-coding-guardrails.md'),
+    Path('docs/engineering/go-version-standard.md'),
+    Path('docs/architecture/api-resource-standard.md'),
+    Path('docs/architecture/provider-neutral-resource-model.md'),
+    Path('docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md'),
+    Path('.kiro/specs/provider-neutral-resource-model/requirements.md'),
+    Path('.kiro/specs/provider-neutral-resource-model/design.md'),
+]
 def load_state(feature):
     p=Path(f'.automation/state/{feature}.json')
     if not p.exists(): raise SystemExit(f'ERROR: state file not found: {p}')
@@ -45,6 +55,8 @@ def model_recommendation(stage):
 def write_feature_0014_context_manifest(out_dir, stage):
     if stage == 'design':
         paths = FEATURE_0014_DESIGN_CONTEXT
+    elif stage == 'tasks':
+        paths = FEATURE_0014_TASKS_CONTEXT
     else:
         paths = [
         Path('AGENTS.md'),
@@ -69,10 +81,6 @@ def write_feature_0014_context_manifest(out_dir, stage):
         Path('docs/context/CURRENT_DECISION_SUMMARY.md'),
         Path('docs/glossary.md'),
         ]
-    if stage == 'tasks':
-        paths.append(Path('.kiro/specs/provider-neutral-resource-model/requirements.md'))
-    if stage == 'tasks':
-        paths.append(Path('.kiro/specs/provider-neutral-resource-model/design.md'))
     missing = [str(path) for path in paths if not path.is_file()]
     if missing:
         raise SystemExit('ERROR: FEATURE-0014 context manifest missing: ' + ', '.join(missing))
@@ -93,7 +101,10 @@ def main():
     state=load_state(args.feature); template_path=Path(TEMPLATES[args.stage])
     if args.feature == 'FEATURE-0014' and args.stage == 'design':
         template_path = Path('docs/prompts/kiro/feature-0014-design.prompt.md')
-    values={'FEATURE_ID':state['feature_id'],'FEATURE_SLUG':state['slug'],'FEATURE_TITLE':state['title'],'PHASE_BRANCH':state['phase_branch'],'FEATURE_BRANCH':state['feature_branch'],'SPEC_PATH':state['spec_path'],'REQUIREMENTS_PATH':f"{state['spec_path']}/requirements.md",'DESIGN_PATH':f"{state['spec_path']}/design.md",'TASKS_PATH':f"{state['spec_path']}/tasks.md",'MODEL_RECOMMENDATIONS':model_recommendation(args.stage),'CONTEXT_FILES':'\n'.join(f'- `{path}`' for path in FEATURE_0014_DESIGN_CONTEXT)}
+    elif args.feature == 'FEATURE-0014' and args.stage == 'tasks':
+        template_path = Path('docs/prompts/kiro/feature-0014-tasks.prompt.md')
+    context_files = FEATURE_0014_TASKS_CONTEXT if args.feature == 'FEATURE-0014' and args.stage == 'tasks' else FEATURE_0014_DESIGN_CONTEXT
+    values={'FEATURE_ID':state['feature_id'],'FEATURE_SLUG':state['slug'],'FEATURE_TITLE':state['title'],'PHASE_BRANCH':state['phase_branch'],'FEATURE_BRANCH':state['feature_branch'],'SPEC_PATH':state['spec_path'],'REQUIREMENTS_PATH':f"{state['spec_path']}/requirements.md",'DESIGN_PATH':f"{state['spec_path']}/design.md",'TASKS_PATH':f"{state['spec_path']}/tasks.md",'MODEL_RECOMMENDATIONS':model_recommendation(args.stage),'CONTEXT_FILES':'\n'.join(f'- `{path}`' for path in context_files)}
     out_dir=Path(state['generated_prompt_path']); out_dir.mkdir(parents=True,exist_ok=True)
     out_file=out_dir/f'{args.stage}.prompt.md'; out_file.write_text(render(template_path.read_text(), values))
     if args.feature == 'FEATURE-0014':

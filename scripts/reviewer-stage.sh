@@ -85,8 +85,6 @@ elif feature == "FEATURE-0014":
         Path("docs/architecture/api-resource-standard.md"),
         Path("docs/reviews/architecture-decision-handoffs/ADH-2026-012-feature-0012-api-resource-standard.md"),
         Path("docs/reviews/architecture-decision-handoffs/ADH-2026-013-operation-allowed-scopes.md"),
-        Path("docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"),
-        Path("docs/reviews/architecture-decision-handoffs/ADH-2026-017-feature-0013-consolidated-architecture.md"),
         Path("docs/architecture/provider-neutral-resource-model.md"),
         Path("docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md"),
         Path("docs/features/FEATURE-0014-provider-neutral-resource-model.md"),
