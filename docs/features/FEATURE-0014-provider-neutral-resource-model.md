@@ -2,14 +2,14 @@
 doc_type: feature
 id: FEATURE-0014
 title: Provider-Neutral Resource Model
-status: requirements_ready
+status: implemented_and_merged
 phase: 2
 reuse_assessment_format_version: 1.0.0
 depends_on:
   - FEATURE-0011
   - FEATURE-0012
 ai_load_priority: feature
-ai_summary: Approved five-resource provider-neutral topology architecture; ADH-2026-018 repository readiness passed and requirements-only generation is authorized.
+ai_summary: Implemented and merged through PR #16 as commit 1ed47ac on 2026-07-30; preserves the approved five-resource provider-neutral topology under ADH-2026-018 as clarified by ADH-2026-019.
 controlling_handoff: ADH-2026-018
 canonical_architecture: docs/architecture/provider-neutral-resource-model.md
 kiro_slug: provider-neutral-resource-model

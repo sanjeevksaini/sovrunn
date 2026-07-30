@@ -6,6 +6,8 @@ Architecture baseline: `ARCH-2026.07-PHASE2-START`.
 
 FEATURE-0013 status: implemented and merged through PR #15 on 2026-07-29. ADH-2026-017 remains the approved single replacement architecture handoff; ADH-2026-014/015/016 are historical provenance and not downstream inputs.
 
+FEATURE-0014 status: implemented and merged through PR #16 as commit `1ed47ac` on 2026-07-30. ADH-2026-018 remains controlling, with the geographic-descriptor clarification in ADH-2026-019.
+
 ## Phase 2 Goal
 
 Establish the reuse-first, provider-neutral PaaS fabric foundation required before executable plugin-chain development.
@@ -36,17 +38,18 @@ Establish the reuse-first, provider-neutral PaaS fabric foundation required befo
 | FEATURE-0011 Reuse Assessment Standard | Merged | Complete |
 | FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` | Final human approval 2026-07-24 |
 | FEATURE-0013 Decision Record and AuditEvent Standard | Implemented and merged through PR #15 into `phase2-reuse-first-paas-fabric-foundation` | Final human/Codex review 2026-07-29 |
+| FEATURE-0014 Provider-Neutral Resource Model | Implemented and merged through PR #16 as commit `1ed47ac` into `phase2-reuse-first-paas-fabric-foundation` | Final feature gate passed 2026-07-30 |
 
-## Phase 2 Active Feature
+## Phase 2 Next Planned Feature
 
 | Feature | Status | Controlling handoff |
 |---|---|---|
-| FEATURE-0014 Provider-Neutral Resource Model | Requirements ready | ADH-2026-018; repository readiness and generated-context preflight passed 2026-07-29 |
+| FEATURE-0015 ResourcePool and ProviderCapability Model | Architecture not started | Pending architecture decision handoff |
 
 
-## FEATURE-0014 Approved Architecture Boundary
+## FEATURE-0014 Merged Architecture Boundary
 
-Before FEATURE-0014 requirements generation, use the approved architecture and this focused dependency read:
+Later features consume FEATURE-0014 through its approved architecture, merged contracts, and this focused dependency boundary:
 
 - FEATURE-0011 controls the mandatory reuse-assessment format and reuse-before-build gate.
 - FEATURE-0012 controls API/resource grammar, metadata, references, status, validation shape, Problem Details envelope, and the six-value `ScopeKind` vocabulary.
