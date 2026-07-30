@@ -122,7 +122,7 @@ def ids(text: str, pattern: str) -> set[str]:
     return set(re.findall(pattern, text))
 
 
-def check_repository(c: Check) -> None:
+def check_repository(c: Check, stage: str) -> None:
     for path in REQUIRED_CONTEXT:
         c.require_file(path)
 
@@ -171,7 +171,8 @@ def check_repository(c: Check) -> None:
         data = json.loads(read(state))
         c.require(data.get("slug") == SLUG and data.get("feature_branch") == "feature-0014-provider-neutral-resource-model",
                   "FEATURE-0014 automation state resolves slug and branch")
-        c.require(data.get("current_stage") == "requirements", "FEATURE-0014 automation state starts at requirements")
+        c.require(data.get("current_stage") == stage,
+                  f"FEATURE-0014 automation state matches requested stage {stage}")
     if config.is_file():
         c.require(f"feature_id={FEATURE}" in read(config) and f"slug={SLUG}" in read(config),
                   "Kiro config resolves FEATURE-0014 identity")
@@ -268,10 +269,13 @@ def check_stage(c: Check, stage: str, require_output: bool) -> None:
                   "design maps risk controls to evidence")
         c.require("not_applicable" in lower, "design preserves FEATURE-0013 NOT_APPLICABLE")
         c.require("absence ledger" in lower, "design contains adjacent-feature absence ledger")
-        normative_paragraphs = [
-            paragraph for paragraph in re.split(r"\n\s*\n", text)
-            if re.search(r"\b(?:MUST|SHALL|MUST NOT|SHALL NOT)\b", paragraph)
-        ]
+        normative_paragraphs = []
+        for paragraph in re.split(r"\n\s*\n", text):
+            # Inline-code mentions explain normative keywords; they do not make
+            # the surrounding design prose normative.
+            prose = re.sub(r"`[^`\n]*`", "", paragraph)
+            if re.search(r"\b(?:MUST|SHALL|MUST NOT|SHALL NOT)\b", prose):
+                normative_paragraphs.append(paragraph)
         uncited = [paragraph.splitlines()[0][:100] for paragraph in normative_paragraphs
                    if not re.search(r"F14-REQ-\d{2}", paragraph)]
         c.require(not uncited, "design has no uncited normative paragraph"
@@ -317,7 +321,7 @@ def main() -> None:
         raise SystemExit(f"ERROR: validator supports only {FEATURE}")
 
     c = Check()
-    check_repository(c)
+    check_repository(c, args.stage)
     check_changed_files(c)
     if args.stage == "design":
         check_design_authorization(c)
