@@ -1,0 +1,19 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderDatacenter",
+  "metadata": {
+    "name": "dc-skip-to-provider",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "providerLocationRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderLocation",
+  "metadata": {
+    "name": "loc-wrong-scope-kind",
+    "scopeRef": {
+      "apiVersion": "core.sovrunn.io/v1alpha1",
+      "kind": "Organization",
+      "name": "owner-organization-a"
+    }
+  },
+  "spec": {}
+}

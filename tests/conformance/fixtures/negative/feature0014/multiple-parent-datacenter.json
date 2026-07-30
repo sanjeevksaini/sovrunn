@@ -1,0 +1,26 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderDatacenter",
+  "metadata": {
+    "name": "dc-multiple-parents",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "providerLocationRef": [
+      {
+        "apiVersion": "fabric.sovrunn.io/v1alpha1",
+        "kind": "ProviderLocation",
+        "name": "provider-location-mumbai"
+      },
+      {
+        "apiVersion": "fabric.sovrunn.io/v1alpha1",
+        "kind": "ProviderLocation",
+        "name": "provider-location-pune"
+      }
+    ]
+  }
+}

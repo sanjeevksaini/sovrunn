@@ -1,0 +1,20 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "InfrastructureStack",
+  "metadata": {
+    "name": "stack-tech-non-ascii",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "datacenterFailureDomainRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "DatacenterFailureDomain",
+      "name": "datacenter-failure-domain-1"
+    },
+    "technology": "Apache Café"
+  }
+}

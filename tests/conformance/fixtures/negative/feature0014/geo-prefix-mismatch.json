@@ -1,0 +1,18 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "ProviderLocation",
+  "metadata": {
+    "name": "loc-geo-prefix-mismatch",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "geo": {
+      "countryCode": "IN",
+      "subdivisionCode": "US-CA"
+    }
+  }
+}

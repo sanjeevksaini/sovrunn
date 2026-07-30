@@ -1,0 +1,19 @@
+{
+  "apiVersion": "fabric.sovrunn.io/v1alpha1",
+  "kind": "InfrastructureStack",
+  "metadata": {
+    "name": "stack-skip-to-location",
+    "scopeRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "Provider",
+      "name": "provider-operator-a"
+    }
+  },
+  "spec": {
+    "datacenterFailureDomainRef": {
+      "apiVersion": "fabric.sovrunn.io/v1alpha1",
+      "kind": "ProviderLocation",
+      "name": "provider-location-mumbai"
+    }
+  }
+}
