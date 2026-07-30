@@ -23,3 +23,7 @@ docs/context/SOVRUNN_CONTEXT_PACK.generated.md
 *.swp
 .env
 .env.*
+
+# Python generated files
+__pycache__/
+*.py[cod]
