@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api/schemas/provider.json",
+  "title": "Provider",
+  "description": "Operator-facing ManagedResource under Platform or Organization scope (FEATURE-0014). Topology registration contract only; no domain spec fields, connectivity, capacity, capability, adapter, or provider-native fields.",
+  "type": "object",
+  "x-sovrunn-profile": "ManagedResource",
+  "x-sovrunn-boundary": "operator-facing",
+  "x-sovrunn-allowed-scopes": ["Platform", "Organization"],
+  "x-sovrunn-stability": "alpha",
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["fabric.sovrunn.io/v1alpha1"],
+      "description": "Contract group and maturity version for Provider.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Provider"],
+      "description": "Singular PascalCase resource kind.",
+      "x-sovrunn-field-policy": {
+        "classification": "Public",
+        "authorizedWriter": "system",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "immutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "metadata": {
+      "allOf": [
+        {
+          "$ref": "_common/object-meta.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "scopeRef": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["Platform", "Organization"],
+                  "description": "Provider primary scope is exactly Platform or Organization; ownerRef is not scope."
+                }
+              },
+              "required": ["kind"]
+            }
+          },
+          "required": ["scopeRef"]
+        }
+      ],
+      "description": "Common ObjectMeta with immutable Platform or Organization scopeRef. ownerRef must not replace scope.",
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "creator",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "Desired state for Provider. Identity and governance scope live in metadata; no domain properties are authorized.",
+      "properties": {},
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "spec-owner",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "mutable",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    },
+    "status": {
+      "type": "object",
+      "description": "System-owned observed state for Provider. Current-fact conditions only; no phase vocabulary.",
+      "properties": {
+        "observedGeneration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Desired-state generation last observed by the status owner.",
+          "x-sovrunn-field-policy": {
+            "classification": "Internal",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "none",
+            "residency": "any",
+            "auditRequired": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "_common/condition.json"
+          },
+          "description": "Current-fact conditions (Valid, TopologyComplete); not event history.",
+          "x-sovrunn-field-policy": {
+            "classification": "Operator-confidential",
+            "authorizedWriter": "status-owner",
+            "authorizedReaders": ["operator", "internal", "governance"],
+            "mutability": "system-only",
+            "retention": "standard",
+            "redaction": "redact",
+            "residency": "any",
+            "auditRequired": true
+          }
+        }
+      },
+      "additionalProperties": false,
+      "x-sovrunn-field-policy": {
+        "classification": "Operator-confidential",
+        "authorizedWriter": "status-owner",
+        "authorizedReaders": ["operator", "internal", "governance"],
+        "mutability": "system-only",
+        "retention": "standard",
+        "redaction": "none",
+        "residency": "any",
+        "auditRequired": true
+      }
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false
+}
