@@ -18,8 +18,8 @@ const designMaxStatusConditions = 32
 func TestProviderIdentityConstants(t *testing.T) {
 	t.Parallel()
 
-	if APIVersion != "fabric.sovrunn.io/v1alpha1" {
-		t.Fatalf("APIVersion = %q, want %q", APIVersion, "fabric.sovrunn.io/v1alpha1")
+	if FabricAPIVersion != "fabric.sovrunn.io/v1alpha1" {
+		t.Fatalf("FabricAPIVersion = %q, want %q", FabricAPIVersion, "fabric.sovrunn.io/v1alpha1")
 	}
 	cases := []struct {
 		name string
@@ -48,7 +48,7 @@ func TestProviderJSONRoundTrip(t *testing.T) {
 
 	in := Provider{
 		TypeMeta: apimeta.TypeMeta{
-			APIVersion: APIVersion,
+			APIVersion: FabricAPIVersion,
 			Kind:       KindProvider,
 		},
 		Metadata: apimeta.ObjectMeta{
@@ -119,8 +119,8 @@ func TestProviderJSONRoundTrip(t *testing.T) {
 		t.Fatalf("unmarshal Provider: %v", err)
 	}
 
-	if out.APIVersion != APIVersion {
-		t.Fatalf("apiVersion = %q, want %q", out.APIVersion, APIVersion)
+	if out.APIVersion != FabricAPIVersion {
+		t.Fatalf("apiVersion = %q, want %q", out.APIVersion, FabricAPIVersion)
 	}
 	if out.Kind != KindProvider {
 		t.Fatalf("kind = %q, want %q", out.Kind, KindProvider)
@@ -169,7 +169,7 @@ func TestProviderJSONRoundTrip(t *testing.T) {
 	}
 }
 
-func TestProviderRejectsForbiddenFieldsByTypeContract(t *testing.T) {
+func TestProviderOmitsForbiddenFieldsFromTypeContract(t *testing.T) {
 	t.Parallel()
 
 	forbidden := []string{

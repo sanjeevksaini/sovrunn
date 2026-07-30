@@ -8,7 +8,7 @@ import (
 // Shared FEATURE-0014 fabric API identity (DD-01). Declared once in this
 // root file for all five kinds; do not duplicate elsewhere.
 const (
-	APIVersion = "fabric.sovrunn.io/v1alpha1"
+	FabricAPIVersion = "fabric.sovrunn.io/v1alpha1"
 
 	KindProvider                = "Provider"
 	KindProviderLocation        = "ProviderLocation"
