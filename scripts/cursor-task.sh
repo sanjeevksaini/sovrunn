@@ -154,10 +154,13 @@ MODELS_TO_TRY=()
 if [[ -n "${CURSOR_SELECTED_MODEL:-}" ]]; then
   MODELS_TO_TRY+=("${CURSOR_SELECTED_MODEL}")
 fi
-for row in "${MODEL_ROWS[@]}"; do
-  IFS=$'\t' read -r model label effort <<< "$row"
-  [[ -n "$model" ]] && MODELS_TO_TRY+=("$model")
-done
+if [[ "${CURSOR_REQUIRE_SELECTED_MODEL:-0}" != "1" ]]; then
+  for row in "${MODEL_ROWS[@]}"; do
+    IFS=$'\t' read -r model label effort <<< "$row"
+    [[ -n "$model" ]] && MODELS_TO_TRY+=("$model")
+  done
+fi
+[[ "${#MODELS_TO_TRY[@]}" -gt 0 ]] || fail "no Cursor model selected"
 
 SUCCESS=0
 SELECTED_MODEL=""
@@ -176,6 +179,7 @@ for idx in "${!MODELS_TO_TRY[@]}"; do
   SELECTED_MODEL="$model"
   # Find effort from recommendation list where possible.
   SELECTED_EFFORT="Medium"
+  [[ "$model" == *-high* ]] && SELECTED_EFFORT="high"
   for row in "${MODEL_ROWS[@]}"; do
     IFS=$'\t' read -r rec_model rec_label rec_effort <<< "$row"
     if [[ "$rec_model" == "$model" || "$rec_label" == "$model" ]]; then

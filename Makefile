@@ -111,7 +111,7 @@ ff-feature-0014-prompt:
 	FEATURE_FACTORY_CURSOR_MODE=prompt ./scripts/cursor-task.sh --feature "FEATURE-0014" --task "$(TASK)" --mode prompt
 
 ff-feature-0014-run:
-	./scripts/feature-0014-flow.py --start-task "$${START_TASK:-1}" $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
+	CURSOR_SELECTED_MODEL="$${CURSOR_SELECTED_MODEL:-cursor-grok-4.5-high-fast}" CURSOR_REQUIRE_SELECTED_MODEL=1 ./scripts/feature-0014-flow.py --start-task "$${START_TASK:-1}" $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
 
 feature-0014-cursor-boundary-check:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-cursor-boundary-check.py --task "$(TASK)"
