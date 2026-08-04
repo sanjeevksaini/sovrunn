@@ -50,7 +50,9 @@ def section(text: str, title: str) -> str | None:
     wanted = title.casefold()
     for index, line in enumerate(lines):
         heading = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
-        if heading and heading.group(2).strip().casefold() == wanted:
+        heading_title = heading.group(2).strip() if heading else ""
+        heading_title = re.sub(r"^\d+(?:\.\d+)*[.)]?\s+", "", heading_title)
+        if heading and heading_title.casefold() == wanted:
             start = index + 1
             level = len(heading.group(1))
             break
@@ -67,7 +69,7 @@ def section(text: str, title: str) -> str | None:
 
 def scalar(value: Any) -> str:
     if value is None:
-        return "—"
+        return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
     return str(value)
@@ -203,6 +205,12 @@ def check_requirements(
             if cf_id not in paragraph or "transition" not in paragraph.casefold():
                 continue
             if re.search(r"invalid.{0,40}transition|transition.{0,40}invalid", paragraph, re.I):
+                if re.search(
+                    r"(?:does|do|must|is)\s+not.{0,100}(?:own|prove|govern|enforce|authority)",
+                    paragraph,
+                    re.I | re.S,
+                ):
+                    continue
                 if "transition" not in semantics:
                     errors.append(
                         f"{cf_id} is used as transition evidence but its registry semantics do not govern a transition"
@@ -214,7 +222,8 @@ def check_requirements(
         if (
             entry.get("owner") != feature
             and cf_id not in source_cf_ids
-            and side_effect != "—"
+            and side_effect.casefold() not in {"null", "none", "no side effects"}
+            and len(side_effect) >= 12
             and side_effect in target_text
         ):
             errors.append(

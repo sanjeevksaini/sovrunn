@@ -157,7 +157,7 @@ if [[ $STATUS -ne 0 ]]; then
 fi
 
 if [[ -f "$CONTROL_FILE" ]]; then
-  if ! ./scripts/receipt-check.py --log "$LOG_FILE" --kind stage; then
+  if ! ./scripts/receipt-check.py --log "$LOG_FILE" --document "$EXPECTED_DOC" --kind stage; then
     ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "kiro_${STAGE}_blocked" >/dev/null || true
     fail "Kiro stage did not produce exactly one COMPLETE receipt; refusing stage acceptance. See $LOG_FILE"
   fi

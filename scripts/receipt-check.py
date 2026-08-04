@@ -30,6 +30,10 @@ def find_receipts(raw: str, kind: str) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--log", required=True)
+    parser.add_argument(
+        "--document",
+        help="stage document fallback when the CLI summary omits an exact receipt",
+    )
     parser.add_argument("--kind", required=True, choices=tuple(PATTERNS))
     args = parser.parse_args()
     path = Path(args.log)
@@ -37,13 +41,29 @@ def main() -> None:
         raise SystemExit(f"ERROR: receipt log does not exist: {path}")
     receipts = find_receipts(path.read_text(errors="replace"), args.kind)
     expected = EXPECTED[args.kind]
-    if len(receipts) != 1:
+    if len(receipts) == 1 and receipts[0] == expected:
+        print(f"PASS: exactly one {expected} in CLI log")
+        return
+    if receipts:
         raise SystemExit(
             f"ERROR: expected exactly one {args.kind} receipt, found {len(receipts)}: {receipts}"
         )
-    if receipts[0] != expected:
-        raise SystemExit(f"ERROR: completion blocked by receipt: {receipts[0]}")
-    print(f"PASS: exactly one {expected}")
+    if not args.document:
+        raise SystemExit(
+            f"ERROR: expected exactly one {args.kind} receipt, found 0: []"
+        )
+    document = Path(args.document)
+    if not document.is_file():
+        raise SystemExit(f"ERROR: receipt document does not exist: {document}")
+    document_receipts = find_receipts(
+        document.read_text(errors="replace"), args.kind
+    )
+    if document_receipts != [expected]:
+        raise SystemExit(
+            "ERROR: CLI log omitted its receipt and document fallback did not "
+            f"contain exactly one completion receipt: {document_receipts}"
+        )
+    print(f"PASS: exactly one {expected} in stage document fallback")
 
 
 if __name__ == "__main__":

@@ -122,7 +122,7 @@ run_kiro_prompt_file() {
   set -e
   [[ $status -eq 0 ]] || fail "Kiro CLI revision failed for $stage. See $log_file"
   if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
-    ./scripts/receipt-check.py --log "$log_file" --kind stage || \
+    ./scripts/receipt-check.py --log "$log_file" --document "$expected_doc" --kind stage || \
       fail "Kiro revision did not produce exactly one COMPLETE receipt. See $log_file"
     PYTHONDONTWRITEBYTECODE=1 python3 \
       ./scripts/generic-kiro-boundary-check.py \

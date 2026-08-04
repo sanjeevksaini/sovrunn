@@ -285,6 +285,16 @@ class KiroSemanticGuardrailTests(unittest.TestCase):
 The behavior remains unchanged. AC-F99-01 uses VS0-CF-F09 only for unavailable-required-participation denial.
 """
 
+    def test_numbered_canonical_section_heading_is_accepted(self):
+        body = kiro_semantic.section(
+            "## 10. Canonical requirement ledger\n\n| ID | Behavior |\n",
+            "Canonical requirement ledger",
+        )
+        self.assertEqual(body, "\n| ID | Behavior |")
+
+    def test_registry_null_is_rendered_exactly_as_yaml(self):
+        self.assertEqual(kiro_semantic.scalar(None), "null")
+
     def test_exact_ledgers_and_registry_semantics_pass(self):
         errors = []
         kiro_semantic.check_requirements(
@@ -368,6 +378,54 @@ class ReceiptCheckTests(unittest.TestCase):
             receipt.find_receipts("STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED\n", "stage"),
             ["STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED"],
         )
+
+    def test_stage_document_is_valid_fallback_when_cli_omits_receipt(self):
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            log = directory / "kiro.log"
+            document = directory / "requirements.md"
+            log.write_text("Revision complete. Receipt retained in document.\n")
+            document.write_text("# Requirements\n\nSTAGE_STATUS: COMPLETE\n")
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts/receipt-check.py"),
+                    "--log",
+                    str(log),
+                    "--document",
+                    str(document),
+                    "--kind",
+                    "stage",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertIn("stage document fallback", completed.stdout)
+
+    def test_blocked_cli_receipt_cannot_be_overridden_by_document(self):
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            log = directory / "kiro.log"
+            document = directory / "requirements.md"
+            log.write_text("STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED\n")
+            document.write_text("STAGE_STATUS: COMPLETE\n")
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts/receipt-check.py"),
+                    "--log",
+                    str(log),
+                    "--document",
+                    str(document),
+                    "--kind",
+                    "stage",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(completed.returncode, 0)
 
 
 class CloseoutMetadataTests(unittest.TestCase):
