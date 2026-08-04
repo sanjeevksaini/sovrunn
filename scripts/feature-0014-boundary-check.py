@@ -15,6 +15,7 @@ from pathlib import Path
 FEATURE = "FEATURE-0014"
 SLUG = "provider-neutral-resource-model"
 ARCH = Path("docs/architecture/provider-neutral-resource-model.md")
+CURRENT_BASELINE = Path("docs/context/CURRENT_ARCHITECTURE_BASELINE.md")
 ADH = Path("docs/reviews/architecture-decision-handoffs/ADH-2026-018-feature-0014-provider-neutral-resource-model.md")
 ADH_GEO = Path("docs/reviews/architecture-decision-handoffs/ADH-2026-019-feature-0014-geographic-descriptor-clarification.md")
 SPEC_DIR = Path(".kiro/specs") / SLUG
@@ -142,8 +143,16 @@ def check_repository(c: Check, stage: str, mode: str) -> None:
     arch = read(ARCH)
     adh = read(ADH)
     adh_geo = read(ADH_GEO)
-    c.require("status: approved-pending-repository-alignment" in arch or "status: approved-for-kiro-requirements" in arch,
-              "architecture has an approved readiness status")
+    historical_under_rebaseline = (
+        "status: historical-implementation" in arch
+        and "ARCH-2026.08-PHASE2R-CANONICAL" in read(CURRENT_BASELINE)
+    )
+    c.require(
+        "status: approved-pending-repository-alignment" in arch
+        or "status: approved-for-kiro-requirements" in arch
+        or historical_under_rebaseline,
+        "architecture has an approved readiness or rebaselined historical status",
+    )
     c.require("- Approval status: Approved" in adh, "ADH-2026-018 is human-approved")
     c.require("- Approval status: Approved" in adh_geo, "ADH-2026-019 is human-approved")
     c.require(ids(arch, r"F14-AD-\d{3}") == DECISIONS, "architecture enumerates exactly F14-AD-001..021")
@@ -188,8 +197,15 @@ def check_repository(c: Check, stage: str, mode: str) -> None:
         c.require(data.get("slug") == SLUG and data.get("feature_branch") == "feature-0014-provider-neutral-resource-model",
                   "FEATURE-0014 automation state resolves slug and branch")
         expected_stage = "cursor" if mode == "execution" else stage
-        c.require(data.get("current_stage") == expected_stage,
-                  f"FEATURE-0014 automation state matches requested stage {expected_stage}")
+        completed_post_gate = (
+            mode == "post"
+            and data.get("current_stage") == "merged"
+            and data.get("status") == "implemented_and_merged"
+        )
+        c.require(
+            data.get("current_stage") == expected_stage or completed_post_gate,
+            f"FEATURE-0014 automation state matches requested stage {expected_stage} or completed merged state",
+        )
     if config.is_file():
         c.require(f"feature_id={FEATURE}" in read(config) and f"slug={SLUG}" in read(config),
                   "Kiro config resolves FEATURE-0014 identity")
