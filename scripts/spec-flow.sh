@@ -132,6 +132,47 @@ run_kiro_prompt_file() {
   ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_generated" >/dev/null
 }
 
+run_semantic_guardrails() {
+  local stage="$1" file_target="$2"
+  local revision_prompt=".automation/generated-prompts/$FEATURE/${stage}.semantic-revision.prompt.md"
+  local review_dir=".automation/reviews/$FEATURE"
+  local count_file="$review_dir/${stage}.revision-count"
+  local output rc old_count new_count
+
+  set +e
+  output="$(./scripts/kiro-semantic-check.py \
+    --feature "$FEATURE" \
+    --stage "$stage" \
+    --write-revision-prompt "$revision_prompt" 2>&1)"
+  rc=$?
+  set -e
+  printf '%s\n' "$output"
+  if [[ $rc -eq 0 ]]; then
+    return 0
+  fi
+
+  mkdir -p "$review_dir"
+  old_count=0
+  if [[ -f "$count_file" ]]; then
+    old_count="$(tr -d '[:space:]' < "$count_file")"
+  fi
+  [[ "$old_count" =~ ^[0-9]+$ ]] || fail "invalid revision count in $count_file"
+  new_count=$((old_count + 1))
+  printf '%s\n' "$new_count" > "$count_file"
+  if (( new_count > MAX_REVISIONS )); then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_blocked" >/dev/null || true
+    ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null || true
+    fail "max combined semantic/reviewer revisions exceeded for $stage: $new_count>$MAX_REVISIONS"
+  fi
+
+  [[ -f "$revision_prompt" ]] || fail "semantic guardrail did not produce revision prompt: $revision_prompt"
+  info "Deterministic semantic guardrails rejected $stage; running bounded Kiro correction $new_count/$MAX_REVISIONS"
+  ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_revision_required" >/dev/null
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false >/dev/null
+  run_kiro_prompt_file "$stage" "$revision_prompt" "$file_target"
+  return 1
+}
+
 run_stage() {
   local stage="$1" file_target="$2"
   if [[ "$RESUME" == "1" && -f "$file_target" ]]; then
@@ -139,7 +180,8 @@ run_stage() {
   else
     info "Generating $stage with Kiro CLI headless mode: $KIRO_MODE"
     KIRO_INVOCATIONS=$((KIRO_INVOCATIONS + 1))
-    ./scripts/kiro-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$KIRO_MODE"
+    FEATURE_FACTORY_DEFER_SEMANTIC_CHECK=1 \
+      ./scripts/kiro-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$KIRO_MODE"
   fi
   [[ -f "$file_target" ]] || fail "missing expected Kiro output: $file_target"
 
@@ -158,6 +200,9 @@ PY
   fi
 
   while true; do
+    if ! run_semantic_guardrails "$stage" "$file_target"; then
+      continue
+    fi
     set +e
     ./scripts/review-and-route-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$MODE" --max-revisions "$MAX_REVISIONS"
     rc=$?

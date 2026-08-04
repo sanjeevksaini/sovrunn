@@ -188,5 +188,16 @@ if [[ -f "$CONTROL_FILE" ]]; then
     --feature "$FEATURE" --stage "$STAGE" --mode post
 fi
 
+if [[ -f "$CONTROL_FILE" && "${FEATURE_FACTORY_DEFER_SEMANTIC_CHECK:-0}" != "1" ]]; then
+  SEMANTIC_REVISION_PROMPT=".automation/generated-prompts/$FEATURE/${STAGE}.semantic-revision.prompt.md"
+  if ! ./scripts/kiro-semantic-check.py \
+    --feature "$FEATURE" \
+    --stage "$STAGE" \
+    --write-revision-prompt "$SEMANTIC_REVISION_PROMPT"; then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_revision_required" >/dev/null || true
+    fail "Kiro semantic guardrails rejected $STAGE. Apply $SEMANTIC_REVISION_PROMPT, then rerun the stage."
+  fi
+fi
+
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_generated" >/dev/null
 info "Kiro stage completed. Log: $LOG_FILE"

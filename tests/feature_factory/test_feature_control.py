@@ -24,6 +24,9 @@ delta = load_module("semantic_delta", ROOT / "scripts/semantic-delta.py")
 closeout = load_module("feature_closeout", ROOT / "scripts/feature-closeout.py")
 orchestrator = load_module("feature_orchestrator", ROOT / "scripts/feature-orchestrator.py")
 receipt = load_module("receipt_check", ROOT / "scripts/receipt-check.py")
+kiro_semantic = load_module(
+    "kiro_semantic_check", ROOT / "scripts/kiro-semantic-check.py"
+)
 
 
 class FeatureControlTests(unittest.TestCase):
@@ -153,6 +156,7 @@ class ScriptSafetyTests(unittest.TestCase):
             "spec-approval-check.py",
             "receipt-check.py",
             "reviewer-openai.py",
+            "kiro-semantic-check.py",
         ]
         for script in scripts:
             path = ROOT / "scripts" / script
@@ -199,6 +203,92 @@ class ScriptSafetyTests(unittest.TestCase):
         review_loop = source.index("while true; do", pending)
         self.assertLess(pending, review_loop)
         self.assertIn("generic-kiro-boundary-check.py", source[pending - 4000 : review_loop])
+
+    def test_spec_flow_runs_semantic_guardrail_before_model_review(self):
+        source = (ROOT / "scripts/spec-flow.sh").read_text()
+        loop = source.index("while true; do", source.index("run_stage()"))
+        semantic = source.index('run_semantic_guardrails "$stage"', loop)
+        reviewer = source.index("review-and-route-stage.sh", semantic)
+        self.assertLess(semantic, reviewer)
+        self.assertIn("${stage}.revision-count", source)
+
+
+class KiroSemanticGuardrailTests(unittest.TestCase):
+    feature_text = """\
+## Scope Classification
+| ID | Behavior | DEC/ADH | VS0 IDs |
+|----|----------|---------|---------|
+| REQ-F99-01 | Preserve the approved behavior | DEC-0099 | VS0-STATE-001 |
+
+## Acceptance Criteria
+| ID | Criterion | Conformance ID |
+|----|-----------|----------------|
+| AC-F99-01 | Prove the registered scenario | VS0-CF-F09 |
+"""
+    conformance = {
+        "VS0-CF-F09": {
+            "id": "VS0-CF-F09",
+            "owner": "FEATURE-0023",
+            "inputs": "unavailable-required-participation",
+            "expectedState": "denied-placement",
+            "expectedError": "VALIDATION_FAILED",
+            "expectedSideEffects": "no-silent-substitution",
+            "gate": "decision",
+        }
+    }
+
+    def valid_requirements(self) -> str:
+        return """\
+## Canonical requirement ledger
+| ID | Behavior | DEC/ADH | VS0 IDs |
+|----|----------|---------|---------|
+| REQ-F99-01 | Preserve the approved behavior | DEC-0099 | VS0-STATE-001 |
+
+## Canonical acceptance ledger
+| ID | Criterion | Conformance ID |
+|----|-----------|----------------|
+| AC-F99-01 | Prove the registered scenario | VS0-CF-F09 |
+
+## Exact conformance semantics ledger
+| ID | Owner | Inputs | Expected State | Expected Error | Expected Side Effects | Gate |
+|----|-------|--------|----------------|----------------|-----------------------|------|
+| VS0-CF-F09 | FEATURE-0023 | unavailable-required-participation | denied-placement | VALIDATION_FAILED | no-silent-substitution | decision |
+
+### REQ-F99-01 — Approved behavior
+The behavior remains unchanged. AC-F99-01 uses VS0-CF-F09 only for unavailable-required-participation denial.
+"""
+
+    def test_exact_ledgers_and_registry_semantics_pass(self):
+        errors = []
+        kiro_semantic.check_requirements(
+            errors,
+            "FEATURE-0099",
+            self.feature_text,
+            self.valid_requirements(),
+            self.conformance,
+        )
+        self.assertEqual(errors, [])
+
+    def test_repurposed_requirement_row_fails(self):
+        target = self.valid_requirements().replace(
+            "Preserve the approved behavior", "Repurpose the approved behavior", 1
+        )
+        errors = []
+        kiro_semantic.check_requirements(
+            errors, "FEATURE-0099", self.feature_text, target, self.conformance
+        )
+        self.assertTrue(any("approved REQ-F99-01 row" in error for error in errors))
+
+    def test_cross_feature_conformance_cannot_prove_state_transition(self):
+        target = self.valid_requirements().replace(
+            "The behavior remains unchanged.",
+            "An invalid participation transition is rejected by VS0-CF-F09.",
+        )
+        errors = []
+        kiro_semantic.check_requirements(
+            errors, "FEATURE-0099", self.feature_text, target, self.conformance
+        )
+        self.assertTrue(any("transition evidence" in error for error in errors))
 
 
 class TaskBatchTests(unittest.TestCase):
