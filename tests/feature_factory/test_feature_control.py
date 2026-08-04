@@ -23,6 +23,7 @@ control = load_module("feature_control", ROOT / "scripts/feature-control.py")
 delta = load_module("semantic_delta", ROOT / "scripts/semantic-delta.py")
 closeout = load_module("feature_closeout", ROOT / "scripts/feature-closeout.py")
 orchestrator = load_module("feature_orchestrator", ROOT / "scripts/feature-orchestrator.py")
+receipt = load_module("receipt_check", ROOT / "scripts/receipt-check.py")
 
 
 class FeatureControlTests(unittest.TestCase):
@@ -116,6 +117,7 @@ class ScriptSafetyTests(unittest.TestCase):
             "human-gate.py",
             "executable-plan-report.py",
             "spec-approval-check.py",
+            "receipt-check.py",
         ]
         for script in scripts:
             path = ROOT / "scripts" / script
@@ -185,6 +187,28 @@ class TaskBatchTests(unittest.TestCase):
     def test_sequence_drift_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "expected Task 2, got 3"):
             orchestrator.task_batches([1, 2, 3], "1", 3, None, 2, True)
+
+
+class ReceiptCheckTests(unittest.TestCase):
+    def test_ansi_wrapped_receipt_is_accepted_and_diff_preview_is_ignored(self):
+        raw = (
+            "\x1b[0m+ 390: \x1b[38;2;192;197;206mSTAGE_STATUS: COMPLETE\x1b[K\n"
+            "STAGE_STATUS: COMPLETE\x1b[0m\x1b[0m\n"
+        )
+        self.assertEqual(receipt.find_receipts(raw, "stage"), ["STAGE_STATUS: COMPLETE"])
+
+    def test_duplicate_exact_receipts_remain_detectable(self):
+        raw = "TASK_STATUS: COMPLETE\n\x1b[32mTASK_STATUS: COMPLETE\x1b[0m\n"
+        self.assertEqual(
+            receipt.find_receipts(raw, "task"),
+            ["TASK_STATUS: COMPLETE", "TASK_STATUS: COMPLETE"],
+        )
+
+    def test_blocked_receipt_is_parsed_but_not_completion(self):
+        self.assertEqual(
+            receipt.find_receipts("STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED\n", "stage"),
+            ["STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED"],
+        )
 
 
 class CloseoutMetadataTests(unittest.TestCase):

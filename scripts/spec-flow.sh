@@ -115,6 +115,10 @@ run_kiro_prompt_file() {
   local status=${PIPESTATUS[0]}
   set -e
   [[ $status -eq 0 ]] || fail "Kiro CLI revision failed for $stage. See $log_file"
+  if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
+    ./scripts/receipt-check.py --log "$log_file" --kind stage || \
+      fail "Kiro revision did not produce exactly one COMPLETE receipt. See $log_file"
+  fi
   [[ -f "$expected_doc" ]] || fail "missing expected Kiro output after revision: $expected_doc"
 }
 

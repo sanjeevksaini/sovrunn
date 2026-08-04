@@ -157,8 +157,7 @@ if [[ $STATUS -ne 0 ]]; then
 fi
 
 if [[ -f "$CONTROL_FILE" ]]; then
-  mapfile -t STAGE_RECEIPTS < <(grep -E '^STAGE_STATUS: (COMPLETE|BLOCKED)( [A-Z_]+)?$' "$LOG_FILE" || true)
-  if [[ "${#STAGE_RECEIPTS[@]}" != "1" || "${STAGE_RECEIPTS[0]:-}" != "STAGE_STATUS: COMPLETE" ]]; then
+  if ! ./scripts/receipt-check.py --log "$LOG_FILE" --kind stage; then
     ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "kiro_${STAGE}_blocked" >/dev/null || true
     fail "Kiro stage did not produce exactly one COMPLETE receipt; refusing stage acceptance. See $LOG_FILE"
   fi

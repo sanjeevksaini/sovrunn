@@ -230,8 +230,7 @@ if [[ "$SUCCESS" != "1" ]]; then
 fi
 
 if [[ -f "$CONTROL_FILE" || "$FEATURE" == "FEATURE-0014" ]]; then
-  mapfile -t TASK_RECEIPTS < <(grep -E '^TASK_STATUS: (COMPLETE|BLOCKED)$' "$LOG_FILE" || true)
-  if [[ "${#TASK_RECEIPTS[@]}" != "1" || "${TASK_RECEIPTS[0]:-}" != "TASK_STATUS: COMPLETE" ]]; then
+  if ! ./scripts/receipt-check.py --log "$LOG_FILE" --kind task; then
     ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "cursor_task_${TASK}_blocked" >/dev/null || true
     fail "Cursor task did not produce exactly one COMPLETE receipt; refusing verification and commit. See $LOG_FILE"
   fi
