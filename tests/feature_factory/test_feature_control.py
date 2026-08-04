@@ -152,6 +152,7 @@ class ScriptSafetyTests(unittest.TestCase):
             "executable-plan-report.py",
             "spec-approval-check.py",
             "receipt-check.py",
+            "reviewer-openai.py",
         ]
         for script in scripts:
             path = ROOT / "scripts" / script

@@ -116,7 +116,8 @@ make -f Makefile.feature-factory \
 Automated reviewer mode with the OpenAI adapter:
 
 ```bash
-export OPENAI_API_KEY="..."
+# Optional: only needed when selecting reviewer-openai.py.
+# export OPENAI_API_KEY="your-real-api-key"
 export FEATURE_FACTORY_REVIEW_MODE=auto
 export FEATURE_FACTORY_REVIEWER_MODEL="gpt-5.6-terra"
 
@@ -191,6 +192,25 @@ make ff-feature-flow \
   TITLE="Canonical Cloud Model and Alpha Migration Foundation" \
   PHASE_BRANCH=phase2-reuse-first-paas-fabric-foundation
 ```
+
+`OPENAI_API_KEY` is optional when the signed-in Codex CLI is installed. Reviewer
+selection is fail-closed and deterministic:
+
+1. an explicit `FEATURE_FACTORY_REVIEWER_CMD` wins;
+2. otherwise a non-placeholder `OPENAI_API_KEY` selects `reviewer-openai.py`;
+3. otherwise the signed-in Codex CLI selects `reviewer-codex.sh` in an
+   ephemeral, read-only sandbox;
+4. if none is available, the flow stops before review.
+
+To force the no-API-key reviewer explicitly:
+
+```bash
+unset OPENAI_API_KEY
+export FEATURE_FACTORY_REVIEWER_CMD=./scripts/reviewer-codex.sh
+```
+
+Codex and OpenAI raw reviewer records use distinct audit filenames. Both
+adapters must return the same strict reviewer JSON schema and exact stage token.
 
 This is one automation, not one approval. It deliberately stops at the
 manifest's founder-controlled gates:

@@ -25,7 +25,8 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ "$MODE" == "auto" ]] || fail "unattended spec flow requires reviewer mode auto"
 [[ "$KIRO_MODE" == "auto" ]] || fail "unattended spec flow requires Kiro mode auto"
-[[ -n "${OPENAI_API_KEY:-}" ]] || fail "OPENAI_API_KEY is required for unattended OpenAI review"
+configure_reviewer_adapter
+info "Specification reviewer adapter: $FEATURE_FACTORY_REVIEWER_CMD"
 command -v kiro-cli >/dev/null 2>&1 || command -v kiro >/dev/null 2>&1 || fail "Kiro CLI is not available"
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"

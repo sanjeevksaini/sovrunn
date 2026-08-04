@@ -13,12 +13,17 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ -n "$STAGE" ]] || fail "--stage required"
 cd "$(repo_root)"; ensure_feature_state "$FEATURE"
+if [[ "$MODE" == "auto" ]]; then
+  configure_reviewer_adapter
+else
+  FEATURE_FACTORY_REVIEWER_RAW_SUFFIX="${FEATURE_FACTORY_REVIEWER_RAW_SUFFIX:-manual.raw.json}"
+fi
 SPEC_PATH=$(get_feature_value "$FEATURE" spec_path)
 TITLE=$(get_feature_value "$FEATURE" title)
 OUT_DIR=".automation/reviews/$FEATURE"; mkdir -p "$OUT_DIR"
 PROMPT_OUT="$OUT_DIR/${STAGE}-review.prompt.md"
 REVIEW_OUT="$OUT_DIR/${STAGE}.review.json"
-RAW_OUT="$OUT_DIR/${STAGE}.openai.raw.json"
+RAW_OUT="$OUT_DIR/${STAGE}.${FEATURE_FACTORY_REVIEWER_RAW_SUFFIX}"
 CONTEXT_OUT="$OUT_DIR/${STAGE}-review.context.json"
 case "$STAGE" in
   requirements) TARGET="$SPEC_PATH/requirements.md";;
@@ -183,7 +188,7 @@ case "$MODE" in
     info "Prompt mode: paste $PROMPT_OUT into ChatGPT/reviewer, then save strict JSON to $REVIEW_OUT."
     ;;
   auto)
-    REVIEWER_CMD="${FEATURE_FACTORY_REVIEWER_CMD:-./scripts/reviewer-openai.py}"
+    REVIEWER_CMD="$FEATURE_FACTORY_REVIEWER_CMD"
     info "Auto review mode: running $REVIEWER_CMD"
     "$REVIEWER_CMD" --prompt "$PROMPT_OUT" --out "$REVIEW_OUT" --raw-out "$RAW_OUT"
     HISTORY_DIR="$OUT_DIR/history"
@@ -191,7 +196,7 @@ case "$MODE" in
     ATTEMPT="$(find "$HISTORY_DIR" -maxdepth 1 -type f -name "${STAGE}.*.review.json" | wc -l | tr -d ' ')"
     ATTEMPT="$((ATTEMPT + 1))"
     cp "$REVIEW_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.review.json"
-    cp "$RAW_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.openai.raw.json"
+    cp "$RAW_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.${FEATURE_FACTORY_REVIEWER_RAW_SUFFIX}"
     cp "$PROMPT_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.review.prompt.md"
     cp "$CONTEXT_OUT" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.context.json"
     cp "$TARGET" "$HISTORY_DIR/${STAGE}.${ATTEMPT}.document.md"
