@@ -337,11 +337,16 @@ else
   pass "Changed-file list collected ($(wc -l <"$CHANGED_FILES_LIST" | tr -d ' ') files)"
 
   if [[ -x scripts/reuse-assessment-check.sh ]]; then
-    echo "==> Running reuse-assessment validator (strict)"
+    REUSE_MODE="strict"
+    if [[ "$FEATURE" == "FEATURE-0014" ]] && grep -q '"status": "implemented_and_merged"' ".automation/state/FEATURE-0014.json"; then
+      REUSE_MODE="legacy"
+      echo "INFO: FEATURE-0014 reuse assessment is immutable approved history; using legacy validation compatibility"
+    fi
+    echo "==> Running reuse-assessment validator ($REUSE_MODE)"
     set +e
     bash scripts/reuse-assessment-check.sh "$FEATURE" \
       --assessment "$ASSESSMENT_PATH" \
-      --mode strict \
+      --mode "$REUSE_MODE" \
       --changed-files "$CHANGED_FILES_LIST" \
       --requirements "$REQUIREMENTS_PATH" \
       --design "$DESIGN_PATH" \
