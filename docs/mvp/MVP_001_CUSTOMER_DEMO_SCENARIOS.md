@@ -24,7 +24,7 @@ Expected result:
 
 ```text
 ALLOWED
-PlacementDecision selects a ResourcePool
+PlacementDecision selects a qualified ExecutionTarget
 AuditEvent is recorded
 AI-readable explanation states why allowed
 ```
@@ -36,7 +36,7 @@ Expected result:
 ```text
 DENIED
 SecurityProfile requires private endpoint
-Suggested action: select private endpoint plan or approved pool
+Suggested action: select private endpoint plan or request exception
 ```
 
 ## Scenario 3: Denied Location
@@ -55,8 +55,8 @@ Expected result:
 
 ```text
 DENIED
-ServiceRuntimeProfile requires capability not present in ResourcePool
-Suggested action: choose compatible ResourcePool or plan
+ServiceRequirementSet requires capability not satisfied by any qualified ExecutionTarget
+Suggested action: choose compatible plan or request target qualification review
 ```
 
 ## Scenario 5: Provisioned Service
@@ -70,3 +70,16 @@ PostgreSQL runtime delegated to reused operator/Helm wrapper
 ServiceBinding created with SecretRef/CredentialRef
 AuditEvent recorded
 ```
+
+## Phase 2R Canonical Context
+
+**ADH-2026-042**
+
+Demo scenarios use canonical model terminology:
+
+- ServiceOffering/ServicePlan replaces ServiceClass/ServicePlan.
+- Qualified ExecutionTarget replaces ResourcePool.
+- EffectiveGovernanceContext replaces EffectivePolicyContext.
+- ServicePlacement is the safe customer projection.
+- DecisionRecord profiles handle sovereignty and placement conclusions.
+- ServiceBinding is SecretRef-only, per-consumer, separately revocable.

@@ -28,10 +28,10 @@ No tool owns a separate architecture.
 ## Current Phase
 
 ```text
-Phase 2: Reuse-First PaaS Fabric Foundation
+Phase 2R: Canonical Model PaaS Fabric Foundation
 ```
 
-Phase 0 and Phase 1 documents remain valid baseline records. Phase 2 extends them with reuse-first, adapter-first, provider-neutral, decision-first, audit-first, and plugin-taxonomy-first architecture.
+Phase 0 and Phase 1 documents remain valid baseline records. Phase 2R extends them with canonical-model, implementation-neutral, adapter-first, decision-first, audit-first, and plugin-taxonomy-first architecture under ADH-2026-042.
 
 ## Current Implementation Rule
 
@@ -110,7 +110,7 @@ docs/foundation/constitution.md
 docs/decisions/DECISION_INDEX.md
 docs/glossary.md
 docs/features/FEATURE_SEQUENCE.md
-docs/phase2/PHASE2_FEATURE_SEQUENCE.md when working on Phase 2
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md when working on Phase 2R
 docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md for scope awareness only
 docs/resource-specs/RESOURCE_MODEL_PHASE1.md
 docs/api/API_CONTRACT_PHASE1.md
@@ -118,6 +118,8 @@ docs/engineering/ai-context-loading-standard.md
 docs/engineering/go-coding-guardrails.md
 docs/architecture/controller-reconciliation-model.md
 docs/architecture/observability-and-audit-baseline.md
+docs/architecture/canonical/sovrunn-finalized-data-model.md when working on Phase 2R
+docs/phase2/PHASE2R_REBASELINE.md when working on Phase 2R
 current FEATURE-xxxx file
 ```
 
@@ -289,14 +291,15 @@ Before implementation work, agents must also load:
 
 ### Source-of-Truth Priority
 
-1. Current architecture baseline
-2. Accepted DEC files and Decision Index
-3. Approved RFC files
-4. Architecture docs
-5. Phase scope docs
-6. Feature specs
-7. Roadmap placeholders
-8. Chat discussion
+1. Current architecture baseline (ARCH-2026.08-PHASE2R-CANONICAL)
+2. Canonical model and contract catalog
+3. Accepted DEC files and Decision Index
+4. Approved RFC files
+5. Architecture docs
+6. Phase scope docs
+7. Feature specs
+8. Roadmap placeholders
+9. Chat discussion
 
 Roadmap placeholders are directional only. They do not override current baseline, accepted decisions, or phase scope.
 
@@ -344,7 +347,7 @@ No agent may proceed to the next feature when:
 - architecture drift checks are missing,
 - acceptance criteria are missing,
 - generated artifacts are staged,
-- Phase 2 scope boundaries are violated,
+- Phase 2R scope boundaries are violated,
 - approval review is missing or not approved in strict team mode.
 
 ## ChatGPT-to-Kiro Architecture Handoff Rule

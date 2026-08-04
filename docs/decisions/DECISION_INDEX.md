@@ -72,11 +72,34 @@ Chat discussions and generated prompts do not create accepted decisions. Accepte
 | DEC-0029 | Provider/Substrate Plugin, PaaS Service Management Plane Plugin, and PaaS Service Runtime Plugin are separate plugin planes. | Plugin Model | Accepted | DEC-0029 / RFC-0027 |
 | DEC-0030 | MVP-001 is Governed PostgreSQL PaaS Placement and Provisioning on one substrate. | MVP | Accepted | DEC-0030 / RFC-0029 |
 | DEC-0031 | ServicePlan remains customer-facing; ServiceRuntimeProfile bridges to infrastructure and runtime requirements. | Service Catalog | Accepted | RFC-0028 |
-| DEC-0032 | ResourcePool is the placement boundary. | Placement | Accepted | RFC-0024 |
-| DEC-0033 | ProviderCapability is the compatibility boundary. | Placement | Accepted | RFC-0024 |
+| DEC-0032 | ResourcePool is the placement boundary. | Placement | Superseded by DEC-0042 | RFC-0024 |
+| DEC-0033 | ProviderCapability is the compatibility boundary. | Placement | Superseded by DEC-0042 | RFC-0024 |
 | DEC-0034 | PlacementDecision is required before provisioning. | Placement | Accepted | RFC-0026 |
 | DEC-0035 | Customer-facing APIs must not expose low-level IaaS complexity by default. | API | Accepted | api-resource-standard.md |
 | DEC-0036 | Adapter boundaries are required before integrating external engines expected to evolve or be replaced. | Architecture | Accepted | DEC-0036 / adapter-boundary-model.md |
+
+| DEC-0037 | Retire ambiguous Provider; classify into CloudPlatform ownership and CloudProvider operation; seven canonical scope kinds. | Canonical Model | Accepted | ADH-2026-020 |
+| DEC-0038 | CloudEnrollment joins customer Organization to CloudPlatform; provider participation remains separate. | Cloud Model | Accepted | ADH-2026-021 |
+| DEC-0039 | Entitlement answers what may be consumed; quota independently answers how much. | Entitlement | Accepted | ADH-2026-022 |
+| DEC-0040 | Industry and domain clouds are versioned ServicePortfolios, not new core provider kinds. | Service Catalog | Accepted | ADH-2026-023 |
+| DEC-0041 | Physical geography, governance scope, and sovereignty are independent dimensions. | Sovereignty | Accepted | ADH-2026-024 |
+| DEC-0042 | Qualified ExecutionTarget is the actionable realization boundary; no mandatory ResourcePool or ProviderCapability in core. Supersedes DEC-0032 and DEC-0033. | Placement | Accepted | ADH-2026-025 |
+| DEC-0043 | SovereigntyAssessment and PlacementDecision use registered FEATURE-0013 DecisionRecord profiles. | Decision Model | Accepted | ADH-2026-026 |
+| DEC-0044 | Published product, runtime, governance, sovereignty, and policy definitions are immutable by version. | Immutability | Accepted | ADH-2026-027 |
+| DEC-0045 | One service may be realized across an atomic set of execution targets with explicit cross-target constraints. | Placement | Accepted | ADH-2026-028 |
+| DEC-0046 | ServicePlacement is a safe immutable customer projection, not canonical topology access. | Customer API | Accepted | ADH-2026-029 |
+| DEC-0047 | Personal onboarding creates a Personal Organization, default Tenant, and default Project. | Onboarding | Accepted | ADH-2026-030 |
+| DEC-0048 | New countries, sectors, services, and backends enter through governed data, contracts, plugins, and adapters — not core conditionals. | Extensibility | Accepted | ADH-2026-031 |
+| DEC-0049 | ServiceOffering is the CloudPlatform product and references reusable ServiceTypeDefinition; global ServiceClass is migration input only. | Service Catalog | Accepted | ADH-2026-032 |
+| DEC-0050 | Governance controls compose into one EffectiveGovernanceContext; sovereignty remains separately assessed. | Governance | Accepted | ADH-2026-033 |
+| DEC-0051 | ServiceBinding is per-consumer, separately revocable, SecretRef-only service-access boundary. | Service Binding | Accepted | ADH-2026-034 |
+| DEC-0052 | ServiceRelationshipDefinition and ServiceRelationship model implementation-neutral cross-service semantics and lifecycle. | Service Model | Accepted | ADH-2026-035 |
+| DEC-0053 | Platform lifecycle uses one external accepted-intent authority, Operation-first activation, and independently recoverable agent. | Platform Lifecycle | Accepted | ADH-2026-036 |
+| DEC-0054 | CloudPlatform ownership, CloudProvider participation, and one-provider-per-installation isolation are distinct boundaries. | Cloud Model | Accepted | ADH-2026-037 |
+| DEC-0055 | Platform sovereignty evaluates one SovrunnInstallation and every dependency able to control, observe, change, decrypt, or recover it. | Sovereignty | Accepted | ADH-2026-038 |
+| DEC-0056 | Release compatibility is directed; recovery actions and lifecycle-reference contracts are explicit and pinned. | Lifecycle | Accepted | ADH-2026-039 |
+| DEC-0057 | External maintenance has explicit notice authority, target lifecycle ownership, epochs, fences, and mandatory requalification. | Infrastructure | Accepted | ADH-2026-040 |
+| DEC-0058 | Alpha migration is one signed cutover with no dual write/authority and immutable history preservation. | Migration | Accepted | ADH-2026-041 |
 
 ## 4. AI Usage Notes
 

@@ -1,4 +1,4 @@
-workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
+workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model — ARCH-2026.08-PHASE2R-CANONICAL" {
 
     !identifiers hierarchical
 
@@ -7,22 +7,27 @@ workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
         customerAdmin = person "Customer Admin" "Requests and manages governed PaaS services."
         platformArchitect = person "Sovrunn Architect" "Maintains approved architecture baseline, DEC/RFC records, and C4 model."
 
-        sovrunn = softwareSystem "Sovrunn Platform" "Cloud-native sovereign PaaS platform for governed service catalog, provider-neutral placement, lifecycle orchestration, audit, evidence, and AI-assisted operations." {
-            api = container "Sovrunn API Server" "Exposes customer/provider APIs for organizations, tenants, projects, service catalog, placement, operations, and audit." "Go"
-            controlPlane = container "Sovrunn Control Plane" "Coordinates governance, policy context, placement decisions, operations, plugin execution, audit, and AI-readable explanations." "Go"
+        sovrunn = softwareSystem "Sovrunn Platform" "Cloud-native sovereign PaaS platform for governed service catalog, implementation-neutral placement, lifecycle orchestration, audit, evidence, and AI-assisted operations." {
+            api = container "Sovrunn API Server" "Exposes customer/provider APIs for organizations, tenants, projects, service catalog, enrollment, placement, operations, and audit." "Go"
+            controlPlane = container "Sovrunn Control Plane" "Coordinates governance, policy context, sovereignty assessment, placement decisions, operations, plugin execution, audit, and AI-readable explanations." "Go"
             policyAdapter = container "Policy Evaluation Adapter" "Abstracts policy evaluation through OPA/Cedar-compatible adapters." "Go interface"
-            placementEngine = container "Placement Decision Engine" "Matches service runtime requirements against provider capabilities and effective policy context." "Go"
+            governanceResolver = container "Governance Resolution Engine" "Resolves EffectiveGovernanceContext from composed profiles with inheritance, conflict, and exception handling." "Go"
+            placementEngine = container "Placement Decision Engine" "Evaluates qualified ExecutionTarget candidates against requirements, sovereignty, and governance context." "Go"
             operationController = container "Operation Controller" "Tracks long-running operations and plugin execution steps." "Go"
             registry = container "Registry" "Stores Sovrunn resources, service catalog, profiles, decisions, operations, and audit records." "PostgreSQL/YugabyteDB later"
-            pluginBoundary = container "Plugin Execution Boundary" "Executes provider, service management, and service runtime plugins through governed contracts." "Go plugin boundary"
-            aiDecisionContext = container "AI Decision Context" "Produces AI-readable decision explanations and operation context." "Structured JSON"
+            pluginBoundary = container "Plugin Execution Boundary" "Executes provider, service management, and service runtime plugins through governed contracts. SecretRef-only credential access." "Go plugin boundary"
+            aiDecisionContext = container "AI Decision Context" "Produces bounded, audience-safe decision explanations and operation context." "Structured JSON"
+            sovereigntyEngine = container "Sovereignty Assessment" "Evaluates sovereignty evidence through DecisionRecord profiles. Geography alone never proves sovereignty." "Go"
         }
+
+        cloudPlatform = softwareSystem "CloudPlatform" "Product-ownership boundary for a sovereign cloud offering. Owns ServiceOfferings and customer enrollment."
+        cloudProvider = softwareSystem "CloudProvider" "Infrastructure/operations supply boundary. Participates in CloudPlatform installations."
 
         providerPlugin = softwareSystem "Provider/Substrate Plugin" "Executes infrastructure operations against Kubernetes, VM, bare metal, or provider APIs."
         pgManagementPlugin = softwareSystem "PostgreSQL Management Plugin" "Plans PostgreSQL service lifecycle and runtime requirements."
         pgRuntimePlugin = softwareSystem "PostgreSQL Runtime Plugin" "Creates and manages PostgreSQL runtime resources through reused operators or Helm."
 
-        kubernetes = softwareSystem "Kubernetes / k3s Substrate" "Initial local substrate for Phase 3 MVP."
+        kubernetes = softwareSystem "Kubernetes / OpenShift Substrate" "Execution substrate for Phase 3 MVP."
         postgresOperator = softwareSystem "PostgreSQL Operator / Helm" "Reused PostgreSQL runtime foundation such as CloudNativePG, Crunchy, or Helm."
         policyEngines = softwareSystem "OPA / Cedar Policy Engines" "Reusable policy engines integrated through PolicyEngineAdapter in later phases."
         observability = softwareSystem "OpenTelemetry / Prometheus / Grafana" "Reusable observability stack for logs, metrics, traces, and operational views."
@@ -32,8 +37,8 @@ workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
         chatgpt = softwareSystem "ChatGPT Project" "Architecture tradeoff discussion and Architecture Decision Handoff generation."
         cursor = softwareSystem "Cursor" "Go implementation studio that implements approved Kiro tasks."
 
-        customerAdmin -> sovrunn.api "Requests governed PaaS services"
-        providerOperator -> sovrunn.api "Configures providers, capabilities, plugins, and service catalog"
+        customerAdmin -> sovrunn.api "Requests governed PaaS services through CloudEnrollment"
+        providerOperator -> sovrunn.api "Configures CloudPlatform, CloudProvider participation, plugins, and service catalog"
         platformArchitect -> chatgpt "Discusses architecture tradeoffs"
         chatgpt -> gitRepo "Reads Architecture Operating System context and produces handoff"
         platformArchitect -> kiro "Approves handoff for repo update"
@@ -42,34 +47,39 @@ workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
         cursor -> gitRepo "Implements approved tasks and tests"
 
         sovrunn.api -> sovrunn.controlPlane "Submits service requests and management actions"
-        sovrunn.controlPlane -> sovrunn.policyAdapter "Evaluates effective governance, security, data, and cost policies"
+        sovrunn.controlPlane -> sovrunn.governanceResolver "Resolves EffectiveGovernanceContext"
+        sovrunn.controlPlane -> sovrunn.policyAdapter "Evaluates policies through adapter"
         sovrunn.policyAdapter -> policyEngines "Delegates policy evaluation through adapter" "" "Future"
-        sovrunn.controlPlane -> sovrunn.placementEngine "Requests placement decisions"
-        sovrunn.placementEngine -> sovrunn.registry "Reads ResourcePool and ProviderCapability data"
+        sovrunn.controlPlane -> sovrunn.sovereigntyEngine "Evaluates sovereignty evidence"
+        sovrunn.controlPlane -> sovrunn.placementEngine "Requests placement decisions using qualified ExecutionTargets"
+        sovrunn.placementEngine -> sovrunn.registry "Reads ExecutionTarget qualifications and service requirements"
         sovrunn.controlPlane -> sovrunn.operationController "Creates and tracks operations"
         sovrunn.operationController -> sovrunn.pluginBoundary "Invokes plugin execution"
         sovrunn.controlPlane -> sovrunn.registry "Reads/writes resources, decisions, operations, and audit events"
-        sovrunn.controlPlane -> sovrunn.aiDecisionContext "Creates AI-readable decision explanations"
+        sovrunn.controlPlane -> sovrunn.aiDecisionContext "Creates bounded AI-readable decision explanations"
         sovrunn.controlPlane -> observability "Emits metrics, traces, logs, and health signals"
         sovrunn.pluginBoundary -> providerPlugin "Calls provider/substrate operations"
         sovrunn.pluginBoundary -> pgManagementPlugin "Calls service management planning"
         sovrunn.pluginBoundary -> pgRuntimePlugin "Calls runtime lifecycle operations"
-        sovrunn.pluginBoundary -> secretProvider "Resolves credential references" "" "Future"
+        sovrunn.pluginBoundary -> secretProvider "Resolves credential references through SecretRef" "" "Future"
         providerPlugin -> kubernetes "Provisions/validates substrate resources"
         pgRuntimePlugin -> postgresOperator "Creates PostgreSQL runtime using reused operator or Helm"
+
+        cloudPlatform -> sovrunn.api "Registered as product-ownership boundary"
+        cloudProvider -> sovrunn.api "Registered as infrastructure supply boundary"
     }
 
     views {
         systemContext sovrunn "SystemContext" {
             include *
             autolayout lr
-            description "Sovrunn system context showing users, AI/spec/coding workflow, plugin ecosystem, and reused foundations."
+            description "Sovrunn system context showing users, AI/spec/coding workflow, cloud model, plugin ecosystem, and reused foundations."
         }
 
         container sovrunn "Containers" {
             include *
             autolayout lr
-            description "Sovrunn core containers and their relationships to plugins and reused OSS foundations."
+            description "Sovrunn core containers showing governance resolution, sovereignty assessment, placement, plugin boundary, and AI context."
         }
 
         dynamic sovrunn "ArchitectureHandoffWorkflow" "ChatGPT to Kiro to Cursor governed architecture handoff workflow" {
@@ -82,19 +92,21 @@ workspace "Sovrunn" "Sovrunn sovereign PaaS architecture model" {
             cursor -> gitRepo "Update Go code and tests"
         }
 
-        dynamic sovrunn "GovernedPostgreSQLProvisioning" "Governed PostgreSQL PaaS provisioning flow" {
-            customerAdmin -> sovrunn.api "Request PostgreSQL ServiceInstance"
-            sovrunn.api -> sovrunn.controlPlane "Submit request"
-            sovrunn.controlPlane -> sovrunn.policyAdapter "Evaluate policy"
-            sovrunn.controlPlane -> sovrunn.placementEngine "Create PlacementDecision"
+        dynamic sovrunn "GovernedPostgreSQLProvisioning" "Governed PostgreSQL PaaS provisioning flow (canonical model)" {
+            customerAdmin -> sovrunn.api "Request PostgreSQL ServiceInstance via ServiceOffering/ServicePlan"
+            sovrunn.api -> sovrunn.controlPlane "Submit request with CloudEnrollment and entitlement context"
+            sovrunn.controlPlane -> sovrunn.governanceResolver "Resolve EffectiveGovernanceContext"
+            sovrunn.controlPlane -> sovrunn.policyAdapter "Evaluate policy through adapter"
+            sovrunn.controlPlane -> sovrunn.sovereigntyEngine "Assess sovereignty through DecisionRecord profile"
+            sovrunn.controlPlane -> sovrunn.placementEngine "Create PlacementDecision using qualified ExecutionTargets"
             sovrunn.controlPlane -> sovrunn.operationController "Create Operation"
             sovrunn.operationController -> sovrunn.pluginBoundary "Execute plugin chain"
             sovrunn.pluginBoundary -> pgManagementPlugin "Plan PostgreSQL lifecycle"
             sovrunn.pluginBoundary -> providerPlugin "Prepare substrate"
             sovrunn.pluginBoundary -> pgRuntimePlugin "Create runtime"
             pgRuntimePlugin -> postgresOperator "Apply operator/Helm resource"
-            sovrunn.controlPlane -> sovrunn.registry "Record status, decision, audit"
-            sovrunn.controlPlane -> sovrunn.aiDecisionContext "Generate explanation"
+            sovrunn.controlPlane -> sovrunn.registry "Record status, decision, audit, ServicePlacement"
+            sovrunn.controlPlane -> sovrunn.aiDecisionContext "Generate bounded explanation"
         }
 
         styles {

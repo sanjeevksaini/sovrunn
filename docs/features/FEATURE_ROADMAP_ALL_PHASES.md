@@ -19,4 +19,4 @@ Rules:
 
 - Use the canonical roadmap for all phase and feature placeholder references.
 - Treat Phase 4+ feature entries as directional scope placeholders only.
-- Rebaseline later phases after Phase 2 and Phase 3 complete.
+- Rebaseline later phases after Phase 2R and Phase 3 complete.

@@ -28,3 +28,14 @@ Sovrunn must reuse mature infrastructure without coupling core business logic di
 ## Rule
 
 MVP implementations may be simple, but they must sit behind adapter interfaces where replacement is expected.
+
+## Phase 2R Update
+
+**ADH-2026-042 / DEC-0036**
+
+Phase 2R extends adapter boundaries with:
+
+- **ExecutionTarget qualification adapter** — normalizes target facts, evaluates availability axes, and reports target-scoped SecretRefs (FEATURE-0016).
+- **Sovereignty evidence adapter** — provides SovereigntyFactSet freshness and tamper detection (FEATURE-0019).
+
+All adapter boundaries remain implementation-neutral and must not expose provider-native fields into customer or core schemas. The canonical adapter contract classification is in `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md`.

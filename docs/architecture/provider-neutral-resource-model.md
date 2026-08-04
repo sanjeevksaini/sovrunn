@@ -1,11 +1,21 @@
 ---
 doc_type: architecture
-title: FEATURE-0014 Provider-Neutral Resource Model Architecture
-status: approved-for-kiro-requirements
+title: FEATURE-0014 Provider-Neutral Resource Model Architecture (Historical)
+status: historical-implementation
 phase: 2
-ai_load_priority: high
-ai_summary: Approved requirements-ready provider-neutral substrate hierarchy for Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack only.
+ai_load_priority: reference
+ai_summary: FEATURE-0014 alpha-model implementation history. Active canonical terminology is implementation-neutral. See docs/architecture/canonical/sovrunn-finalized-data-model.md for the current authority.
 ---
+
+> **Migration Notice (ADH-2026-042):** This document records the FEATURE-0014 implementation
+> history using alpha-model terminology (Provider, ProviderLocation, ProviderDatacenter,
+> DatacenterFailureDomain, InfrastructureStack). It is retained for audit. The active canonical
+> model uses CloudPlatform, CloudProvider, HostingLocation, Datacenter, FaultDomain,
+> InfrastructureStack, and qualified ExecutionTarget. The canonical adjective is
+> "implementation-neutral", not "provider-neutral". See:
+> - `docs/architecture/canonical/sovrunn-finalized-data-model.md`
+> - `docs/phase2/PHASE2R_REBASELINE.md`
+> - DEC-0037 through DEC-0042
 
 # FEATURE-0014 Provider-Neutral Resource Model Architecture
 

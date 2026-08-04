@@ -242,3 +242,11 @@ resources can be recreated from manifest examples
 ## 14. Final Principle
 
 Sovrunn should be API-first and GitOps-friendly from the beginning, even before GitOps automation exists.
+
+## Phase 2R Note
+
+**ADH-2026-042**
+
+GitOps desired-state principles remain unchanged in Phase 2R. All canonical model resources (CloudPlatform, CloudProvider, ServiceOffering, ServicePlan, GovernanceProfile, SovereigntyProfile, etc.) are designed for safe declarative representation in Git. Published definitions are immutable by version (DEC-0044); once committed to Git as a published version, they must not be mutated.
+
+Phase 2R does not implement a GitOps controller. The intent-first design ensures future GitOps adoption requires no fundamental resource redesign.

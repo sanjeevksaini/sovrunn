@@ -1,49 +1,49 @@
 ---
 doc_type: execution_strategy
-title: Phase 2 Execution Strategy
+title: Phase 2R Execution Strategy
 status: active
 ai_load_priority: critical
 ---
 
-# Phase 2 Execution Strategy
+# Phase 2R Execution Strategy
 
 ## Purpose
 
-This document defines how Sovrunn Phase 2 must be designed and executed.
+This document defines how Sovrunn Phase 2R must be designed and executed.
 
-Phase 2 introduces the reusable governance, policy, decision, adapter, provider-neutral, plugin-taxonomy, and placement foundation for Sovrunn.
+Phase 2R introduces the canonical model, implementation-neutral governance, sovereignty, decision, adapter, plugin-taxonomy, and placement foundation for Sovrunn under ADH-2026-042.
 
 The goal is to avoid two risks:
 
-1. Designing all Phase 2 features in excessive detail before implementation.
-2. Implementing Phase 2 features independently without a shared architecture spine.
+1. Designing all Phase 2R features in excessive detail before implementation.
+2. Implementing Phase 2R features independently without a shared architecture spine.
 
 The approved approach is:
 
 ```text
-Phase 2 architecture spine first.
+Phase 2R architecture spine and canonical model first.
 Then strict sequential feature execution.
 ```
 
 ## Core Execution Principle
 
-Phase 2 must use a hybrid architecture approach.
+Phase 2R must use a hybrid architecture approach.
 
 ```text
-High-level architecture for all Phase 2: yes.
+High-level architecture for all Phase 2R: yes.
 Detailed architecture per feature: only when starting that feature.
 Code and tests: only for the current feature.
 ```
 
-Do not fully design all Phase 2 features upfront.
+Do not fully design all Phase 2R features upfront.
 
-Do not implement multiple Phase 2 features at the same time.
+Do not implement multiple Phase 2R features at the same time.
 
 Do not move to the next feature until the current feature passes its feature gate.
 
 ## Approved Workflow
 
-Each Phase 2 feature must follow this sequence:
+Each Phase 2R feature must follow this sequence:
 
 ```text
 1. Architecture discussion
@@ -68,7 +68,7 @@ The spine must define:
 - shared object model
 - common API and resource conventions
 - decision and audit pattern
-- provider-neutral core boundaries
+- implementation-neutral core boundaries
 - adapter, plugin, and core separation
 - strict Phase 2 non-goals
 - expected end-state of the FEATURE-0026 integration demo
@@ -101,7 +101,7 @@ These features define the standards used by all later Phase 2 work.
 
 ```text
 FEATURE-0014: Provider-Neutral Resource Model
-FEATURE-0015: ResourcePool and ProviderCapability Model
+FEATURE-0015: Canonical Cloud Model and Alpha Migration Foundation
 FEATURE-0016: Adapter Boundary Foundation
 ```
 
@@ -113,7 +113,7 @@ These features define how Sovrunn avoids hardcoding Kubernetes, IaaS, or provide
 FEATURE-0017: Policy Evaluation Abstraction
 FEATURE-0018: GovernanceProfile and SecurityProfile Foundation
 FEATURE-0019: DataPlacementPolicy and CostGuardrail Minimal Foundation
-FEATURE-0020: ProfileAssignment and EffectivePolicyContext
+FEATURE-0020: Assignment and Effective Governance Resolution
 FEATURE-0021: Minimal ServiceEntitlement and Quota Placeholder
 ```
 

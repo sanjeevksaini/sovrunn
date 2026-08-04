@@ -87,7 +87,7 @@ boundaries:
       unrestricted customer data.
     owner: Sovrunn Platform API Architecture
     producers:
-      - api/schemas/resource-pool.json
+      - api/schemas/resource-pool.json  # FEATURE-0014 alpha history; canonical model uses ExecutionTarget qualification
       - Sovrunn operator control surfaces and pool lifecycle controllers
     consumers:
       - Platform operators
@@ -96,14 +96,13 @@ boundaries:
     allowed_data:
       - Administrative desired state and normalized infrastructure descriptors
       - Operator-visible diagnostics and pool readiness conditions
-      - Provider-neutral capability class and jurisdiction metadata
+      - Implementation-neutral capability facts and jurisdiction metadata
     prohibited_data:
       - Raw secrets and unrestricted customer confidential payloads
       - Provider SDK types as shared core models
       - Customer-facing product contracts served from this boundary
     authorization: >
-      Operator principals are authorized within Provider (or declared operator)
-      scope. Access to customer-confidential data requires an explicit approved
+      Operator principals are authorized within CloudProvider or CloudPlatform operator scope (DEC-0037 seven canonical scopes). Access to customer-confidential data requires an explicit approved
       boundary view; SafeDenial applies for unauthorized cross-scope access.
     audit: >
       Operator mutations and privileged reads that affect pools or operator
@@ -257,7 +256,7 @@ boundaries:
       - Operation lifecycle observers authorized for the operation scope
     allowed_data:
       - Versioned plugin capability definitions
-      - Operation targetRef/scopeRef contracts with six allowed scopes
+      - Operation targetRef/scopeRef contracts with seven canonical scope kinds
       - Validated plugin results expressed through Sovrunn status grammar
     prohibited_data:
       - Unrestricted control-plane access or authorization bypass
@@ -292,7 +291,7 @@ boundaries:
       plugin-manager readiness.
     migration_path: >
       FEATURE-0012 ships grammar and fixtures only; plugin execution arrives in
-      later features while preserving these contracts and six Operation scopes.
+      later features while preserving these contracts and seven canonical scope kinds.
     reassessment_trigger: >
       Reassess at the first remotely executed or data-path plugin, before
       plugin taxonomy expansion that changes trust assumptions, or when a
