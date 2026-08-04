@@ -299,7 +299,11 @@ else
   require_contains "$TASKS_PATH" "Stage: Tasks" "Tasks stage"
 
   # Reuse summary + non-goals + controlling ADH
-  require_contains "$REQUIREMENTS_PATH" "Reuse Assessment" "Reuse Assessment"
+  if [[ "$FEATURE" == "FEATURE-0014" ]] && grep -qi "Feature-level reuse summary" "$REQUIREMENTS_PATH"; then
+    pass "Reuse Assessment (approved FEATURE-0014 legacy heading: Feature-level reuse summary)"
+  else
+    require_contains "$REQUIREMENTS_PATH" "Reuse Assessment" "Reuse Assessment"
+  fi
   require_contains "$REQUIREMENTS_PATH" "Acceptance Criteria" "Acceptance Criteria"
   if ! grep -qiE "Non-goals|Out of scope|non-goals" "$REQUIREMENTS_PATH"; then
     fail "Non-goals missing in $REQUIREMENTS_PATH"
