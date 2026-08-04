@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-08-04T13:16:41.681695+00:00",
+  "current_stage": "requirements",
+  "current_task": null,
+  "feature_branch": "feature-0015-canonical-cloud-model-and-alpha-migration",
+  "feature_id": "FEATURE-0015",
+  "generated_prompt_path": "docs/generated-prompts/FEATURE-0015",
+  "human_gate_required": true,
+  "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+  "slug": "canonical-cloud-model-and-alpha-migration",
+  "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration",
+  "status": "branch_created",
+  "title": "Canonical Cloud Model and Alpha Migration Foundation",
+  "updated_at": "2026-08-04T13:16:41.681824+00:00"
+}
