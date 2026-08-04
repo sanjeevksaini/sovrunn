@@ -176,6 +176,51 @@ and exact OpenAI API token usage. Kiro credits cannot be obtained reliably from
 the headless CLI; use Kiro's interactive `/usage` command or the enterprise
 usage report for authoritative credit accounting.
 
+## End-to-end controlled feature flow
+
+For features with `.automation/features/<FEATURE-ID>.control.json`, use one
+resumable command to orchestrate branch initialization, Kiro specifications,
+Cursor implementation, and validation:
+
+```bash
+export OPENAI_API_KEY="..."
+
+make ff-feature-flow \
+  FEATURE=FEATURE-0015 \
+  SLUG=canonical-cloud-model-and-alpha-migration \
+  TITLE="Canonical Cloud Model and Alpha Migration Foundation" \
+  PHASE_BRANCH=phase2-reuse-first-paas-fabric-foundation
+```
+
+This is one automation, not one approval. It deliberately stops at the
+manifest's founder-controlled gates:
+
+1. `architecture` before Kiro generates `requirements.md`;
+2. `executable_plan` after approved requirements and design, before `tasks.md`;
+3. `final` after all Cursor tasks and final verification.
+
+At a gate, review the generated evidence, run the exact
+`ff-approve-human-gate` command printed by the flow, and rerun the same
+`ff-feature-flow` command. The flow resumes from persisted, digest-bound state;
+it does not regenerate or recommit already approved work.
+
+Validation is enforced after every boundary:
+
+- the control manifest and state identities must agree;
+- each Kiro stage is restricted to its one writable spec file, then receives
+  an automated reviewer decision and exact approval token;
+- requirements and design are jointly digest-bound by the executable-plan
+  human approval;
+- the complete spec is digest-checked before commit and again after coding;
+- Cursor runs all remaining tasks in manifest-sized batches, with a COMPLETE
+  receipt, task path-boundary check, manifest verification commands,
+  guardrails, and one commit per task;
+- final verification runs only after every approved task is committed.
+
+`ff-start` alone only creates the feature branch, runtime state, and Kiro spec
+directory. It does not generate `requirements.md`. `ff-task-flow` is the legacy
+runner and is not used by the controlled end-to-end command.
+
 ## Kiro Decision Policy
 
 Kiro decisions are controlled by:

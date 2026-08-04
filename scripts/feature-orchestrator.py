@@ -57,11 +57,48 @@ def changed_paths() -> list[str]:
     return [line[3:] for line in output.splitlines() if len(line) > 3]
 
 
+def task_batches(
+    ordered: list[int],
+    last_raw: object,
+    requested_start: int | None,
+    stop_after: int | None,
+    batch_limit: int,
+    run_all: bool,
+) -> list[list[int]]:
+    if not ordered:
+        raise ValueError("no numbered tasks found")
+    if last_raw in (None, ""):
+        expected_start = ordered[0]
+    else:
+        last = int(str(last_raw))
+        if last not in ordered:
+            raise ValueError(f"committed task {last} is not in the approved plan")
+        if ordered.index(last) + 1 >= len(ordered):
+            return []
+        expected_start = ordered[ordered.index(last) + 1]
+    start = requested_start if requested_start is not None else expected_start
+    if start != expected_start:
+        raise ValueError(f"sequence violation: expected Task {expected_start}, got {start}")
+    selected = [task for task in ordered if task >= start]
+    if stop_after is not None:
+        selected = [task for task in selected if task <= stop_after]
+    if not selected:
+        raise ValueError("selected task batch is empty")
+    if not run_all:
+        selected = selected[:batch_limit]
+    return [selected[index : index + batch_limit] for index in range(0, len(selected), batch_limit)]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature", required=True)
     parser.add_argument("--start-task", type=int)
     parser.add_argument("--stop-after", type=int)
+    parser.add_argument(
+        "--all-tasks",
+        action="store_true",
+        help="run all remaining tasks while preserving manifest-sized verification batches",
+    )
     args = parser.parse_args()
     run([str(ROOT / "scripts/feature-control.py"), "validate", "--feature", args.feature])
     control = json.loads((ROOT / f".automation/features/{args.feature}.control.json").read_text())
@@ -72,61 +109,62 @@ def main() -> None:
     tasks_path = ROOT / state["spec_path"] / "tasks.md"
     plan = blocks(tasks_path.read_text())
     ordered = sorted(plan)
-    if not ordered:
-        raise SystemExit("ERROR: no numbered tasks found")
     last_raw = state.get("last_committed_task")
-    if last_raw in (None, ""):
-        expected_start = ordered[0]
-    else:
-        last = int(last_raw)
-        if last not in ordered or ordered.index(last) + 1 >= len(ordered):
-            raise SystemExit(f"ERROR: no approved successor after committed task {last}")
-        expected_start = ordered[ordered.index(last) + 1]
-    start = args.start_task if args.start_task is not None else expected_start
-    if start != expected_start:
-        raise SystemExit(f"ERROR: sequence violation: expected Task {expected_start}, got {start}")
     batch_limit = control["execution"]["tasks_per_run"]
-    selected = [task for task in ordered if task >= start]
-    if args.stop_after is not None:
-        selected = [task for task in selected if task <= args.stop_after]
-    selected = selected[:batch_limit]
-    if not selected:
-        raise SystemExit("ERROR: selected task batch is empty")
+    try:
+        batches = task_batches(
+            ordered,
+            last_raw,
+            args.start_task,
+            args.stop_after,
+            batch_limit,
+            args.all_tasks,
+        )
+    except (TypeError, ValueError) as exc:
+        raise SystemExit(f"ERROR: {exc}") from exc
+    if not batches:
+        if args.all_tasks:
+            print(f"{args.feature} already has all approved tasks committed")
+            return
+        raise SystemExit(f"ERROR: no approved successor after committed task {last_raw}")
     allowed_dirty = {str(state_path.relative_to(ROOT))}
     unexpected = [path for path in changed_paths() if path not in allowed_dirty]
     if unexpected:
         raise SystemExit("ERROR: working tree is not ready: " + ", ".join(unexpected))
 
-    for task in selected:
-        print(f"\n=== {args.feature} Task {task} ===", flush=True)
-        run(["make", "ff-cursor-task-auto", f"FEATURE={args.feature}", f"TASK={task}"])
-        completed = json.loads(state_path.read_text())
-        if completed.get("status") != f"cursor_task_{task}_completed":
-            raise SystemExit(f"ERROR: Task {task} lacks a verified COMPLETE receipt")
-        run(
-            [
-                str(ROOT / "scripts/generic-feature-boundary-check.py"),
-                "--feature",
-                args.feature,
-                "--task",
-                str(task),
-                "--mode",
-                "all",
-            ]
-        )
-        for command in control["guardrails"]["cursor"]["verify_commands"]:
-            run(verify_command(command, args.feature))
-        run(["make", "ff-guardrails", f"FEATURE={args.feature}"])
-        run(
-            [
-                "make",
-                "ff-commit-task",
-                f"FEATURE={args.feature}",
-                f"TASK={task}",
-                f"MESSAGE={commit_message(plan[task])}",
-            ]
-        )
-    print(f"{args.feature} task batch complete: {selected}")
+    for selected in batches:
+        print(f"\n=== {args.feature} controlled batch {selected} ===", flush=True)
+        for task in selected:
+            print(f"\n=== {args.feature} Task {task} ===", flush=True)
+            run(["make", "ff-cursor-task-auto", f"FEATURE={args.feature}", f"TASK={task}"])
+            completed = json.loads(state_path.read_text())
+            if completed.get("status") != f"cursor_task_{task}_completed":
+                raise SystemExit(f"ERROR: Task {task} lacks a verified COMPLETE receipt")
+            run(
+                [
+                    str(ROOT / "scripts/generic-feature-boundary-check.py"),
+                    "--feature",
+                    args.feature,
+                    "--task",
+                    str(task),
+                    "--mode",
+                    "all",
+                ]
+            )
+            for command in control["guardrails"]["cursor"]["verify_commands"]:
+                run(verify_command(command, args.feature))
+            run(["make", "ff-guardrails", f"FEATURE={args.feature}"])
+            run(
+                [
+                    "make",
+                    "ff-commit-task",
+                    f"FEATURE={args.feature}",
+                    f"TASK={task}",
+                    f"MESSAGE={commit_message(plan[task])}",
+                ]
+            )
+        print(f"{args.feature} task batch complete: {selected}")
+    print(f"{args.feature} controlled task run complete")
 
 
 if __name__ == "__main__":

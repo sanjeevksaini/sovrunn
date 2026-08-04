@@ -22,6 +22,7 @@ def load_module(name: str, path: Path):
 control = load_module("feature_control", ROOT / "scripts/feature-control.py")
 delta = load_module("semantic_delta", ROOT / "scripts/semantic-delta.py")
 closeout = load_module("feature_closeout", ROOT / "scripts/feature-closeout.py")
+orchestrator = load_module("feature_orchestrator", ROOT / "scripts/feature-orchestrator.py")
 
 
 class FeatureControlTests(unittest.TestCase):
@@ -114,6 +115,7 @@ class ScriptSafetyTests(unittest.TestCase):
             "feature-closeout.py",
             "human-gate.py",
             "executable-plan-report.py",
+            "spec-approval-check.py",
         ]
         for script in scripts:
             path = ROOT / "scripts" / script
@@ -144,6 +146,45 @@ class ScriptSafetyTests(unittest.TestCase):
         source = (ROOT / "scripts/feature-closeout.py").read_text()
         self.assertNotIn('["git", "commit"', source)
         self.assertNotIn('["git", "push"', source)
+
+    def test_full_flow_uses_manifest_controlled_cursor_runner(self):
+        source = (ROOT / "scripts/feature-flow.sh").read_text()
+        self.assertIn('PHASE_BRANCH="$PHASE_BRANCH"', source)
+        self.assertIn("make ff-controlled-run", source)
+        self.assertNotIn("make ff-task-flow", source)
+        self.assertIn("stop_for_gate architecture", source)
+        self.assertIn("stop_for_gate executable_plan", source)
+        self.assertIn("stop_for_gate final", source)
+
+
+class TaskBatchTests(unittest.TestCase):
+    def test_run_all_preserves_manifest_sized_batches(self):
+        self.assertEqual(
+            orchestrator.task_batches([1, 2, 3, 4, 5], None, None, None, 2, True),
+            [[1, 2], [3, 4], [5]],
+        )
+
+    def test_single_run_keeps_existing_batch_limit(self):
+        self.assertEqual(
+            orchestrator.task_batches([1, 2, 3, 4], None, None, None, 2, False),
+            [[1, 2]],
+        )
+
+    def test_resume_starts_after_last_committed_task(self):
+        self.assertEqual(
+            orchestrator.task_batches([1, 2, 3, 4], "2", None, None, 2, True),
+            [[3, 4]],
+        )
+
+    def test_completed_plan_is_idempotent_for_run_all(self):
+        self.assertEqual(
+            orchestrator.task_batches([1, 2], "2", None, None, 2, True),
+            [],
+        )
+
+    def test_sequence_drift_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "expected Task 2, got 3"):
+            orchestrator.task_batches([1, 2, 3], "1", 3, None, 2, True)
 
 
 class CloseoutMetadataTests(unittest.TestCase):

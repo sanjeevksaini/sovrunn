@@ -65,9 +65,17 @@ def main() -> None:
         requirements, design = spec / "requirements.md", spec / "design.md"
         if state.get("executable_plan_approval_token") != "APPROVED_EXECUTABLE_PLAN" or state.get("executable_plan_approved_sha256") != combined_digest([requirements, design]):
             raise SystemExit("FAIL: current requirements/design package lacks explicit human executable-plan approval")
-    allowed = set(control["guardrails"]["kiro"]["writable_by_stage"].get(args.stage, []))
-    if len(allowed) != 1:
+    writable = set(control["guardrails"]["kiro"]["writable_by_stage"].get(args.stage, []))
+    if len(writable) != 1:
         raise SystemExit(f"FAIL: {args.stage} must have exactly one writable output")
+    # Earlier approved spec files may remain uncommitted until the complete
+    # requirements/design/tasks package is committed. Their approval digests
+    # above pin their content; they are not additional Kiro-writable outputs.
+    allowed = set(writable)
+    if args.stage in {"design", "tasks"}:
+        allowed.add(str((spec / "requirements.md").relative_to(ROOT)))
+    if args.stage == "tasks":
+        allowed.add(str((spec / "design.md").relative_to(ROOT)))
     allowed.add(str(state_path.relative_to(ROOT)))
     if args.mode == "pre":
         dirty = changed_paths()
@@ -87,7 +95,7 @@ def main() -> None:
         if not path.is_file() or sha256(path) != item["sha256"]:
             raise SystemExit(f"FAIL: context changed or missing: {item['path']}")
     if args.mode == "post":
-        target = ROOT / next(iter(allowed - {str(state_path.relative_to(ROOT))}))
+        target = ROOT / next(iter(writable))
         if not target.is_file():
             raise SystemExit(f"FAIL: expected stage output missing: {target.relative_to(ROOT)}")
         unexpected = [path for path in changed_paths() if path not in allowed]

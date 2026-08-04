@@ -141,7 +141,7 @@ ff-approve-human-gate:
 	./scripts/human-gate.py --feature "$(FEATURE)" --gate "$(GATE)" --approved-by "$(APPROVED_BY)" --approve
 
 ff-controlled-run:
-	./scripts/feature-orchestrator.py --feature "$(FEATURE)" $${START_TASK:+--start-task "$${START_TASK}"} $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"}
+	./scripts/feature-orchestrator.py --feature "$(FEATURE)" $${START_TASK:+--start-task "$${START_TASK}"} $${STOP_AFTER:+--stop-after "$${STOP_AFTER}"} $${RUN_ALL:+--all-tasks}
 
 ff-semantic-delta:
 	./scripts/semantic-delta.py --current "$(CURRENT)" $${BASELINE:+--baseline "$${BASELINE}"} --json-out "$(JSON_OUT)" --markdown-out "$(MARKDOWN_OUT)"
@@ -159,7 +159,7 @@ ff-task-flow:
 
 .PHONY: ff-feature-flow
 ff-feature-flow:
-	./scripts/feature-flow.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" --start-task "$${START_TASK:-1}"
+	./scripts/feature-flow.sh --feature "$(FEATURE)" --slug "$(SLUG)" --title "$(TITLE)" $(if $(filter file,$(origin PHASE_BRANCH)),,--phase-branch "$(PHASE_BRANCH)") $${START_TASK:+--start-task "$${START_TASK}"}
 
 .PHONY: phase1-consistency
 phase1-consistency:
