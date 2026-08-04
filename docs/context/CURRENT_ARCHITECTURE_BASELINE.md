@@ -1,25 +1,37 @@
 # Current Architecture Baseline
 
-Status: Approved Phase 2 start baseline.
+Status: Approved Phase 2R canonical baseline.
 
-Architecture baseline: `ARCH-2026.07-PHASE2-START`
+Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`
 
-FEATURE-0013 completion status: `ADH-2026-017` is the Approved replacement that captures the complete FEATURE-0013 architecture in one content-bound approval envelope. FEATURE-0013 is implemented and merged through PR #15 on 2026-07-29.
+Predecessor baseline: `ARCH-2026.07-PHASE2-START`
 
-Historical FEATURE-0013 updates: `ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` record the path to the consolidation. They are retained for provenance, excluded from downstream instructions, and normatively superseded by approved `ADH-2026-017`.
+Controlling adoption: `ADH-2026-042`, `ACR-2026-001`, `ARCH-APPROVAL-2026-004`
+
+## Canonical Model Authority
+
+The canonical semantic model is `docs/architecture/canonical/sovrunn-finalized-data-model.md` version 1.7.
+
+The canonical contract catalog is `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` version 1.7.
+
+The PostgreSQL reference flow is `docs/architecture/reference-flows/postgresql-end-to-end.md`.
+
+The Phase 2R rebaseline is `docs/phase2/PHASE2R_REBASELINE.md`.
+
+The cross-feature acceptance charter is `docs/architecture/vertical-slices/VS-000-core-skeleton.md`.
 
 ## Product Position
 
 Sovrunn is a cloud-native sovereign PaaS platform for local cloud providers, MSPs, and on-premise cloud operators.
 
-Sovrunn provides governed service catalog, organization/tenant/project governance, provider-neutral placement, plugin-based service lifecycle, decision/audit/evidence records, and AI-assisted operations.
+Sovrunn provides governed service catalog, organization/tenant/project governance, implementation-neutral placement, plugin-based service lifecycle, decision/audit/evidence records, and AI-assisted operations.
 
 Sovrunn Data Engine is a future managed service inside the broader Sovrunn platform, not the whole product.
 
 ## Approved Architecture Principles
 
 - Reuse before build is mandatory and applies across Sovrunn phases.
-- Provider-neutral core is mandatory.
+- Implementation-neutral core is mandatory; provider-native objects do not appear in customer or core APIs.
 - Adapter boundaries must exist before deep integration.
 - Policy logic must go through a `PolicyEngineAdapter` boundary.
 - OPA is the preferred first real policy adapter candidate.
@@ -27,82 +39,83 @@ Sovrunn Data Engine is a future managed service inside the broader Sovrunn platf
 - Customer-facing APIs must not expose low-level IaaS complexity.
 - Provider-facing, internal, plugin-facing, and customer-facing APIs must remain separate.
 - AI may recommend and explain, but must not bypass policy, approval, or audit.
+- Published definitions are immutable by version (DEC-0044).
+- Extensibility enters through data, contracts, plugins, and adapters — not core conditionals (DEC-0048).
 
-## Approved FEATURE-0012 Architecture Baseline
+## Seven Canonical Scope Kinds
 
-ADH-2026-012 approves `docs/architecture/api-resource-standard.md` as the controlling baseline for FEATURE-0012 Kiro specifications. It establishes provider-neutral resource profiles, scope/reference semantics, boundary and ownership rules, status/condition grammar, strict validation, stable errors, compatibility, conformance, migration, and reassessment requirements.
+Per DEC-0037, the active governance scope vocabulary is:
 
-The standard is cross-phase in effect but remains draft until FEATURE-0012 implementation and final review complete.
+```text
+Platform, Organization, OrganizationUnit, Tenant, Project, CloudPlatform, CloudProvider
+```
 
-## Approved Phase 2 Scope
+The former six-scope vocabulary (Platform, Organization, OrganizationUnit, Tenant, Project, Provider) is superseded. `ServiceInstance` remains a typed subject within its governing scope, not a scope kind.
 
-Phase 2 builds only:
+## Canonical Cloud Model
 
-- model foundation,
-- resource/API standards,
-- decision and audit standards,
-- reuse assessment standard,
-- adapter boundary foundation,
-- provider-neutral resource model,
-- governance/security/data/cost policy context foundation,
-- service runtime profile foundation,
-- placement request and placement decision v0,
-- plugin taxonomy foundation,
-- AI-readable decision context,
-- Phase 2 simulation/demo.
+- **CloudPlatform** — product ownership boundary for a sovereign cloud offering.
+- **CloudProvider** — infrastructure/operations supply boundary.
+- **CloudProviderParticipation** — relationship between a CloudProvider and a CloudPlatform installation.
+- **CloudEnrollment** — customer Organization joins a CloudPlatform (DEC-0038).
+- **HostingLocation** — registered geographic/sovereignty fact.
+- **Datacenter** — physical site boundary.
+- **FaultDomain** — failure-isolation boundary inside a datacenter.
+- **InfrastructureStack** — externally operated substrate stack inside a FaultDomain.
+- **ExecutionTarget** — qualified actionable realization boundary (DEC-0042). No mandatory ResourcePool or ProviderCapability.
 
-## Phase 2 Explicit Non-Goals
+## Canonical Service Model
 
-Phase 2 does not build:
+- **ServiceTypeDefinition** — reusable, implementation-neutral service type definition.
+- **ServiceOffering** — CloudPlatform-scoped product referencing a ServiceTypeDefinition (DEC-0049).
+- **ServicePlan** — versioned, immutable customer-facing plan under a ServiceOffering.
+- **ServiceRuntimeProfile** — runtime/capability requirements bridge.
+- **ServiceRequirementSet** — immutable requirements for placement and execution.
+- **ServicePlacement** — safe, immutable customer projection (DEC-0046).
+- **ServiceBinding** — per-consumer, SecretRef-only access boundary (DEC-0051).
+- **ServiceRelationshipDefinition** / **ServiceRelationship** — cross-service semantics (DEC-0052).
 
-- real provider provisioning,
-- real Kubernetes workload provisioning,
-- real PostgreSQL runtime provisioning,
-- full OPA/Cedar integration,
-- full Keycloak/Vault/Temporal/Argo integration,
-- production workflow engine,
-- global traffic execution,
-- autoscaling execution,
-- DR/failover execution,
-- billing/chargeback engine,
-- full compliance evidence engine,
-- autonomous AI operations,
-- full UI/portal.
+## Governance Model
 
-## Approved Phase 3 Direction
+- **EffectiveGovernanceContext** — single resolved governance composition (DEC-0050).
+- **SovereigntyProfile** / **SovereigntyFactSet** / **EvidenceRecord** — evidence-backed sovereignty evaluation (DEC-0055).
+- **DecisionRecord** with registered profiles for sovereignty, placement, governance (DEC-0043).
+- **EntitlementPackage** / **ServiceEntitlement** — what may be consumed (DEC-0039).
+- **QuotaPolicy** — how much may be consumed, independently (DEC-0039).
 
-Phase 3 builds the first executable PaaS plugin chain:
+## Completed Feature History
 
-- plugin execution contract v0,
-- operation controller v0,
-- PostgreSQL management plane plugin v0,
-- Kubernetes/local substrate plugin v0,
-- PostgreSQL runtime plugin v0,
-- ServiceInstance provisioning v0,
-- ServiceBinding and SecretRef integration,
-- end-to-end MVP demo.
+FEATURE-0001 through FEATURE-0014 are completed implementation history:
 
-Phase 3 should reuse Kubernetes APIs, Helm or an existing PostgreSQL operator where practical.
+- FEATURE-0011: Reuse Assessment Standard (merged)
+- FEATURE-0012: API, Resource Naming, Status, and Validation Standard (merged PR #14, 2026-07-24)
+- FEATURE-0013: Decision Record and AuditEvent Standard (merged PR #15, 2026-07-29; ADH-2026-017 controlling)
+- FEATURE-0014: Provider-Neutral Resource Model (merged PR #16, 2026-07-30; ADH-2026-018/019 controlling)
+
+These features used the alpha model terminology. Their implementation remains intact. Active authorities now point to the canonical model; alpha data migrates through the controlled cutover defined in DEC-0058.
+
+## Superseded Decisions
+
+- DEC-0032 (ResourcePool as placement boundary) — superseded by DEC-0042.
+- DEC-0033 (ProviderCapability as compatibility boundary) — superseded by DEC-0042.
+
+## Phase 2R Scope
+
+Phase 2R replaces the unimplemented Phase 2 features (FEATURE-0015 through FEATURE-0026) with the canonical model sequence. It remains a contract, simulation, and side-effect-free phase. No real provider, Kubernetes, OpenShift, or PostgreSQL calls.
+
+## Phase 2R Next Planned Feature
+
+FEATURE-0015: Canonical Cloud Model and Alpha Migration Foundation.
 
 ## MVP Definition
 
 MVP-001: Governed PostgreSQL PaaS Placement and Provisioning on one substrate.
 
-The MVP must demonstrate:
-
-- customer service request,
-- entitlement/policy evaluation,
-- placement decision,
-- operation creation,
-- plugin-chain execution,
-- service instance status,
-- service binding,
-- audit event,
-- AI-readable explanation.
+The MVP demonstrates the canonical end-to-end flow defined in `docs/architecture/reference-flows/postgresql-end-to-end.md`.
 
 ## Not Approved
 
-The following are not approved architecture directions:
+The following remain not approved architecture directions:
 
 - building a custom policy engine,
 - building a PostgreSQL HA/failover controller from scratch,
@@ -111,7 +124,10 @@ The following are not approved architecture directions:
 - treating logs as audit records,
 - storing raw credentials in Sovrunn resource records,
 - allowing plugins to bypass policy, placement, or audit,
-- allowing AI recommendations to execute without policy/approval validation.
+- allowing AI recommendations to execute without policy/approval validation,
+- mandatory ResourcePool or provider-wide ProviderCapability in core,
+- dual write/authority between old and new canonical models,
+- native AWS, OCI, OpenStack, Kubernetes, or OpenShift objects in customer/core schemas.
 
 ## Deferred Decisions
 
@@ -131,33 +147,6 @@ Deferred until later phases:
 - AI autonomous remediation,
 - production-grade UI/portal,
 - billing/chargeback.
-
-## Current Execution Focus
-
-Current active phase: Phase 2.
-
-Completed and merged: `FEATURE-0011: Reuse Assessment Standard`.
-
-Completed and merged: `FEATURE-0012: API, Resource Naming, Status, and Validation Standard` — checkpoint 18 passed, final human approval granted (2026-07-24), and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation`.
-
-Completed and merged: `FEATURE-0013: Decision Record and AuditEvent Standard` — implemented through PR #15 on 2026-07-29. `ADH-2026-017` remains the approved single replacement handoff for the complete FEATURE-0013 architecture.
-
-Completed and merged: `FEATURE-0014: Provider-Neutral Resource Model` — final feature gate passed and PR #16 merged on 2026-07-30 as commit `1ed47ac` into `phase2-reuse-first-paas-fabric-foundation`. `ADH-2026-018`, as clarified by `ADH-2026-019`, remains the approved architecture package. FEATURE-0014 owns exactly Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack; reuses FEATURE-0011 governance and FEATURE-0012 resource grammar; declares FEATURE-0013 adoption `NOT_APPLICABLE`; and leaves FEATURE-0015 ResourcePool/ProviderCapability, FEATURE-0016 adapters, and FEATURE-0053 connectivity to their canonical owners.
-
-## Approved Consolidated FEATURE-0013 Architecture Baseline
-
-`ADH-2026-017` approves `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md` as one complete, authoritative architecture package. It consolidates the common immutable provider-neutral `DecisionRecord` envelope, versioned `DecisionProfile` extension, atomic `EvaluationResult` normalization, deterministic bounded composition, `AuditEvent` linkage, structural security and projection controls, conformance cases, Matrix E risks, guardrails, and the downstream adoption contract.
-
-The consolidated scope model preserves FEATURE-0012 semantics:
-
-1. `ScopeKind` remains the six-value governance vocabulary: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
-2. `metadata.scopeRef` is the sole scope authority. Platform uses the canonical absent scope form; every non-Platform scope uses a canonical non-empty reference.
-3. `ServiceInstance` is lifecycle-contained by its owner and is represented as a typed `subjectRef`, normally under its governing Project scope. It is not a `ScopeKind`.
-4. Scope identifies the governance boundary; subject identifies the entity about which the decision or audit statement was made. Neither grants authorization.
-
-`ADH-2026-014`, `ADH-2026-015`, and `ADH-2026-016` remain historical decision records. They are normatively superseded and must not be loaded as separate Kiro, reviewer, design, task, or implementation instructions.
-
-FEATURE-0013 requirements, design, tasks, implementation, conformance fixtures, Matrix E evidence, and final approval were completed from approved `ADH-2026-017` and merged through PR #15. Later features consume the merged contract; they do not reload predecessor FEATURE-0013 handoffs as active instructions.
 
 ## Change Control
 

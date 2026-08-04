@@ -12,89 +12,72 @@ Start here:
 - engineering/ai-context-loading-standard.md
 - engineering/go-coding-guardrails.md
 
-## Phase 2 Source-of-Truth Additions
+## Phase 2R Canonical Model Source-of-Truth
 
-For Phase 2 and Phase 3 development, AI agents must load these before generating features:
+For Phase 2R and Phase 3 development, AI agents must load these before generating features:
 
-- `docs/architecture/development-phases.md`
+- `docs/architecture/canonical/sovrunn-finalized-data-model.md` — canonical semantic model
+- `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` — contract catalog
+- `docs/architecture/reference-flows/postgresql-end-to-end.md` — PostgreSQL reference flow
+- `docs/phase2/PHASE2R_REBASELINE.md` — Phase 2R feature authority
+- `docs/architecture/vertical-slices/VS-000-core-skeleton.md` — cross-feature acceptance
+- `docs/architecture/vertical-slices/VS-000-contract-specification.md` — exact Slice 0 integration rules
+- `docs/architecture/vertical-slices/VS-000-contract-registry.yaml` — machine-readable Slice 0 schemas, writers, states, errors and conformance
+- `docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md` — Slice 0 repository traceability
+- `docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md` — closed FEATURE-0015 architecture boundary
+- `docs/features/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md` — executable FEATURE-0015 scope before Kiro stage generation
 - `docs/phase2/PHASE2_SCOPE.md`
 - `docs/phase2/PHASE2_FEATURE_SEQUENCE.md`
 - `docs/phase2/PHASE2_ACCEPTANCE_GATES.md`
 - `docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`
 - `docs/architecture/api-resource-standard.md`
 - `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`
-- `docs/architecture/provider-neutral-resource-model.md`
-- `docs/architecture/policy-evaluation-abstraction.md`
-- `docs/architecture/placement-decision-engine.md`
-- `docs/architecture/plugin-taxonomy-and-boundaries.md`
-- `docs/architecture/adapter-boundary-model.md`
-- `docs/mvp/MVP_001_GOVERNED_POSTGRESQL_PAAS.md`
+- `docs/architecture/development-phases.md`
+
+## Superseded Documents (Retained as History)
+
+The following remain for audit trail but are not active authorities:
+
+- `docs/architecture/provider-neutral-resource-model.md` — alpha model, superseded by canonical model
+- Any reference to ResourcePool, ProviderCapability, or generic Provider as active targets
 
 ## Architecture Operating System
 
-The Architecture Operating System layer controls long-term Sovrunn architecture evolution.
+Sovrunn architecture is evolved through a durable Architecture Operating System.
 
-Important folders:
+Key files:
 
-- `context/` — current baseline, context pack, session prompt, checkpoints.
-- `governance/` — change control, ownership, review gates.
-- `traceability/` — feature and decision traceability matrices.
-- `templates/` — architecture change, DEC, RFC, review templates.
-- `reviews/monthly/` — recurring architecture baseline reviews.
-- `reviews/phase-gates/` — phase readiness and closeout reviews.
-- `reviews/feature-gates/` — feature approval reviews.
+- `docs/context/ARCHITECTURE_VERSION.md`
+- `docs/context/CURRENT_ARCHITECTURE_BASELINE.md`
+- `docs/context/SOVRUNN_CONTEXT_PACK.md`
+- `docs/context/CURRENT_PHASE_CONTEXT.md`
+- `docs/context/CURRENT_DECISION_SUMMARY.md`
+- `docs/context/OPEN_QUESTIONS.md`
+- `docs/context/CHATGPT_ARCHITECTURE_SESSION_PROMPT.md`
+- `docs/governance/ARCHITECTURE_CHANGE_CONTROL.md`
+- `docs/governance/ARCHITECTURE_OWNERSHIP.md`
+- `docs/governance/REVIEW_GATES.md`
+- `docs/traceability/FEATURE_TRACEABILITY_MATRIX.md`
+- `docs/traceability/DECISION_TRACEABILITY_MATRIX.md`
 
-Chat history is not source of truth. Approved repo docs are source of truth.
-
-## Architecture Decision Handoff
-
-Sovrunn separates architecture discussion from repository updates.
-
-- ChatGPT Project produces an Architecture Decision Handoff.
-- Human approves the handoff.
-- Kiro validates and applies approved handoff to docs/specs.
-- Cursor implements only from approved Kiro tasks.
-
-Important files:
+## Handoff and Diagrams
 
 - `docs/templates/ARCHITECTURE_DECISION_HANDOFF.md`
 - `docs/prompts/chatgpt/architecture-decision-handoff.prompt.md`
 - `docs/prompts/kiro/architecture-update.prompt.md`
 - `docs/reviews/architecture-decision-handoffs/README.md`
+- `docs/diagrams/structurizr/workspace.dsl`
+- `docs/diagrams/structurizr/README.md`
 
-## Architecture diagrams
+## Roadmap and Phase Context
 
-Structurizr DSL lives under:
+- `docs/architecture/development-phases.md`
+- `docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md`
+- `docs/features/FEATURE_INDEX.md`
+- `docs/phase2/PHASE2_SCOPE.md`
+- `docs/phase2/PHASE2_FEATURE_SEQUENCE.md`
+- `docs/phase2/PHASE2R_REBASELINE.md`
 
-```text
-docs/diagrams/structurizr/workspace.dsl
-```
+## Generated Artifacts Policy
 
-Use it for durable C4 architecture views. Markdown docs explain architecture decisions; Structurizr DSL visualizes the approved architecture model.
-
-Commands:
-
-```bash
-make structurizr-check
-make structurizr-lite
-```
-
-## Canonical Roadmap and Feature Index
-
-- Canonical all-phase roadmap: `docs/roadmap/SOVRUNN_FEATURE_ROADMAP.md`
-- Feature ID to Kiro slug mapping: `docs/features/FEATURE_INDEX.md`
-- `docs/features/FEATURE_ROADMAP_ALL_PHASES.md` is intentionally only a pointer to avoid duplicated roadmap sources.
-
-## Generated Artifact Policy
-
-These paths are generated artifacts and must not be used as source of truth:
-
-```text
-site/
-docs/generated-prompts/
-docs/context/SOVRUNN_CONTEXT_PACK.generated.md
-.automation/generated-prompts/
-.automation/logs/
-.automation/reviews/
-*.zip
-```
+Generated artifacts such as `site/`, `docs/generated-prompts/`, generated context packs, logs, and zip archives are intentionally ignored and must not be treated as architecture source of truth.

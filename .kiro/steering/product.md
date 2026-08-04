@@ -28,13 +28,14 @@ Sovrunn should provide:
 ```text
 organization-first governance
 multi-tenant service consumption
-service catalog
-service plans
+service catalog (ServiceTypeDefinition + ServiceOffering + ServicePlan)
+service plans (immutable, versioned)
 Service Management Plane registry
 ServiceOps plugin framework
 capability registry
 operation framework
-policy inheritance
+policy inheritance (EffectiveGovernanceContext)
+sovereignty evidence and assessment
 audit aggregation
 backup and archival governance
 cloud management across multiple sovereign datacenter locations
@@ -42,25 +43,23 @@ AI-assisted operations
 SDE
 ```
 
-## Phase 1 Goal
+## Phase 2R Goal
 
-Phase 1 builds the platform grammar:
+Phase 2R builds the canonical model foundation:
 
 ```text
-Organization
-OrganizationUnit
-Tenant
-Project
-Operation
-ServiceClass
-ServicePlan
-Plugin
-Capability
-ServiceInstance
-ServiceBinding
+CloudPlatform, CloudProvider, CloudProviderParticipation, CloudEnrollment
+HostingLocation, Datacenter, FaultDomain, InfrastructureStack, ExecutionTarget
+ServiceTypeDefinition, ServiceOffering, ServicePlan, ServiceRequirementSet
+EffectiveGovernanceContext, SovereigntyProfile, EvidenceRecord
+DecisionRecord profiles (sovereignty, placement, governance)
+EntitlementPackage, QuotaPolicy
+PluginExecution (synthetic), ServicePlacement (safe projection)
+ServiceBinding (SecretRef-only, per-consumer)
+VS-000 Slice 0 conformance demo
 ```
 
-## Phase 1 Non-Goals
+## Phase 2R Non-Goals
 
 Do not build yet:
 
@@ -72,12 +71,14 @@ multi-cluster federation implementation
 persistent database storage
 Kubernetes CRDs
 GitOps controller
-ServiceOps plugin execution
+real ServiceOps plugin execution
 real datastore provisioning
 AI agent execution
 SDE transformation
+mandatory ResourcePool or ProviderCapability
+native provider objects in customer schemas
 ```
 
 ## Product Rule
 
-Expose simple, governed service consumption. Do not expose raw Kubernetes complexity to tenants.
+Expose simple, governed service consumption. Do not expose raw Kubernetes complexity to tenants. Do not expose topology, credentials, or protected handles to customers.

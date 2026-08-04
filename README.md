@@ -7,7 +7,7 @@ Sovrunn builds on proven open-source and open-standard technologies instead of r
 
 ## Current Roadmap Context
 
-Sovrunn now uses a reuse-first phased roadmap. Phase 2 and Phase 3 are the current execution focus. Later phase features are maintained as scope placeholders only and must be rebaselined after Phase 2 and Phase 3 complete.
+Sovrunn now uses a reuse-first phased roadmap. Phase 2R and Phase 3 are the current execution focus. Later phase features are maintained as scope placeholders only and must be rebaselined after Phase 2R and Phase 3 complete.
 
 Authoritative roadmap files:
 
@@ -31,7 +31,7 @@ Roadmap rule:
 
 ```text
 Use future features for scope awareness.
-Do not implement future-phase features during Phase 2 or Phase 3 unless a formal decision changes the phase boundary.
+Do not implement future-phase features during Phase 2R or Phase 3 unless a formal decision changes the phase boundary.
 ```
 
 ## Positioning

@@ -8,7 +8,7 @@ Use with `docs/context/CURRENT_ARCHITECTURE_BASELINE.md` and `docs/context/CHATG
 
 Sovrunn is a cloud-native sovereign PaaS platform for local cloud providers, MSPs, and on-premise cloud operators.
 
-It provides governed service catalog, organization/tenant/project governance, provider-neutral placement, plugin-based service lifecycle, decision/audit/evidence records, and AI-assisted operations.
+It provides governed service catalog, organization/tenant/project governance, implementation-neutral placement, plugin-based service lifecycle, decision/audit/evidence records, and AI-assisted operations.
 
 Sovrunn Data Engine is a future managed service inside Sovrunn.
 
@@ -24,7 +24,10 @@ Sovrunn builds:
 - operation tracking,
 - audit and evidence,
 - AI-readable explanation context,
-- customer/provider PaaS experience.
+- customer/provider PaaS experience,
+- sovereign cloud product and participation semantics,
+- implementation-neutral requirements, decisions, lifecycle, and safe projections,
+- sovereignty evidence composition and plugin/adapter contracts.
 
 Sovrunn reuses or wraps mature infrastructure such as Kubernetes, OPA, Cedar, Keycloak, Vault, OpenTelemetry, Prometheus, Grafana, Temporal/Argo, PostgreSQL operators, ingress controllers, and backup tools where appropriate.
 
@@ -32,60 +35,49 @@ Sovrunn reuses or wraps mature infrastructure such as Kubernetes, OPA, Cedar, Ke
 
 ```text
 Service request
-  -> entitlement check
-  -> effective policy context
-  -> policy evaluation
-  -> placement request
-  -> placement decision
-  -> operation
-  -> plugin execution
-  -> service instance status
-  -> service binding
-  -> audit event
-  -> AI-readable explanation
+  -> authenticate and authorize through adapter
+  -> CloudEnrollment, ServiceEntitlement, and Quota reservation
+  -> EffectiveGovernanceContext
+  -> immutable ServiceRequirementSet
+  -> qualified ExecutionTarget candidates
+  -> sovereignty DecisionRecord
+  -> placement DecisionRecord
+  -> immutable ServiceDeploymentPlan
+  -> accepted Operation
+  -> PluginExecution (fake in Phase 2R)
+  -> verified synthetic readiness
+  -> customer-safe ServicePlacement
+  -> per-consumer ServiceBinding with SecretRef only
+  -> correlated AuditEvents and safe AI-readable explanation
 ```
 
 ## Current Phase
 
-Current active phase: Phase 2.
+Current active phase: Phase 2R.
 
-Phase 2 builds model, decision, audit, adapter, plugin taxonomy, and placement simulation foundations.
+Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`.
 
-Phase 2 does not build real provider provisioning or real PostgreSQL runtime provisioning.
+Next feature: FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation.
 
-## MVP
+## Canonical Model Authority
 
-MVP-001: Governed PostgreSQL PaaS Placement and Provisioning on one substrate.
+- Semantic model: `docs/architecture/canonical/sovrunn-finalized-data-model.md`
+- Contract catalog: `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md`
+- Reference flow: `docs/architecture/reference-flows/postgresql-end-to-end.md`
+- Phase 2R rebaseline: `docs/phase2/PHASE2R_REBASELINE.md`
+- VS-000 charter: `docs/architecture/vertical-slices/VS-000-core-skeleton.md`
+- Delivery plan: `docs/architecture/vertical-slices/INTEGRATED_DELIVERY_PLAN.md`
 
-## Plugin Planes
+## Seven Canonical Scope Kinds
 
-1. Provider/Substrate Plugin: infrastructure execution.
-2. PaaS Service Management Plane Plugin: service lifecycle planning.
-3. PaaS Service Runtime Plugin: runtime configuration, binding, readiness, and status.
+Platform, Organization, OrganizationUnit, Tenant, Project, CloudPlatform, CloudProvider.
 
-## Reuse Targets
+## Key Canonical Boundaries
 
-- Policy: OPA/Cedar through `PolicyEngineAdapter`.
-- Identity: Keycloak/Dex through `IdentityProviderAdapter`.
-- Secrets: Vault/External Secrets through `SecretProviderAdapter`.
-- Workflow: Temporal/Argo through `OperationEngineAdapter`.
-- Observability: OpenTelemetry, Prometheus, Grafana, Loki, Tempo.
-- PostgreSQL runtime: CloudNativePG, Crunchy Postgres Operator, or Helm wrapper.
-
-## Current Phase 2 Features
-
-`FEATURE-0011` through `FEATURE-0026` define Phase 2.
-
-## Roadmap Rule
-
-Roadmap placeholders for Phase 4+ are directional scope references. They must be revalidated after Phase 2 and Phase 3 before detailed design or implementation.
-
-## Architecture Rule
-
-Every new idea must either:
-
-- fit the current approved architecture,
-- become an explicit open question,
-- or become a formal DEC/RFC proposal.
-
-Chat history is not source of truth. The repo is source of truth.
+- CloudPlatform (product ownership) ≠ CloudProvider (infrastructure operation)
+- CloudEnrollment (customer joins platform) ≠ CloudProviderParticipation (provider participates)
+- ExecutionTarget (qualified realization boundary) — no mandatory ResourcePool or ProviderCapability
+- EffectiveGovernanceContext (resolved governance) ≠ sovereignty assessment (separate evidence)
+- ServiceTypeDefinition (reusable type) → ServiceOffering (platform product) → ServicePlan (versioned, immutable)
+- ServicePlacement (safe customer projection) — no topology/credential leakage
+- ServiceBinding (per-consumer, SecretRef-only, revocable)

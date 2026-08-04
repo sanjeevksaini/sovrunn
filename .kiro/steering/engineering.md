@@ -10,12 +10,15 @@ docs/architecture/controller-reconciliation-model.md
 docs/architecture/observability-and-audit-baseline.md
 docs/engineering/context-engineering-standard.md
 docs/features/FEATURE_SEQUENCE.md
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md
+docs/phase2/PHASE2R_REBASELINE.md
+docs/architecture/canonical/sovrunn-finalized-data-model.md
 ```
 Follow docs/engineering/ai-context-loading-standard.md for context selection.
 
 ## Language
 
-Use Go for Phase 1 platform core.
+Use Go for Phase 2R platform core.
 
 ## Implementation Style
 
@@ -39,6 +42,9 @@ premature abstraction
 large frameworks
 implicit magic
 future features hidden in current implementation
+ResourcePool or ProviderCapability as active concepts
+generic Provider as combined owner/operator
+six-scope vocabulary in new code
 ```
 
 ## Package Direction
@@ -68,3 +74,15 @@ make fmt
 make test
 make vet
 ```
+
+## Drift Checks
+
+Phase 2R drift checks must verify:
+
+- No active authority uses ResourcePool or ProviderCapability as mandatory
+- No active authority uses generic Provider as combined concept
+- Seven canonical scope kinds are used
+- CloudEnrollment and CloudProviderParticipation are distinct
+- ServiceClass has no active canonical authority
+- Customer APIs have no provider-native objects
+- No Go code change in architecture-only updates

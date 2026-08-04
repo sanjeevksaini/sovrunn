@@ -1,13 +1,18 @@
 ---
 doc_type: architecture
 title: Sovrunn Platform Core
-status: draft
+status: historical-phase1
 phase: 1
-ai_load_priority: phase
-ai_summary: Defines the Phase 1 Platform Core Skeleton resources, boundaries, and acceptance criteria.
+ai_load_priority: reference
+ai_summary: Phase 1 Platform Core Skeleton resources and boundaries. ServiceClass is superseded by ServiceTypeDefinition+ServiceOffering in Phase 2R (DEC-0049). See canonical model for active authority.
 ---
 
 # Sovrunn Platform Core
+
+> **Phase 2R Note:** This document records Phase 1 platform core resources. In the canonical
+> model (ARCH-2026.08-PHASE2R-CANONICAL), ServiceClass maps to ServiceTypeDefinition +
+> ServiceOffering (DEC-0049), and the catalog/governance model is significantly expanded.
+> See `docs/architecture/canonical/sovrunn-finalized-data-model.md` for the active canonical model.
 
 ## 1. Purpose
 

@@ -1,15 +1,15 @@
 ---
 doc_type: acceptance_gates
-title: Phase 2 Acceptance Gates
-status: draft
-phase: 2
+title: Phase 2R Acceptance Gates
+status: approved
+phase: 2R
 ai_load_priority: always
-ai_summary: Mandatory gates for each Phase 2 feature under the Me + AI chain execution model.
+ai_summary: Mandatory gates for each Phase 2R feature under canonical model architecture.
 ---
 
-# Phase 2 Acceptance Gates
+# Phase 2R Acceptance Gates
 
-Every Phase 2 feature must pass these gates before merge.
+Every Phase 2R feature must pass these gates before merge.
 
 ## 1. Architecture Contract Gate
 
@@ -19,12 +19,14 @@ Every Phase 2 feature must pass these gates before merge.
 - Reuse assessment is complete.
 - Customer, operator, internal-engine, adapter, plugin, or governance API boundary is identified.
 - Non-goals are explicit.
+- Canonical model terminology is used (no generic Provider, no ResourcePool/ProviderCapability as active concepts).
+- Seven-scope vocabulary is respected.
 
 FEATURE-0012-and-later resource/API contracts must also conform to:
 
 `docs/architecture/api-resource-standard.md`
 
-The architecture gate checks resource profile, allowed scope, boundary classification, ownership, provider neutrality, compatibility, and reassessment coverage.
+The architecture gate checks resource profile, allowed scope, boundary classification, ownership, implementation neutrality, compatibility, and reassessment coverage.
 
 ## 2. Reuse Gate
 
@@ -56,65 +58,30 @@ Check:
 - no customer-facing IaaS leakage,
 - decision object is explainable,
 - audit behavior is defined,
-- adapter boundaries are preserved.
+- adapter boundaries are preserved,
+- no mandatory ResourcePool or ProviderCapability in active contracts,
+- no generic Provider as combined owner/operator concept,
+- no six-scope vocabulary in active authorities,
+- ServiceClass has no active canonical authority,
+- ExecutionTarget is the placement boundary,
+- EffectiveGovernanceContext is the resolved governance term,
+- published definitions are immutable by version,
+- customer APIs contain no provider-native objects, raw secrets, or protected handles.
 
 ## 4. Quality Gate
 
-- unit tests pass,
-- integration tests pass where applicable,
-- lint passes,
-- gosec passes,
-- race tests pass where applicable,
-- generated docs are consistent with source-of-truth docs.
+- Tests cover happy paths and failure paths.
+- Structured errors follow API contract.
+- Observability fields are present.
+- Race conditions are tested where relevant.
 
-## 5. Human Acceptance Gate
+## 5. Human Approval Gate
 
-The architecture owner approves with ChatGPT support before merge.
+- Feature gate script passes.
+- Human or approved reviewer confirms acceptance criteria.
+- Feature may proceed to next in sequence.
 
-## 6. FEATURE-0013 Specific Gate Criteria
+## 6. VS-000 Conformance Gate (FEATURE-0026 only)
 
-FEATURE-0013 (Decision Record and AuditEvent Standard) must additionally satisfy:
-
-### 6.1 Terminology reconciliation
-
-- All normative documents use `DecisionRecord` (not `DecisionObject`) for the common decision envelope.
-- A terminology reconciliation traceability record exists.
-
-### 6.2 Canonical scope and subject model
-
-- `AuditEvent` supports FEATURE-0012's six governance scopes: Platform, Organization, OrganizationUnit, Tenant, Project, and Provider.
-- The canonical `Platform` form is an absent/nil `metadata.scopeRef` (FEATURE-0012 `NormalizeScope`/`CanonicalScopeIdentity`): an absent `scopeRef` resolves deterministically to `Platform` where the contract permits `Platform`, and returns the stable required-scope error where it does not (absence is not automatically valid).
-- No parallel scope enum, presence flag, `AuditScope` type, discriminator, alias, or independently mutable scope field is introduced.
-- `ServiceInstance` is represented through a typed `subjectRef`, normally with Project as `metadata.scopeRef`; it is rejected as a `ScopeKind`.
-- Compatibility fixtures cover all six FEATURE-0012 scopes, the canonical Platform form, invalid absence where Platform is disallowed, rejection of parallel scope sources, rejection of `ServiceInstance` as scope, and acceptance of a ServiceInstance subject within Project scope.
-- FEATURE-0012 conformance is not regressed.
-
-### 6.3 Contract-only scope
-
-- No production runtime implementation exists.
-- No persistence, workflow, or external service implementation exists.
-- Schemas, validation, conformance fixtures, and documentation only.
-
-### 6.4 Consolidated controlling reference
-
-- `ADH-2026-017` is the approved single replacement handoff for `docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md`.
-- ADH-2026-014, ADH-2026-015, and ADH-2026-016 are historical provenance and must not be loaded as separate downstream instructions.
-- FEATURE-0013 requirements, design, tasks, implementation, conformance fixtures, Matrix E evidence, and final feature approval are complete through merged PR #15 (2026-07-29).
-- AD-001 through AD-045 are preserved; AD-045 owns the public error binding and
-  closed violation-code registry.
-- Matrix E F13-R01 through F13-R31 are preserved with architecture-stage treatment.
-
-### 6.5 Consolidated contract boundary criteria
-
-- `DecisionRecord` uses `metadata.scopeRef` as its sole logical and serialized scope authority; no top-level `DecisionRecord` `scopeRef` or parallel scope source exists.
-- Sensitivity classification uses the closed ordered provider-neutral vocabulary `PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED`; jurisdiction-specific labels are versioned profile mappings; profiles permitting captured output declare a sensitivity ceiling, content-category rules, and maximum fields/bytes/depth/value-types.
-- Security validation is bounded to structural conformance; no secret/credential/PII/malware/DLP/content-scanning engine is introduced; comprehensive semantic content scanning is a later approved feature.
-- Algorithm-agile carrier fields and structural trust metadata are contract-now; canonicalization algorithm/profile, digest-covered fields, signature algorithm, and cryptographic services remain DEFERRED under ADR-F13-002; RFC 8785 is illustrative only.
-- Architecture section 17 scenarios map one-to-one to stable IDs `F13-CF-01` through `F13-CF-28`; coverage is counted by scenario ID with an explicit coverage-matrix entry per scenario.
-- FEATURE-0013 final gates passed before PR #15 merge; ADH-2026-017 remains the controlling consolidated architecture reference.
-
-### 6.6 Downstream adoption
-
-- One normative downstream adoption contract exists.
-- One lightweight gate check validates adoption section presence.
-- No separate manifests, registries, indexes, or approval workflows are introduced.
+- Cross-feature orchestration passes positive, denial, stale-input, authorization, idempotency, fencing, redaction, and no-side-effect conformance.
+- VS-000 definition of done is met.

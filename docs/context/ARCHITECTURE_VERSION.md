@@ -1,16 +1,20 @@
 # Sovrunn Architecture Version
 
-Current architecture baseline: `ARCH-2026.07-PHASE2-START`
+Current architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`
 
 ## Active Baseline
 
-`ARCH-2026.07-PHASE2-START`
+`ARCH-2026.08-PHASE2R-CANONICAL`
+
+## Predecessor Baseline
+
+`ARCH-2026.07-PHASE2-START` — superseded by ADH-2026-042 canonical model adoption.
 
 ## Scope
 
 This baseline governs:
 
-- Phase 2 architecture and feature execution
+- Phase 2R architecture and feature execution
 - Phase 3 MVP planning boundaries
 - Feature Factory prompts
 - Kiro requirements/design/tasks generation
@@ -39,6 +43,10 @@ Architecture baselines should be updated only at controlled milestones:
 - accepted major architecture decision,
 - monthly architecture baseline review when required.
 
+## Current Milestone
+
+ADH-2026-042 canonical model adoption with ACR-2026-001 approval and DEC-0037 through DEC-0058 acceptance.
+
 ## Next Planned Review
 
-The next baseline review should occur after Phase 2 completion, before Phase 3 execution.
+The next baseline review should occur after Phase 2R completion, before Phase 3 execution.

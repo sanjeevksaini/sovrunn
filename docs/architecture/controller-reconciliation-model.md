@@ -217,3 +217,16 @@ New concepts:
 - approval placeholder,
 - retry placeholder,
 - rollback placeholder.
+
+## Phase 2R Note
+
+**ADH-2026-042**
+
+The reconciliation model principles (spec = desired state, status = observed state, operation = lifecycle trace) remain valid in Phase 2R. The canonical model introduces:
+
+- **Published definitions are immutable by version** (DEC-0044). Once published, a ServiceTypeDefinition, ServiceRuntimeProfile, GovernanceProfile, or SovereigntyProfile version cannot be altered.
+- **EffectiveGovernanceContext** is the resolved governance composition (DEC-0050).
+- **DecisionRecord** remains the immutable governed-conclusion envelope with registered profiles (DEC-0043).
+- **Operation** remains the lifecycle trace with PluginExecution linkage.
+
+Phase 2R uses in-memory registry only. Durable persistence remains a later-phase concern.

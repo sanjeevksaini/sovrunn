@@ -32,6 +32,7 @@ nav:
       - Review Gates: governance/REVIEW_GATES.md
       - Feature Traceability: traceability/FEATURE_TRACEABILITY_MATRIX.md
       - Decision Traceability: traceability/DECISION_TRACEABILITY_MATRIX.md
+      - Slice 0 Contract Traceability: traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md
   - Foundation:
       - Vision: foundation/vision.md
       - Philosophy: foundation/philosophy.md
@@ -42,18 +43,26 @@ nav:
       - Canonical Feature Roadmap: roadmap/SOVRUNN_FEATURE_ROADMAP.md
       - Roadmap README: roadmap/README.md
       - Feature Index: features/FEATURE_INDEX.md
-      - Phase 2 Scope: phase2/PHASE2_SCOPE.md
-      - Phase 2 Feature Sequence: phase2/PHASE2_FEATURE_SEQUENCE.md
-      - Phase 2 Acceptance Gates: phase2/PHASE2_ACCEPTANCE_GATES.md
+      - Phase 2R Scope: phase2/PHASE2_SCOPE.md
+      - Phase 2R Feature Sequence: phase2/PHASE2_FEATURE_SEQUENCE.md
+      - Phase 2R Acceptance Gates: phase2/PHASE2_ACCEPTANCE_GATES.md
+      - Phase 2R Rebaseline: phase2/PHASE2R_REBASELINE.md
       - Phase 2 Reuse Assessment Standard: phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md
       - MVP Governed PostgreSQL PaaS: mvp/MVP_001_GOVERNED_POSTGRESQL_PAAS.md
       - MVP Customer Demo Scenarios: mvp/MVP_001_CUSTOMER_DEMO_SCENARIOS.md
       - MVP Out of Scope: mvp/MVP_001_OUT_OF_SCOPE.md
   - Architecture:
       - Platform Core: architecture/platform-core.md
+      - Canonical Data Model: architecture/canonical/sovrunn-finalized-data-model.md
+      - Canonical Contract Catalog: architecture/canonical/sovrunn-final-canonical-contract-catalog.md
+      - PostgreSQL Reference Flow: architecture/reference-flows/postgresql-end-to-end.md
+      - VS-000 Core Skeleton: architecture/vertical-slices/VS-000-core-skeleton.md
+      - VS-000 Exact Contract: architecture/vertical-slices/VS-000-contract-specification.md
+      - FEATURE-0015 Canonical Cloud Model and Alpha Migration: architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md
+      - Integrated Delivery Plan: architecture/vertical-slices/INTEGRATED_DELIVERY_PLAN.md
       - API Resource Standard: architecture/api-resource-standard.md
       - Decision Record and AuditEvent Standard: architecture/FEATURE-0013-decision-record-and-auditevent-standard.md
-      - Provider-Neutral Resource Model: architecture/provider-neutral-resource-model.md
+      - Provider-Neutral Resource Model (History): architecture/provider-neutral-resource-model.md
       - Policy Evaluation Abstraction: architecture/policy-evaluation-abstraction.md
       - Placement Decision Engine: architecture/placement-decision-engine.md
       - Plugin Taxonomy and Boundaries: architecture/plugin-taxonomy-and-boundaries.md
@@ -70,6 +79,30 @@ nav:
       - Plugin Planes: decisions/DEC-0029-plugin-planes.md
       - PostgreSQL MVP: decisions/DEC-0030-postgresql-mvp.md
       - Adapter Boundaries: decisions/DEC-0036-adapter-boundaries.md
+      - Seven Canonical Scopes: decisions/DEC-0037-canonical-cloud-model-seven-scopes.md
+      - CloudEnrollment: decisions/DEC-0038-cloudenrollment-joins-customer-to-platform.md
+      - Entitlement and Quota: decisions/DEC-0039-entitlement-and-quota-independence.md
+      - Industry Portfolios: decisions/DEC-0040-industry-portfolios-not-provider-kinds.md
+      - Geography Independence: decisions/DEC-0041-geography-governance-sovereignty-independent.md
+      - ExecutionTarget: decisions/DEC-0042-executiontarget-no-resourcepool.md
+      - DecisionRecord Profiles: decisions/DEC-0043-decisionrecord-profiles-sovereignty-placement.md
+      - Immutable Definitions: decisions/DEC-0044-immutable-versioned-definitions.md
+      - Multi-Target Placement: decisions/DEC-0045-multitarget-placement.md
+      - ServicePlacement Projection: decisions/DEC-0046-serviceplacement-safe-projection.md
+      - Personal Organization: decisions/DEC-0047-personal-organization.md
+      - Extensibility by Data: decisions/DEC-0048-extensibility-by-data.md
+      - ServiceOffering: decisions/DEC-0049-serviceoffering-replaces-serviceclass.md
+      - Effective Governance: decisions/DEC-0050-effective-governance-context.md
+      - ServiceBinding SecretRef: decisions/DEC-0051-servicebinding-secretref-only.md
+      - Service Relationship: decisions/DEC-0052-service-relationship-boundary.md
+      - Platform Lifecycle: decisions/DEC-0053-platform-lifecycle-boundary.md
+      - CloudPlatform Isolation: decisions/DEC-0054-cloudplatform-provider-installation-isolation.md
+      - Sovereignty Composition: decisions/DEC-0055-platform-sovereignty-composition.md
+      - Release Compatibility: decisions/DEC-0056-release-recovery-compatibility.md
+      - Maintenance Authority: decisions/DEC-0057-infrastructure-maintenance-authority.md
+      - Alpha Migration: decisions/DEC-0058-alpha-migration-no-dual-authority.md
+  - Governance:
+      - Architecture Change Request ACR-2026-001: governance/architecture-change-requests/ACR-2026-001-final-canonical-model-and-phase2r-rebaseline.md
   - RFC:
       - Organization Tenant Governance Model: rfc/RFC-0012-organization-tenant-governance-model.md
       - ServiceOps Plugin Framework: rfc/RFC-0020-serviceops-plugin-framework.md

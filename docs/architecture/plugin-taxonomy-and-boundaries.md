@@ -54,3 +54,13 @@ AI explains and recommends, but does not bypass policy.
 ## Phase 2 Scope
 
 Metadata and taxonomy only. Runtime execution begins in Phase 3.
+
+## Phase 2R Update
+
+**ADH-2026-042**
+
+Plugin taxonomy in Phase 2R includes a synthetic PluginExecution contract (FEATURE-0024). The fake execution harness is conformance machinery only — no provider or workload side effects.
+
+Plugin/adapter roles, manifests, compatibility rules, and protected handles are governed per the canonical contract catalog. Plugins must not bypass final DecisionRecord, Operation, target authority, or SecretRef boundaries.
+
+Canonical plugin boundary model: `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md`.

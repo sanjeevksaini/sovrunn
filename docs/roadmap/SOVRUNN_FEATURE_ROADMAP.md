@@ -1,10 +1,10 @@
 ---
 doc_type: roadmap
 title: Sovrunn Feature Roadmap
-status: draft
-phase: roadmap
+status: approved
+phase: 2R
 ai_load_priority: important
-ai_summary: Roadmap-level feature placeholders for all Sovrunn phases. Phase 2 is executable detail; Phase 3 is MVP planning detail; Phase 4+ are scope references and must be revalidated after Phase 2 and Phase 3.
+ai_summary: Roadmap-level feature placeholders for all Sovrunn phases. Phase 2R is executable detail under canonical model; Phase 3 is MVP planning detail; Phase 4+ are scope references and must be revalidated after Phase 2R and Phase 3.
 ---
 
 # Sovrunn Feature Roadmap
@@ -16,12 +16,12 @@ This document records the full Sovrunn feature roadmap at a scope-reference leve
 This file is **not** a detailed design for every feature.
 
 ```text
-Phase 2: detailed enough for immediate execution.
+Phase 2R: detailed enough for immediate execution under canonical model.
 Phase 3: detailed enough for MVP planning.
 Phase 4+: roadmap placeholders only.
 ```
 
-Before starting Phase 4 or any later phase, this roadmap must be reviewed and re-baselined using the outcomes of Phase 2, Phase 3, customer feedback, technical learning, and market validation.
+Before starting Phase 4 or any later phase, this roadmap must be reviewed and re-baselined using the outcomes of Phase 2R, Phase 3, customer feedback, technical learning, and market validation.
 
 ## 2. Roadmap Governance Rules
 
@@ -50,28 +50,28 @@ Provider exposes infrastructure capability.
 Sovrunn governs, places, provisions through reusable components, explains, and audits.
 ```
 
-## 4. Phase 2: Reuse-First PaaS Fabric Foundation
+## 4. Phase 2R: Canonical Model PaaS Fabric Foundation
 
-Phase 2 features are executable Phase 2 scope and should be developed in order unless a formal architecture decision changes the order.
+Phase 2R features are executable scope under the canonical model (ADH-2026-042). Developed in order per `docs/phase2/PHASE2_FEATURE_SEQUENCE.md`.
 
 | Feature | Name | Scope Level | Purpose |
 |---|---|---|---|
-| FEATURE-0011 | Reuse Assessment Standard | Executable | Require Reuse / Wrap / Extend / Build decision for every feature. |
-| FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Executable | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
-| FEATURE-0013 | Decision Record and AuditEvent Standard | Executable | Define common decision and audit event structure. |
-| FEATURE-0014 | Provider-Neutral Resource Model | Executable | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack only. |
-| FEATURE-0015 | ResourcePool and ProviderCapability Model | Executable | Define ResourcePool as placement boundary and ProviderCapability as compatibility boundary. |
-| FEATURE-0016 | Adapter Boundary Foundation | Executable | Define adapter interfaces for policy, identity, secrets, operations, observability, events, and repositories. |
-| FEATURE-0017 | Policy Evaluation Abstraction | Executable | Define OPA/Cedar-ready policy input, evaluation result, and engine adapter contracts. |
-| FEATURE-0018 | GovernanceProfile and SecurityProfile Foundation | Executable | Define governance and security profile objects. |
-| FEATURE-0019 | DataPlacementPolicy and CostGuardrail Minimal Foundation | Executable | Define minimal data residency, movement, and cost guardrail inputs. |
-| FEATURE-0020 | ProfileAssignment and EffectivePolicyContext | Executable | Resolve effective policy context for Organization, Tenant, Project, and ServiceInstance requests. |
-| FEATURE-0021 | Minimal ServiceEntitlement and Quota Placeholder | Executable | Validate that a tenant/project may request a ServiceClass/ServicePlan. |
-| FEATURE-0022 | ServiceRuntimeProfile Foundation | Executable | Map customer-facing ServicePlan to runtime/capability requirements. |
-| FEATURE-0023 | PlacementRequest and PlacementDecision v0 | Executable | Evaluate resource pools against runtime, policy, entitlement, and capability requirements. |
-| FEATURE-0024 | Plugin Taxonomy Foundation | Executable | Define plugin types and boundaries for provider, service management, runtime, traffic, backup, observability, security, evidence, and AI operations. |
-| FEATURE-0025 | AI-Readable Decision Context | Executable | Create structured explanation context for allowed/denied decisions. |
-| FEATURE-0026 | Phase 2 Integration Demo | Executable | Demonstrate provider/resource/policy/runtime/placement/audit/explanation simulation. |
+| FEATURE-0011 | Reuse Assessment Standard | Completed | Require Reuse / Wrap / Extend / Build decision for every feature. |
+| FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Completed | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
+| FEATURE-0013 | Decision Record and AuditEvent Standard | Completed | Define common decision and audit event structure with DecisionRecord profiles. |
+| FEATURE-0014 | Provider-Neutral Resource Model | Completed (alpha model) | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack. Migration input for canonical model. |
+| FEATURE-0015 | Canonical Cloud Model and Alpha Migration Foundation | Executable | Seven-scope migration; CloudPlatform; CloudProvider; ExecutionTarget; CanonicalMigrationPlan. |
+| FEATURE-0016 | Adapter Boundary and ExecutionTarget Qualification | Executable | Core adapter interfaces; target qualification; fake adapter. |
+| FEATURE-0017 | Policy Evaluation Abstraction | Executable | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage. |
+| FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | Executable | GovernanceProfile; Membership; Roles; Approval; ExceptionGrant. |
+| FEATURE-0019 | Sovereignty Facts, Evidence and Policy Foundation | Executable | SovereigntyProfile; SovereigntyFactSet; EvidenceRecord. |
+| FEATURE-0020 | Assignment and Effective Governance Resolution | Executable | ProfileAssignment; EffectiveGovernanceContext. |
+| FEATURE-0021 | CloudEnrollment, Personal Onboarding, Entitlement and Quota | Executable | CloudEnrollment; Personal Organization; EntitlementPackage; QuotaPolicy. |
+| FEATURE-0022 | Service Product, Runtime and Requirement Foundation | Executable | ServiceTypeDefinition; ServiceOffering; ServicePlan; ServiceRequirementSet. |
+| FEATURE-0023 | Sovereignty and Placement Decision v0 | Executable | DecisionRecord profiles; candidate evaluation; ServicePlacement projection. |
+| FEATURE-0024 | Plugin Taxonomy and Synthetic Execution Boundary | Executable | Plugin roles; manifests; PluginExecution; fake harness. |
+| FEATURE-0025 | AI-Readable Decision and Operation Context | Executable | Bounded audience-safe explanation projection. |
+| FEATURE-0026 | Slice 0 Integration and Conformance Demo | Executable | VS-000 cross-feature conformance. |
 
 ## 5. Phase 3: First Executable PaaS Plugin Chain
 
@@ -113,7 +113,7 @@ Phase 5 should be revalidated after MVP feedback. It expands from one executable
 | FEATURE-0044 | Plugin CredentialPolicy Integration | Roadmap Placeholder | Connect plugin credentials to SecretRef/CredentialRef and approved secret providers. |
 | FEATURE-0045 | Provider Capability Validation Workflow | Roadmap Placeholder | Move capabilities from declared to validated/certified/degraded/disabled. |
 | FEATURE-0046 | Plugin Certification Test Harness | Roadmap Placeholder | Run conformance tests for provider, service management, and runtime plugins. |
-| FEATURE-0047 | Provider Onboarding Workflow | Roadmap Placeholder | Guide provider/MSP through Provider, ProviderLocation, InfrastructureStack, ResourcePool, and capability onboarding. |
+| FEATURE-0047 | Provider Onboarding Workflow | Roadmap Placeholder | Guide CloudProvider/MSP through CloudPlatform participation, HostingLocation, InfrastructureStack, ExecutionTarget qualification, and plugin onboarding. Terminology aligns with canonical model after Phase 2R revalidation. |
 | FEATURE-0048 | Plugin Versioning and Compatibility Checks | Roadmap Placeholder | Manage plugin compatibility with Sovrunn API and resource versions. |
 | FEATURE-0049 | Plugin Health and Degradation Model | Roadmap Placeholder | Represent plugin health, degraded capability states, and disabled execution paths. |
 
@@ -141,7 +141,7 @@ Phase 7 adds governed scaling and cost-awareness.
 |---|---|---|---|
 | FEATURE-0059 | AutoscalingPolicy Foundation | Roadmap Placeholder | Model scale triggers, safe actions, approval modes, and limits. |
 | FEATURE-0060 | CapacityPolicy and CapacityClass | Roadmap Placeholder | Model on-demand, reserved, dedicated, spot, burstable, and committed capacity. |
-| FEATURE-0061 | ResourcePool Capacity Model | Roadmap Placeholder | Track capacity availability, reservation, and exhaustion signals. |
+| FEATURE-0061 | Capacity Model (future) | Roadmap Placeholder | Track capacity availability, reservation, and exhaustion signals. Note: ResourcePool is not a canonical concept (DEC-0042); this feature will be revalidated after Phase 2R using ExecutionTarget-based capacity semantics. |
 | FEATURE-0062 | CostEstimate Foundation | Roadmap Placeholder | Estimate cost impact of provisioning/scaling decisions through reusable cost sources. |
 | FEATURE-0063 | CostGuardrail v1 | Roadmap Placeholder | Enforce cost limits, approval thresholds, and budget risk reasons. |
 | FEATURE-0064 | ScalingDecision Foundation | Roadmap Placeholder | Explain allowed/denied scaling decisions and alternatives. |
@@ -204,7 +204,7 @@ Phase 11 brings Sovrunn Data Engine into Sovrunn as a governed managed service.
 
 | Feature | Name | Scope Level | Purpose |
 |---|---|---|---|
-| FEATURE-0096 | SDE ServiceClass | Roadmap Placeholder | Model SDE as a first-class managed service. |
+| FEATURE-0096 | SDE ServiceTypeDefinition and ServiceOffering | Roadmap Placeholder | Model SDE as a governed managed service using ServiceTypeDefinition + ServiceOffering (DEC-0049). ServiceClass is migration input only. |
 | FEATURE-0097 | SDE ServiceRuntimeProfile | Roadmap Placeholder | Define SDE runtime requirements and capabilities. |
 | FEATURE-0098 | PostgreSQL Wire Gateway Service Plugin | Roadmap Placeholder | Wrap SDE gateway deployment and lifecycle. |
 | FEATURE-0099 | Metadata Store Integration | Roadmap Placeholder | Integrate SDE metadata store requirements. |

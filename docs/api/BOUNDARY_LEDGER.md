@@ -115,7 +115,7 @@ Sovrunn Platform API Architecture
 
 - Administrative desired state and normalized infrastructure descriptors
 - Operator-visible diagnostics and pool readiness conditions
-- Provider-neutral capability class and jurisdiction metadata
+- Implementation-neutral capability facts and jurisdiction metadata
 
 #### Prohibited data
 
@@ -125,7 +125,7 @@ Sovrunn Platform API Architecture
 
 #### Authorization
 
-Operator principals are authorized within Provider (or declared operator) scope. Access to customer-confidential data requires an explicit approved boundary view; SafeDenial applies for unauthorized cross-scope access.
+Operator principals are authorized within CloudProvider or CloudPlatform operator scope (DEC-0037 seven canonical scopes). Access to customer-confidential data requires an explicit approved boundary view; SafeDenial applies for unauthorized cross-scope access.
 
 #### Audit
 
@@ -314,7 +314,7 @@ Sovrunn Platform API Architecture
 #### Allowed data
 
 - Versioned plugin capability definitions
-- Operation targetRef/scopeRef contracts with six allowed scopes
+- Operation targetRef/scopeRef contracts with seven canonical scope kinds
 - Validated plugin results expressed through Sovrunn status grammar
 
 #### Prohibited data
@@ -349,7 +349,7 @@ Replace plugin-facing contracts by versioning PluginDefinition/Operation, dual-s
 
 #### Migration path
 
-FEATURE-0012 ships grammar and fixtures only; plugin execution arrives in later features while preserving these contracts and six Operation scopes.
+FEATURE-0012 ships grammar and fixtures only; plugin execution arrives in later features while preserving these contracts and seven canonical scope kinds.
 
 #### Reassessment trigger
 

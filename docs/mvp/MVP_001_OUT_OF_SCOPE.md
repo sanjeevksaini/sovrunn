@@ -29,3 +29,16 @@ MVP-001 must not include:
 - custom workflow engine.
 
 These are later-phase capabilities or mature systems to reuse/wrap.
+
+## Phase 2R Additional Non-Goals
+
+**ADH-2026-042**
+
+MVP-001 also does not include:
+
+- mandatory ResourcePool or ProviderCapability in core,
+- native AWS/OCI/OpenStack/Kubernetes/OpenShift objects in customer schemas,
+- dual authority between alpha and canonical models,
+- capacity scheduling or provider-wide capability truth,
+- autonomous AI decision authority,
+- stable API promotion during Phase 2R.

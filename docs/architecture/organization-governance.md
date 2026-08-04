@@ -238,18 +238,32 @@ ServiceOps plugins execute actual service-specific backup and restore.
 
 ## Phase 2 Governance Extension
 
-Phase 2 shifts from generic `PolicySet` language toward explicit profile and policy-context objects:
+Phase 2R shifts from generic `PolicySet` language toward explicit governance, sovereignty, and policy-context objects under the canonical model (ADH-2026-042):
 
 - GovernanceProfile,
-- SecurityProfile,
+- SovereigntyProfile,
 - DataPlacementPolicy,
 - CostGuardrail,
 - ProfileAssignment,
-- EffectivePolicyContext,
+- EffectiveGovernanceContext (DEC-0050),
 - PolicyEvaluationRequest,
 - PolicyEvaluationResult,
-- GovernanceDecision,
-- SecurityDecision,
-- PlacementDecision.
+- DecisionRecord with sovereignty profile (DEC-0043),
+- DecisionRecord with placement profile (DEC-0043),
+- ServicePlacement (safe customer projection, DEC-0046).
 
 Policy evaluation must go through PolicyEngineAdapter so OPA/Cedar or other engines can be reused later.
+
+## Phase 2R Governance Update
+
+**ADH-2026-042 / DEC-0050**
+
+Phase 2R governance uses:
+
+- **Seven canonical scope kinds:** Platform, Organization, OrganizationUnit, Tenant, Project, CloudPlatform, CloudProvider (DEC-0037).
+- **EffectiveGovernanceContext:** single resolved governance composition from profiles, with non-weakenable controls and deterministic conflict resolution (DEC-0050).
+- **Sovereignty:** separately assessed through evidence-backed DecisionRecord profiles, not conflated with governance composition (DEC-0055).
+- **Personal Organization:** automatic onboarding with default Tenant and default Project (DEC-0047).
+- **EntitlementPackage and QuotaPolicy:** independent evaluation (DEC-0039).
+
+The canonical governance model is in `docs/architecture/canonical/sovrunn-finalized-data-model.md`.

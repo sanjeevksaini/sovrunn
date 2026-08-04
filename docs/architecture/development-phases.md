@@ -1,10 +1,10 @@
 ---
 doc_type: architecture
 title: Sovrunn Development Phases
-status: draft
-phase: 2
+status: approved
+phase: 2R
 ai_load_priority: always
-ai_summary: Reuse-first phased plan for Sovrunn from Phase 0/1 baseline through Phase 2 provider-neutral PaaS fabric foundation, Phase 3 executable PostgreSQL plugin chain, and later production capabilities.
+ai_summary: 'Reuse-first phased plan from Phase 0/1 through Phase 2R canonical model foundation, Phase 3 executable PostgreSQL plugin chain, and later capabilities.'
 ---
 
 # Sovrunn Development Phases
@@ -26,7 +26,7 @@ Build Sovrunn-specific governance, decisions, audit, orchestration, plugin contr
 
 ## 3. Current Execution Model
 
-Phase 2 and Phase 3 assume:
+Phase 2R and Phase 3 assume:
 
 ```text
 Human owner + ChatGPT = architecture contract and final acceptance
@@ -41,7 +41,7 @@ Automated reviewer = quality, security, and architecture drift checks
 |---:|---|---|
 | 0 | Foundation and AI Development System | Make project AI-developable without architecture drift. |
 | 1 | Platform Core Skeleton | Build core Sovrunn resource grammar. |
-| 2 | Reuse-First PaaS Fabric Foundation | Build model, adapter, policy-context, decision, audit, plugin taxonomy, and placement simulation foundation. |
+| 2R | Canonical Model PaaS Fabric Foundation | Build implementation-neutral model, adapter, governance, sovereignty, decision, audit, plugin taxonomy, and placement simulation foundation under the canonical model. |
 | 3 | First Executable PaaS Plugin Chain | Execute one governed PostgreSQL provisioning path on one substrate by wrapping mature components. |
 | 4 | Customer-Testable MVP Hardening | Package the PostgreSQL PaaS MVP for design-partner/customer validation. |
 | 5 | Provider/Plugin Framework and Certification | Formalize provider, service, runtime, traffic, backup, evidence, and observability plugin contracts. |
@@ -75,40 +75,41 @@ Build core resource grammar: Organization, OrganizationUnit, Tenant, Project, Se
 
 Phase 1 documents remain valid as baseline records. They are not the complete Phase 2 scope.
 
-## 7. Phase 2: Reuse-First PaaS Fabric Foundation
+## 7. Phase 2R: Canonical Model PaaS Fabric Foundation
 
 ### Goal
 
-Phase 2 makes Sovrunn excellent at:
+Phase 2R makes Sovrunn excellent at:
 
 ```text
-modeling
-validating
-deciding
-explaining
-auditing
+implementation-neutral modeling
+governance and sovereignty resolution
+deciding and explaining
+auditing with immutable records
 creating adapter boundaries
+qualifying execution targets
+conformance simulation
 ```
 
-Phase 2 must not perform real provider provisioning or real PostgreSQL runtime provisioning.
+Phase 2R must not perform real provider provisioning, real PostgreSQL runtime provisioning, or any external side effects.
 
 ### In Scope
 
 - reuse assessment standard,
 - API/resource standard,
-- decision and audit standard,
-- provider-neutral resource model,
-- ResourcePool and ProviderCapability model,
-- adapter boundaries for mature OSS reuse,
-- policy evaluation abstraction,
-- governance/security/data/cost policy models,
-- ProfileAssignment and EffectivePolicyContext,
-- minimal entitlement/quota placeholder,
-- ServiceRuntimeProfile,
-- PlacementRequest and PlacementDecision v0,
-- plugin taxonomy foundation,
-- AI-readable decision context,
-- Phase 2 integration simulation.
+- decision and audit standard (DecisionRecord with registered profiles),
+- canonical cloud model and alpha migration (seven scope kinds, CloudPlatform, CloudProvider, ExecutionTarget),
+- adapter boundary and ExecutionTarget qualification,
+- policy evaluation abstraction with DecisionRecord linkage,
+- governance, IAM, approval, and exception foundation,
+- sovereignty facts, evidence, and policy foundation,
+- effective governance resolution (EffectiveGovernanceContext),
+- CloudEnrollment, personal onboarding, entitlement, and quota,
+- service product, runtime, and requirement foundation (ServiceTypeDefinition, ServiceOffering, ServicePlan, ServiceRequirementSet),
+- sovereignty and placement decision v0 (DecisionRecord profiles),
+- plugin taxonomy and synthetic execution boundary,
+- AI-readable decision and operation context,
+- Slice 0 integration and conformance demo (VS-000).
 
 ### Out of Scope
 
@@ -121,38 +122,52 @@ Phase 2 must not perform real provider provisioning or real PostgreSQL runtime p
 - full billing,
 - full compliance engine,
 - autonomous AI operations,
-- production-grade plugin sandbox.
+- production-grade plugin sandbox,
+- mandatory capacity scheduling or provider-wide capability truth,
+- native provider objects in customer or core schemas,
+- dual authority between alpha and canonical models.
 
-### Phase 2 Feature Sequence
+### Phase 2R Feature Sequence
+
+#### Completed Features (Implementation History)
 
 | Feature | Name | Purpose |
 |---|---|---|
 | FEATURE-0011 | Reuse Assessment Standard | Force every feature to decide Reuse / Wrap / Extend / Build. |
-| FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Establish Kubernetes-inspired resource conventions, status, conditions, references, validation errors, and API boundary classification. |
-| FEATURE-0013 | Decision Record and AuditEvent Standard | Define common decision, reason, rejected alternative, suggested action, and audit event structure. |
-| FEATURE-0014 | Provider-Neutral Resource Model | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack only, controlled by ADH-2026-018. |
-| FEATURE-0015 | ResourcePool and ProviderCapability Model | Define ResourcePool as placement boundary and ProviderCapability as compatibility boundary. |
-| FEATURE-0016 | Adapter Boundary Foundation | Define adapter interfaces for policy, identity, secrets, operations, observability, events, and repositories. |
-| FEATURE-0017 | Policy Evaluation Abstraction | Define PolicyEvaluationRequest/Result and OPA/Cedar-ready PolicyEngineAdapter. |
-| FEATURE-0018 | GovernanceProfile and SecurityProfile Foundation | Define policy profiles and profile references. |
-| FEATURE-0019 | DataPlacementPolicy and CostGuardrail Minimal Foundation | Define minimal data residency, movement, and cost guardrail inputs. |
-| FEATURE-0020 | ProfileAssignment and EffectivePolicyContext | Resolve effective policy context for Organization, Tenant, Project, and ServiceInstance requests. |
-| FEATURE-0021 | Minimal ServiceEntitlement and Quota Placeholder | Check whether tenant/project may request a ServiceClass/ServicePlan. |
-| FEATURE-0022 | ServiceRuntimeProfile Foundation | Map customer-facing ServicePlan to required runtime capabilities. |
-| FEATURE-0023 | PlacementRequest and PlacementDecision v0 | Match ServiceRuntimeProfile, effective policy, entitlement, and ResourcePool capabilities with explainable results. |
-| FEATURE-0024 | Plugin Taxonomy Foundation | Define provider/substrate, service management, runtime, traffic, backup, observability, security, compliance evidence, and AI-operations plugin types. |
-| FEATURE-0025 | AI-Readable Decision Context | Create structured context for AI explanations without making AI an execution dependency. |
-| FEATURE-0026 | Phase 2 Integration Demo | Demonstrate provider/resource/policy/runtime/placement/audit/explanation simulation. |
+| FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Establish resource conventions, status, conditions, references, validation, and API boundary classification. |
+| FEATURE-0013 | Decision Record and AuditEvent Standard | Define DecisionRecord envelope, DecisionProfile extension, AuditEvent, and scope authority. Controlled by ADH-2026-017. |
+| FEATURE-0014 | Provider-Neutral Resource Model | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack. Alpha model; controlled by ADH-2026-018. |
 
-### Phase 2 Acceptance
+#### Phase 2R Rebaselined Features
 
-- A provider and resource pools can be modeled.
-- Capabilities can be declared with status.
-- Policy profiles can be assigned and resolved into an EffectivePolicyContext.
-- A PostgreSQL ServiceRuntimeProfile can be mapped to required capabilities.
-- PlacementDecision can return ALLOWED or DENIED with structured reasons and alternatives.
-- AuditEvent is created for meaningful decisions.
-- AI-readable DecisionContext can explain allowed/denied placement.
+| Feature | Name | Purpose |
+|---|---|---|
+| FEATURE-0015 | Canonical Cloud Model and Alpha Migration Foundation | Seven-scope migration; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; InfrastructureStack; ExecutionTarget identity; CanonicalMigrationPlan/Record. |
+| FEATURE-0016 | Adapter Boundary and ExecutionTarget Qualification | Core adapter interfaces; normalized target facts; target qualification and availability axes; target-scoped SecretRefs; fake adapter. |
+| FEATURE-0017 | Policy Evaluation Abstraction | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage; deterministic bootstrap fake. |
+| FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | GovernanceProfile; Membership; RoleDefinition; RoleAssignment; PrivilegedAccessRequest; AccessReview; ApprovalPolicy; ApprovalRequest; ExceptionGrant. |
+| FEATURE-0019 | Sovereignty Facts, Evidence and Policy Foundation | SovereigntyProfile; RegulatoryPolicyBundle; SovereigntyFactSet; EvidenceRecord; governed dimension registry. |
+| FEATURE-0020 | Assignment and Effective Governance Resolution | ProfileAssignment; immutable EffectiveGovernanceContext; deterministic inheritance/conflict/exception resolution. |
+| FEATURE-0021 | CloudEnrollment, Personal Onboarding, Entitlement and Quota | CloudEnrollment; Personal Organization; EntitlementPackage; ServiceEntitlement; QuotaPolicy; provider-selection intent. |
+| FEATURE-0022 | Service Product, Runtime and Requirement Foundation | ServicePortfolio; ServiceTypeDefinition; ServiceOffering; ServicePlan migration; ServiceRuntimeProfile; immutable ServiceRequirementSet. |
+| FEATURE-0023 | Sovereignty and Placement Decision v0 | Registered sovereignty/placement DecisionProfiles; authoritative DecisionRecords; candidate-set evaluation; ServicePlacement safe projection. |
+| FEATURE-0024 | Plugin Taxonomy and Synthetic Execution Boundary | Plugin/adapter roles; manifests; compatibility; protected handles; PluginExecution contract; deterministic fake harness. |
+| FEATURE-0025 | AI-Readable Decision and Operation Context | Bounded audience-safe explanation projection from decisions, evidence, operations, and audit. |
+| FEATURE-0026 | Slice 0 Integration and Conformance Demo | Cross-feature orchestration of one synthetic service through fake execution, safe placement, and fake binding; VS-000 conformance. |
+
+### Phase 2R Acceptance
+
+- CloudPlatform, CloudProvider, and ExecutionTarget can be modeled with seven canonical scope kinds.
+- ExecutionTarget qualification produces qualified/denied outcomes through adapter-provided normalized facts.
+- Governance profiles compose into an immutable EffectiveGovernanceContext with non-weakenable controls.
+- Sovereignty is assessed through evidence-backed DecisionRecord profiles; geography alone never proves sovereignty.
+- A ServiceRequirementSet translates customer-facing ServicePlan into placement requirements.
+- Placement DecisionRecord selects, denies, or marks targets as requires-approval with exact evidence/policy versions.
+- ServicePlacement is a safe customer projection with no topology or credential leakage.
+- ServiceBinding is per-consumer, SecretRef-only, separately revocable.
+- AuditEvent is created for meaningful decisions with correlated DecisionRecords.
+- AI-readable context explains authorized facts but cannot decide, approve, or execute.
+- VS-000 definition of done and conformance matrix pass.
 - Every feature includes a Reuse Assessment.
 
 ## 8. Phase 3: First Executable PaaS Plugin Chain
@@ -277,7 +292,7 @@ FEATURE-0058 Cross-Location Placement Simulation
 ```text
 FEATURE-0059 AutoscalingPolicy Foundation
 FEATURE-0060 CapacityPolicy and CapacityClass
-FEATURE-0061 ResourcePool Capacity Model
+FEATURE-0061 Capacity Model (future; ExecutionTarget-based after Phase 2R revalidation)
 FEATURE-0062 CostEstimate Foundation
 FEATURE-0063 CostGuardrail v1
 FEATURE-0064 ScalingDecision Foundation
@@ -332,7 +347,7 @@ FEATURE-0095 Multi-Service Lifecycle Validation
 ### Phase 11: SDE as Managed Service
 
 ```text
-FEATURE-0096 SDE ServiceClass
+FEATURE-0096 SDE ServiceTypeDefinition and ServiceOffering
 FEATURE-0097 SDE ServiceRuntimeProfile
 FEATURE-0098 PostgreSQL Wire Gateway Service Plugin
 FEATURE-0099 Metadata Store Integration

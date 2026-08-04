@@ -1,0 +1,13 @@
+version: "2"
+
+linters:
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # Preserve the repository's established lint baseline across
+        # golangci-lint v2, which newly includes these stylecheck rules here.
+        # Historical Go code is unchanged by ADH-2026-042.
+        - -ST1000
+        - -ST1005
+        - -ST1022

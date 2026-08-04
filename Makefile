@@ -246,9 +246,15 @@ ff-feature-0012-flow-self-test:
 	./scripts/feature-0012-flow.py --feature FEATURE-0012 --self-test
 
 
-.PHONY: ff-feature-0013-plan ff-feature-0013-flow
+.PHONY: ff-feature-0013-plan ff-feature-0013-flow vs000-contract-check phase2r-drift-check
 ff-feature-0013-plan:
 	./scripts/feature-0013-flow.py --plan
 
 ff-feature-0013-flow:
 	./scripts/feature-0013-flow.py --human-approved-for-cursor --start-task "$${START_TASK:-}" --stop-after "$${STOP_AFTER:-}" --max-tasks "$${MAX_TASKS:-0}" $${FEATURE_FACTORY_PUSH:+--push}
+
+vs000-contract-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/vs000-contract-check.py
+
+phase2r-drift-check:
+	./scripts/phase2r-drift-check.sh

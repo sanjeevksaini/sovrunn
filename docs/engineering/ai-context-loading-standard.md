@@ -134,15 +134,17 @@ When files conflict, use this order:
 ```text
 1. AGENTS.md
 2. docs/foundation/constitution.md
-3. docs/decisions/DECISION_INDEX.md
-4. docs/glossary.md
-5. docs/features/FEATURE_SEQUENCE.md
-6. docs/resource-specs/RESOURCE_MODEL_PHASE1.md
-7. docs/api/API_CONTRACT_PHASE1.md
-8. current feature file
-9. relevant engineering or architecture standard
-10. role-specific Kiro/Cursor/ChatGPT prompt files
-11. reference RFCs and historical docs
+3. docs/architecture/canonical/sovrunn-finalized-data-model.md (Phase 2R)
+4. docs/decisions/DECISION_INDEX.md
+5. docs/glossary.md
+6. docs/features/FEATURE_SEQUENCE.md
+7. docs/phase2/PHASE2_FEATURE_SEQUENCE.md (Phase 2R)
+8. docs/resource-specs/RESOURCE_MODEL_PHASE1.md
+9. docs/api/API_CONTRACT_PHASE1.md
+10. current feature file
+11. relevant engineering or architecture standard
+12. role-specific Kiro/Cursor/ChatGPT prompt files
+13. reference RFCs and historical docs
 ```
 
 Archived documents are not source of truth unless explicitly reactivated.
@@ -218,6 +220,12 @@ If file-local metadata differs from this table, this table wins.
 | `docs/architecture/platform-core.md` | `reference` | platform architecture | Platform core architecture |
 | `docs/architecture/organization-governance.md` | `reference` | governance architecture | Organization governance architecture |
 | `docs/architecture/development-phases.md` | `role-kiro` | roadmap | Development phase planning |
+| `docs/architecture/canonical/sovrunn-finalized-data-model.md` | `always` (Phase 2R) | canonical model | Canonical semantic model for Phase 2R+ |
+| `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` | `always` (Phase 2R) | contract catalog | Contract classification and ownership |
+| `docs/architecture/reference-flows/postgresql-end-to-end.md` | `reference` | reference flow | PostgreSQL MVP end-to-end flow |
+| `docs/architecture/vertical-slices/VS-000-core-skeleton.md` | `reference` | acceptance charter | Cross-feature acceptance for Phase 2R |
+| `docs/phase2/PHASE2R_REBASELINE.md` | `always` (Phase 2R) | phase rebaseline | Phase 2R feature authority |
+| `docs/architecture/provider-neutral-resource-model.md` | `archive` | alpha history | FEATURE-0014 alpha model; canonical model supersedes |
 | `docs/architecture/gitops-desired-state-model.md` | `reference` | GitOps architecture | Desired-state/GitOps model |
 | `docs/engineering/ai-controlled-development.md` | `reference` | AI development model | AI-assisted development operating model |
 | `docs/engineering/context-engineering-standard.md` | `reference` | context principle | High-level context engineering principle |
@@ -267,6 +275,35 @@ They define context-selection behavior.
 ```
 
 Do not add files to ALWAYS casually. The always-load set must stay small.
+
+## 8.1 Phase 2R Canonical Context (Load When Working on Phase 2R Features)
+
+When the current task involves Phase 2R features (FEATURE-0015 onward), also load:
+
+```text
+docs/architecture/canonical/sovrunn-finalized-data-model.md
+docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md
+docs/phase2/PHASE2R_REBASELINE.md
+docs/phase2/PHASE2_SCOPE.md
+docs/phase2/PHASE2_FEATURE_SEQUENCE.md
+docs/architecture/vertical-slices/VS-000-core-skeleton.md
+docs/architecture/reference-flows/postgresql-end-to-end.md
+docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md
+```
+
+Why these are loaded for Phase 2R:
+
+```text
+They define the canonical semantic model.
+They define the contract catalog and boundary ownership.
+They define the Phase 2R feature sequence and dependencies.
+They define the cross-feature acceptance charter.
+They define the PostgreSQL reference flow for MVP context.
+They define the controlling adoption handoff and its acceptance criteria.
+They prevent stale ResourcePool/ProviderCapability/ServiceClass/EffectivePolicyContext usage.
+```
+
+Do not load these for Phase 1 historical work or for tasks unrelated to Phase 2R+.
 
 ## 9. GO_IMPLEMENTATION Loading Set
 

@@ -1,71 +1,66 @@
 # Current Phase Context
 
-Current active phase: Phase 2.
+Current active phase: Phase 2R.
 
-Architecture baseline: `ARCH-2026.07-PHASE2-START`.
+Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`.
 
-FEATURE-0013 status: implemented and merged through PR #15 on 2026-07-29. ADH-2026-017 remains the approved single replacement architecture handoff; ADH-2026-014/015/016 are historical provenance and not downstream inputs.
+Controlling adoption: `ADH-2026-042`, `ACR-2026-001`, `ARCH-APPROVAL-2026-004`.
 
-FEATURE-0014 status: implemented and merged through PR #16 as commit `1ed47ac` on 2026-07-30. ADH-2026-018 remains controlling, with the geographic-descriptor clarification in ADH-2026-019.
+## Phase 2R Goal
 
-## Phase 2 Goal
+Establish the canonical, implementation-neutral PaaS fabric foundation with seven-scope governance, qualified ExecutionTarget placement, sovereign evidence-backed decisions, and VS-000 cross-feature conformance — without real provider execution.
 
-Establish the reuse-first, provider-neutral PaaS fabric foundation required before executable plugin-chain development.
+## Phase 2R Build Scope
 
-## Phase 2 Build Scope
+- Canonical cloud model and alpha migration foundation (seven scopes, CloudPlatform, CloudProvider, ExecutionTarget)
+- Adapter boundary and ExecutionTarget qualification
+- Policy evaluation abstraction with DecisionRecord linkage
+- Governance, IAM, approval, and exception foundation
+- Sovereignty facts, evidence, and policy foundation
+- Assignment and effective governance resolution (EffectiveGovernanceContext)
+- CloudEnrollment, personal onboarding, entitlement, and quota
+- Service product, runtime, and requirement foundation (ServiceTypeDefinition, ServiceOffering, ServicePlan, ServiceRequirementSet)
+- Sovereignty and placement decision v0 (DecisionRecord profiles)
+- Plugin taxonomy and synthetic execution boundary
+- AI-readable decision and operation context
+- Slice 0 integration and conformance demo (VS-000)
 
-- Reuse assessment standard
-- API/resource standard
-- Decision and AuditEvent standard (DecisionRecord envelope, FEATURE-0012 six-scope governance vocabulary, ServiceInstance as typed subject, AuditEvent via metadata.scopeRef)
-- Provider-neutral resource model
-- ResourcePool and ProviderCapability model
-- Adapter boundary foundation
-- Policy evaluation abstraction
-- GovernanceProfile and SecurityProfile foundation
-- DataPlacementPolicy and CostGuardrail minimal foundation
-- ProfileAssignment and EffectivePolicyContext
-- Minimal ServiceEntitlement and quota placeholder
-- ServiceRuntimeProfile foundation
-- PlacementRequest and PlacementDecision v0
-- Plugin taxonomy foundation
-- AI-readable decision context
-- Phase 2 integration demo
-
-## Phase 2 Completed Features
+## Phase 2R Completed Features
 
 | Feature | Status | Approval |
 |---|---|---|
 | FEATURE-0011 Reuse Assessment Standard | Merged | Complete |
-| FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Implemented and merged through PR #14 as commit `a1b74fb` into `phase2-reuse-first-paas-fabric-foundation` | Final human approval 2026-07-24 |
-| FEATURE-0013 Decision Record and AuditEvent Standard | Implemented and merged through PR #15 into `phase2-reuse-first-paas-fabric-foundation` | Final human/Codex review 2026-07-29 |
-| FEATURE-0014 Provider-Neutral Resource Model | Implemented and merged through PR #16 as commit `1ed47ac` into `phase2-reuse-first-paas-fabric-foundation` | Final feature gate passed 2026-07-30 |
+| FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Merged through PR #14 | Final human approval 2026-07-24 |
+| FEATURE-0013 Decision Record and AuditEvent Standard | Merged through PR #15 | Final review 2026-07-29 |
+| FEATURE-0014 Provider-Neutral Resource Model | Merged through PR #16 | Final feature gate 2026-07-30 |
 
-## Phase 2 Next Planned Feature
+## Phase 2R Next Planned Feature
 
-| Feature | Status | Controlling handoff |
+| Feature | Status | Controlling decisions |
 |---|---|---|
-| FEATURE-0015 ResourcePool and ProviderCapability Model | Architecture not started | Pending architecture decision handoff |
+| FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0058; ADH-2026-020/024/025/037/041 |
 
+## Phase 2R Feature Sequence
 
-## FEATURE-0014 Merged Architecture Boundary
+See `docs/phase2/PHASE2_FEATURE_SEQUENCE.md` for the canonical order.
 
-Later features consume FEATURE-0014 through its approved architecture, merged contracts, and this focused dependency boundary:
+## FEATURE-0014 Completed Architecture Boundary
 
-- FEATURE-0011 controls the mandatory reuse-assessment format and reuse-before-build gate.
-- FEATURE-0012 controls API/resource grammar, metadata, references, status, validation shape, Problem Details envelope, and the six-value `ScopeKind` vocabulary.
-- FEATURE-0013 controls `DecisionRecord`, `DecisionProfile`, `EvaluationResult`, `AuditEvent`, `metadata.scopeRef` as sole scope authority, and the rule that `ServiceInstance` is a typed subject, not a `ScopeKind`.
-- FEATURE-0014 owns only provider-neutral substrate resources: Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack.
-- FEATURE-0014 must not own `ResourcePool` or `ProviderCapability`; those belong to FEATURE-0015.
-- FEATURE-0014 must not define adapter interfaces; those belong to FEATURE-0016.
-- FEATURE-0014 must not introduce provider-specific runtime provisioning, plugin execution, placement decisions, policy evaluation, or new decision/audit envelopes.
-- FEATURE-0014 is `NOT_APPLICABLE` under the FEATURE-0013 adoption contract and must not invent decision, audit, or operation behavior.
-- Physical containment implies neither network connectivity nor isolation; explicit connectivity remains outside FEATURE-0014.
+FEATURE-0014 remains completed history. Its alpha model resources (Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, InfrastructureStack) are implementation artifacts that migrate through the canonical cutover (DEC-0058). The active canonical model uses CloudPlatform, CloudProvider, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, and ExecutionTarget.
 
-## Phase 2 Exit Criteria
+Later features consume FEATURE-0014 through its completed contracts:
 
-- All Phase 2 features pass feature gate.
-- Placement simulation demonstrates explainable allowed/denied outcomes.
-- AuditEvent records are produced for required decisions.
-- Adapter boundaries are present before real integrations.
-- Architecture drift review is approved.
-- Phase 3 readiness review is complete.
+- FEATURE-0011 controls reuse-assessment format and reuse-before-build gate.
+- FEATURE-0012 controls API/resource grammar, seven-scope ScopeKind vocabulary (DEC-0037), typed references, status/validation shape, and Problem Details envelope.
+- FEATURE-0013 controls DecisionRecord, DecisionProfile, EvaluationResult, AuditEvent, metadata.scopeRef as sole scope authority, and ServiceInstance as typed subject.
+- FEATURE-0014 implementation history owns the alpha Provider/ProviderLocation/ProviderDatacenter/DatacenterFailureDomain/InfrastructureStack. These migrate per DEC-0037/DEC-0041/DEC-0058.
+
+## Phase 2R Exit Criteria
+
+- All Phase 2R features pass feature gate.
+- VS-000 definition of done and conformance matrix pass.
+- Sovereignty and placement simulation demonstrates selected, denied, requires-approval, and indeterminate outcomes.
+- DecisionRecord and AuditEvent semantics remain owned by FEATURE-0013.
+- Customer contracts contain no provider-native objects, raw secrets, or protected handles.
+- No active desired-state API supports old and canonical kinds/scopes simultaneously.
+- Phase 3 readiness review approves replacement of fake execution with one real PostgreSQL path.
