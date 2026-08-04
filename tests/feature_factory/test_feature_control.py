@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 import sys
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 
@@ -211,6 +212,32 @@ class ScriptSafetyTests(unittest.TestCase):
         reviewer = source.index("review-and-route-stage.sh", semantic)
         self.assertLess(semantic, reviewer)
         self.assertIn("${stage}.revision-count", source)
+
+    def test_reviewer_discovery_supports_desktop_bundled_codex(self):
+        common = (ROOT / "scripts/common.sh").read_text()
+        reviewer = (ROOT / "scripts/reviewer-codex.sh").read_text()
+        self.assertIn("/Applications/ChatGPT.app/Contents/Resources/codex", common)
+        self.assertIn('CODEX_REVIEWER_BIN="$(resolve_codex_bin)"', common)
+        self.assertIn('CODEX_BIN="$(resolve_codex_bin || true)"', reviewer)
+
+    def test_reviewer_discovery_honors_explicit_executable(self):
+        with tempfile.TemporaryDirectory() as raw:
+            fake = Path(raw) / "codex"
+            fake.write_text("#!/bin/sh\nexit 0\n")
+            fake.chmod(0o755)
+            completed = subprocess.run(
+                [
+                    "/opt/homebrew/bin/bash",
+                    "-c",
+                    'source scripts/common.sh; resolve_codex_bin',
+                ],
+                cwd=ROOT,
+                env={"PATH": "/usr/bin:/bin", "CODEX_REVIEWER_BIN": str(fake)},
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.stdout.strip(), str(fake))
 
 
 class KiroSemanticGuardrailTests(unittest.TestCase):

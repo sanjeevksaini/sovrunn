@@ -23,12 +23,9 @@ cd "$(repo_root)"
 SCHEMA=".automation/schemas/reviewer-response.schema.json"
 [[ -f "$SCHEMA" ]] || fail "reviewer response schema does not exist: $SCHEMA"
 
-CODEX_BIN="${CODEX_REVIEWER_BIN:-}"
-if [[ -z "$CODEX_BIN" ]]; then
-  CODEX_BIN="$(command -v codex || true)"
-fi
+CODEX_BIN="$(resolve_codex_bin || true)"
 [[ -n "$CODEX_BIN" && -x "$CODEX_BIN" ]] || \
-  fail "Codex CLI is unavailable; install/sign in to Codex or configure FEATURE_FACTORY_REVIEWER_CMD"
+  fail "Codex CLI is unavailable; install/sign in to Codex CLI/Desktop or configure FEATURE_FACTORY_REVIEWER_CMD"
 
 mkdir -p "$(dirname "$OUT")" "$(dirname "$RAW_OUT")"
 TMP_OUT="$(mktemp "${TMPDIR:-/tmp}/sovrunn-codex-review.XXXXXX")"
