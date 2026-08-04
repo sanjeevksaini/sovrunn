@@ -193,6 +193,13 @@ class ScriptSafetyTests(unittest.TestCase):
         self.assertIn("stop_for_gate executable_plan", source)
         self.assertIn("stop_for_gate final", source)
 
+    def test_spec_flow_applies_pending_revision_before_review(self):
+        source = (ROOT / "scripts/spec-flow.sh").read_text()
+        pending = source.index('if [[ "$pending_status" == "${stage}_revision_required" ]]')
+        review_loop = source.index("while true; do", pending)
+        self.assertLess(pending, review_loop)
+        self.assertIn("generic-kiro-boundary-check.py", source[pending - 4000 : review_loop])
+
 
 class TaskBatchTests(unittest.TestCase):
     def test_run_all_preserves_manifest_sized_batches(self):

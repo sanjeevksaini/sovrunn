@@ -110,6 +110,11 @@ run_kiro_prompt_file() {
   fi
 
   info "Running Kiro CLI headlessly for $FEATURE $stage revision"
+  if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
+    PYTHONDONTWRITEBYTECODE=1 python3 \
+      ./scripts/generic-kiro-boundary-check.py \
+      --feature "$FEATURE" --stage "$stage" --mode pre
+  fi
   KIRO_INVOCATIONS=$((KIRO_INVOCATIONS + 1))
   set +e
   "$KIRO_BIN" "${args[@]}" "$prompt_text" 2>&1 | tee "$log_file"
@@ -119,8 +124,12 @@ run_kiro_prompt_file() {
   if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
     ./scripts/receipt-check.py --log "$log_file" --kind stage || \
       fail "Kiro revision did not produce exactly one COMPLETE receipt. See $log_file"
+    PYTHONDONTWRITEBYTECODE=1 python3 \
+      ./scripts/generic-kiro-boundary-check.py \
+      --feature "$FEATURE" --stage "$stage" --mode post
   fi
   [[ -f "$expected_doc" ]] || fail "missing expected Kiro output after revision: $expected_doc"
+  ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_generated" >/dev/null
 }
 
 run_stage() {
@@ -133,6 +142,20 @@ run_stage() {
     ./scripts/kiro-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$KIRO_MODE"
   fi
   [[ -f "$file_target" ]] || fail "missing expected Kiro output: $file_target"
+
+  local pending_status
+  pending_status="$(python3 - "$FEATURE" <<'PY'
+import json, sys
+from pathlib import Path
+print(json.loads(Path(f'.automation/state/{sys.argv[1]}.json').read_text()).get('status', ''))
+PY
+)"
+  if [[ "$pending_status" == "${stage}_revision_required" ]]; then
+    local pending_prompt=".automation/generated-prompts/$FEATURE/${stage}.revision.prompt.md"
+    [[ -f "$pending_prompt" ]] || fail "missing pending revision prompt: $pending_prompt"
+    info "Resume mode: applying pending $stage revision before re-review"
+    run_kiro_prompt_file "$stage" "$pending_prompt" "$file_target"
+  fi
 
   while true; do
     set +e
