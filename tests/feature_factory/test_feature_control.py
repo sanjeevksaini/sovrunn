@@ -67,6 +67,40 @@ class FeatureControlTests(unittest.TestCase):
         self.assertIn("ARCHITECTURE_DECISION_REQUIRED", prompt)
         self.assertIn("modify only", prompt)
 
+    def test_review_context_includes_only_existing_stage_predecessors(self):
+        spec = self.data["feature"]["spec_path"]
+        requirements = f"{spec}/requirements.md"
+        design = f"{spec}/design.md"
+        tasks = f"{spec}/tasks.md"
+
+        requirements_review = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(self.data, "review", review_stage="requirements")
+        }
+        self.assertNotIn(requirements, requirements_review)
+        self.assertNotIn(design, requirements_review)
+        self.assertNotIn(tasks, requirements_review)
+
+        design_review = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(self.data, "review", review_stage="design")
+        }
+        self.assertIn(requirements, design_review)
+        self.assertNotIn(design, design_review)
+        self.assertNotIn(tasks, design_review)
+
+        tasks_review = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(self.data, "review", review_stage="tasks")
+        }
+        self.assertIn(requirements, tasks_review)
+        self.assertIn(design, tasks_review)
+        self.assertNotIn(tasks, tasks_review)
+
+    def test_review_context_requires_explicit_review_stage(self):
+        with self.assertRaisesRegex(control.ControlError, "review context requires"):
+            control.resolve_context(self.data, "review")
+
     def test_closeout_is_never_allowed_to_commit_or_push(self):
         self.assertEqual(self.data["closeout"]["mode"], "prepare_only")
         self.assertIs(self.data["closeout"]["commit"], False)
