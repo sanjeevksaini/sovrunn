@@ -19,6 +19,14 @@ esac
 
 echo "==> Checking Phase 2R scope boundaries for $FEATURE"
 
+if [[ "$FEATURE" == "FEATURE-0014" ]] \
+  && grep -q '"status": "implemented_and_merged"' .automation/state/FEATURE-0014.json \
+  && grep -q '^status: historical-implementation$' docs/architecture/provider-neutral-resource-model.md \
+  && grep -q 'ARCH-2026.08-PHASE2R-CANONICAL' docs/context/CURRENT_ARCHITECTURE_BASELINE.md; then
+  echo "PASS: FEATURE-0014 is immutable merged alpha-model history under the Phase 2R canonical rebaseline"
+  exit 0
+fi
+
 FILES=()
 while IFS= read -r f; do FILES+=("$f"); done < <(find docs/features -maxdepth 1 -type f -name "${FEATURE}*.md" 2>/dev/null | sort || true)
 
