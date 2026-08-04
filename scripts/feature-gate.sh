@@ -320,6 +320,11 @@ else
     echo "INFO: FEATURE-0011 governance-only — skipping runtime Architecture Drift/Observability/Security heading checks"
     require_contains "$DESIGN_PATH" "Non-goals" "Non-goals"
     require_contains "$DESIGN_PATH" "ADH-2026-011" "Controlling ADH reference"
+  elif [[ "$FEATURE" == "FEATURE-0014" ]]; then
+    require_contains "$DESIGN_PATH" "architecture-drift" "Architecture Drift Checks (approved FEATURE-0014 legacy wording)"
+    require_contains "$DESIGN_PATH" "observable outcomes" "Observability (approved FEATURE-0014 legacy wording)"
+    require_contains "$DESIGN_PATH" "Security" "Security"
+    require_contains "$DESIGN_PATH" "Non-goals" "Non-goals"
   else
     require_contains "$DESIGN_PATH" "Architecture Drift" "Architecture Drift Checks"
     require_contains "$DESIGN_PATH" "Observability" "Observability"
