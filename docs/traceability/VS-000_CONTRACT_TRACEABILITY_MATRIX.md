@@ -198,6 +198,7 @@
 | VS0-CF-F15-08 | Signed-backup and restore-verification guard | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-061, VS0-STATE-011 |
 | VS0-CF-F15-09 | Participation activation denial without both delegations | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-10 | Migration writer separation | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-WRITER-020,021 |
+| VS0-CF-F15-11 | Scope reference UID mismatch | FEATURE-0015 | feature | DEC-0037/0054; ADH-2026-042/043 | VS0-SCHEMA-008,010 |
 | VS0-CF-MIG01 | Migration dry-run determinism with signed backup and verified restore | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-060,061, VS0-STATE-011, VS0-WRITER-020,021 |
 | VS0-CF-MIG02 | Migration record immutability | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-061, VS0-STATE-010, VS0-WRITER-020 |
 | VS0-CF-MIGF01 | Invalid migration milestone | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F01, VS0-STATE-011 |
@@ -233,7 +234,7 @@
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..10, VS0-CF-MIG01..MIG02, VS0-CF-MIGF01..MIGF03) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local and migration conformance cases.
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..11, VS0-CF-MIG01..MIG02, VS0-CF-MIGF01..MIGF03) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local and migration conformance cases.
 
 ---
 

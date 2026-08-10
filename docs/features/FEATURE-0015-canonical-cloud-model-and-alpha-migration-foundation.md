@@ -10,7 +10,7 @@
 | Depended On By | FEATURE-0016, FEATURE-0021, FEATURE-0022 |
 | Architecture Boundary | docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0058 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, ADH-2026-042 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, ADH-2026-042, ADH-2026-043 |
 
 ---
 
@@ -39,6 +39,8 @@ Establish the seven-scope canonical cloud model identity layer and one-way alpha
 | REQ-F15-11 | Writer enforcement: only cloud-provider-admin may write topology spec; only cloud-platform-admin may write CloudPlatform spec | DEC-0037 | VS0-WRITER-002,003 |
 | REQ-F15-12 | Existing FEATURE-0012 Problem Details codes used for all errors; no new top-level codes | — | VS0-SCHEMA-004 |
 | REQ-F15-13 | Separate migration authorities: approved-migration-plan-publisher alone persists signed CanonicalMigrationPlan; migration-controller alone appends CanonicalMigrationRecord under that approved plan | DEC-0058; ADH-041 | VS0-WRITER-020,021 |
+| REQ-F15-14 | Scope reference UID invariants: CloudPlatform `spec.ownerOrganizationRef.uid` must equal its Organization `metadata.scopeRef.uid`; CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. Mismatch returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH | DEC-0037,0054; ADH-043 | VS0-SCHEMA-008,010, VS0-CF-F15-11 |
+| REQ-F15-15 | Audit evidence: participation lifecycle changes, migration plan publication, each migration milestone, migration cutover decision, and safe-denial/security denials produce AuditEvent (reusing FEATURE-0013) with intentional correlation fields, safe projection/redaction, and no secrets | DEC-0058; ADH-043 | VS0-SCHEMA-007 |
 
 ### 2.2 DESIGN-Delegated Mechanics
 
@@ -93,12 +95,16 @@ These fields appear in the shared Slice 0 registry only so FEATURE-0015 can prov
 | AC-F15-09 | All errors use FEATURE-0012 Problem Details with existing codes | — |
 | AC-F15-10 | Invalid milestone order, dual authority and unresolved migrated references fail closed with exact registered codes/violations and no cutover side effects | VS0-CF-MIGF01..MIGF03 |
 | AC-F15-11 | Migration controller cannot create or mutate CanonicalMigrationPlan; plan publisher cannot append CanonicalMigrationRecord; plan mutation is rejected | VS0-CF-MIG01,MIG02,VS0-CF-F15-07,VS0-CF-F15-10 |
+| AC-F15-12 | Scope reference UID invariant enforced: ownerOrganizationRef UID equals scopeRef UID for CloudPlatform; cloudPlatformRef UID equals scopeRef UID for CloudProviderParticipation; mismatch rejected with VS0_SCOPE_REFERENCE_MISMATCH | VS0-CF-F15-11 |
+| AC-F15-13 | Participation lifecycle, plan publication, migration milestones, cutover decision, and security denials produce correlated, redacted AuditEvent with no secrets | — |
 
 ---
 
 ## 4. Migration Milestone Sequence (VS0-STATE-011)
 
 VS0-STATE-011 represents the **CanonicalMigrationRecord append-only milestone sequence**. The CanonicalMigrationPlan itself is a signed immutable record (FINAL per VS0-STATE-010). Migration progress is proven by appending successive FINAL CanonicalMigrationRecord instances, each linked to the plan and its predecessor record.
+
+**Draft representation:** `Draft` is pre-persistence preparation of a migration plan. The signed immutable plan precedes the persisted CanonicalMigrationRecord sequence, which begins at stage 1 (`InventoryValidated`) and ends at stage 9 (`Completed`). Draft is not a persisted record state.
 
 **Milestones** (each is a new FINAL CanonicalMigrationRecord appended to the chain):
 
@@ -124,7 +130,7 @@ InventoryValidated
 
 **Guards:** Each milestone record may only be appended if the preceding milestone record (by stage ordinal) exists and is FINAL for the same plan. `InventoryValidated` requires zero unclassified alpha records. `DryRunPassed` requires zero transform errors. `WriteFrozen` requires zero active legacy writers. `BackupVerified` requires both `record.signedBackupEvidenceRef` and `record.restoreVerificationEvidenceRef`; each is an opaque, externally verifiable evidence reference, and no cryptographic algorithm is selected by this feature. Missing either is rejected with VALIDATION_FAILED/422 and `VS0_MIGRATION_BACKUP_RESTORE_UNVERIFIED`. Invalid milestone order is rejected with CONFLICT/409 and `VS0_MIGRATION_STATE_INVALID`.
 
-**Immutability:** Neither the plan nor any prior record mutates. Progress is proven exclusively by new append-only records. Corrections create linked records with a supersession reference, never mutation.
+**Immutability:** Neither the plan nor any prior record mutates. Progress is proven exclusively by new append-only records. A CanonicalMigrationRecord has no direct correction or supersession link; a correction requires a superseding CanonicalMigrationPlan and a new linked migration run. Retained prior records are never altered or re-ordered.
 
 ---
 
@@ -150,6 +156,55 @@ InventoryValidated
 | Unresolved canonical reference after transform | VALIDATION_FAILED | 422 | VS0_MIGRATION_UNRESOLVED_REF |
 | Invalid reference chain | VALIDATION_FAILED | 422 | — |
 | Stale resourceVersion | STALE_RESOURCE_VERSION | 412 | — |
+| Scope reference UID mismatch (ownerOrganizationRef or cloudPlatformRef UID ≠ scopeRef UID) | VALIDATION_FAILED | 422 | VS0_SCOPE_REFERENCE_MISMATCH |
+
+---
+
+## 5.1. Migration Correction Model (ADH-2026-043 Decision 1)
+
+A CanonicalMigrationRecord is immutable evidence with no direct correction or supersession link. Correcting a migration requires:
+1. Publishing a new superseding CanonicalMigrationPlan that links to (but does not mutate) the previous plan.
+2. Executing a new linked migration run that appends its own CanonicalMigrationRecord milestone sequence.
+3. Prior records from the superseded plan are retained immutably and are never altered or re-ordered.
+
+No `correctionRef` or `supersessionRef` field exists on CanonicalMigrationRecord. The strict 1..9 milestone ordering within a single plan run is inviolable.
+
+## 5.2. Draft Representation (ADH-2026-043 Decision 2)
+
+`Draft` is pre-persistence plan preparation. It is not a CanonicalMigrationRecord milestone and not a persisted record state. The signed immutable CanonicalMigrationPlan is FINAL on persistence (VS0-STATE-010). The persisted append-only evidence sequence (VS0-STATE-011) begins at `InventoryValidated` (stage 1) and ends at `Completed` (stage 9).
+
+## 5.3. Migration Inventory and Feature Boundary (ADH-2026-043 Decision 3)
+
+FEATURE-0015 owns the signed global inventory/classification plan and executes provider/topology migration only. For every alpha record family:
+
+| Alpha Family | F0015 Action |
+|---|---|
+| Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, InfrastructureStack | Classifies in signed plan; transforms to canonical representations in dry-run |
+| ServiceClass, ServicePlan (catalog domain) | Classifies in signed plan; defers transform to FEATURE-0022 |
+| CloudEnrollment (enrollment domain) | Classifies in signed plan; defers transform to FEATURE-0021 |
+| GovernanceProfile, PolicyAssignment (governance domain) | Classifies in signed plan; defers transform to FEATURE-0020 |
+| DecisionRecord, AuditEvent (decision/audit domain) | Classifies in signed plan; defers transform to owning features |
+| Placement/execution (placement domain) | Classifies in signed plan; defers transform to FEATURE-0023/0024 |
+
+Later domain owners execute catalog, enrollment, governance, placement, plugin, and related transforms under the signed plan. FEATURE-0015 cannot claim global cutover completion; final all-domain cutover/conformance is FEATURE-0026 integration evidence.
+
+## 5.4. Audit Evidence Contract (ADH-2026-043 Decision 6)
+
+FEATURE-0015 reuses FEATURE-0013 AuditEvent. The following events produce audit evidence:
+
+| Event | Correlation | Projection/Redaction |
+|---|---|---|
+| CloudProviderParticipation lifecycle change (state transition) | participationRef UID, requestId | Safe: no provider credentials or protected handles |
+| CanonicalMigrationPlan publication (signed plan) | planRef UID, requestId, publisherPrincipalRef | Safe: classification mappings visible; no secrets |
+| Each CanonicalMigrationRecord milestone | planRef UID, recordRef UID, milestone, requestId | Safe: milestone evidence only |
+| Migration cutover decision (CutoverActivated) | planRef UID, decisionRef UID, requestId | Safe: outcome and rationale only |
+| Safe-denial/security denials (403, 404 safe denial) | requestId, subjectRef (if disclosable) | Redacted: no target existence disclosure |
+
+Rules:
+- No secrets in any audit path.
+- Correlation fields enable trace reconstruction (requestId, resource UID, plan UID).
+- Safe projection: customer-facing audit projections omit Internal and Provider-confidential data.
+- This contract does not import FEATURE-0026's integration-only trace conformance (VS0-CF-T01).
 
 ---
 

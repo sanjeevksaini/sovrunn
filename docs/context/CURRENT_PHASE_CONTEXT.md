@@ -38,7 +38,7 @@ Establish the canonical, implementation-neutral PaaS fabric foundation with seve
 
 | Feature | Status | Controlling decisions |
 |---|---|---|
-| FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0058; ADH-2026-020/024/025/037/041 |
+| FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0058; ADH-2026-020/024/025/037/041/043 |
 
 ## Phase 2R Feature Sequence
 

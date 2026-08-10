@@ -142,6 +142,8 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
 ### Safety Rules
 
 - Error responses must not confirm existence of resources the caller cannot access (safe denial).
+- An inaccessible cross-provider reference returns RESOURCE_NOT_FOUND (404) with violation VS0_AUTHORIZATION_SAFE_DENIAL and no existence disclosure. An authorized but structurally invalid same-provider reference returns VALIDATION_FAILED (422). VS0-CF-X03 records the safe-denial violation exactly.
+- CloudPlatform `spec.ownerOrganizationRef.uid` must equal its Organization `metadata.scopeRef.uid`; CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. A mismatch returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH.
 - No error `detail` or `title` string is parsed programmatically by clients; codes and types are the contract.
 
 ---
@@ -162,7 +164,7 @@ Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` own
 | `VS0-CF-T01` | Correlation | Request, decisions, plan, operation, executions and audit form one complete trace graph. |
 | `VS0-CF-I01..I02` | Idempotency and races | Same payload converges; different payload conflicts; one quota/operation wins. |
 | `VS0-CF-D01` | Deletion ordering | Binding revocation precedes cleanup, quota release and instance finalization. |
-| `VS0-CF-F15-01..F15-10` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation acceptance and uniqueness, writer denial and separation, plan immutability, and signed-backup/verified-restore gating. |
+| `VS0-CF-F15-01..F15-11` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation acceptance and uniqueness, writer denial and separation, plan immutability, signed-backup/verified-restore gating, and scope reference UID invariants. |
 | `VS0-CF-MIG01..MIG02` | Migration positive evidence | Signed plan, signed backup evidence, verified restore evidence, and append-only records deterministically reach the `Completed` milestone without dual authority. |
 | `VS0-CF-MIGF01..MIGF03` | Migration failure evidence | Invalid milestone order, dual authority and unresolved references fail with their registered Problem/violation mapping and zero cutover side effects. |
 

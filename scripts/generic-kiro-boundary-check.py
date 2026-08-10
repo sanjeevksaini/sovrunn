@@ -57,6 +57,12 @@ def main() -> None:
         ]
         if state.get("architecture_approval_token") != "APPROVED_ARCHITECTURE" or state.get("architecture_approved_sha256") != combined_digest(architecture_paths):
             raise SystemExit("FAIL: current architecture package lacks explicit human approval")
+        if args.feature == "FEATURE-0015" and args.mode == "pre":
+            subprocess.run(
+                [str(ROOT / "scripts/feature-0015-architecture-readiness-check.py"), "--mode", "readiness"],
+                cwd=ROOT,
+                check=True,
+            )
     elif args.stage == "design":
         requirements = spec / "requirements.md"
         if state.get("requirements_approval_token") != "APPROVED_FOR_DESIGN" or not requirements.is_file() or state.get("requirements_approved_sha256") != sha256(requirements):

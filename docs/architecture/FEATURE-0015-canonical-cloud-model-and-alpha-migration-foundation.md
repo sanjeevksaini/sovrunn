@@ -5,7 +5,7 @@
 | Status | Approved boundary (correction under ADH-2026-042) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0058 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, consolidated ADH-2026-042 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, consolidated ADH-2026-042, ADH-2026-043 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model) |
 
@@ -131,10 +131,53 @@ FEATURE-0015 does NOT introduce, store, validate, default, or reference `provide
 | Purpose | Append-only milestone evidence: each record proves one migration milestone was reached; records form an ordered sequence linked to their plan and predecessor record |
 | Milestone Sequence (VS0-STATE-011) | InventoryValidated → DryRunPassed → WriteFrozen → BackupVerified → Transformed → ReferencesVerified → CutoverActivated → ConformancePassed → Completed |
 | Fields | record.milestone (enum), record.stage (integer 1..9), record.predecessorRef (TypedRef<CanonicalMigrationRecord>, nil for first), plus source/target/classification/transform/digest fields |
-| Immutability | Append-only; each record is FINAL on persistence (VS0-STATE-010); corrections create linked records |
+| Immutability | Append-only; each record is FINAL on persistence (VS0-STATE-010); no direct correction or supersession link on records |
+| Correction Model | A CanonicalMigrationRecord has no correction/supersession link. A correction requires a superseding CanonicalMigrationPlan and a new linked migration run; retained prior records are never altered or re-ordered (ADH-2026-043 decision 1) |
 | Writer | migration-controller (VS0-WRITER-020) |
 
 For the `BackupVerified` milestone only, `record.signedBackupEvidenceRef` and `record.restoreVerificationEvidenceRef` are required evidence references. They prove the signed backup and verified restore gates from ADH-2026-041 without selecting a cryptographic algorithm or implementing a backup service in Phase 2R.
+
+### 7.4 Draft Representation (ADH-2026-043 decision 2)
+
+`Draft` is pre-persistence preparation of a migration plan. The signed immutable CanonicalMigrationPlan precedes the persisted CanonicalMigrationRecord sequence. The 1..9 milestone evidence sequence begins at `InventoryValidated`. Draft has no representation in the append-only record chain or in the immutable record state machine (VS0-STATE-010/011).
+
+### 7.5 Migration Inventory and Feature Boundary (ADH-2026-043 decision 3)
+
+FEATURE-0015 owns the signed global inventory/classification plan and executes provider/topology migration only. The following table classifies every alpha record family for FEATURE-0015:
+
+| Alpha Record Family | F0015 Action | Notes |
+|---------------------|--------------|-------|
+| Provider (combined) | Classifies and transforms now | Splits into CloudPlatform + CloudProvider |
+| ProviderLocation | Classifies and transforms now | Maps to HostingLocation |
+| ProviderDatacenter | Classifies and transforms now | Maps to Datacenter |
+| DatacenterFailureDomain | Classifies and transforms now | Maps to FaultDomain |
+| InfrastructureStack | Classifies and transforms now | Identity preserved, new scope |
+| ExecutionTarget (identity) | Classifies and transforms now | Spec only; status deferred to FEATURE-0016 |
+| ServiceClass | Classifies in signed plan; defers transform | FEATURE-0022 owns ServiceTypeDefinition/ServiceOffering |
+| CloudEnrollment (alpha) | Classifies in signed plan; defers transform | FEATURE-0021 owns enrollment |
+| Governance/policy alpha refs | Classifies in signed plan; defers transform | FEATURE-0018/0019/0020 own transforms |
+| Placement/decision alpha refs | Classifies in signed plan; defers transform | FEATURE-0023 owns transforms |
+| Plugin/operation alpha refs | Classifies in signed plan; defers transform | FEATURE-0024 owns transforms |
+
+FEATURE-0015 cannot claim global cutover completion; final all-domain cutover/conformance is FEATURE-0026 integration evidence.
+
+### 7.6 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6)
+
+FEATURE-0015 reuses FEATURE-0013 AuditEvent. The following lifecycle and security events produce audit evidence:
+
+| Event | Audit Evidence | Correlation |
+|-------|----------------|-------------|
+| CloudProviderParticipation state change | AuditEvent with subjectRef, actor, transition, timestamp | participationRef UID |
+| CanonicalMigrationPlan publication | AuditEvent with planRef, publisher actor, signedAt | planRef UID |
+| Each migration milestone record append | AuditEvent with milestoneRef, stage, predecessorRef | planRef UID + milestone ordinal |
+| Migration cutover decision | AuditEvent with cutover activation evidence | planRef UID |
+| Cross-provider safe-denial (security) | AuditEvent with denied actor, denied action; no target existence disclosed | requestId |
+
+Rules:
+- Safe projection/redaction: audit events use the same safe-denial principle — no existence disclosure for cross-provider references.
+- No secrets: no credential values, protected handles, or secret material in any audit record.
+- Intentional correlation: each audit record links to its subject, actor, and governing plan or participation through UID-pinned references.
+- FEATURE-0015 does not import FEATURE-0026's integration-only trace conformance (VS0-CF-T01).
 
 ---
 
@@ -170,19 +213,22 @@ For the `BackupVerified` milestone only, `record.signedBackupEvidenceRef` and `r
 
 ## 10. Traceability Mapping
 
-| Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance |
-|------------|---------|------------|------------|-----------|-----------------|
-| CloudPlatform | DEC-0037; ADH-020/042 | VS0-SCHEMA-008 | VS0-WRITER-002,003 | — | VS0-CF-HP01 |
-| CloudProvider | DEC-0037; ADH-020/042 | VS0-SCHEMA-009 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| CloudProviderParticipation | DEC-0054; ADH-037/042 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-HP01,F09 |
-| HostingLocation | DEC-0041; ADH-024/042 | VS0-SCHEMA-011 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| Datacenter | DEC-0041; ADH-024/042 | VS0-SCHEMA-012 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| FaultDomain | DEC-0041; ADH-024/042 | VS0-SCHEMA-013 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| InfrastructureStack | DEC-0041,0042; ADH-025/042 | VS0-SCHEMA-014 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| ExecutionTarget (identity) | DEC-0042; ADH-025/042 | VS0-SCHEMA-015 | VS0-WRITER-003 | — | VS0-CF-HP01 |
-| CanonicalMigrationPlan | DEC-0058; ADH-041/042 | VS0-SCHEMA-060 | VS0-WRITER-021 | VS0-STATE-010 | VS0-CF-MIG01 |
-| CanonicalMigrationRecord | DEC-0058; ADH-041/042 | VS0-SCHEMA-061 | VS0-WRITER-020 | VS0-STATE-010,011 | VS0-CF-MIG02 |
-| Cross-provider isolation | DEC-0037,0054 | VS0-SCHEMA-015 | VS0-WRITER-003 | — | VS0-CF-X03 |
+| Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance (FEATURE-0015 local) |
+|------------|---------|------------|------------|-----------|--------------------------------------|
+| CloudPlatform | DEC-0037; ADH-020/042/043 | VS0-SCHEMA-008 | VS0-WRITER-002,003 | — | VS0-CF-F15-01,F15-02,F15-11 |
+| CloudProvider | DEC-0037; ADH-020/042/043 | VS0-SCHEMA-009 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
+| CloudProviderParticipation | DEC-0054; ADH-037/042/043 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-01,F15-02,F15-03,F15-04,F15-09,F15-11 |
+| HostingLocation | DEC-0041; ADH-024/042/043 | VS0-SCHEMA-011 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
+| Datacenter | DEC-0041; ADH-024/042/043 | VS0-SCHEMA-012 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
+| FaultDomain | DEC-0041; ADH-024/042/043 | VS0-SCHEMA-013 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
+| InfrastructureStack | DEC-0041,0042; ADH-025/042/043 | VS0-SCHEMA-014 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
+| ExecutionTarget (identity) | DEC-0042; ADH-025/042/043 | VS0-SCHEMA-015 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-05,F15-06 |
+| CanonicalMigrationPlan | DEC-0058; ADH-041/042/043 | VS0-SCHEMA-060 | VS0-WRITER-021 | VS0-STATE-010 | VS0-CF-MIG01,F15-07,F15-10 |
+| CanonicalMigrationRecord | DEC-0058; ADH-041/042/043 | VS0-SCHEMA-061 | VS0-WRITER-020 | VS0-STATE-010,011 | VS0-CF-MIG02,F15-08,MIGF01..MIGF03 |
+| Cross-provider isolation | DEC-0037,0054; ADH-043 | VS0-SCHEMA-015 | VS0-WRITER-003 | — | VS0-CF-X03 |
+| Scope-reference integrity | DEC-0037,0054; ADH-043 | VS0-SCHEMA-008,010 | VS0-WRITER-002,004 | — | VS0-CF-F15-11 |
+
+Note: VS0-CF-HP01 (FEATURE-0026 integration) and VS0-CF-F09 (FEATURE-0023 placement) are downstream integration references only; they are not FEATURE-0015 local acceptance evidence.
 
 ---
 

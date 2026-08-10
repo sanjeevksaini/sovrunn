@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"]
     +["MIG01","MIG02","MIGF01","MIGF02","MIGF03"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,11)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,12)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack", "ExecutionTarget",

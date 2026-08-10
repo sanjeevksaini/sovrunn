@@ -16,7 +16,8 @@
       "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-025-executiontarget-no-resourcepool.md",
       "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-037-cloudplatform-provider-participation-installation-isolation.md",
       "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-041-coordinated-alpha-migration-no-dual-authority.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-043-feature-0015-architecture-readiness-closure.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },

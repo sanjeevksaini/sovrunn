@@ -209,6 +209,10 @@ feature-0014-architecture-readiness:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
 		--feature FEATURE-0014 --stage requirements --mode readiness
 
+.PHONY: feature-0015-architecture-readiness
+feature-0015-architecture-readiness:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0015-architecture-readiness-check.py
+
 .PHONY: structurizr-lite
 structurizr-lite:
 	./scripts/structurizr-lite.sh

@@ -1,9 +1,9 @@
 {
   "architecture_approval_token": "APPROVED_ARCHITECTURE",
-  "architecture_approved_at": "2026-08-10T14:55:13.378345+00:00",
+  "architecture_approved_at": "2026-08-10T15:48:25.928637+00:00",
   "architecture_approved_by": "Sanjeev Kumar",
-  "architecture_approved_sha256": "46cf064f28105a39818fcaf0a826151ff3d27bd4fdb233ceb317e2e99f543e09",
-  "control_approved_sha256": "9abdcce463a2c51264c7fe338f30d3e79630e097e2dd82a3acfc42f67f7ede80",
+  "architecture_approved_sha256": "c46ebcc9bfba34a9faf5c2c3dfd6d2ab15a1d57f12ad75c4759406e012d96bdd",
+  "control_approved_sha256": "41056cbe39878d48cb614e19b3095064e15c63606b66ad44c35316d0eebd2b2a",
   "created_at": "2026-08-04T13:16:41.681695+00:00",
   "current_stage": "requirements",
   "current_task": null,
@@ -16,5 +16,5 @@
   "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration",
   "status": "architecture_approved",
   "title": "Canonical Cloud Model and Alpha Migration Foundation",
-  "updated_at": "2026-08-10T14:55:13.378740+00:00"
+  "updated_at": "2026-08-10T15:48:25.929121+00:00"
 }

@@ -262,6 +262,7 @@ violationCodes:
     - {code: VS0_MIGRATION_STATE_INVALID, field: /record/milestone, meaning: "migration milestone record cannot be appended; precondition not met or ordering violated"}
     - {code: VS0_MIGRATION_DUAL_AUTHORITY, field: /record/sourceKind, meaning: "legacy and canonical writers both active for the same resource"}
     - {code: VS0_MIGRATION_UNRESOLVED_REF, field: /record/targetUID, meaning: "transformed record has dangling reference"}
+    - {code: VS0_SCOPE_REFERENCE_MISMATCH, field: /spec, meaning: "ownerOrganizationRef or cloudPlatformRef UID does not equal the resource's metadata.scopeRef UID"}
     - {code: VS0_SERVICE_STATE_INVALID, field: /status/phase, meaning: "ServiceInstance transition is invalid"}
 
 failureMappings:
@@ -315,7 +316,7 @@ conformance:
   - {id: VS0-CF-F20, owner: FEATURE-0024, inputs: delete-with-active-binding, expectedState: "binding Revoked before instance Deleted", expectedError: null, expectedSideEffects: "quota released; retained records preserved", gate: lifecycle}
   - {id: VS0-CF-X01, owner: FEATURE-0018, inputs: cross-organization-ref, expectedState: unchanged, expectedError: RESOURCE_NOT_FOUND, expectedSideEffects: none, gate: security}
   - {id: VS0-CF-X02, owner: FEATURE-0018, inputs: cross-project-ref, expectedState: unchanged, expectedError: RESOURCE_NOT_FOUND, expectedSideEffects: none, gate: security}
-  - {id: VS0-CF-X03, owner: FEATURE-0015, inputs: cross-provider-target-ref, expectedState: unchanged, expectedError: RESOURCE_NOT_FOUND, expectedSideEffects: none, gate: security}
+  - {id: VS0-CF-X03, owner: FEATURE-0015, inputs: cross-provider-target-ref, expectedState: unchanged, expectedError: RESOURCE_NOT_FOUND, expectedViolation: VS0_AUTHORIZATION_SAFE_DENIAL, expectedSideEffects: none, gate: security}
   - {id: VS0-CF-L01, owner: FEATURE-0026, inputs: "all responses/logs/audits/explanations snapshots", expectedState: accepted-only-if-clean, expectedError: null, expectedSideEffects: "zero secret/native-handle/topology leakage", gate: release-blocker}
   - {id: VS0-CF-Z01, owner: FEATURE-0024, inputs: fake-executor-call-ledger, expectedState: "all steps terminal", expectedError: null, expectedSideEffects: "externalCallCount=0", gate: release-blocker}
   - {id: VS0-CF-T01, owner: FEATURE-0026, inputs: completed-happy-path, expectedState: "requestId->DecisionRecord->Operation->PluginExecution->AuditEvent graph complete", expectedError: null, expectedSideEffects: "no log treated as audit", gate: observability}
@@ -337,6 +338,7 @@ conformance:
   - {id: VS0-CF-F15-08, owner: FEATURE-0015, inputs: "BackupVerified milestone lacking signed backup evidence or verified restore evidence", expectedState: unchanged, expectedError: VALIDATION_FAILED, expectedViolation: VS0_MIGRATION_BACKUP_RESTORE_UNVERIFIED, expectedSideEffects: "BackupVerified milestone not appended and cutover remains inactive", gate: migration}
   - {id: VS0-CF-F15-09, owner: FEATURE-0015, inputs: "Pending CloudProviderParticipation activation with one or both delegated authority acceptances absent", expectedState: "participation remains Pending", expectedError: CONFLICT, expectedViolation: VS0_PARTICIPATION_ACCEPTANCE_MISSING, expectedSideEffects: "no Active transition", gate: feature}
   - {id: VS0-CF-F15-10, owner: FEATURE-0015, inputs: "migration-controller creates or mutates a CanonicalMigrationPlan, or plan publisher appends a CanonicalMigrationRecord", expectedState: unchanged, expectedError: ALREADY_EXISTS, expectedViolation: VS0_MIGRATION_WRITER_SEPARATION, expectedSideEffects: "no plan or migration record written by the forbidden writer", gate: migration}
+  - {id: VS0-CF-F15-11, owner: FEATURE-0015, inputs: "CloudPlatform with spec.ownerOrganizationRef.uid != metadata.scopeRef.uid, or CloudProviderParticipation with spec.cloudPlatformRef.uid != metadata.scopeRef.uid", expectedState: unchanged, expectedError: VALIDATION_FAILED, expectedViolation: VS0_SCOPE_REFERENCE_MISMATCH, expectedSideEffects: none, gate: feature}
 
 prohibitedTerms:
   - ResourcePool
