@@ -22,7 +22,10 @@ STAGES = ("requirements", "design", "tasks")
 RECEIPT = "STAGE_STATUS: COMPLETE"
 REQ_ID = re.compile(r"REQ-[A-Z0-9]+-\d+")
 AC_ID = re.compile(r"AC-[A-Z0-9]+-\d+")
-CF_ID = re.compile(r"VS0-CF-[A-Z]+\d+")
+# Conformance IDs have both historical compact forms (for example, MIGF01)
+# and feature-local forms (for example, F15-01).  The word boundaries prevent
+# a local ID from also being counted as its non-existent F15 prefix.
+CF_ID = re.compile(r"\bVS0-CF-(?:[A-Z]+\d+(?:-\d+)?)\b")
 VS_ID = re.compile(r"VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9-]+")
 
 
@@ -77,6 +80,12 @@ def scalar(value: Any) -> str:
 
 def expand_cf_ranges(text: str) -> set[str]:
     found = set(CF_ID.findall(text))
+    local_range_pattern = re.compile(r"\bVS0-CF-([A-Z]+\d+)-(\d+)\.\.(\d+)\b")
+    for match in local_range_pattern.finditer(text):
+        prefix, left_number, right_number = match.groups()
+        width = max(len(left_number), len(right_number))
+        for number in range(int(left_number), int(right_number) + 1):
+            found.add(f"VS0-CF-{prefix}-{number:0{width}d}")
     range_pattern = re.compile(r"VS0-CF-([A-Z]+)(\d+)\.\.([A-Z]*)(\d+)")
     for match in range_pattern.finditer(text):
         left_prefix, left_number, right_prefix, right_number = match.groups()
@@ -105,6 +114,7 @@ def expected_cf_row(entry: dict[str, Any]) -> tuple[str, ...]:
         scalar(entry.get("inputs")),
         scalar(entry.get("expectedState")),
         scalar(entry.get("expectedError")),
+        scalar(entry.get("expectedViolation", "—")),
         scalar(entry.get("expectedSideEffects")),
         scalar(entry.get("gate")),
     )
@@ -171,8 +181,8 @@ def check_requirements(
                 f"{item_id} must appear in the canonical ledger and at least one detailed acceptance/coverage mapping"
             )
 
-    target_cf_ids = expand_cf_ranges(target_text)
     source_cf_ids = expand_cf_ranges(feature_text)
+    target_cf_ids = expand_cf_ranges(target_text)
     unknown = sorted(target_cf_ids - set(conformance))
     if unknown:
         errors.append(f"unknown VS-000 conformance IDs: {', '.join(unknown)}")
@@ -182,14 +192,21 @@ def check_requirements(
         errors.append("missing exact section heading: Exact conformance semantics ledger")
     else:
         ledger_rows = rows_by_id(ledger, CF_ID)
-        for cf_id in sorted(target_cf_ids & set(conformance)):
+        expected_ledger_ids = source_cf_ids & set(conformance)
+        extra_ledger_ids = sorted(set(ledger_rows) - expected_ledger_ids)
+        if extra_ledger_ids:
+            errors.append(
+                "Exact conformance semantics ledger contains cases not authorized by the feature authority: "
+                + ", ".join(extra_ledger_ids)
+            )
+        for cf_id in sorted(expected_ledger_ids):
             expected = expected_cf_row(conformance[cf_id])
             if ledger_rows.get(cf_id) != [expected]:
                 errors.append(
-                    f"Exact conformance semantics ledger must copy all seven registry fields for {cf_id} exactly once"
+                    f"Exact conformance semantics ledger must copy all eight registry fields for {cf_id} exactly once"
                 )
 
-    for cf_id in sorted(target_cf_ids & set(conformance)):
+    for cf_id in sorted(source_cf_ids & set(conformance)):
         entry = conformance[cf_id]
         if entry.get("owner") != feature and cf_id not in source_cf_ids:
             errors.append(
