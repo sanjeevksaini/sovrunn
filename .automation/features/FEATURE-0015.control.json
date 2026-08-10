@@ -104,7 +104,6 @@
       "docs/phase2/PHASE2_FEATURE_SEQUENCE.md",
       "docs/architecture/vertical-slices/VS-000-contract-specification.md",
       "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
-      "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
       ".kiro/steering/slice0-contract.md"
     ],
     "stages": {
