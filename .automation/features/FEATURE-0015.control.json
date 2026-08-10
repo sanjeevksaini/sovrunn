@@ -54,7 +54,7 @@
         "id": "FEATURE-0013",
         "relationship": "reuses DecisionRecord and AuditEvent schemas; does not redefine",
         "context": {
-          "requirements": ["docs/features/FEATURE-0013-decision-object-and-auditevent-standard.md"],
+          "requirements": [],
           "design": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"]
         }
       },
