@@ -33,6 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"]
     +["MIG01","MIG02","MIGF01","MIGF02","MIGF03"])
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,11)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack", "ExecutionTarget",
@@ -198,7 +199,7 @@ def run():
         if exp_viol not in vc_set: e(f"{fid}: violation '{exp_viol}' not registered")
     # Conformance
     confs = reg.get("conformance",[])
-    exp_cf={f"VS0-CF-{c}" for c in CF_IDS}; found_cf=set(); seen_cf=set()
+    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS}; found_cf=set(); seen_cf=set()
     for c in confs:
         cid=c.get("id","?")
         if cid in seen_cf: e(f"Dup conformance: {cid}")
@@ -210,7 +211,7 @@ def run():
     # Traceability
     if TRACE_PATH.exists():
         txt=TRACE_PATH.read_text()
-        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+list(MIGRATION_MAPPINGS)+[f"VS0-CF-{c}" for c in CF_IDS])
+        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+list(MIGRATION_MAPPINGS)+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS])
         for a in all_ids:
             if a not in txt: e(f"Traceability missing: {a}")
         for p in ("VS-000-contract-registry.yaml","VS-000-contract-specification.md","VS-000_CONTRACT_TRACEABILITY_MATRIX.md"):
@@ -285,6 +286,12 @@ def run():
     for field in ("record.milestone:", "record.stage:", "record.planRef:"):
         if field not in required: e(f"CanonicalMigrationRecord missing required {field[:-1]}")
     if "record.predecessorRef:" not in optional: e("CanonicalMigrationRecord predecessorRef must be optional for the first milestone")
+    for field in ("record.signedBackupEvidenceRef:", "record.restoreVerificationEvidenceRef:"):
+        if field not in optional: e(f"CanonicalMigrationRecord missing conditional BackupVerified evidence field {field[:-1]}")
+    state_011=next((sm for sm in sms if sm.get("id")=="VS0-STATE-011"), {})
+    backup_guard=" ".join(state_011.get("guards", []))
+    for requirement in ("signed backup evidence", "verified restore evidence"):
+        if requirement not in backup_guard: e(f"VS0-STATE-011 BackupVerified guard missing {requirement}")
     if SEQUENCE_PATH.exists():
         seq=SEQUENCE_PATH.read_text()
         f15_line=next((ln for ln in seq.splitlines() if re.match(r"^\|\s*5\s*\|\s*FEATURE-0015\b",ln)), "")

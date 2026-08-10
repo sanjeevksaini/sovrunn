@@ -150,7 +150,7 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
 
 ### Conformance Classes
 
-Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` owns the happy path; `VS0-CF-F01` through `VS0-CF-F20` map one-to-one to the charter failures; `X`, `L`, `Z`, `T`, `I` and `D` cases cover scope, leakage, external effects, traceability, concurrency and deletion ordering. FEATURE-0015 migration proof uses `VS0-CF-MIG01..MIG02` plus the exact negative cases `VS0-CF-MIGF01..MIGF03`.
+Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` owns the end-to-end happy path; `VS0-CF-F01` through `VS0-CF-F20` map one-to-one to the charter failures; `X`, `L`, `Z`, `T`, `I` and `D` cases cover scope, leakage, external effects, traceability, concurrency and deletion ordering. Feature-local pre-integration evidence uses `VS0-CF-F<feature>-<case>` and must not reuse a downstream-owned scenario. FEATURE-0015 migration proof uses `VS0-CF-MIG01..MIG02` plus the exact negative cases `VS0-CF-MIGF01..MIGF03`.
 
 | Registry range | Class | Verification |
 |----------------|-------|--------------|
@@ -162,7 +162,8 @@ Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` own
 | `VS0-CF-T01` | Correlation | Request, decisions, plan, operation, executions and audit form one complete trace graph. |
 | `VS0-CF-I01..I02` | Idempotency and races | Same payload converges; different payload conflicts; one quota/operation wins. |
 | `VS0-CF-D01` | Deletion ordering | Binding revocation precedes cleanup, quota release and instance finalization. |
-| `VS0-CF-MIG01..MIG02` | Migration positive evidence | Signed plan and append-only records deterministically reach the `Completed` milestone without dual authority. |
+| `VS0-CF-F15-01..F15-10` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation acceptance and uniqueness, writer denial and separation, plan immutability, and signed-backup/verified-restore gating. |
+| `VS0-CF-MIG01..MIG02` | Migration positive evidence | Signed plan, signed backup evidence, verified restore evidence, and append-only records deterministically reach the `Completed` milestone without dual authority. |
 | `VS0-CF-MIGF01..MIGF03` | Migration failure evidence | Invalid milestone order, dual authority and unresolved references fail with their registered Problem/violation mapping and zero cutover side effects. |
 
 Each conformance test specifies exact expected state, expected error (code + HTTP + type), and expected side effects.

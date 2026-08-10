@@ -61,6 +61,8 @@ FEATURE-0015 owns only the portions shown in the activation-boundary column:
 
 FEATURE-0015 must NOT store, validate, default, or mention this field as CONTRACT_ONLY behavior. It is wholly owned by FEATURE-0021.
 
+The registry's `fieldOwnership.introducedBy` and `activatedBy` rule governs feature activation boundaries. It does not alter the source-of-truth precedence order: the registry remains the machine-readable expression of the higher-precedence Slice 0 specification.
+
 ---
 
 ## 4. FEATURE-0016 Delegated Activation
@@ -131,6 +133,8 @@ FEATURE-0015 does NOT introduce, store, validate, default, or reference `provide
 | Fields | record.milestone (enum), record.stage (integer 1..9), record.predecessorRef (TypedRef<CanonicalMigrationRecord>, nil for first), plus source/target/classification/transform/digest fields |
 | Immutability | Append-only; each record is FINAL on persistence (VS0-STATE-010); corrections create linked records |
 | Writer | migration-controller (VS0-WRITER-020) |
+
+For the `BackupVerified` milestone only, `record.signedBackupEvidenceRef` and `record.restoreVerificationEvidenceRef` are required evidence references. They prove the signed backup and verified restore gates from ADH-2026-041 without selecting a cryptographic algorithm or implementing a backup service in Phase 2R.
 
 ---
 

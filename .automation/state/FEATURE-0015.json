@@ -1,15 +1,20 @@
 {
+  "architecture_approval_token": "APPROVED_ARCHITECTURE",
+  "architecture_approved_at": "2026-08-10T14:52:01.977680+00:00",
+  "architecture_approved_by": "Sanjeev Kumar",
+  "architecture_approved_sha256": "46cf064f28105a39818fcaf0a826151ff3d27bd4fdb233ceb317e2e99f543e09",
+  "control_approved_sha256": "61db24d5e317dbf198476c4c252174479c2919f3219cad5d54cb66873f0d3d71",
   "created_at": "2026-08-04T13:16:41.681695+00:00",
   "current_stage": "requirements",
   "current_task": null,
   "feature_branch": "feature-0015-canonical-cloud-model-and-alpha-migration",
   "feature_id": "FEATURE-0015",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0015",
-  "human_gate_required": true,
+  "human_gate_required": false,
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "slug": "canonical-cloud-model-and-alpha-migration",
   "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration",
-  "status": "branch_created",
+  "status": "architecture_approved",
   "title": "Canonical Cloud Model and Alpha Migration Foundation",
-  "updated_at": "2026-08-04T13:16:41.681824+00:00"
+  "updated_at": "2026-08-10T14:52:01.978089+00:00"
 }
