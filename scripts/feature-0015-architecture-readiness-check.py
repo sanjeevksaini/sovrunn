@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Fail-closed architecture-readiness check for FEATURE-0015.
 
-Validates that all seven ADH-2026-043 decisions are representable and consistent
-across the repository authorities before requirements generation may proceed.
+Validates that all seven ADH-2026-043 decisions plus the ADH-2026-044 run-local
+migration-completion decision are representable and consistent across the
+repository authorities before requirements generation may proceed.
 
 Exit 0 = PASS (requirements generation may proceed).
 Exit 1 = FAIL (architecture gap remains; requirements generation blocked).
@@ -206,6 +207,69 @@ def check_decision_7_traceability(f15_arch: str) -> None:
         e("D7: §10 must note that HP01/F09 are downstream integration references only")
 
 
+def check_adh_044_run_cardinality(reg: dict, spec: str, f15_arch: str, f15_feat: str) -> None:
+    """ADH-2026-044: migration completion is run-local under a plan-declared runKey.
+
+    Fail-closed: rejects missing runKey linkage, missing per-(planRef.uid, runKey)
+    cardinality, missing run-local Completed, or a global-completion claim by F0015.
+    """
+    schemas = reg.get("schemas", [])
+    plan = next((s for s in schemas if s.get("id") == "VS0-SCHEMA-060"), None)
+    record = next((s for s in schemas if s.get("id") == "VS0-SCHEMA-061"), None)
+    if not plan:
+        e("D044: VS0-SCHEMA-060 (CanonicalMigrationPlan) not found in registry")
+    else:
+        plan_text = " ".join(plan.get("required", [])) + " " + str(plan.get("validation", ""))
+        if "runKey" not in plan_text:
+            e("D044: CanonicalMigrationPlan must declare a plan-level runKey per resourceTransforms entry")
+    if not record:
+        e("D044: VS0-SCHEMA-061 (CanonicalMigrationRecord) not found in registry")
+    else:
+        if not any(str(f).startswith("record.runKey:") for f in record.get("required", [])):
+            e("D044: CanonicalMigrationRecord must require record.runKey")
+        if "runKey" not in str(record.get("mutability", "")):
+            e("D044: CanonicalMigrationRecord mutability must bind records to a plan-declared runKey")
+
+    sms = reg.get("stateMachines", [])
+    sm_011 = next((sm for sm in sms if sm.get("id") == "VS0-STATE-011"), {})
+    state_text = " ".join(str(sm_011.get(k, "")) for k in ("description", "ordering", "immutabilityRule"))
+    if "runKey" not in state_text:
+        e("D044: VS0-STATE-011 must express per-(planRef.uid, runKey) cardinality")
+    if "planRef.uid" not in state_text:
+        e("D044: VS0-STATE-011 must key the milestone chain by planRef.uid and runKey")
+    guard_text = " ".join(sm_011.get("guards", [])) + " " + str(sm_011.get("ordering", ""))
+    if "seals" not in guard_text.lower() and "run-local" not in state_text.lower():
+        e("D044: VS0-STATE-011 must state that Completed seals only its run (run-local)")
+
+    confs = reg.get("conformance", [])
+    mig01 = next((c for c in confs if c.get("id") == "VS0-CF-MIG01"), {})
+    mig01_text = " ".join(str(mig01.get(k, "")) for k in ("inputs", "expectedState", "expectedSideEffects"))
+    if "provider-topology" not in mig01_text:
+        e("D044: VS0-CF-MIG01 must prove the provider-topology run, not global completion")
+    if "FEATURE-0026" not in mig01_text:
+        e("D044: VS0-CF-MIG01 must defer global all-run completion to FEATURE-0026")
+
+    # Architecture authority
+    if "runKey" not in f15_arch:
+        e("D044: F0015 architecture must define plan-declared runKey semantics")
+    if "run-local" not in f15_arch.lower() and "seals that run" not in f15_arch.lower():
+        e("D044: F0015 architecture must state Completed is run-local")
+    if "provider-topology" not in f15_arch.lower():
+        e("D044: F0015 architecture must scope F0015 to the provider-topology run")
+    # CloudPlatform writer traceability must be VS0-WRITER-002 only
+    for line in f15_arch.splitlines():
+        if line.strip().startswith("| CloudPlatform ") and "VS0-WRITER-002,003" in line:
+            e("D044: CloudPlatform writer traceability must be VS0-WRITER-002 only")
+
+    # Feature authority
+    if "runKey" not in f15_feat:
+        e("D044: F0015 feature must define plan-declared runKey semantics")
+    if "provider-topology" not in f15_feat.lower():
+        e("D044: F0015 feature must scope F0015 to the provider-topology run")
+    if "FEATURE-0026" not in f15_feat:
+        e("D044: F0015 feature must attribute global completion proof to FEATURE-0026")
+
+
 def check_closure_matrix(closure: str) -> None:
     """All ARC-F15-01..07 must be RESOLVED."""
     for i in range(1, 8):
@@ -248,6 +312,7 @@ def main() -> None:
     check_decision_5_scope_integrity(reg, spec, f15_feat)
     check_decision_6_audit(f15_arch, f15_feat)
     check_decision_7_traceability(f15_arch)
+    check_adh_044_run_cardinality(reg, spec, f15_arch, f15_feat)
 
     # Cross-checks
     check_closure_matrix(closure)
@@ -268,6 +333,7 @@ def main() -> None:
         print("  ✓ D5: Scope-reference UID invariants (VS0_SCOPE_REFERENCE_MISMATCH)")
         print("  ✓ D6: Audit evidence (FEATURE-0013 reuse, correlation, no secrets)")
         print("  ✓ D7: Traceability (F0015-local conformance only)")
+        print("  ✓ D044: Run-local migration completion (plan-declared runKey, per-(planRef.uid,runKey) chain, FEATURE-0026 global proof)")
         print("  ✓ Closure matrix: all ARC-F15 rows RESOLVED")
         print("  ✓ Traceability matrix: VS0-CF-F15-11 present")
         sys.exit(0)

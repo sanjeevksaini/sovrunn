@@ -86,8 +86,8 @@
 | VS0-SCHEMA-057 | SovrunnInstallation | **Removed-NoPhase2ROwner** | DEC-0054; ADH-2026-037/042 | No Phase 2R feature owns platform lifecycle; removed 2026-08-04 | — |
 | VS0-SCHEMA-058 | PluginDefinition | FEATURE-0012 retained | DEC-0029; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
 | VS0-SCHEMA-059 | AdapterConfiguration | FEATURE-0012 retained | DEC-0036; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
-| VS0-SCHEMA-060 | CanonicalMigrationPlan | FEATURE-0015 | DEC-0058; ADH-2026-041/042 | canonical data model §16.1 | VS0-CF-MIG01,F15-07 |
-| VS0-SCHEMA-061 | CanonicalMigrationRecord | FEATURE-0015 | DEC-0058; ADH-2026-041/042 | canonical data model §16.1 | VS0-CF-MIG02,F15-08 |
+| VS0-SCHEMA-060 | CanonicalMigrationPlan (declares per-domain runKey) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | canonical data model §16.1 | VS0-CF-MIG01,F15-07 |
+| VS0-SCHEMA-061 | CanonicalMigrationRecord (runKey-bound, per-run chain) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | canonical data model §16.1 | VS0-CF-MIG02,F15-08 |
 
 ---
 
@@ -133,7 +133,7 @@
 | VS0-STATE-008 | Operation | FEATURE-0012 | ADH-2026-012/013/042 | VS0-CF-HP01,F14..F16 |
 | VS0-STATE-009 | PluginExecution | FEATURE-0024 | DEC-0029; ADH-2026-042 | VS0-CF-HP01,F15,F16,Z01 |
 | VS0-STATE-010 | ImmutableSlice0Records | FEATURE-0013 plus owning Slice 0 features | ADH-2026-017/042 | VS0-CF-HP01,T01 |
-| VS0-STATE-011 | CanonicalMigrationRecord milestone sequence | FEATURE-0015 | DEC-0058; ADH-2026-041/042 | VS0-CF-MIG01,MIG02,F15-08 |
+| VS0-STATE-011 | CanonicalMigrationRecord milestone sequence (per-(planRef.uid,runKey) run; run-local Completed) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | VS0-CF-MIG01,MIG02,F15-08 |
 
 ---
 
@@ -199,7 +199,7 @@
 | VS0-CF-F15-09 | Participation activation denial without both delegations | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-10 | Migration writer separation | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-WRITER-020,021 |
 | VS0-CF-F15-11 | Scope reference UID mismatch | FEATURE-0015 | feature | DEC-0037/0054; ADH-2026-042/043 | VS0-SCHEMA-008,010 |
-| VS0-CF-MIG01 | Migration dry-run determinism with signed backup and verified restore | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-060,061, VS0-STATE-011, VS0-WRITER-020,021 |
+| VS0-CF-MIG01 | Provider-topology run determinism with signed backup and verified restore (run-local Completed) | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042/044 | VS0-SCHEMA-060,061, VS0-STATE-011, VS0-WRITER-020,021 |
 | VS0-CF-MIG02 | Migration record immutability | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-061, VS0-STATE-010, VS0-WRITER-020 |
 | VS0-CF-MIGF01 | Invalid migration milestone | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F01, VS0-STATE-011 |
 | VS0-CF-MIGF02 | Dual migration authority | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F02, VS0-WRITER-020 |

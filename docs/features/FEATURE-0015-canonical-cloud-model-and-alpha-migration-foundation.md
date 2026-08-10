@@ -10,7 +10,7 @@
 | Depended On By | FEATURE-0016, FEATURE-0021, FEATURE-0022 |
 | Architecture Boundary | docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0058 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, ADH-2026-042, ADH-2026-043 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, ADH-2026-042, ADH-2026-043, ADH-2026-044 |
 
 ---
 
@@ -104,6 +104,8 @@ These fields appear in the shared Slice 0 registry only so FEATURE-0015 can prov
 
 VS0-STATE-011 represents the **CanonicalMigrationRecord append-only milestone sequence**. The CanonicalMigrationPlan itself is a signed immutable record (FINAL per VS0-STATE-010). Migration progress is proven by appending successive FINAL CanonicalMigrationRecord instances, each linked to the plan and its predecessor record.
 
+**Run cardinality (ADH-2026-044):** The signed CanonicalMigrationPlan declares an immutable `runKey` for each transform domain in `record.resourceTransforms[]`. Every CanonicalMigrationRecord carries a required `record.runKey` that must match one plan-declared runKey. The strict 1..9 milestone chain is ordered only within one `(planRef.uid, runKey)` run, and a `Completed` record seals that run alone. FEATURE-0015 appends only the `provider-topology` run. Later domain owners append only their assigned plan-declared runs, and FEATURE-0026 alone proves that every required run is sealed and the global cutover/conformance result holds. FEATURE-0015 makes no global-completion claim.
+
 **Draft representation:** `Draft` is pre-persistence preparation of a migration plan. The signed immutable plan precedes the persisted CanonicalMigrationRecord sequence, which begins at stage 1 (`InventoryValidated`) and ends at stage 9 (`Completed`). Draft is not a persisted record state.
 
 **Milestones** (each is a new FINAL CanonicalMigrationRecord appended to the chain):
@@ -124,11 +126,13 @@ InventoryValidated
 
 | Field | Description |
 |-------|-------------|
+| `record.planRef` | TypedRef<CanonicalMigrationPlan> (uid-pinned); the signed plan that declares this run |
+| `record.runKey` | String (1..63); required; must match one plan-declared `resourceTransforms[].runKey`; immutable; identifies the run whose chain this record belongs to (ADH-2026-044) |
 | `record.milestone` | Enum: InventoryValidated, DryRunPassed, WriteFrozen, BackupVerified, Transformed, ReferencesVerified, CutoverActivated, ConformancePassed, Completed |
-| `record.stage` | Integer (1..9) corresponding to milestone ordinal position |
-| `record.predecessorRef` | TypedRef<CanonicalMigrationRecord> (nil for first milestone; uid-pinned for subsequent) |
+| `record.stage` | Integer (1..9) corresponding to milestone ordinal position within the `(planRef.uid, runKey)` run |
+| `record.predecessorRef` | TypedRef<CanonicalMigrationRecord> (nil for the first milestone of a run; uid-pinned for subsequent milestones of the same run) |
 
-**Guards:** Each milestone record may only be appended if the preceding milestone record (by stage ordinal) exists and is FINAL for the same plan. `InventoryValidated` requires zero unclassified alpha records. `DryRunPassed` requires zero transform errors. `WriteFrozen` requires zero active legacy writers. `BackupVerified` requires both `record.signedBackupEvidenceRef` and `record.restoreVerificationEvidenceRef`; each is an opaque, externally verifiable evidence reference, and no cryptographic algorithm is selected by this feature. Missing either is rejected with VALIDATION_FAILED/422 and `VS0_MIGRATION_BACKUP_RESTORE_UNVERIFIED`. Invalid milestone order is rejected with CONFLICT/409 and `VS0_MIGRATION_STATE_INVALID`.
+**Guards:** Each milestone record may only be appended if the preceding milestone record (by stage ordinal) exists and is FINAL for the same `(planRef.uid, runKey)` run. `InventoryValidated` requires zero unclassified alpha records. `DryRunPassed` requires zero transform errors. `WriteFrozen` requires zero active legacy writers. `BackupVerified` requires both `record.signedBackupEvidenceRef` and `record.restoreVerificationEvidenceRef`; each is an opaque, externally verifiable evidence reference, and no cryptographic algorithm is selected by this feature. Missing either is rejected with VALIDATION_FAILED/422 and `VS0_MIGRATION_BACKUP_RESTORE_UNVERIFIED`. Invalid milestone order is rejected with CONFLICT/409 and `VS0_MIGRATION_STATE_INVALID`.
 
 **Immutability:** Neither the plan nor any prior record mutates. Progress is proven exclusively by new append-only records. A CanonicalMigrationRecord has no direct correction or supersession link; a correction requires a superseding CanonicalMigrationPlan and a new linked migration run. Retained prior records are never altered or re-ordered.
 
@@ -175,7 +179,7 @@ No `correctionRef` or `supersessionRef` field exists on CanonicalMigrationRecord
 
 ## 5.3. Migration Inventory and Feature Boundary (ADH-2026-043 Decision 3)
 
-FEATURE-0015 owns the signed global inventory/classification plan and executes provider/topology migration only. For every alpha record family:
+FEATURE-0015 owns the signed global inventory/classification plan and executes provider/topology migration only. The signed plan declares an immutable `runKey` per transform domain; FEATURE-0015 appends milestones only for the `provider-topology` run (ADH-2026-044). For every alpha record family:
 
 | Alpha Family | F0015 Action |
 |---|---|

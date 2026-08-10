@@ -5,7 +5,7 @@
 | Status | Approved boundary (correction under ADH-2026-042) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0058 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, consolidated ADH-2026-042, ADH-2026-043 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-041, consolidated ADH-2026-042, ADH-2026-043, ADH-2026-044 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model) |
 
@@ -108,6 +108,7 @@ FEATURE-0015 does NOT introduce, store, validate, default, or reference `provide
 
 - DEC-0058: alpha migration is one signed cutover with no dual write/authority and immutable history preservation.
 - ADH-2026-041: Controlling handoff for migration semantics.
+- ADH-2026-044: Migration completion is run-local under plan-declared `runKey`; FEATURE-0015 owns the provider-topology run; FEATURE-0026 proves global completion.
 - Canonical data model §16.1: Defines migration sequence and classification rules.
 
 ### 7.2 CanonicalMigrationPlan (VS0-SCHEMA-060)
@@ -118,6 +119,7 @@ FEATURE-0015 does NOT introduce, store, validate, default, or reference `provide
 | Scope | Platform |
 | Boundary | platform-operator-facing |
 | Purpose | Signed, immutable plan that defines the complete alpha-to-canonical cutover classification mappings, scope vocabulary mapping, and resource transforms |
+| Run declaration (ADH-2026-044) | `record.resourceTransforms[]` declares a unique immutable `runKey` per transform domain; every appended CanonicalMigrationRecord must bind to one plan-declared runKey |
 | Immutability | FINAL on persistence (VS0-STATE-010); no field may change after signing; corrections create a new linked plan superseding the previous |
 | Writer | approved-migration-plan-publisher (VS0-WRITER-021); the migration controller is forbidden from authoring or approving its plan |
 
@@ -129,8 +131,9 @@ FEATURE-0015 does NOT introduce, store, validate, default, or reference `provide
 | Scope | Platform |
 | Boundary | platform-operator-facing |
 | Purpose | Append-only milestone evidence: each record proves one migration milestone was reached; records form an ordered sequence linked to their plan and predecessor record |
+| Run cardinality (ADH-2026-044) | Each record carries a required immutable `record.runKey` matching one plan-declared runKey; the strict 1..9 milestone chain is ordered only within one `(planRef.uid, runKey)` run; `Completed` seals that run and is not a global-completion claim |
 | Milestone Sequence (VS0-STATE-011) | InventoryValidated → DryRunPassed → WriteFrozen → BackupVerified → Transformed → ReferencesVerified → CutoverActivated → ConformancePassed → Completed |
-| Fields | record.milestone (enum), record.stage (integer 1..9), record.predecessorRef (TypedRef<CanonicalMigrationRecord>, nil for first), plus source/target/classification/transform/digest fields |
+| Fields | record.planRef (uid-pinned), record.runKey (string 1..63, required, immutable), record.milestone (enum), record.stage (integer 1..9), record.predecessorRef (TypedRef<CanonicalMigrationRecord>, nil for the first milestone of a run), plus source/target/classification/transform/digest fields |
 | Immutability | Append-only; each record is FINAL on persistence (VS0-STATE-010); no direct correction or supersession link on records |
 | Correction Model | A CanonicalMigrationRecord has no correction/supersession link. A correction requires a superseding CanonicalMigrationPlan and a new linked migration run; retained prior records are never altered or re-ordered (ADH-2026-043 decision 1) |
 | Writer | migration-controller (VS0-WRITER-020) |
@@ -159,7 +162,7 @@ FEATURE-0015 owns the signed global inventory/classification plan and executes p
 | Placement/decision alpha refs | Classifies in signed plan; defers transform | FEATURE-0023 owns transforms |
 | Plugin/operation alpha refs | Classifies in signed plan; defers transform | FEATURE-0024 owns transforms |
 
-FEATURE-0015 cannot claim global cutover completion; final all-domain cutover/conformance is FEATURE-0026 integration evidence.
+FEATURE-0015 appends only the `provider-topology` plan-declared run and reaches a run-local `Completed` for that run only. FEATURE-0015 cannot claim global cutover completion; each later domain owner appends only its assigned plan-declared run, and final all-domain completion, cutover, and conformance are proven only by FEATURE-0026 integration evidence after every required run is sealed (ADH-2026-044).
 
 ### 7.6 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6)
 
@@ -215,7 +218,7 @@ Rules:
 
 | Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance (FEATURE-0015 local) |
 |------------|---------|------------|------------|-----------|--------------------------------------|
-| CloudPlatform | DEC-0037; ADH-020/042/043 | VS0-SCHEMA-008 | VS0-WRITER-002,003 | — | VS0-CF-F15-01,F15-02,F15-11 |
+| CloudPlatform | DEC-0037; ADH-020/042/043 | VS0-SCHEMA-008 | VS0-WRITER-002 | — | VS0-CF-F15-01,F15-02,F15-11 |
 | CloudProvider | DEC-0037; ADH-020/042/043 | VS0-SCHEMA-009 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
 | CloudProviderParticipation | DEC-0054; ADH-037/042/043 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-01,F15-02,F15-03,F15-04,F15-09,F15-11 |
 | HostingLocation | DEC-0041; ADH-024/042/043 | VS0-SCHEMA-011 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02 |
