@@ -234,7 +234,7 @@ Note: VS0-CF-HP01 (FEATURE-0026 integration) and VS0-CF-F09 (FEATURE-0023 placem
 
 ## 11. Anti-Drift Rules
 
-1. FEATURE-0015 requirements/design/tasks must NOT reference ResourcePool, ProviderCapability, generic Provider, ServiceClass, EffectivePolicyContext, or six-scope vocabulary.
+1. FEATURE-0015 requirements/design/tasks must NOT introduce or use any superseded concept listed in §8 as active behavior. Those names may appear only in the explicitly labelled exclusion/non-goal context that explains why they are prohibited.
 2. FEATURE-0015 must NOT introduce, initialize, persist, validate, default, or write ExecutionTarget `status.*` fields — FEATURE-0016 owns their introduction and activation.
 3. FEATURE-0015 must NOT evaluate provider-selection intent — that is FEATURE-0021 scope.
 4. FEATURE-0015 must NOT implement platform lifecycle (SovrunnInstallation, SovrunnRelease, PlatformLifecyclePolicy, PlatformLifecyclePlan).

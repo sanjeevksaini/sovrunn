@@ -182,6 +182,13 @@ def check_requirements(
             )
 
     source_cf_ids = expand_cf_ranges(feature_text)
+    # A feature authority may name a downstream conformance case only to
+    # exclude it.  Only cases owned by this feature can authorize its ledger.
+    source_owned_cf_ids = {
+        cf_id
+        for cf_id in source_cf_ids
+        if cf_id in conformance and conformance[cf_id].get("owner") == feature
+    }
     target_cf_ids = expand_cf_ranges(target_text)
     unknown = sorted(target_cf_ids - set(conformance))
     if unknown:
@@ -192,7 +199,7 @@ def check_requirements(
         errors.append("missing exact section heading: Exact conformance semantics ledger")
     else:
         ledger_rows = rows_by_id(ledger, CF_ID)
-        expected_ledger_ids = source_cf_ids & set(conformance)
+        expected_ledger_ids = source_owned_cf_ids
         extra_ledger_ids = sorted(set(ledger_rows) - expected_ledger_ids)
         if extra_ledger_ids:
             errors.append(
@@ -206,7 +213,7 @@ def check_requirements(
                     f"Exact conformance semantics ledger must copy all eight registry fields for {cf_id} exactly once"
                 )
 
-    for cf_id in sorted(source_cf_ids & set(conformance)):
+    for cf_id in sorted(source_owned_cf_ids):
         entry = conformance[cf_id]
         if entry.get("owner") != feature and cf_id not in source_cf_ids:
             errors.append(
