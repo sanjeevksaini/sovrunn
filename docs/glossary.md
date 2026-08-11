@@ -186,8 +186,6 @@ One concept = one canonical term.
 
 | Term | Definition |
 |---|---|
-| CanonicalMigrationPlan | Controlling plan for alpha-to-canonical model migration (DEC-0058). |
-| CanonicalMigrationRecord | Auditable record of a completed migration step. |
 | MaintenanceEpoch | Provider-declared maintenance window with explicit notice and fencing (DEC-0057). |
 | MaintenanceFence | Prevention of execution on targets undergoing maintenance until requalified (DEC-0057). |
 
@@ -226,6 +224,8 @@ These terms have no active canonical authority and appear only as migration inpu
 | ResourcePool | Former placement boundary | ExecutionTarget (DEC-0042) |
 | ProviderCapability | Former compatibility boundary | Target qualification via adapter (DEC-0042) |
 | CapabilityStatus | Former capability state | Target availability axes |
+| CanonicalMigrationPlan | Former controlling plan for alpha-to-canonical model migration | No active authority; canonical bootstrap creates resources directly (DEC-0059 supersedes DEC-0058) |
+| CanonicalMigrationRecord | Former auditable record of a completed migration step | No active authority; FEATURE-0013 AuditEvent covers create/PATCH/lifecycle actions directly (DEC-0059) |
 | EffectivePolicyContext | Former resolved context term | EffectiveGovernanceContext (DEC-0050) |
 | ServiceClass | Former global service type | ServiceTypeDefinition + ServiceOffering (DEC-0049) |
 | PlacementCandidate | Former candidate concept | Qualified ExecutionTarget candidates |

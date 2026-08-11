@@ -26,7 +26,7 @@ Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`
 
 | Order | Feature | Depends On | Output |
 |---:|---|---|---|
-| 5 | FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation | FEATURE-0011–0014; ADH-020/024/025/037/041 | Seven-scope migration; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; InfrastructureStack; ExecutionTarget identity; CanonicalMigrationPlan; CanonicalMigrationRecord |
+| 5 | FEATURE-0015 Canonical Cloud Model Foundation | FEATURE-0011–0014; ADH-020/024/025/037/045 | Seven-scope canonical bootstrap; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; InfrastructureStack (ends here; ExecutionTarget owned by FEATURE-0016) |
 | 6 | FEATURE-0016 Adapter Boundary and ExecutionTarget Qualification | FEATURE-0015; DEC-0036 | Core adapter interfaces; normalized target facts; target qualification; fake adapter |
 | 7 | FEATURE-0017 Policy Evaluation Abstraction | FEATURE-0013, FEATURE-0016 | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage; deterministic fake |
 | 8 | FEATURE-0018 Governance, IAM, Approval and Exception Foundation | FEATURE-0012, FEATURE-0017 | GovernanceProfile; Membership; RoleDefinition; RoleAssignment; PrivilegedAccessRequest; AccessReview; ApprovalPolicy; ApprovalRequest; ExceptionGrant |
@@ -85,3 +85,5 @@ FEATURE-0019 may proceed in parallel with FEATURE-0017/0018 after FEATURE-0016.
 Do not start FEATURE-0023 before FEATURE-0019, FEATURE-0020, FEATURE-0021, and FEATURE-0022 exist.
 
 Do not implement features using ResourcePool, ProviderCapability, or generic Provider as active concepts. Use ExecutionTarget, CloudPlatform, and CloudProvider.
+
+Do not implement CanonicalMigrationPlan, CanonicalMigrationRecord, a migration controller, or a cutover state machine in FEATURE-0015 (DEC-0059 supersedes DEC-0058). FEATURE-0001–0014 are retained repository assets, not live state requiring conversion.

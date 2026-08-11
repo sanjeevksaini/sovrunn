@@ -94,7 +94,8 @@ State-machine summary (exact definitions in registry):
 
 | Kind Group | States | Terminal | Registry Prefix |
 |------------|--------|----------|-----------------|
-| Participation and enrollment | Pending, Active, Suspended, Terminating, Terminated | Terminated | VS0-STATE-001..002 |
+| Participation | Pending, Active, Rejected, Withdrawn, Expired, Suspended, Terminating, Terminated | Rejected, Withdrawn, Expired, Terminated | VS0-STATE-001 |
+| CloudEnrollment | Pending, Active, Suspended, Terminating, Terminated | Terminated | VS0-STATE-002 |
 | Published definitions | Draft, Published, Retired | Retired | VS0-STATE-003 |
 | Target qualification/availability | Orthogonal qualified/available combinations in the registry | None | VS0-STATE-004 |
 | Quota reservation | None, Reserved, Committed, Released | Released | VS0-STATE-005 |
@@ -143,7 +144,7 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
 
 - Error responses must not confirm existence of resources the caller cannot access (safe denial).
 - An inaccessible cross-provider reference returns RESOURCE_NOT_FOUND (404) with violation VS0_AUTHORIZATION_SAFE_DENIAL and no existence disclosure. An authorized but structurally invalid same-provider reference returns VALIDATION_FAILED (422). VS0-CF-X03 records the safe-denial violation exactly.
-- CloudPlatform `spec.ownerOrganizationRef.uid` must equal its Organization `metadata.scopeRef.uid`; CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. A mismatch returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH.
+- CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. CloudPlatform has no Organization reference to validate; it carries an immutable `spec.ownerRegistration` instead (ADH-2026-045 decision 8). A mismatch on the participation reference returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH.
 - No error `detail` or `title` string is parsed programmatically by clients; codes and types are the contract.
 
 ---
@@ -152,7 +153,7 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
 
 ### Conformance Classes
 
-Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` owns the end-to-end happy path; `VS0-CF-F01` through `VS0-CF-F20` map one-to-one to the charter failures; `X`, `L`, `Z`, `T`, `I` and `D` cases cover scope, leakage, external effects, traceability, concurrency and deletion ordering. Feature-local pre-integration evidence uses `VS0-CF-F<feature>-<case>` and must not reuse a downstream-owned scenario. FEATURE-0015 migration proof uses `VS0-CF-MIG01..MIG02` plus the exact negative cases `VS0-CF-MIGF01..MIGF03`. Under ADH-2026-044 the signed plan declares an immutable `runKey` per transform domain; `CanonicalMigrationRecord` milestone chains are strict 1..9 only within one `(planRef.uid, runKey)` run, and a `Completed` record seals only that run. FEATURE-0015 proves the `provider-topology` run; global all-run completion and cutover/conformance are proven only by FEATURE-0026.
+Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` owns the end-to-end happy path; `VS0-CF-F01` through `VS0-CF-F20` map one-to-one to the charter failures; `X`, `L`, `Z`, `T`, `I` and `D` cases cover scope, leakage, external effects, traceability, concurrency and deletion ordering. Feature-local pre-integration evidence uses `VS0-CF-F<feature>-<case>` and must not reuse a downstream-owned scenario. FEATURE-0015 has no migration proof: per DEC-0059 (canonical bootstrap replaces alpha runtime migration), there is no `CanonicalMigrationPlan`/`CanonicalMigrationRecord`, and `VS0-CF-MIG01..MIG02`/`VS0-CF-MIGF01..MIGF03` are retired.
 
 | Registry range | Class | Verification |
 |----------------|-------|--------------|
@@ -164,9 +165,7 @@ Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` own
 | `VS0-CF-T01` | Correlation | Request, decisions, plan, operation, executions and audit form one complete trace graph. |
 | `VS0-CF-I01..I02` | Idempotency and races | Same payload converges; different payload conflicts; one quota/operation wins. |
 | `VS0-CF-D01` | Deletion ordering | Binding revocation precedes cleanup, quota release and instance finalization. |
-| `VS0-CF-F15-01..F15-11` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation acceptance and uniqueness, writer denial and separation, plan immutability, signed-backup/verified-restore gating, and scope reference UID invariants. |
-| `VS0-CF-MIG01..MIG02` | Migration positive evidence | Signed plan, signed backup evidence, verified restore evidence, and append-only records deterministically reach the run-local `Completed` milestone for the `provider-topology` `(planRef.uid, runKey)` run without dual authority; global all-run completion is FEATURE-0026 evidence. |
-| `VS0-CF-MIGF01..MIGF03` | Migration failure evidence | Invalid milestone order, dual authority and unresolved references fail with their registered Problem/violation mapping and zero cutover side effects. |
+| `VS0-CF-F15-01..F15-11` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation lifecycle actions and independent suspension holds, writer denial, PATCH-only update surface (no PUT/DELETE), and scope reference UID invariants. |
 
 Each conformance test specifies exact expected state, expected error (code + HTTP + type), and expected side effects.
 
@@ -242,6 +241,7 @@ This specification does not:
 | EffectivePolicyContext | EffectiveGovernanceContext | DEC-0050 |
 | Six-scope vocabulary | Seven canonical scopes | DEC-0037 |
 | SovrunnInstallation (active Slice 0) | CloudProviderParticipation boundary proof | No Phase 2R owner; DEC-0053 deferred |
+| CanonicalMigrationPlan, CanonicalMigrationRecord, migration controller | Direct canonical resource creation (FEATURE-0015) | DEC-0059 (supersedes DEC-0058); ADH-2026-045 |
 
 ---
 

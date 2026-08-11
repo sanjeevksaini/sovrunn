@@ -23,7 +23,7 @@
 
 ---
 
-## Schema Mapping (VS0-SCHEMA-001..061)
+## Schema Mapping (VS0-SCHEMA-001..059; VS0-SCHEMA-057/060/061 retired tombstones)
 
 | Registry ID | Contract Identity | Owner | Controlling DEC/ADH | Repository Authority | Conformance |
 |-------------|-------------------|-------|---------------------|---------------------|-------------|
@@ -34,14 +34,14 @@
 | VS0-SCHEMA-005 | DecisionProfile | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-F07..F09 |
 | VS0-SCHEMA-006 | DecisionRecord | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-HP01,T01 |
 | VS0-SCHEMA-007 | AuditEvent | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-HP01,T01 |
-| VS0-SCHEMA-008 | CloudPlatform | FEATURE-0015 | DEC-0037, ADH-2026-042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-009 | CloudProvider | FEATURE-0015 | DEC-0037, ADH-2026-042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-010 | CloudProviderParticipation | FEATURE-0015 | DEC-0054; ADH-2026-037/042 | canonical data model | VS0-CF-F15-01..04 |
-| VS0-SCHEMA-011 | HostingLocation | FEATURE-0015 | DEC-0041; ADH-2026-024/042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-012 | Datacenter | FEATURE-0015 | DEC-0041; ADH-2026-024/042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-013 | FaultDomain | FEATURE-0015 | DEC-0041; ADH-2026-024/042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-014 | InfrastructureStack | FEATURE-0015 | DEC-0041/0042; ADH-2026-025/042 | canonical data model | VS0-CF-F15-01,02 |
-| VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0015 | DEC-0042/0057; ADH-2026-025/040/042 | canonical data model | VS0-CF-F15-01,02,05,X03 |
+| VS0-SCHEMA-008 | CloudPlatform | FEATURE-0015 | DEC-0037, ADH-2026-042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-009 | CloudProvider | FEATURE-0015 | DEC-0037, ADH-2026-042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-010 | CloudProviderParticipation | FEATURE-0015 | DEC-0054; ADH-2026-037/042/045 | canonical data model | VS0-CF-F15-01..04,08..10 |
+| VS0-SCHEMA-011 | HostingLocation | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-012 | Datacenter | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-013 | FaultDomain | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-014 | InfrastructureStack | FEATURE-0015 | DEC-0041/0042; ADH-2026-025/042/045 | canonical data model | VS0-CF-F15-01,02,07 |
+| VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045 | canonical data model | VS0-CF-F10,X03 |
 | VS0-SCHEMA-016 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
 | VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
 | VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042 | canonical data model | VS0-CF-F07..F09 |
@@ -86,19 +86,19 @@
 | VS0-SCHEMA-057 | SovrunnInstallation | **Removed-NoPhase2ROwner** | DEC-0054; ADH-2026-037/042 | No Phase 2R feature owns platform lifecycle; removed 2026-08-04 | — |
 | VS0-SCHEMA-058 | PluginDefinition | FEATURE-0012 retained | DEC-0029; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
 | VS0-SCHEMA-059 | AdapterConfiguration | FEATURE-0012 retained | DEC-0036; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
-| VS0-SCHEMA-060 | CanonicalMigrationPlan (declares per-domain runKey) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | canonical data model §16.1 | VS0-CF-MIG01,F15-07 |
-| VS0-SCHEMA-061 | CanonicalMigrationRecord (runKey-bound, per-run chain) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | canonical data model §16.1 | VS0-CF-MIG02,F15-08 |
+| VS0-SCHEMA-060 | CanonicalMigrationPlan | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
+| VS0-SCHEMA-061 | CanonicalMigrationRecord | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
 
 ---
 
-## Writer Mapping (VS0-WRITER-001..021)
+## Writer Mapping (VS0-WRITER-001..019; VS0-WRITER-020/021 retired tombstones)
 
 | Registry ID | Writer Domain | Owner | Authority | Conformance Evidence |
 |-------------|---------------|-------|-----------|---------------------|
 | VS0-WRITER-001 | api-server | FEATURE-0012 | canonical contract catalog | VS0-CF-HP01 |
-| VS0-WRITER-002 | cloud-platform-admin-or-product-publisher | FEATURE-0015+FEATURE-0022 | DEC-0037, DEC-0049 | VS0-CF-F15-01,05,06 |
-| VS0-WRITER-003 | cloud-provider-admin | FEATURE-0015 | DEC-0037 | VS0-CF-F15-01,05,06,X03 |
-| VS0-WRITER-004 | delegated-participation-contract-authority | FEATURE-0015 | DEC-0037 | VS0-CF-F15-03,04,09 |
+| VS0-WRITER-002 | cloud-platform-admin-or-product-publisher | FEATURE-0015+FEATURE-0022 | DEC-0037, DEC-0049 | VS0-CF-F15-01,05,06,07 |
+| VS0-WRITER-003 | cloud-provider-admin | FEATURE-0015 | DEC-0037 | VS0-CF-F15-01,05,06,07,X03 |
+| VS0-WRITER-004 | delegated-participation-contract-authority | FEATURE-0015 | DEC-0037, ADH-2026-045 | VS0-CF-F15-03,04,08,09,10 |
 | VS0-WRITER-005 | kind-registered-controller | FEATURE-0012 | canonical contract catalog | VS0-CF-HP01,F15,F16 |
 | VS0-WRITER-006 | fake-adapter-and-qualification-controller | FEATURE-0016 | DEC-0036/0042/0057 | VS0-CF-F10,Z01 |
 | VS0-WRITER-007 | authorized-governance-publisher | FEATURE-0018+FEATURE-0019 | DEC-0041/0043/0050/0055 | VS0-CF-HP01,F07 |
@@ -114,26 +114,26 @@
 | VS0-WRITER-017 | projection-controller | FEATURE-0023+FEATURE-0025 | DEC-0043/0046 | VS0-CF-HP01,F18,F19 |
 | VS0-WRITER-018 | authorized-project-consumer | FEATURE-0007+FEATURE-0008 | DEC-0051; ADH-2026-042 Slice 0 adoption | VS0-CF-HP01,F03..F06,I01,I02 |
 | VS0-WRITER-019 | binding-controller | FEATURE-0008+FEATURE-0024 | DEC-0051 | VS0-CF-HP01,F17 |
-| VS0-WRITER-020 | migration-controller (CanonicalMigrationRecord only) | FEATURE-0015 | DEC-0058; ADH-2026-041/042 | VS0-CF-MIG01,MIG02,F15-10 |
-| VS0-WRITER-021 | approved-migration-plan-publisher (CanonicalMigrationPlan only) | FEATURE-0015 | DEC-0058; ADH-2026-041/042 | VS0-CF-MIG01,F15-10 |
+| VS0-WRITER-020 | **Retired-CanonicalBootstrap** (was migration-controller) | — | DEC-0059 supersedes DEC-0058; ADH-2026-045 | — |
+| VS0-WRITER-021 | **Retired-CanonicalBootstrap** (was approved-migration-plan-publisher) | — | DEC-0059 supersedes DEC-0058; ADH-2026-045 | — |
 
 ---
 
-## State Machine Mapping (VS0-STATE-001..011)
+## State Machine Mapping (VS0-STATE-001..010; VS0-STATE-011 retired tombstone)
 
 | Registry ID | Kind | Owner | Authority | Conformance Evidence |
 |-------------|------|-------|-----------|---------------------|
-| VS0-STATE-001 | CloudProviderParticipation | FEATURE-0015 | DEC-0037, ADH-2026-042 | VS0-CF-F15-03,04 |
+| VS0-STATE-001 | CloudProviderParticipation (Pending/Active/Rejected/Withdrawn/Expired/Suspended/Terminating/Terminated; independent platformSuspended/providerSuspended holds) | FEATURE-0015 | DEC-0037,0054; ADH-2026-042/045 | VS0-CF-F15-03,04,08,09,10 |
 | VS0-STATE-002 | CloudEnrollment | FEATURE-0021 | DEC-0038; ADH-2026-021/037/042 | VS0-CF-F03 |
 | VS0-STATE-003 | VersionedDefinition | FEATURE-0022 | DEC-0044; ADH-2026-027/042 | VS0-CF-F06 |
-| VS0-STATE-004 | ExecutionTarget | FEATURE-0015+FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042 | VS0-CF-F10 |
+| VS0-STATE-004 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045 | VS0-CF-F10 |
 | VS0-STATE-005 | QuotaReservation | FEATURE-0021 | DEC-0039; ADH-2026-022/042 | VS0-CF-F05,I01,I02 |
 | VS0-STATE-006 | ServiceInstance | FEATURE-0007 | ADH-2026-042 Slice 0 adoption | VS0-CF-HP01,F15,F16,D01 |
 | VS0-STATE-007 | ServiceBinding | FEATURE-0008+FEATURE-0024 | DEC-0051; ADH-2026-034/042 | VS0-CF-HP01,F17,F20,D01 |
 | VS0-STATE-008 | Operation | FEATURE-0012 | ADH-2026-012/013/042 | VS0-CF-HP01,F14..F16 |
 | VS0-STATE-009 | PluginExecution | FEATURE-0024 | DEC-0029; ADH-2026-042 | VS0-CF-HP01,F15,F16,Z01 |
 | VS0-STATE-010 | ImmutableSlice0Records | FEATURE-0013 plus owning Slice 0 features | ADH-2026-017/042 | VS0-CF-HP01,T01 |
-| VS0-STATE-011 | CanonicalMigrationRecord milestone sequence (per-(planRef.uid,runKey) run; run-local Completed) | FEATURE-0015 | DEC-0058; ADH-2026-041/042/044 | VS0-CF-MIG01,MIG02,F15-08 |
+| VS0-STATE-011 | **Retired-CanonicalBootstrap** (was CanonicalMigrationRecord milestone sequence) | — | DEC-0059 supersedes DEC-0058; ADH-2026-045 | — |
 
 ---
 
@@ -164,13 +164,9 @@
 
 ---
 
-## FEATURE-0015 Migration Failure Mapping
+## FEATURE-0015 Migration Failure Mapping — Retired (Canonical Bootstrap)
 
-| Failure ID | Conformance ID | Code | HTTP | Violation | Controlling Decision |
-|------------|----------------|------|------|-----------|---------------------|
-| VS0-MIG-F01 | VS0-CF-MIGF01 | CONFLICT | 409 | VS0_MIGRATION_STATE_INVALID | DEC-0058; ADH-2026-041/042 |
-| VS0-MIG-F02 | VS0-CF-MIGF02 | CONFLICT | 409 | VS0_MIGRATION_DUAL_AUTHORITY | DEC-0058; ADH-2026-041/042 |
-| VS0-MIG-F03 | VS0-CF-MIGF03 | VALIDATION_FAILED | 422 | VS0_MIGRATION_UNRESOLVED_REF | DEC-0058; ADH-2026-041/042 |
+Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failure mapping. `VS0-MIG-F01`, `VS0-MIG-F02`, and `VS0-MIG-F03` are permanently retired; their IDs must never be reused.
 
 ---
 
@@ -188,22 +184,21 @@
 | VS0-CF-I01 | Idempotency same-digest | FEATURE-0024 | race | DEC-0029 | VS0-SCHEMA-035,050, VS0-STATE-005 |
 | VS0-CF-I02 | Idempotency diff-digest | FEATURE-0024 | race | DEC-0029 | VS0-SCHEMA-035,050, VS0-STATE-005 |
 | VS0-CF-D01 | Deletion ordering | FEATURE-0024 | lifecycle | DEC-0029/0051 | VS0-STATE-006,007, VS0-WRITER-019 |
-| VS0-CF-F15-01 | Canonical resource registration | FEATURE-0015 | feature | DEC-0037/0041/0042 | VS0-SCHEMA-008..015 |
-| VS0-CF-F15-02 | Per-resource scope subset denial | FEATURE-0015 | feature | DEC-0037 | VS0-SCHEMA-001,008..015,060..061 |
-| VS0-CF-F15-03 | Participation delegated acceptance | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042 | VS0-STATE-001, VS0-WRITER-004 |
+| VS0-CF-F15-01 | Canonical resource registration | FEATURE-0015 | feature | DEC-0037/0041/0042 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-02 | Per-resource scope subset denial | FEATURE-0015 | feature | DEC-0037 | VS0-SCHEMA-001,008..014 |
+| VS0-CF-F15-03 | Participation delegated acceptance | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042/045 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-04 | Participation pair uniqueness | FEATURE-0015 | feature | DEC-0054 | VS0-SCHEMA-010 |
 | VS0-CF-F15-05 | Client status-write denial | FEATURE-0015 | security | FEATURE-0012 status contract | VS0-WRITER-005 |
 | VS0-CF-F15-06 | System-owned metadata-write denial | FEATURE-0015 | security | FEATURE-0012 grammar | VS0-WRITER-001 |
-| VS0-CF-F15-07 | Migration-plan immutability | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-060, VS0-STATE-010 |
-| VS0-CF-F15-08 | Signed-backup and restore-verification guard | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-061, VS0-STATE-011 |
+| VS0-CF-F15-07 | PATCH-only update surface (no PUT/DELETE) | FEATURE-0015 | feature | DEC-0059; ADH-2026-045 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-08 | Independent suspension hold isolation | FEATURE-0015 | feature | DEC-0054; ADH-2026-045 | VS0-STATE-001, VS0-SCHEMA-010 |
 | VS0-CF-F15-09 | Participation activation denial without both delegations | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042 | VS0-STATE-001, VS0-WRITER-004 |
-| VS0-CF-F15-10 | Migration writer separation | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-WRITER-020,021 |
+| VS0-CF-F15-10 | Suspend/resume denial in terminal/Pending/Terminating phases | FEATURE-0015 | feature | DEC-0054; ADH-2026-045 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-11 | Scope reference UID mismatch | FEATURE-0015 | feature | DEC-0037/0054; ADH-2026-042/043 | VS0-SCHEMA-008,010 |
-| VS0-CF-MIG01 | Provider-topology run determinism with signed backup and verified restore (run-local Completed) | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042/044 | VS0-SCHEMA-060,061, VS0-STATE-011, VS0-WRITER-020,021 |
-| VS0-CF-MIG02 | Migration record immutability | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-SCHEMA-061, VS0-STATE-010, VS0-WRITER-020 |
-| VS0-CF-MIGF01 | Invalid migration milestone | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F01, VS0-STATE-011 |
-| VS0-CF-MIGF02 | Dual migration authority | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F02, VS0-WRITER-020 |
-| VS0-CF-MIGF03 | Unresolved migrated reference | FEATURE-0015 | migration | DEC-0058; ADH-2026-041/042 | VS0-MIG-F03, VS0-SCHEMA-061 |
+
+## FEATURE-0015 Migration Conformance — Retired (Canonical Bootstrap)
+
+Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG02`, `VS0-CF-MIGF01`, `VS0-CF-MIGF02`, and `VS0-CF-MIGF03` are permanently retired; their IDs must never be reused. FEATURE-0015 has no migration proof because there is no live alpha state to convert.
 
 ---
 
@@ -234,7 +229,7 @@
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..11, VS0-CF-MIG01..MIG02, VS0-CF-MIGF01..MIGF03) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local and migration conformance cases.
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..11) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059).
 
 ---
 

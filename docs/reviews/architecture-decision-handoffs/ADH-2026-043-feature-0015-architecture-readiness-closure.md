@@ -1,3 +1,5 @@
+> **SUPERSESSION NOTICE (2026-08-11):** Decisions 1–3 and 6 of this handoff (the portions governing CanonicalMigrationPlan/CanonicalMigrationRecord behavior — correction model, draft representation, migration inventory/feature boundary, and the migration portion of the audit contract) are superseded by **ADH-2026-045** ("Replace alpha runtime migration with a canonical bootstrap") and **DEC-0059** (supersedes DEC-0058). There is no migration plan/record/controller in active Phase 2R authorities. Decisions 4 (safe-denial), 5 (scope-reference integrity), and the non-migration portion of decision 6 (FEATURE-0013 AuditEvent reuse, correlation, no-secrets), decision 7 (feature-local traceability) **remain intact and unaffected**. This document is preserved below as an unmodified historical record — it is not rewritten or deleted.
+
 # Architecture Decision Handoff
 
 ## Metadata
@@ -9,7 +11,7 @@
 - Related phase: Phase 2R
 - Author: Codex
 - Human approver: Sanjeev Kumar
-- Approval status: Approved
+- Approval status: Approved; **decisions 1–3 and 6 (migration portions) superseded by ADH-2026-045 (2026-08-11)**
 
 ## Decision title
 

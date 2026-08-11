@@ -39,13 +39,13 @@ Phase 2R remains a contract and side-effect-free simulation phase. It may use de
 | DEC-0055 | ADH-2026-038 | Platform sovereignty evaluates one SovrunnInstallation and every dependency able to control, observe, change, decrypt or recover it |
 | DEC-0056 | ADH-2026-039 | Release compatibility is directed; recovery actions and lifecycle-reference contracts are explicit and pinned |
 | DEC-0057 | ADH-2026-040 | External maintenance has explicit notice authority, target lifecycle ownership, epochs, fences and mandatory requalification |
-| DEC-0058 | ADH-2026-041 | Alpha migration is one signed cutover with no dual write/authority and immutable history preservation |
+| DEC-0058 | ADH-2026-041 | Superseded by DEC-0059 (ADH-2026-045): the first control-plane release exposes canonical contracts only; no runtime alpha migration |
 
 ## 3. Rebaselined FEATURE-0015–0026 sequence
 
 | Order | Feature | Scope and sole ownership | Depends on | Phase 2R exit evidence |
 |---:|---|---|---|---|
-| 1 | **FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation** | Seven-scope migration; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; externally operated InfrastructureStack; ExecutionTarget identity; CanonicalMigrationPlan/Record; no ResourcePool/ProviderCapability | FEATURE-0011–0014; ADH-020/024/025/037/041 | Deterministic dry-run conversion of Provider/topology fixtures; zero ambiguous authorities; old and new writers never coexist; provider credential isolation |
+| 1 | **FEATURE-0015 Canonical Cloud Model Foundation** | Seven-scope canonical bootstrap; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; externally operated InfrastructureStack (ends here); no ResourcePool/ProviderCapability; no CanonicalMigrationPlan/Record | FEATURE-0011–0014; ADH-020/024/025/037/045 | Direct canonical resource creation with zero ambiguous authorities; provider credential isolation; no alpha runtime migration |
 | 2 | **FEATURE-0016 Adapter Boundary and ExecutionTarget Qualification** | Core adapter interfaces; normalized target facts; target qualification and availability axes; target-scoped SecretRefs; fake adapter | FEATURE-0015; DEC-0036 | One fake target qualifies and one is denied; no provider-native fields in canonical/customer contracts |
 | 3 | **FEATURE-0017 Policy Evaluation Abstraction** | PolicyEvaluationRequest/Result, PolicyEngineAdapter and DecisionRecord linkage; deterministic bootstrap fake only | FEATURE-0013, FEATURE-0016 | Allow, deny, unknown and adapter-failure fixtures; no embedded custom policy engine |
 | 4 | **FEATURE-0018 Governance, IAM, Approval and Exception Foundation** | GovernanceProfile, Membership, RoleDefinition, RoleAssignment, PrivilegedAccessRequest, AccessReview, ApprovalPolicy, ApprovalRequest and ExceptionGrant | FEATURE-0012, FEATURE-0017 | Least privilege, scoped assignment, JIT expiry, separation of duties, no persona-based authorization |

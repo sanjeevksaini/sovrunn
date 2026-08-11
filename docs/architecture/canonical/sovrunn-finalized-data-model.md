@@ -38,7 +38,7 @@ API refinement: `SovereigntyFacts` and `ServiceRequirements` remain conceptual l
 15. **Single external lifecycle authority:** accepted installation lifecycle intent is committed to one independently recoverable authoritative repository; the Sovrunn API is a request and safe-projection surface, not a second source of truth.
 16. **Directed compatibility:** release transitions and recovery paths are explicitly published and verified; version proximity never implies compatibility.
 17. **Externally announced, internally fenced maintenance:** infrastructure operators announce native maintenance while Sovrunn alone controls target availability projections, placement fencing and service-impact orchestration.
-18. **One-way canonical migration:** breaking alpha corrections use a coordinated cutover with immutable mappings and no dual desired-state authority.
+18. **Canonical bootstrap, not runtime migration:** the first executable control plane exposes canonical resource contracts only; completed FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion (DEC-0059).
 
 ## 3. Model overview
 
@@ -53,7 +53,8 @@ flowchart TB
     AGENT["External PlatformLifecycleAgent"] -. "executes approved plan" .-> POP
   end
 
-  OWNER["Owner Organization"] --> CPLAT["CloudPlatform"]
+  PLATROOT["Platform root (sovrunn)"] -. "scopeRef" .-> CPLAT["CloudPlatform"]
+  CPLAT -. "immutable spec.ownerRegistration" .-> OWNERREG["legalName + registrationIdentifier + jurisdictionCode"]
   CP["CloudProvider"]
   PART["CloudProviderParticipation"]
   CPLAT --- PART
@@ -151,11 +152,17 @@ Feature specifications may package a contract as a resource or subresource, but 
 
 ### 5.1 `CloudPlatform`, `CloudProvider` and participation
 
-`CloudPlatform` is the named customer-facing cloud product and governance boundary. It is owned by exactly one `Organization`, which publishes the catalog, enrolls customers and establishes platform-wide governance.
+`CloudPlatform` is the named customer-facing cloud product and governance boundary. It is a Platform-scoped canonical resource with no `Organization` scope or `Organization` reference; its immutable `spec.ownerRegistration` records the owning legal entity's `legalName`, `registrationIdentifier`, and `jurisdictionCode` directly, without a user, Organization, role, or grant reference. Multiple CloudPlatforms may share the same owner registration. It publishes the catalog, enrolls customers, and establishes platform-wide governance.
 
-`CloudProvider` is the independent operator supplying execution environments. It registers and operates hosting topology, execution targets, maintenance notices, realization mappings and provider-scoped operating policy. Contracting a provider does not make it a child of the CloudPlatform owner.
+`CloudProvider` is the independent operator supplying execution environments, also Platform-scoped with no deployment reference, credential, or CloudPlatform reference. It registers and operates hosting topology, execution targets, maintenance notices, realization mappings and provider-scoped operating policy. Contracting a provider does not make it a child of the CloudPlatform owner.
+
+A Sovrunn deployment is the implicit runtime/control-plane boundary, not an F0015 resource or reference; every F0015 Platform-scoped resource receives an immutable server-assigned `metadata.scopeRef` to the deployment's canonical Platform root (`core.sovrunn.io/v1alpha1`, kind `Platform`, name `sovrunn`, UID-pinned), which clients neither supply nor PATCH. `CloudProviderParticipation` is CloudPlatform-scoped; `HostingLocation`, `Datacenter`, `FaultDomain`, and `InfrastructureStack` are CloudProvider-scoped.
+
+CloudPlatform exists first: a CloudProvider, topology resource, or `CloudProviderParticipation` create is denied until at least one CloudPlatform exists in the authoritative deployment control plane, returning CONFLICT (409) with `VS0_CLOUDPLATFORM_ROOT_REQUIRED`. CloudProvider exists before its topology and before participation. Provider topology may be registered before participation is Active, but it is not customer-visible merely because it exists.
 
 `CloudProviderParticipation` joins exactly one `CloudPlatform` and one `CloudProvider`. It records scope of supply, effective period, eligible locations and portfolios, responsibilities, protected agreement references and provider-selection eligibility. Each `SovrunnInstallation` serves exactly one participation and therefore one CloudPlatform and one CloudProvider.
+
+Participation follows an explicit request/accept lifecycle: `Pending` (provider request) → `Active` (platform acceptance) or a terminal `Rejected`/`Withdrawn`/`Expired` outcome from `Pending`. From `Active`, the relationship may become `Suspended` and later return to `Active`, or move to `Terminating` and then terminal `Terminated`. `Suspended` is a derived effective state carried by two independent, separately controlled holds — `platformSuspended` (set/cleared only by the CloudPlatform administrator) and `providerSuspended` (set/cleared only by the CloudProvider administrator). A participation is effectively `Active` only when accepted and both holds are false; it is effectively `Suspended` when either hold is true. Clearing one hold does not reactivate a participation while the other hold remains true. An Active `CloudProviderParticipation` is necessary but not sufficient for customer visibility: the CloudPlatform separately decides which enrolled customer Organizations may see or select it, and individual-user visibility derives from that Organization-level eligibility and scoped authorization rather than from a field stored on the participation itself. Pending, Rejected, Withdrawn, Expired, Suspended, Terminating, and Terminated participations are never end-user visible.
 
 **The CloudPlatform owns or publishes:**
 
@@ -177,6 +184,8 @@ Feature specifications may package a contract as a resource or subresource, but 
 - country or legal sovereignty definitions.
 
 `CloudProvider` is used instead of the generic name `Provider` because the latter is ambiguous across identity, infrastructure, service and capability-provider contexts. `CloudPlatform` is not a synonym: it is the product customers consume, while `CloudProvider` is a supply participant.
+
+Mutable `CloudPlatform`, `CloudProvider`, and hosting-topology (`HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`) resources expose only `PATCH` with `application/merge-patch+json` for their approved mutable fields; identity, scope, relationship references, and system-owned status remain immutable and are never exposed through `PUT` or `DELETE`. `CloudProviderParticipation` has no mutable spec fields once created; its lifecycle changes occur only through the explicit participation actions described above, not through PATCH.
 
 ### 5.2 Reusable service contracts
 
@@ -419,6 +428,8 @@ flowchart LR
 | `ExecutionTarget` | Provider-approved, adapter-addressable realization boundary against which Sovrunn can execute service lifecycle actions | May represent an infrastructure platform, external managed-service API, edge environment, remote control plane or future federated endpoint; uses narrow credentials |
 
 `HostingLocation` is preferred over `Country` because country is one important attribute of geography, not the complete location model. The resource can also describe state, province, locality, seismic classification and other physical facts without turning them into fixed core hierarchy levels.
+
+FEATURE-0015 owns direct creation of `CloudPlatform`, `CloudProvider`, `CloudProviderParticipation`, `HostingLocation`, `Datacenter`, and `FaultDomain`, and ends at `InfrastructureStack`. `ExecutionTarget` — including its identity, schema, routes, status, writer, conformance, and target lifecycle — belongs in its entirety to FEATURE-0016; FEATURE-0015 introduces no `ExecutionTarget` contract, invariant, or route.
 
 ```yaml
 kind: ExecutionTarget
@@ -897,7 +908,7 @@ The platform lifecycle module manages Sovrunn software and state, including inst
 
 | Source | Relationship | Target | Cardinality and rule |
 |---|---|---|---|
-| owner `Organization` | owns | `CloudPlatform` | One-to-many; each CloudPlatform has exactly one owner Organization |
+| Platform root | scopes | `CloudPlatform` | One-to-many; every CloudPlatform receives an immutable server-assigned scopeRef to the deployment's Platform root; CloudPlatform has no Organization scope or reference |
 | `CloudPlatform` | contracts through | `CloudProviderParticipation` | One-to-many; each participation references exactly one independent CloudProvider |
 | `CloudProvider` | supplies through | `CloudProviderParticipation` | One-to-many; a provider may participate in several CloudPlatforms only through separate participation and installation boundaries |
 | `CloudProviderParticipation` | is served by | `SovrunnInstallation` | Exactly one active production installation per CloudPlatform + CloudProvider + environment initially; HA replicas form one logical installation |
@@ -941,7 +952,7 @@ Cross-Project relationships require authorization at both endpoints and reveal n
 
 ## 16. Model invariants
 
-1. Owner Organization, CloudPlatform, CloudProvider and customer Organization are distinct boundaries: ownership, supply participation and customer enrollment must never be conflated.
+1. CloudPlatform's immutable owner registration, CloudProvider, and customer Organization are distinct boundaries: platform ownership, supply participation and customer enrollment must never be conflated. CloudPlatform has no Organization scope or Organization reference.
 2. Consumption requires an active `CloudEnrollment` and applicable `ServiceEntitlement`; realization additionally requires an eligible `CloudProviderParticipation`.
 3. Entitlement and quota are evaluated independently; descendant quota policies may narrow but never enlarge the CloudPlatform-granted envelope.
 4. `OrganizationUnit` is optional and is not a tenant or provider-enrollment boundary.
@@ -987,35 +998,24 @@ Cross-Project relationships require authorization at both endpoints and reveal n
 44. Qualification and availability are separate target axes; cancellation or maintenance completion cannot bypass requalification.
 45. Maintenance acceptance increments the target epoch, and stale placement, plan or PluginExecution fences fail closed.
 46. Breaking alpha migration prohibits dual write and dual authority; legacy read/import support is bounded, read-only and non-authoritative.
-47. Immutable historical DecisionRecords and AuditEvents are not rewritten; append-only migration records preserve old-to-new identity and provenance.
-48. After canonical cutover, obsolete kinds, scope values and desired-state endpoints are rejected rather than retained as permanent aliases.
+47. Immutable historical DecisionRecords and AuditEvents from FEATURE-0001–0014 are retained as repository history and are not rewritten.
+48. Obsolete alpha kinds, scope values and desired-state endpoints are not carried forward as active compatibility surfaces and are rejected rather than retained as permanent aliases.
 49. Every `SovrunnInstallation` serves exactly one `CloudProviderParticipation`; one installation must never serve several CloudProviders or silently cross CloudPlatform boundaries.
 50. Customer provider choice is explicit intent evaluated against participation, entitlement, policy, sovereignty and operational eligibility; automatic assignment is a governed placement decision, not hidden catalog ownership.
 51. Platform sovereignty evaluates the exact installation and complete current dependency snapshot; control-plane geography alone never proves the outcome.
 52. A required platform-sovereignty assessment must be current and satisfactory before placement or execution; dependency or evidence change triggers reassessment and fail-closed handling according to policy.
 
-### 16.1 Coordinated alpha migration
+### 16.1 Canonical bootstrap (no alpha runtime migration)
 
-The repository baseline migrates through one signed `CanonicalMigrationPlan` and retained `CanonicalMigrationRecord`; completed FEATURE-0001–0014 remain immutable implementation history. Dual write and dual authority are prohibited. A legacy importer or compatibility projection may be temporarily available only as read-only migration machinery.
+Per DEC-0059 (superseding DEC-0058), Sovrunn has no live control plane, customer data, production API estate, or persisted alpha state to convert. The first control-plane release therefore creates canonical resources directly rather than migrating them. There is no `CanonicalMigrationPlan`, `CanonicalMigrationRecord`, migration controller, runtime converter, or cutover state machine in Phase 2R.
 
-```text
-Draft
-  → InventoryValidated
-  → DryRunPassed
-  → WriteFrozen
-  → BackupVerified
-  → Transformed
-  → ReferencesVerified
-  → CutoverActivated
-  → ConformancePassed
-  → Completed
-```
+FEATURE-0001 through FEATURE-0014 remain retained repository assets and implementation history. Their code, documents, tests, standards, and compatible generic infrastructure are assessed for reuse or extension under FEATURE-0011; they do not constitute live control-plane data requiring conversion. Obsolete alpha domain kinds and APIs (generic `Provider`, provider-prefixed topology, global `ServiceClass`, `CloudProviderEnrollment`, unimplemented `ResourcePool`/`ProviderCapability` placeholders) are not carried forward as active compatibility surfaces; they are not reintroduced as runtime APIs, writers, projections, or persistence contracts.
 
-Existing Provider records are classified rather than blindly renamed: customer-cloud ownership becomes owner Organization plus CloudPlatform; infrastructure operation becomes CloudProvider plus CloudProviderParticipation; an entity performing both roles receives both relationships with separate authority. Provider-prefixed topology maps deterministically to HostingLocation, Datacenter and FaultDomain. Global ServiceClass splits into ServiceTypeDefinition and one or more CloudPlatform-scoped ServiceOfferings. CloudProviderEnrollment becomes CloudEnrollment. Unimplemented ResourcePool and ProviderCapability placeholders are withdrawn without a runtime-data migration.
+If historical fixture comparison remains useful during development, it is a bounded developer/test utility only. It is neither a platform resource nor a runtime protocol, accepts no user data, has no active API, and creates no migration authority.
 
-One-to-one transforms preserve UID where semantics are unchanged. Split transforms allocate linked UIDs through an immutable mapping. Historical DecisionRecords and AuditEvents remain in their original immutable representation or a read-only archive; new projections and migration records link them without rewriting history.
+Historical DecisionRecords and AuditEvents from FEATURE-0001–0014 remain in their original immutable representation as repository history; they are not rewritten, imported, or linked into a new migration-evidence chain.
 
-Cutover requires a deterministic replayable dry run, verified backup/restore, zero ambiguous authorities, zero unresolved references, no legacy desired-state writers, complete scope/authorization/catalog/topology/decision/audit conformance and a post-cutover drift scan. Recovery before and after the irreversible checkpoint follows the exact ReleaseCompatibilityContract.
+The one-authority principle is satisfied by beginning with canonical desired-state contracts only, not by operating alpha and canonical writers during a coordinated cutover.
 
 ## 17. Future-service extensibility model
 
@@ -1121,8 +1121,8 @@ Reusable service contract registry
   ServiceRelationshipDefinition
 
 CloudPlatform product and provider-supply model
-  owner Organization
-    └── CloudPlatform
+  Platform root (sovrunn)
+    └── CloudPlatform (immutable spec.ownerRegistration; no Organization scope/reference)
     ├── ServiceRegion
     ├── ServicePortfolio ↔ versioned membership ↔ ServiceOffering
     │     └── ServiceOffering → pinned ServiceTypeDefinition version
@@ -1253,7 +1253,7 @@ The model separates:
 - atomic lifecycle acceptance from asynchronous, checkpointed external execution;
 - directed release compatibility from unsafe version inference;
 - native maintenance authority from Sovrunn target-state and placement authority;
-- legacy migration evidence from new desired-state authority;
+- retained alpha implementation history from active canonical desired-state authority;
 - service relationships from access bindings;
 - implementation-neutral intent from target-native realization;
 - customer visibility from sensitive backend details.

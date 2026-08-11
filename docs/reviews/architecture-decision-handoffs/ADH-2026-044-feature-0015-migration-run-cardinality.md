@@ -1,3 +1,5 @@
+> **SUPERSESSION NOTICE (2026-08-11):** This handoff is superseded in its entirety by **ADH-2026-045** ("Replace alpha runtime migration with a canonical bootstrap") and **DEC-0059** (supersedes DEC-0058). This handoff exists solely to govern `CanonicalMigrationPlan`/`CanonicalMigrationRecord` run cardinality; since those resources no longer exist as active Phase 2R behavior, its run-cardinality decision is moot. This document is preserved below as an unmodified historical record — it is not rewritten or deleted.
+
 # Architecture Decision Handoff
 
 ## Metadata
@@ -9,7 +11,7 @@
 - Related phase: Phase 2R
 - Author: Codex
 - Human approver: Sanjeev Kumar
-- Approval status: Approved
+- Approval status: Approved; **superseded in its entirety by ADH-2026-045 (2026-08-11)**
 
 ## Decision title
 

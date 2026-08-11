@@ -11,8 +11,8 @@ resources:
   - file://docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md
   - file://docs/architecture/reference-flows/postgresql-end-to-end.md
   - file://docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md
-  - file://docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md
-  - file://docs/features/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md
+  - file://docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md
+  - file://docs/features/FEATURE-0015-canonical-cloud-model-foundation.md
   - file://.automation/features/FEATURE-0015.control.json
   - file://docs/architecture/api-resource-standard.md
   - file://docs/phase2/PHASE2R_REBASELINE.md
@@ -70,7 +70,11 @@ metadata.scopeRef.
 
 FEATURE-0014 is implemented and merged. Its alpha model resources (Provider,
 ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, InfrastructureStack)
-remain history. The canonical model migrates these per DEC-0037/DEC-0041/DEC-0058.
+remain retained repository history assessed for reuse under FEATURE-0011. Per
+DEC-0059 (supersedes DEC-0058; ADH-2026-045), FEATURE-0015 creates the canonical
+model (CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation,
+Datacenter, FaultDomain, InfrastructureStack) directly — there is no runtime
+alpha migration, CanonicalMigrationPlan/Record, or migration controller.
 
 ## Before Writing an Artifact
 

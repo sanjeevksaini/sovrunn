@@ -15,7 +15,7 @@ This matrix links features to tenets, decisions, RFCs, tests, and gate status.
 
 | Feature | Phase | Status | Decisions | Controlling Source | Notes |
 |---|---|---|---|---|---|
-| FEATURE-0015 | Phase 2R | Architecture ready; Kiro requirements not started | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0058 | ADH-2026-042, ADH-020/024/025/037/041; `FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md`; VS0-SCHEMA-008..015/060/061; VS0-WRITER-001/003/004/020; VS0-STATE-001/010/011; VS0-CF-MIG01/MIG02/X03 | Closed canonical cloud identity and append-only alpha migration boundary; manifest prepared, architecture human gate still required |
+| FEATURE-0015 | Phase 2R | Architecture ready; Kiro requirements not started | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0059 | ADH-2026-042/045, ADH-020/024/025/037; `FEATURE-0015-canonical-cloud-model-foundation.md`; VS0-SCHEMA-008..014; VS0-WRITER-001/003/004; VS0-STATE-001/010; VS0-CF-F15-01..11/X03 | Canonical bootstrap replaces alpha runtime migration (ADH-2026-045); FEATURE-0015 ends at InfrastructureStack; manifest prepared, architecture human gate still required |
 | FEATURE-0016 | Phase 2R | Planned | DEC-0036, DEC-0042 | ADH-2026-042 | Adapter boundary and ExecutionTarget qualification |
 | FEATURE-0017 | Phase 2R | Planned | DEC-0028, DEC-0043 | ADH-2026-042 | Policy evaluation with DecisionRecord linkage |
 | FEATURE-0018 | Phase 2R | Planned | DEC-0050 | ADH-2026-042 | Governance, IAM, approval, exception |

@@ -18,7 +18,7 @@ Load in this exact sequence before any VS-000 contributing stage:
 9. docs/architecture/vertical-slices/VS-000-contract-registry.yaml
 10. docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md
 11. Current FEATURE-xxxx file (requirements, design, tasks)
-12. docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md (when working on FEATURE-0015)
+12. docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md (when working on FEATURE-0015)
 13. FEATURE-0012 and FEATURE-0013 authorities (when schemas/errors/decisions consumed)
 ```
 
@@ -68,9 +68,7 @@ Conflict stop: if any loaded authority contradicts a higher-precedence authority
 - No plan/decision/execution authority collapse (planner ≠ decision-service ≠ executor).
 - No secret values in any writer path; `SecretRef` identifier only.
 - Conflicts fail closed per registered conflict code.
-- The approved-migration-plan-publisher is the sole writer of CanonicalMigrationPlan.record (VS0-WRITER-021).
-- The migration-controller is the sole writer of CanonicalMigrationRecord.record (VS0-WRITER-020) and operates only under an approved signed plan.
-- The migration-controller must never author or approve its own CanonicalMigrationPlan; the plan publisher must never append migration records.
+- CanonicalMigrationPlan/Record, the migration-controller, and the approved-migration-plan-publisher are retired (DEC-0059 supersedes DEC-0058; ADH-2026-045 canonical bootstrap). VS0-WRITER-020 and VS0-WRITER-021 are permanently retired tombstones and must never be reused or reintroduced as active writers.
 
 ## 7. State Anti-Drift
 
@@ -80,8 +78,7 @@ Conflict stop: if any loaded authority contradicts a higher-precedence authority
 - Operation owns async lifecycle: `Pending → Running → Succeeded | Failed | Cancelled`.
 - Immutable records are append-only; corrections create linked records, never mutate.
 - Invalid transitions are rejected with the registered error/violation.
-- CanonicalMigrationPlan is FINAL on persistence; it has no mutable execution lifecycle.
-- VS0-STATE-011 is the ordered append-only CanonicalMigrationRecord milestone sequence, not a mutable CanonicalMigrationPlan state machine.
+- VS0-STATE-011 (formerly the CanonicalMigrationRecord milestone sequence) is retired (DEC-0059 supersedes DEC-0058; ADH-2026-045 canonical bootstrap) and must never be reused or reintroduced.
 
 ## 8. Error Anti-Drift
 
@@ -95,8 +92,8 @@ Conflict stop: if any loaded authority contradicts a higher-precedence authority
 
 - Every requirement maps to: ADH/DEC authority + owner + schema/writer/state/error IDs + `VS0-CF-<ID>`.
 - Failure mappings `VS0-F01..F20` have one-to-one conformance cases `VS0-CF-F01..F20`.
-- Migration failures `VS0-MIG-F01..F03` have one-to-one conformance cases `VS0-CF-MIGF01..MIGF03` with exact top-level codes and violations.
-- FEATURE-0015 local conformance uses `VS0-CF-F15-01..F15-11`, `VS0-CF-MIG01..MIG02`, `VS0-CF-MIGF01..MIGF03`, and `VS0-CF-X03`.
+- Migration conformance (`VS0-MIG-F01..F03`, `VS0-CF-MIG01..MIG02`, `VS0-CF-MIGF01..MIGF03`) is retired (DEC-0059 supersedes DEC-0058; ADH-2026-045 canonical bootstrap) and must never be reused or reintroduced.
+- FEATURE-0015 local conformance uses `VS0-CF-F15-01..F15-11` and `VS0-CF-X03`.
 - FEATURE-0015 traceability must NOT use downstream-owned conformance (HP01, F09) as local acceptance evidence; those are integration references only.
 - Registry, traceability matrix, and test contract update atomically in the same change.
 - Run `make vs000-contract-check` and `make phase2r-drift-check` before marking complete.

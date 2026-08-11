@@ -4,13 +4,13 @@
 **Phase:** Phase 2R — Canonical Model PaaS Fabric Foundation
 **Baseline:** `ARCH-2026.08-PHASE2R-CANONICAL`
 **Approved date:** 2026-08-04
-**Immediate feature:** FEATURE-0015 — Canonical Cloud Model and Alpha Migration Foundation
+**Immediate feature:** FEATURE-0015 — Canonical Cloud Model Foundation
 **Scope:** Architecture, contract, simulation, and conformance only
 **Controlling rebaseline:** `docs/phase2/PHASE2R_REBASELINE.md`
 **Canonical model:** `docs/architecture/canonical/sovrunn-finalized-data-model.md`
 **Contract catalog:** `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md`
 **Cross-feature acceptance:** `docs/architecture/vertical-slices/VS-000-core-skeleton.md`
-**Decisions:** DEC-0037 through DEC-0058
+**Decisions:** DEC-0037 through DEC-0059
 
 ---
 
@@ -125,9 +125,9 @@ Reason codes, policy references, evidence versions, rejected alternatives, and s
 
 A later feature may consume or specialize an earlier contract but may not silently redefine it. Changing an earlier contract requires an Architecture Decision Handoff.
 
-### Invariant M — No dual authority
+### Invariant M — Canonical bootstrap, not runtime migration
 
-Old and new writers never coexist (DEC-0058). Alpha migration is one signed cutover with immutable history preservation.
+The first control-plane release exposes canonical resource contracts only (DEC-0059, supersedes DEC-0058). FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion; there is no dual-writer cutover to manage because there is no alpha authority to coexist with.
 
 ---
 
@@ -138,7 +138,7 @@ Old and new writers never coexist (DEC-0058). Alpha migration is one signed cuto
 | Architecture governance | Reuse assessment, controls, feature-level decision discipline | FEATURE-0011 |
 | Resource contract | Resource grammar, API boundaries, references, validation, status, conditions | FEATURE-0012 |
 | Decision and accountability | DecisionRecord, DecisionProfile, AuditEvent, scope authority | FEATURE-0013 |
-| Canonical cloud model | Seven-scope migration, CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, ExecutionTarget, CanonicalMigrationPlan | FEATURE-0015 |
+| Canonical cloud model | Seven-scope canonical bootstrap: CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack (ends here; no alpha runtime migration) | FEATURE-0015 |
 | Integration boundary | Adapter contracts, ExecutionTarget qualification, normalized target facts, fake adapter | FEATURE-0016 |
 | Policy context | Policy Evaluation Abstraction: PolicyEvaluationRequest/Result, PolicyEngineAdapter, DecisionRecord linkage | FEATURE-0017 |
 | Governance and access | Governance, IAM, Approval and Exception Foundation: GovernanceProfile, Membership, Roles, Approval, Exception | FEATURE-0018 |
@@ -180,7 +180,7 @@ At FEATURE-0026 completion, Sovrunn demonstrates through VS-000:
 FEATURE-0011–0014 completed baseline
               │
               ▼
-FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation
+FEATURE-0015 Canonical Cloud Model Foundation
               │
               ▼
 FEATURE-0016 Adapter Boundary and ExecutionTarget Qualification
@@ -229,7 +229,7 @@ FEATURE-0019 may proceed in parallel with FEATURE-0017/0018 after FEATURE-0016.
 | Organization, OrganizationUnit, Tenant, Project | Phase 1 retained | Governance resolution, enrollment, audit | Phase 2R references; does not redesign the hierarchy. |
 | Common resource grammar, seven-scope vocabulary | FEATURE-0012 retained + DEC-0037 | Every later resource | Owns metadata, scopeRef, references, status, validation, conditions, Problem Details. |
 | DecisionRecord, DecisionProfile, AuditEvent | FEATURE-0013 retained + DEC-0043 | Sovereignty, placement, governance, plugin, AI | Common immutable envelope with registered profiles. Specialized decisions extend it. |
-| CloudPlatform, CloudProvider, CloudProviderParticipation, ExecutionTarget | FEATURE-0015 | Adapter qualification, enrollment, placement, plugin | Implementation-neutral cloud model. No combined owner/operator concept. |
+| CloudPlatform, CloudProvider, CloudProviderParticipation, topology through InfrastructureStack | FEATURE-0015 | Adapter qualification, enrollment, placement, plugin | Implementation-neutral cloud model. No combined owner/operator concept. ExecutionTarget owned entirely by FEATURE-0016. |
 | Adapter contracts, target qualification | FEATURE-0016 | Policy, sovereignty, placement, plugin | Normalized facts. No provider-native leakage into customer/core. |
 | PolicyEvaluationRequest/Result | FEATURE-0017 | Governance resolution, placement | Engine-neutral. No OPA/Cedar native objects in core. |
 | GovernanceProfile, Membership, Roles, Approval, Exception | FEATURE-0018 | Resolution, entitlement, placement | Declarative governance inputs and access control. |

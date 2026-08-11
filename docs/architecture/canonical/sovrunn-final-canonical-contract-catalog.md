@@ -31,18 +31,18 @@ The final target model intentionally corrects parts of the current Phase 2 repos
 | Amendment | Current repository baseline | Final canonical contract | Required action |
 |---|---|---|---|
 | Cloud ownership and provider identity | `Provider` conflates customer cloud ownership, product publication and infrastructure operation | Owner `Organization` + `CloudPlatform` for the customer-facing cloud; independent `CloudProvider` joined by `CloudProviderParticipation` | Amend FEATURE-0012 scope vocabulary and dependent schemas; classify rather than blindly rename alpha records; bind every installation to one participation |
-| Physical topology | `ProviderLocation → ProviderDatacenter → DatacenterFailureDomain → InfrastructureStack` strict containment | `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack` and `ExecutionTarget` as provider-registered facts and relationships | Supersede FEATURE-0014 architecture through an approved amendment; preserve stable identity and migration mappings |
+| Physical topology | `ProviderLocation → ProviderDatacenter → DatacenterFailureDomain → InfrastructureStack` strict containment | `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack` (FEATURE-0015) and `ExecutionTarget` (FEATURE-0016) as provider-registered facts and relationships | Supersede FEATURE-0014 architecture through an approved amendment; FEATURE-0015 creates the canonical topology resources directly (DEC-0059; no migration mapping) |
 | Placement and sovereignty conclusions | FEATURE-0013 owns the only common decision envelope | `PlacementDecision` and `SovereigntyAssessment` remain domain concepts | Implement each as a registered `DecisionProfile` and typed `DecisionRecord`; do not create competing decision envelopes |
 | Plural conceptual names | `SovereigntyFacts` and `ServiceRequirements` are conceptual labels | API kinds must be singular PascalCase | Use `SovereigntyFactSet` and `ServiceRequirementSet` as API kinds while retaining the conceptual labels in explanatory text |
 | Infrastructure allocation | FEATURE-0015 planned `ResourcePool` and provider capability resources | No mandatory resource pool or provider-wide capability in the core | Reframe post-0014 roadmap around execution targets, normalized facts, requirements and adapters |
-| CloudPlatform product catalog | FEATURE-0006 implements a global mutable `ServiceClass` and `ServicePlan` | Reusable versioned `ServiceTypeDefinition` plus CloudPlatform-scoped, versioned `ServiceOffering` and `ServicePlan` definitions | Split reusable technical semantics from cloud-product identity; migrate existing classes deterministically and rewrite plan, plugin, instance, demo and CLI references while APIs are alpha |
-| Customer enrollment | Customer Organization enrolls directly with the old Provider/CloudProvider product boundary | `CloudEnrollment` joins customer Organization to CloudPlatform; provider realization eligibility derives from participation and placement | Migrate enrollment and entitlement references as one coordinated cutover; prohibit old/new dual authority |
+| CloudPlatform product catalog | FEATURE-0006 implements a global mutable `ServiceClass` and `ServicePlan` | Reusable versioned `ServiceTypeDefinition` plus CloudPlatform-scoped, versioned `ServiceOffering` and `ServicePlan` definitions | Split reusable technical semantics from cloud-product identity; FEATURE-0022 creates the canonical catalog resources directly; FEATURE-0006 remains retained repository history assessed for reuse (DEC-0059) |
+| Customer enrollment | Customer Organization enrolls directly with the old Provider/CloudProvider product boundary | `CloudEnrollment` joins customer Organization to CloudPlatform; provider realization eligibility derives from participation and placement | FEATURE-0021 creates `CloudEnrollment` directly; there is no old/new dual authority to prohibit because there is no runtime migration (DEC-0059) |
 | Governance resolution | Planned FEATURE-0018–0021 split overlapping policy/profile kinds and use `EffectivePolicyContext` | Compositional `GovernanceProfile`, separate `SovereigntyProfile` and immutable `EffectiveGovernanceContext` | Rebaseline the planned features and amend FEATURE-0013 terminology without weakening provenance or typed-reference rules |
 | Managed-service access | FEATURE-0008 implements `ServiceBinding` and planned FEATURE-0033 extends it | `ServiceBinding` remains the per-consumer, Project-scoped access boundary | Retain the resource; require SecretRef-only delivery, independent rotation/revocation and lifecycle protection |
 | Sovrunn platform lifecycle | No complete canonical model for installing, upgrading, backing up, restoring or recovering the Sovrunn control plane | `SovrunnInstallation`, immutable `SovrunnRelease`, `PlatformLifecyclePolicy`, immutable `PlatformLifecyclePlan`, canonical `Operation`, external `PlatformLifecycleAgent` and safe `PlatformHealth` projection | Add an operator-facing platform lifecycle module before production MVP; keep recovery execution independent from the affected installation and do not absorb underlying infrastructure lifecycle |
 | Release and recovery compatibility | Version strings and skeletal compatibility fields do not define all executable transitions | Explicit directed `ReleaseCompatibilityContract`, typed lifecycle references, three recovery actions and an irreversible-boundary constraint | Deny any transition lacking a complete published edge and verified recovery path |
 | Infrastructure maintenance | Normalized signal and Draining status lack exact authority and concurrency semantics | `InfrastructureMaintenanceNotice`, lifecycle-controller-owned availability, maintenance epoch/fence and mandatory requalification | Separate provider notice authority from Sovrunn target-state authority; reject stale placement/execution |
-| Breaking alpha migration | Independent renaming risks old/new dual authority | Signed CanonicalMigrationPlan, immutable mapping/evidence, write freeze and one-way cutover | Classify and transform records together; permit read-only legacy import/projection only; reject obsolete writes after cutover |
+| Canonical bootstrap (no alpha runtime migration) | FEATURE-0001–0014 are retained repository assets, not live control-plane state | No `CanonicalMigrationPlan`/`CanonicalMigrationRecord`, migration controller, or cutover state machine; canonical resources are created directly | Retire the migration model per DEC-0059 (supersedes DEC-0058); reject reintroduction of migration-plan/record contracts as active behavior |
 
 Until those amendments are approved in the repository, this document describes the target architecture rather than claiming that the current schemas already implement it.
 
@@ -175,7 +175,7 @@ Conditions represent current facts, not history. Decisions, evidence and activit
 | `ADH-2026-038` | Platform sovereignty evaluates the SovrunnInstallation and every dependency able to control, observe, change, decrypt or recover it |
 | `ADH-2026-039` | Release transitions are explicit directed compatibility contracts with typed references, executable recovery modes and irreversible checkpoints |
 | `ADH-2026-040` | Infrastructure maintenance separates provider notice authority from Sovrunn target state and uses epochs, fences and mandatory requalification |
-| `ADH-2026-041` | Alpha migration is coordinated, evidence-backed and never dual-write or dual-authoritative |
+| `ADH-2026-041` | Superseded by ADH-2026-045/DEC-0059: alpha migration is not implemented as a coordinated cutover because there is no live alpha state to convert |
 
 ## 5. CloudPlatform product and provider-supply contracts
 
@@ -183,9 +183,9 @@ Conditions represent current facts, not history. Decisions, evidence and activit
 
 | Concept / API kind | Purpose and ownership | Profile, scope and writers | Mutability and lifecycle | Boundary, relationships and invariants |
 |---|---|---|---|---|
-| `CloudPlatform` | Named customer-facing cloud product and governance boundary | MR; owner Organization scope; cloud-owner administrator owns spec; platform controller owns status | Owner Organization and identity immutable; brand and approved operating configuration mutable; DECOMMISSION then RESTRICT | CF brand/product projection plus operator canonical view; owns catalog and enrollments, never owns participating providers or customer Organizations; `ADH-2026-037` |
-| `CloudProvider` | Independent infrastructure/execution supply operator | MR; Platform or Organization scope; supply administrator owns spec; provider controller owns status | Identity/scope immutable; presentation and approved operating configuration mutable; DECOMMISSION then RESTRICT | OF canonical resource plus optional CF provider-summary projection; registers topology/targets and maintenance, never owns customer catalog or Organizations; `ADH-2026-020`/`037` |
-| `CloudProviderParticipation` | Governed supply relationship between one CloudPlatform and one CloudProvider | MR; CloudPlatform scope; cloud-owner contracting authority and delegated provider authority own permitted spec portions; participation controller owns status | PlatformRef/providerRef immutable; eligibility, term and responsibility changes governed; terminate rather than erase; RETAIN summary | OF/GO; one participation per exact relationship and environment/contract context; each installation binds exactly one participation; protected agreement data never enters customer projection; `ADH-2026-037` |
+| `CloudPlatform` | Named customer-facing cloud product and governance boundary | MR; Platform scope (no Organization scope/reference); bootstrap/cloud-owner administrator owns spec; platform controller owns status | Identity, scope, and immutable `spec.ownerRegistration` (legalName, registrationIdentifier, jurisdictionCode) immutable; `spec.description` and approved operating configuration mutable via PATCH only; no PUT/DELETE; no lifecycle action or deletion exposed | CF brand/product projection plus operator canonical view; owns catalog and enrollments, never owns participating providers or customer Organizations; `ADH-2026-037`/`045` |
+| `CloudProvider` | Independent infrastructure/execution supply operator | MR; Platform scope; supply administrator owns spec; provider controller owns status | Identity/scope immutable; `spec.displayName` and non-empty `spec.operatingMarkets[]` mutable via PATCH only; no PUT/DELETE; no lifecycle action or deletion exposed | OF canonical resource plus optional CF provider-summary projection; registers topology/targets and maintenance, never owns customer catalog or Organizations; no deployment reference or credential; `ADH-2026-020`/`037`/`045` |
+| `CloudProviderParticipation` | Governed supply relationship between one CloudPlatform and one CloudProvider | MR; CloudPlatform scope; cloud-owner contracting authority and delegated provider authority act through explicit lifecycle actions; participation controller owns status | PlatformRef/providerRef immutable; no mutable spec fields; lifecycle changes (accept/reject/withdraw/expire/suspend/resume/request-release/accept-release/decline-release) occur only through explicit actions, never PATCH; terminate rather than erase; RETAIN summary | OF/GO; one non-terminal participation per exact CloudPlatform+CloudProvider pair; effective `Active` only when accepted and both `platformSuspended`/`providerSuspended` holds are false; protected agreement data never enters customer projection; `ADH-2026-037`/`045` |
 | `ServiceRegion` | Customer-selectable service geography | MR; CloudPlatform scope; product administrator owns spec; availability controller owns status | Mappings may change through generation; existing instances preserve placement record; RETIRE then RESTRICT | CF projection and owner/provider views; maps through eligible participations to one or more HostingLocations/Datacenters/ExecutionTargets; must not claim sovereignty |
 | `ServicePortfolio` | Curated general, technology, sovereign or industry product bundle | VD; CloudPlatform scope; authorized product publisher owns spec | Draft mutable; published version immutable; RETIRE | CF published projection; contains offerings and required profiles; `ADH-2026-023`/`027` |
 | `ServiceTypeDefinition` | Implementation-neutral extension contract for one managed-service family | VD; Platform, CloudPlatform or approved publisher scope; approved service-contract publisher owns spec | Draft mutable; published version immutable; RETIRE; referenced versions retained | IE/PF with CF schema/documentation projection; defines parameter, action, status, binding, meter, runtime-compatibility and upgrade schemas; no provider-native payloads; `ADH-2026-031`/`032` |
@@ -202,8 +202,13 @@ kind: CloudPlatform
 metadata:
   name: nic-cloud
   displayName: NIC Cloud
+  scopeRef: {apiVersion: core.sovrunn.io/v1alpha1, kind: Platform, name: sovrunn}
 spec:
-  ownerOrganizationRef: {apiVersion: core.sovrunn.io/v1alpha1, kind: Organization, name: nic}
+  description: National Informatics Centre sovereign cloud
+  ownerRegistration:
+    legalName: National Informatics Centre
+    registrationIdentifier: NIC-GOV-IN-0001
+    jurisdictionCode: IN
 status:
   phase: Active
 ---
@@ -212,6 +217,7 @@ kind: CloudProvider
 metadata:
   name: yotta
   displayName: Yotta
+  scopeRef: {apiVersion: core.sovrunn.io/v1alpha1, kind: Platform, name: sovrunn}
 spec:
   operatingMarkets: [IN]
 status:
@@ -1168,11 +1174,9 @@ Executable recovery modes are `InPlaceSupported`, `RestoreRequired` and `Forward
 
 Before acceptance, the planner verifies the exact edge, manifest, provenance, installed plugins/adapters, decision profiles, applicable client policy, lifecycle agent, backup format, qualified RecoveryRepository, pre-change backup and every mandatory ValidationGateDefinition. Any unknown mandatory dimension denies activation.
 
-### 13.6 Canonical alpha migration
+### 13.6 Canonical bootstrap (no alpha runtime migration)
 
-`CanonicalMigrationPlan` is a signed immutable plan after approval; `CanonicalMigrationRecord` is append-only evidence of classification, mapping, transformation, validation, cutover and final state. The normal sequence is Draft → InventoryValidated → DryRunPassed → WriteFrozen → BackupVerified → Transformed → ReferencesVerified → CutoverActivated → ConformancePassed → Completed.
-
-Dual write and dual desired-state authority are prohibited. A bounded legacy importer/projection may read old data only for migration. One-to-one semantic transforms preserve UID; split transforms allocate new UIDs and preserve immutable mappings. Historical DecisionRecords and AuditEvents are never rewritten. After cutover, obsolete write endpoints, kinds and scope values return stable migration/deprecation errors.
+Per DEC-0059 (superseding DEC-0058), there is no `CanonicalMigrationPlan`, `CanonicalMigrationRecord`, migration controller, or cutover state machine. FEATURE-0001 through FEATURE-0014 are retained repository assets and reuse input under FEATURE-0011, not live control-plane state requiring conversion. The first executable control-plane release creates canonical resources directly. Historical DecisionRecords and AuditEvents from FEATURE-0001–0014 remain in their original immutable representation as repository history and are never rewritten. Obsolete alpha write endpoints, kinds, and scope values are not carried forward as active compatibility surfaces.
 
 The platform lifecycle boundary manages Sovrunn software and state. It does not install, upgrade or repair OpenShift, Kubernetes, OpenStack, AWS, OCI, datacenter facilities or equivalent external substrates. Those systems expose normalized maintenance and health signals through the ExecutionTarget boundary described in Section 8.3.
 
@@ -1209,7 +1213,7 @@ Implementation-native networking objects and identifiers are restricted to provi
 | Platform lifecycle agent | Execution status and protected handles for an approved PlatformLifecyclePlan and correlated Operation | Release publishing, desired state, lifecycle policy, approval, authorization decisions or unplanned underlying infrastructure changes |
 | Infrastructure operator or trusted adapter | InfrastructureMaintenanceNotice desired facts within delegated CloudProviderParticipation/target authority | ExecutionTarget availability/qualification status, owner restrictions or service placement decisions |
 | ExecutionTarget lifecycle controller | Target availability state, maintenance epoch/fence and requalification status | Native maintenance facts, customer intent or provider agreement state |
-| Canonical migration controller | Transformation outputs and immutable CanonicalMigrationRecord under an approved signed plan | New architecture decisions, historical DecisionRecord/AuditEvent mutation or simultaneous legacy/new writes |
+| (retired) Canonical migration controller | None — role retired by DEC-0059; no runtime migration authority exists | Transformation outputs, CanonicalMigrationRecord, or any migration-plan/record write — all removed from active Phase 2R authorities |
 | Approved service-contract publisher | ServiceTypeDefinition, ServiceRelationshipDefinition and, when applicable, ServiceCompositionDefinition drafts and published versions within delegated scope | Provider commercial terms, customer instances, decisions or execution state |
 | CloudPlatform administrator | Platform catalog, enrollments, entitlements, quota envelope, approved product/governance/placement profiles and participation requests within delegated scope | Provider credentials or native operations, customer Organization ownership or customer Project contents |
 | CloudProvider administrator | Participation response, topology declarations, realization mappings, maintenance notices, approved operating profiles and targets within delegated scope | CloudPlatform catalog/enrollment grants, customer Organization ownership or customer Project contents |

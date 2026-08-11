@@ -36,12 +36,14 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - Sovereignty evaluates SovrunnInstallation and every dependency (`DEC-0055`).
 - Release compatibility is directed; recovery actions are explicit and pinned (`DEC-0056`).
 - External maintenance has explicit notice authority, epochs, fences, mandatory requalification (`DEC-0057`).
-- Alpha migration is one signed cutover, no dual authority, immutable history preserved (`DEC-0058`).
+- Alpha migration is one signed cutover, no dual authority, immutable history preserved (`DEC-0058`) — superseded by `DEC-0059`.
+- Canonical bootstrap replaces alpha runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion; no CanonicalMigrationPlan/Record, migration controller, or cutover state machine (`DEC-0059`, supersedes `DEC-0058`).
 
 ### Superseded Decisions
 
 - DEC-0032 (ResourcePool as placement boundary) — superseded by DEC-0042.
 - DEC-0033 (ProviderCapability as compatibility boundary) — superseded by DEC-0042.
+- DEC-0058 (alpha migration as one signed cutover) — superseded by DEC-0059.
 
 ### Completed Feature Architecture (Retained History)
 

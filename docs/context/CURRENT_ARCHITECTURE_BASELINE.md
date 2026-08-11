@@ -92,12 +92,13 @@ FEATURE-0001 through FEATURE-0014 are completed implementation history:
 - FEATURE-0013: Decision Record and AuditEvent Standard (merged PR #15, 2026-07-29; ADH-2026-017 controlling)
 - FEATURE-0014: Provider-Neutral Resource Model (merged PR #16, 2026-07-30; ADH-2026-018/019 controlling)
 
-These features used the alpha model terminology. Their implementation remains intact. Active authorities now point to the canonical model; alpha data migrates through the controlled cutover defined in DEC-0058.
+These features used the alpha model terminology. Their implementation remains intact as retained repository assets and reuse input under FEATURE-0011; they do not constitute live control-plane data requiring conversion. Per DEC-0059 (superseding DEC-0058), the first executable control-plane release exposes canonical contracts only — there is no alpha runtime migration to execute.
 
 ## Superseded Decisions
 
 - DEC-0032 (ResourcePool as placement boundary) — superseded by DEC-0042.
 - DEC-0033 (ProviderCapability as compatibility boundary) — superseded by DEC-0042.
+- DEC-0058 (alpha migration as one signed cutover) — superseded by DEC-0059 (canonical bootstrap; no runtime alpha migration).
 
 ## Phase 2R Scope
 
@@ -105,7 +106,7 @@ Phase 2R replaces the unimplemented Phase 2 features (FEATURE-0015 through FEATU
 
 ## Phase 2R Next Planned Feature
 
-FEATURE-0015: Canonical Cloud Model and Alpha Migration Foundation.
+FEATURE-0015: Canonical Cloud Model Foundation (renamed under ADH-2026-045; no alpha runtime migration scope; ends at InfrastructureStack; ExecutionTarget owned entirely by FEATURE-0016).
 
 ## MVP Definition
 
@@ -127,7 +128,8 @@ The following remain not approved architecture directions:
 - allowing AI recommendations to execute without policy/approval validation,
 - mandatory ResourcePool or provider-wide ProviderCapability in core,
 - dual write/authority between old and new canonical models,
-- native AWS, OCI, OpenStack, Kubernetes, or OpenShift objects in customer/core schemas.
+- native AWS, OCI, OpenStack, Kubernetes, or OpenShift objects in customer/core schemas,
+- runtime alpha data migration, a migration controller, or a cutover state machine (DEC-0059).
 
 ## Deferred Decisions
 

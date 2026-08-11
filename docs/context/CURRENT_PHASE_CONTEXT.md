@@ -12,7 +12,7 @@ Establish the canonical, implementation-neutral PaaS fabric foundation with seve
 
 ## Phase 2R Build Scope
 
-- Canonical cloud model and alpha migration foundation (seven scopes, CloudPlatform, CloudProvider, ExecutionTarget)
+- Canonical cloud model foundation via direct bootstrap (seven scopes, CloudPlatform, CloudProvider; ExecutionTarget owned by FEATURE-0016)
 - Adapter boundary and ExecutionTarget qualification
 - Policy evaluation abstraction with DecisionRecord linkage
 - Governance, IAM, approval, and exception foundation
@@ -38,7 +38,7 @@ Establish the canonical, implementation-neutral PaaS fabric foundation with seve
 
 | Feature | Status | Controlling decisions |
 |---|---|---|
-| FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0058; ADH-2026-020/024/025/037/041/043 |
+| FEATURE-0015 Canonical Cloud Model Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0059; ADH-2026-020/024/025/037/043/045 |
 
 ## Phase 2R Feature Sequence
 
@@ -46,14 +46,14 @@ See `docs/phase2/PHASE2_FEATURE_SEQUENCE.md` for the canonical order.
 
 ## FEATURE-0014 Completed Architecture Boundary
 
-FEATURE-0014 remains completed history. Its alpha model resources (Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, InfrastructureStack) are implementation artifacts that migrate through the canonical cutover (DEC-0058). The active canonical model uses CloudPlatform, CloudProvider, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, and ExecutionTarget.
+FEATURE-0014 remains completed history. Its alpha model resources (Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, InfrastructureStack) are retained repository assets and reuse input under FEATURE-0011 (DEC-0059); they are not live control-plane data requiring runtime conversion. The active canonical model uses CloudPlatform, CloudProvider, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, and ExecutionTarget, created directly by FEATURE-0015/0016 rather than migrated.
 
 Later features consume FEATURE-0014 through its completed contracts:
 
 - FEATURE-0011 controls reuse-assessment format and reuse-before-build gate.
 - FEATURE-0012 controls API/resource grammar, seven-scope ScopeKind vocabulary (DEC-0037), typed references, status/validation shape, and Problem Details envelope.
 - FEATURE-0013 controls DecisionRecord, DecisionProfile, EvaluationResult, AuditEvent, metadata.scopeRef as sole scope authority, and ServiceInstance as typed subject.
-- FEATURE-0014 implementation history owns the alpha Provider/ProviderLocation/ProviderDatacenter/DatacenterFailureDomain/InfrastructureStack. These migrate per DEC-0037/DEC-0041/DEC-0058.
+- FEATURE-0014 implementation history owns the alpha Provider/ProviderLocation/ProviderDatacenter/DatacenterFailureDomain/InfrastructureStack as retained repository assets assessed for reuse under FEATURE-0011; per DEC-0059 they are not runtime-migrated, since FEATURE-0015 creates canonical resources directly.
 
 ## Phase 2R Exit Criteria
 
