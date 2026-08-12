@@ -68,6 +68,13 @@ F15_EXPECTED_ROUTE_COUNTS = {"collection": 7, "item": 7, "action": 8}
 F15_EXPECTED_TOTAL_ROUTES = 22
 F15_REQUIRED_CF_FIELDS = ("id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate")
 
+# F0015 participation existing-item action names whose idempotency conformance must be covered
+# by VS0-CF-F15-18/19 alongside the seven collection creates (ADH-2026-050).
+F15_PARTICIPATION_ACTIONS = (
+    "accept", "reject", "withdraw", "suspend", "resume",
+    "request-release", "accept-release", "decline-release",
+)
+
 # F0015-owned resource kinds whose create-request contract must be closed (ADH-2026-047 decision 1).
 F15_CREATE_KINDS = (
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
@@ -373,6 +380,78 @@ def check_audit_append_failure_mapping(reg: dict, f15_arch: str, f15_feat: str, 
         if "not published" not in lower and "unpublished" not in lower:
             e(f"AUDITFAIL049: F0015 {label} must state the mutation/idempotency non-publication rule "
               f"for a required-AuditEvent-append failure (ADH-2026-049)")
+
+
+def check_all_route_idempotency_conformance_coverage(reg: dict) -> None:
+    """Fail-closed (ADH-2026-050): VS0-CF-F15-18 and VS0-CF-F15-19 must each explicitly cover
+    all seven FEATURE-0015 collection creates and all eight existing-participation create/action
+    routes, while preserving their existing IDs, expected states, CONFLICT, and
+    VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH behavior."""
+    confs = reg.get("conformance", [])
+    f15_18 = next((c for c in confs if c.get("id") == "VS0-CF-F15-18"), None)
+    f15_19 = next((c for c in confs if c.get("id") == "VS0-CF-F15-19"), None)
+    if not f15_18:
+        e("ALLROUTEIDEMP050: VS0-CF-F15-18 conformance entry missing")
+    if not f15_19:
+        e("ALLROUTEIDEMP050: VS0-CF-F15-19 conformance entry missing")
+    if not f15_18 or not f15_19:
+        return
+    for case_id, entry in (("VS0-CF-F15-18", f15_18), ("VS0-CF-F15-19", f15_19)):
+        inputs_lower = str(entry.get("inputs", "")).lower()
+        for kind_name in F15_CREATE_KINDS:
+            if kind_name.lower() not in inputs_lower:
+                e(f"ALLROUTEIDEMP050: {case_id} inputs must name {kind_name} as part of the "
+                  f"all-route collection-create scope (ADH-2026-050)")
+        for action in F15_PARTICIPATION_ACTIONS:
+            if action not in inputs_lower:
+                e(f"ALLROUTEIDEMP050: {case_id} inputs must name the '{action}' participation "
+                  f"action as part of the all-route scope (ADH-2026-050)")
+    if f15_18.get("expectedError") is not None:
+        e("ALLROUTEIDEMP050: VS0-CF-F15-18 expectedError must remain null (preserved ADH-2026-050 behavior)")
+    if f15_19.get("expectedError") != "CONFLICT":
+        e(f"ALLROUTEIDEMP050: VS0-CF-F15-19 expectedError must remain CONFLICT, "
+          f"found {f15_19.get('expectedError')!r}")
+    if f15_19.get("expectedViolation") != "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH":
+        e(f"ALLROUTEIDEMP050: VS0-CF-F15-19 expectedViolation must remain VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH, "
+          f"found {f15_19.get('expectedViolation')!r}")
+
+
+def _expand_f15_conformance_shorthand(cell: str) -> set[str]:
+    """Expand comma-joined VS0-CF-F15 shorthand (e.g. 'VS0-CF-F15-01,02,07' or
+    'VS0-CF-F15-01..04,08..10') into a set of two-digit numeric tokens."""
+    numbers: set[str] = set()
+    for token in re.split(r"[,\s]+", cell):
+        token = token.strip()
+        m = re.search(r"(?:VS0-CF-F15-)?(\d{2})(?:\.\.(\d{2}))?$", token)
+        if not m:
+            continue
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else start
+        for n in range(start, end + 1):
+            numbers.add(f"{n:02d}")
+    return numbers
+
+
+def check_all_route_idempotency_traceability(trace: str) -> None:
+    """Fail-closed (ADH-2026-050): the traceability matrix schema mapping must cite
+    VS0-CF-F15-18 and VS0-CF-F15-19 for every non-participation FEATURE-0015 resource
+    (CloudPlatform, CloudProvider, HostingLocation, Datacenter, FaultDomain,
+    InfrastructureStack), not only for CloudProviderParticipation."""
+    schema_ids = ("VS0-SCHEMA-008", "VS0-SCHEMA-009", "VS0-SCHEMA-011",
+                  "VS0-SCHEMA-012", "VS0-SCHEMA-013", "VS0-SCHEMA-014")
+    for line in trace.splitlines():
+        stripped = line.strip()
+        for schema_id in schema_ids:
+            if stripped.startswith(f"| {schema_id} "):
+                cells = [c.strip() for c in stripped.split("|")]
+                conf_cell = cells[-2] if cells and cells[-1] == "" else (cells[-1] if cells else "")
+                numbers = _expand_f15_conformance_shorthand(conf_cell)
+                if "18" not in numbers:
+                    e(f"ALLROUTEIDEMP050: traceability matrix row for {schema_id} missing "
+                      f"VS0-CF-F15-18 (ADH-2026-050)")
+                if "19" not in numbers:
+                    e(f"ALLROUTEIDEMP050: traceability matrix row for {schema_id} missing "
+                      f"VS0-CF-F15-19 (ADH-2026-050)")
 
 
 def check_traceability_local_only(f15_arch: str) -> None:
@@ -1050,6 +1129,8 @@ def main() -> None:
     check_api_update_behavior_and_concurrency(f15_feat)
     check_audit_matrix(f15_arch, f15_feat)
     check_audit_append_failure_mapping(reg, f15_arch, f15_feat, spec)
+    check_all_route_idempotency_conformance_coverage(reg)
+    check_all_route_idempotency_traceability(trace)
     check_traceability_local_only(f15_arch)
 
     # Cross-checks
@@ -1110,6 +1191,7 @@ def main() -> None:
         print("  ✓ Contract-executability audit: field classification, route-contract completeness, F15-26..28 proof matrix (ADH-2026-047 decision 5)")
         print("  ✓ ISO-3166-1 alpha-2 assigned-code semantics; four malformed-input outcomes; F15-29..30 proof matrix; per-route design-readiness simulation (ADH-2026-048)")
         print("  ✓ Required-AuditEvent-append failure maps to INTERNAL_ERROR/500, not DEPENDENCY_UNAVAILABLE; non-publication rule preserved (ADH-2026-049)")
+        print("  ✓ All-route idempotency conformance coverage: F15-18/19 cover all seven collection creates and eight participation actions (ADH-2026-050)")
         sys.exit(0)
 
 

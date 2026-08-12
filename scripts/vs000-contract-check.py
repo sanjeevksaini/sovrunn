@@ -204,6 +204,34 @@ def run():
         side_effects_049 = str(f15_24.get("expectedSideEffects", "")).lower()
         if "dependency_unavailable" in side_effects_049 and "not used" not in side_effects_049:
             e("VS0-CF-F15-24 expectedSideEffects must not assign DEPENDENCY_UNAVAILABLE (ADH-2026-049)")
+    # ADH-2026-050: VS0-CF-F15-18/19 must each explicitly cover all seven FEATURE-0015
+    # collection creates and all eight existing-participation create/action routes,
+    # while preserving their existing IDs, expected states, and violation/code semantics.
+    f15_18 = next((c for c in confs if c.get("id") == "VS0-CF-F15-18"), None)
+    f15_19 = next((c for c in confs if c.get("id") == "VS0-CF-F15-19"), None)
+    if not f15_18:
+        e("VS0-CF-F15-18 conformance entry missing (ADH-2026-050)")
+    if not f15_19:
+        e("VS0-CF-F15-19 conformance entry missing (ADH-2026-050)")
+    if f15_18 and f15_19:
+        f15_all_route_kinds = ("CloudPlatform", "CloudProvider", "CloudProviderParticipation",
+                                "HostingLocation", "Datacenter", "FaultDomain", "InfrastructureStack")
+        f15_all_route_actions = ("accept", "reject", "withdraw", "suspend", "resume",
+                                  "request-release", "accept-release", "decline-release")
+        for case_id, entry in (("VS0-CF-F15-18", f15_18), ("VS0-CF-F15-19", f15_19)):
+            inputs_lower = str(entry.get("inputs", "")).lower()
+            for kind_name in f15_all_route_kinds:
+                if kind_name.lower() not in inputs_lower:
+                    e(f"{case_id} inputs must name {kind_name} in the all-route scope (ADH-2026-050)")
+            for action in f15_all_route_actions:
+                if action not in inputs_lower:
+                    e(f"{case_id} inputs must name the '{action}' participation action in the all-route scope (ADH-2026-050)")
+        if f15_18.get("expectedError") is not None:
+            e("VS0-CF-F15-18 expectedError must remain null (ADH-2026-050)")
+        if f15_19.get("expectedError") != "CONFLICT":
+            e(f"VS0-CF-F15-19 expectedError must remain CONFLICT (ADH-2026-050), found {f15_19.get('expectedError')!r}")
+        if f15_19.get("expectedViolation") != "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH":
+            e(f"VS0-CF-F15-19 expectedViolation must remain VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH (ADH-2026-050), found {f15_19.get('expectedViolation')!r}")
     for x in found_cf-exp_cf: e(f"Unexpected conformance: {x}")
     retired_confs = reg.get("retiredConformance", [])
     ids_retired_cf = [x.get("id") for x in retired_confs]
