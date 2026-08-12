@@ -162,6 +162,47 @@ def expand_cf_ranges_with_positions(text: str) -> dict[str, int]:
     return found
 
 
+def req_detail_heading_matches(item_id: str, target_text: str) -> int:
+    """Count normative REQ detail headings for item_id.  A valid heading is a
+    Markdown heading (``##``..``######``) whose text is item_id itself,
+    optionally preceded by an approved Markdown section-number prefix (for
+    example ``4.1``, ``4.12``, or no numeric prefix at all) before the REQ
+    ID -- for example ``### 4.1 REQ-F15-01 -- ...`` or ``### REQ-F15-01
+    ...``.  Only an exact match of this pattern anchored at the start of a
+    heading line counts; a duplicate heading is counted again (so callers can
+    reject a count other than exactly one), and an incidental in-body mention
+    of the REQ ID that is not itself a heading is never counted."""
+    pattern = re.compile(
+        rf"^#{{2,6}}\s+(?:\d+(?:\.\d+)*[.)]?\s+)?{re.escape(item_id)}(?:\s|—|-|$)",
+        re.MULTILINE,
+    )
+    return len(pattern.findall(target_text))
+
+
+def owned_conformance_ids(
+    feature_text: str,
+    authority_text: str,
+    conformance: dict[str, dict[str, Any]],
+    feature: str,
+) -> set[str]:
+    """Return the F0015-style feature-owned conformance IDs authorized for the
+    Exact conformance semantics ledger.  Authorization is derived from the
+    union of every conformance ID mentioned in the current feature authority
+    and in the control-manifest architecture authority: a required proof
+    matrix (for example ADH-2026-046's complete F15-01..25 cases) may be
+    mapped in the manifest-controlled architecture authority's traceability
+    section rather than repeated verbatim in the feature authority.  Only
+    registry cases whose registered owner is this feature are included;
+    downstream, unowned, or unknown IDs mentioned in either authority are
+    never authorized by this function."""
+    mentioned = expand_cf_ranges(feature_text) | expand_cf_ranges(authority_text)
+    return {
+        cf_id
+        for cf_id in mentioned
+        if cf_id in conformance and conformance[cf_id].get("owner") == feature
+    }
+
+
 def registry_conformance(root: Path) -> dict[str, dict[str, Any]]:
     if yaml is None:
         raise RuntimeError("PyYAML is required for Kiro semantic checks")
@@ -260,6 +301,7 @@ def check_requirements(
     feature_text: str,
     target_text: str,
     conformance: dict[str, dict[str, Any]],
+    architecture_text: str = "",
 ) -> None:
     source_requirements = rows_by_id(feature_text, REQ_ID)
     source_acceptance = rows_by_id(feature_text, AC_ID)
@@ -275,13 +317,7 @@ def check_requirements(
     )
 
     for item_id in source_requirements:
-        count = len(
-            re.findall(
-                rf"^#{{2,6}}\s+{re.escape(item_id)}(?:\s|—|-|$)",
-                target_text,
-                flags=re.MULTILINE,
-            )
-        )
+        count = req_detail_heading_matches(item_id, target_text)
         if count != 1:
             errors.append(f"{item_id} must have exactly one normative detail heading; found {count}")
     for item_id in source_acceptance:
@@ -291,14 +327,15 @@ def check_requirements(
                 f"{item_id} must appear in the canonical ledger and at least one detailed acceptance/coverage mapping"
             )
 
-    source_cf_ids = expand_cf_ranges(feature_text)
     # A feature authority may name a downstream conformance case only to
-    # exclude it.  Only cases owned by this feature can authorize its ledger.
-    source_owned_cf_ids = {
-        cf_id
-        for cf_id in source_cf_ids
-        if cf_id in conformance and conformance[cf_id].get("owner") == feature
-    }
+    # exclude it.  Authorization for the Exact conformance semantics ledger is
+    # derived from the union of the current feature authority and the
+    # control-manifest architecture authority (ADH-2026-046 §3): a required
+    # proof matrix may be mapped in the architecture authority's traceability
+    # section rather than repeated verbatim in the feature authority.  Only
+    # cases owned by this feature can authorize its ledger.
+    source_cf_ids = expand_cf_ranges(feature_text) | expand_cf_ranges(architecture_text)
+    source_owned_cf_ids = owned_conformance_ids(feature_text, architecture_text, conformance, feature)
     target_cf_positions = expand_cf_ranges_with_positions(target_text)
     target_cf_ids = set(target_cf_positions)
     # A retired/tombstone ID mentioned solely inside an explicit non-goal,
@@ -464,7 +501,13 @@ def check_stage(root: Path, control: dict[str, Any], stage: str) -> list[str]:
 
     conformance = registry_conformance(root)
     if stage == "requirements":
-        check_requirements(errors, feature, feature_text, target_text, conformance)
+        architecture_rel = control["feature"].get("architecture", "")
+        architecture_text = ""
+        if architecture_rel:
+            architecture_path = root / architecture_rel
+            if architecture_path.is_file():
+                architecture_text = architecture_path.read_text()
+        check_requirements(errors, feature, feature_text, target_text, conformance, architecture_text)
     else:
         check_coverage(errors, feature_text, target_text, stage)
         if stage == "design":
@@ -503,12 +546,124 @@ def write_revision_prompt(path: Path, feature: str, stage: str, errors: list[str
     path.write_text("\n".join(lines) + "\n")
 
 
+def self_test() -> None:
+    """Deterministic, offline regression coverage for the two checker defects
+    corrected here: (1) the normative REQ detail heading matcher must accept
+    an optional approved Markdown section-number prefix before the REQ ID
+    while still rejecting duplicates and incidental in-body mentions; and (2)
+    Exact conformance semantics ledger authorization must be derived from the
+    union of the feature authority and the control-manifest architecture
+    authority, filtered to registry cases owned by the feature."""
+    failures: list[str] = []
+
+    def check(label: str, condition: bool) -> None:
+        if not condition:
+            failures.append(label)
+
+    # --- Case 1: normative REQ detail heading matcher ---
+    check(
+        "accepts a numbered section-number prefix (4.1)",
+        req_detail_heading_matches("REQ-F15-01", "### 4.1 REQ-F15-01 — Register CloudPlatform") == 1,
+    )
+    check(
+        "accepts a two-digit subsection number (4.12)",
+        req_detail_heading_matches("REQ-F15-01", "#### 4.12 REQ-F15-01 detail") == 1,
+    )
+    check(
+        "accepts no numeric prefix at all",
+        req_detail_heading_matches("REQ-F15-01", "### REQ-F15-01 — Register CloudPlatform") == 1,
+    )
+    check(
+        "rejects zero headings (only an incidental in-body mention)",
+        req_detail_heading_matches(
+            "REQ-F15-01", "This paragraph mentions REQ-F15-01 without a heading."
+        )
+        == 0,
+    )
+    check(
+        "rejects duplicate headings (counts both, so callers reject count != 1)",
+        req_detail_heading_matches(
+            "REQ-F15-01",
+            "### 4.1 REQ-F15-01 — first\n\nbody\n\n### 4.9 REQ-F15-01 — duplicate\n",
+        )
+        == 2,
+    )
+    check(
+        "does not match a different REQ ID sharing a numeric prefix",
+        req_detail_heading_matches("REQ-F15-01", "### 4.1 REQ-F15-02 — Register CloudProvider") == 0,
+    )
+
+    # --- Case 2: exact conformance-ledger authority union ---
+    conformance = {
+        "VS0-CF-F15-13": {"owner": "FEATURE-0015"},
+        "VS0-CF-F15-14": {"owner": "FEATURE-0015"},
+        "VS0-CF-F15-16": {"owner": "FEATURE-0015"},
+        "VS0-CF-F15-20": {"owner": "FEATURE-0015"},
+        "VS0-CF-F15-21": {"owner": "FEATURE-0015"},
+        "VS0-CF-F15-22": {"owner": "FEATURE-0015"},
+        "VS0-CF-F10": {"owner": "FEATURE-0016"},
+    }
+    feature_text = "Owned locally: VS0-CF-F15-01, VS0-CF-F15-02. Excluded: must not use VS0-CF-F10."
+    architecture_text = (
+        "| REQ-F15-08 | VS0-CF-F15-13, VS0-CF-F15-14 |\n"
+        "| REQ-F15-16 | VS0-CF-F15-16 |\n"
+        "| REQ-F15-07 | VS0-CF-F15-20 |\n"
+        "| AC-F15-... | VS0-CF-F15-21, VS0-CF-F15-22 |\n"
+    )
+    owned = owned_conformance_ids(feature_text, architecture_text, conformance, "FEATURE-0015")
+    check(
+        "accepts F15-13, F15-14, F15-16, F15-20, F15-21, F15-22 sourced only from the architecture authority",
+        {
+            "VS0-CF-F15-13",
+            "VS0-CF-F15-14",
+            "VS0-CF-F15-16",
+            "VS0-CF-F15-20",
+            "VS0-CF-F15-21",
+            "VS0-CF-F15-22",
+        }
+        <= owned,
+    )
+    check(
+        "still rejects an unowned/downstream ID mentioned only for exclusion (VS0-CF-F10)",
+        "VS0-CF-F10" not in owned,
+    )
+    check(
+        "still rejects an unknown ID not present in the registry",
+        "VS0-CF-F15-99" not in owned,
+    )
+    check(
+        "owned set is empty when neither authority mentions any owned case",
+        owned_conformance_ids("no mentions here", "no mentions here either", conformance, "FEATURE-0015")
+        == set(),
+    )
+
+    if failures:
+        print(f"FAIL: kiro-semantic-check self-test — {len(failures)} failure(s)")
+        for failure in failures:
+            print(f"  ✗ {failure}")
+        raise SystemExit(1)
+    print(f"PASS: kiro-semantic-check self-test — {6 + 4} checks")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--feature", required=True)
-    parser.add_argument("--stage", choices=STAGES, required=True)
+    parser.add_argument("--feature")
+    parser.add_argument("--stage", choices=STAGES)
     parser.add_argument("--write-revision-prompt")
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run deterministic offline regression checks and exit (no --feature/--stage required)",
+    )
     args = parser.parse_args()
+
+    if args.self_test:
+        self_test()
+        return
+
+    if not args.feature or not args.stage:
+        print("FAIL: --feature and --stage are required unless --self-test is given", file=sys.stderr)
+        raise SystemExit(1)
 
     control_path = ROOT / ".automation/features" / f"{args.feature}.control.json"
     try:
