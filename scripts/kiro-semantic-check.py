@@ -29,11 +29,65 @@ CF_ID = re.compile(r"\bVS0-CF-(?:[A-Z]+\d+(?:-\d+)?)\b")
 VS_ID = re.compile(r"VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9-]+")
 
 
+def _mention_at_position_allowed(text: str, position: int) -> bool:
+    """True if the text preceding the given offset (within a bounded lookback
+    window) contains an explicit exclusion/retirement/non-goal/tombstone
+    marker, meaning the mention at that position is historical record rather
+    than an active conformance claim."""
+    lower = text.casefold()
+    window = lower[max(0, position - 160):position]
+    allow_markers = (
+        "must not", "no longer", "superseded", "retired", "removed", "does not",
+        "not implement", "excluded", "non-goal", "tombstone", "never",
+        "must never", "reject",
+    )
+    return any(marker in window for marker in allow_markers)
+
+
 def table_cells(line: str) -> tuple[str, ...] | None:
     stripped = line.strip()
     if not (stripped.startswith("|") and stripped.endswith("|")):
         return None
     return tuple(cell.strip() for cell in stripped[1:-1].split("|"))
+
+
+def table_header_cells(text: str) -> tuple[str, ...] | None:
+    """Return the header row of the first markdown table in text, identified by
+    the standard header/separator pattern (a row immediately followed by a
+    ``|---|---|...|`` separator row), rather than assuming a fixed column
+    position. This makes ledger comparisons robust to column reordering."""
+    lines = text.splitlines()
+    for index in range(len(lines) - 1):
+        header = table_cells(lines[index])
+        separator = table_cells(lines[index + 1])
+        if not header or not separator:
+            continue
+        if all(re.fullmatch(r":?-{1,}:?", cell) for cell in separator):
+            return header
+    return None
+
+
+def normalize_header(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", name.casefold())
+
+
+# Maps a normalized registry conformance table-header name to the registry
+# field it represents. Matching by normalized header name (instead of a fixed
+# presentation-column index) keeps the comparison correct regardless of the
+# order columns are presented in a target document's table.
+CF_FIELD_BY_HEADER = {
+    "id": "id",
+    "owner": "owner",
+    "inputs": "inputs",
+    "expectedstate": "expectedState",
+    "expectederror": "expectedError",
+    "expectedviolation": "expectedViolation",
+    "expectedsideeffects": "expectedSideEffects",
+    "gate": "gate",
+}
+CF_REQUIRED_HEADER_FIELDS = (
+    "id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate",
+)
 
 
 def rows_by_id(text: str, pattern: re.Pattern[str]) -> dict[str, list[tuple[str, ...]]]:
@@ -79,13 +133,23 @@ def scalar(value: Any) -> str:
 
 
 def expand_cf_ranges(text: str) -> set[str]:
-    found = set(CF_ID.findall(text))
+    return set(expand_cf_ranges_with_positions(text))
+
+
+def expand_cf_ranges_with_positions(text: str) -> dict[str, int]:
+    """Like expand_cf_ranges, but also records the text offset of the mention
+    (direct ID or range expression) that produced each expanded ID, so callers
+    can check whether that specific mention occurs in an allowed exclusion
+    context (e.g. a retired-ID range spelled out in a tombstone/non-goal note)."""
+    found: dict[str, int] = {}
+    for match in CF_ID.finditer(text):
+        found.setdefault(match.group(0), match.start())
     local_range_pattern = re.compile(r"\bVS0-CF-([A-Z]+\d+)-(\d+)\.\.(\d+)\b")
     for match in local_range_pattern.finditer(text):
         prefix, left_number, right_number = match.groups()
         width = max(len(left_number), len(right_number))
         for number in range(int(left_number), int(right_number) + 1):
-            found.add(f"VS0-CF-{prefix}-{number:0{width}d}")
+            found.setdefault(f"VS0-CF-{prefix}-{number:0{width}d}", match.start())
     range_pattern = re.compile(r"VS0-CF-([A-Z]+)(\d+)\.\.([A-Z]*)(\d+)")
     for match in range_pattern.finditer(text):
         left_prefix, left_number, right_prefix, right_number = match.groups()
@@ -94,7 +158,7 @@ def expand_cf_ranges(text: str) -> set[str]:
             continue
         width = max(len(left_number), len(right_number))
         for number in range(int(left_number), int(right_number) + 1):
-            found.add(f"VS0-CF-{prefix}{number:0{width}d}")
+            found.setdefault(f"VS0-CF-{prefix}{number:0{width}d}", match.start())
     return found
 
 
@@ -118,6 +182,52 @@ def expected_cf_row(entry: dict[str, Any]) -> tuple[str, ...]:
         scalar(entry.get("expectedSideEffects")),
         scalar(entry.get("gate")),
     )
+
+
+def parse_ledger_rows_by_header(ledger_text: str) -> dict[str, dict[str, str]] | None:
+    """Parse the conformance ledger table using its own header row rather than
+    assuming a fixed presentation-column order. Returns a mapping of
+    conformance ID -> {registry field name -> cell value}, using only the
+    columns the ledger's header names identify (unrecognized/reordered extra
+    columns, such as expectedViolation appearing before expectedError, are
+    handled correctly). Returns None if no table with an 'id' header is found.
+    """
+    header = table_header_cells(ledger_text)
+    if header is None:
+        return None
+    normalized_header = [normalize_header(cell) for cell in header]
+    if "id" not in normalized_header:
+        return None
+    id_index = normalized_header.index("id")
+    field_by_index: dict[int, str] = {}
+    for index, cell in enumerate(normalized_header):
+        field = CF_FIELD_BY_HEADER.get(cell)
+        if field:
+            field_by_index[index] = field
+
+    rows: dict[str, dict[str, str]] = {}
+    lines = ledger_text.splitlines()
+    started = False
+    for line in lines:
+        cells = table_cells(line)
+        if cells is None:
+            continue
+        if not started:
+            if cells == header:
+                started = True
+            continue
+        if all(re.fullmatch(r":?-{1,}:?", cell) for cell in cells):
+            continue
+        if id_index >= len(cells) or not CF_ID.fullmatch(cells[id_index]):
+            continue
+        cf_id = cells[id_index]
+        row_fields = {
+            field: cells[index]
+            for index, field in field_by_index.items()
+            if index < len(cells)
+        }
+        rows[cf_id] = row_fields
+    return rows
 
 
 def require_exact_ledger(
@@ -189,8 +299,20 @@ def check_requirements(
         for cf_id in source_cf_ids
         if cf_id in conformance and conformance[cf_id].get("owner") == feature
     }
-    target_cf_ids = expand_cf_ranges(target_text)
-    unknown = sorted(target_cf_ids - set(conformance))
+    target_cf_positions = expand_cf_ranges_with_positions(target_text)
+    target_cf_ids = set(target_cf_positions)
+    # A retired/tombstone ID mentioned solely inside an explicit non-goal,
+    # exclusion, or tombstone context (e.g. "retired tombstones that must
+    # never be reused: VS0-CF-MIG01..MIGF03...") is historical record, not an
+    # active conformance claim, and must not be misclassified as
+    # unknown/active. The mention is checked at the exact source position
+    # (direct ID or range expression) that produced the expanded ID, so an ID
+    # only reachable through a retired range expression is still recognized.
+    unknown = sorted(
+        cf_id
+        for cf_id in (target_cf_ids - set(conformance))
+        if not _mention_at_position_allowed(target_text, target_cf_positions[cf_id])
+    )
     if unknown:
         errors.append(f"unknown VS-000 conformance IDs: {', '.join(unknown)}")
 
@@ -198,7 +320,12 @@ def check_requirements(
     if ledger is None:
         errors.append("missing exact section heading: Exact conformance semantics ledger")
     else:
-        ledger_rows = rows_by_id(ledger, CF_ID)
+        ledger_rows = parse_ledger_rows_by_header(ledger)
+        if ledger_rows is None:
+            errors.append(
+                "Exact conformance semantics ledger table must have a recognizable 'id' header column"
+            )
+            ledger_rows = {}
         expected_ledger_ids = source_owned_cf_ids
         extra_ledger_ids = sorted(set(ledger_rows) - expected_ledger_ids)
         if extra_ledger_ids:
@@ -207,10 +334,27 @@ def check_requirements(
                 + ", ".join(extra_ledger_ids)
             )
         for cf_id in sorted(expected_ledger_ids):
-            expected = expected_cf_row(conformance[cf_id])
-            if ledger_rows.get(cf_id) != [expected]:
+            entry = conformance[cf_id]
+            actual_row = ledger_rows.get(cf_id)
+            if actual_row is None:
                 errors.append(
                     f"Exact conformance semantics ledger must copy all eight registry fields for {cf_id} exactly once"
+                )
+                continue
+            mismatched_fields = [
+                field
+                for field in CF_REQUIRED_HEADER_FIELDS
+                if field not in actual_row or scalar(entry.get(field)) != actual_row.get(field)
+            ]
+            if "expectedViolation" in entry and (
+                "expectedViolation" not in actual_row
+                or scalar(entry.get("expectedViolation")) != actual_row.get("expectedViolation")
+            ):
+                mismatched_fields.append("expectedViolation")
+            if mismatched_fields:
+                errors.append(
+                    f"Exact conformance semantics ledger must copy all eight registry fields for {cf_id} exactly once "
+                    f"(mismatched by normalized header name: {', '.join(mismatched_fields)})"
                 )
 
     for cf_id in sorted(source_owned_cf_ids):

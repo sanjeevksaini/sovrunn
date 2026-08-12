@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Approved scope (replacement under ADH-2026-045; renamed/re-scoped, no alpha migration) |
+| Status | Approved scope (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Phase | 2R |
 | Order | 5 (first unimplemented Phase 2R feature) |
@@ -10,7 +10,7 @@
 | Depended On By | FEATURE-0016, FEATURE-0021, FEATURE-0022 |
 | Architecture Boundary | docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046 |
 
 ---
 
@@ -32,7 +32,7 @@ Establish the seven-scope canonical cloud model identity layer through direct ca
 | REQ-F15-04 | Register topology chain under CloudProvider scope: HostingLocation (uppercase ISO 3166-1 alpha-2 `countryCode`, non-empty `locality`, optional ISO 3166-2 `administrativeAreaCode`) → Datacenter → FaultDomain → InfrastructureStack, each with an immutable parent TypedRef; validate containment refs and same-provider UID preservation through the chain | DEC-0041; ADH-024,045 | VS0-SCHEMA-011..014 |
 | REQ-F15-05 | FEATURE-0015 ends at InfrastructureStack. It introduces no ExecutionTarget identity, schema, route, status, writer, conformance, or target lifecycle behavior — ExecutionTarget belongs in its entirety to FEATURE-0016 | DEC-0059; ADH-045 | — |
 | REQ-F15-06 | CloudProviderParticipation lifecycle: explicit request/accept/reject/withdraw/expire actions; Suspended is a derived effective state carried by two independent holds (platformSuspended, providerSuspended), each settable/clearable only by its respective administrator; clearing one hold never reactivates while the other remains true; terminal states are Rejected, Withdrawn, Expired, Terminated | DEC-0054; ADH-037,045 | VS0-SCHEMA-010, VS0-STATE-001 |
-| REQ-F15-07 | FEATURE-0015 exposes no mutable CloudProviderParticipation spec fields; lifecycle changes occur only through explicit actions (accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release), each requiring If-Match and Idempotency-Key | DEC-0054; ADH-045 | VS0-SCHEMA-010, VS0-STATE-001 |
+| REQ-F15-07 | FEATURE-0015 exposes no mutable CloudProviderParticipation spec fields; create (participation.request) requires Idempotency-Key only, no If-Match; every action on an existing participation (accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release) requires both If-Match and Idempotency-Key | DEC-0054; ADH-045,046 | VS0-SCHEMA-010, VS0-STATE-001 |
 | REQ-F15-08 | Mutable CloudPlatform, CloudProvider, and topology resource updates use PATCH with application/merge-patch+json only; PUT and DELETE are not exposed and return 405 | DEC-0059; ADH-045 | VS0-SCHEMA-008..014 |
 | REQ-F15-09 | Cross-provider isolation: deny cross-provider target reference; use safe RESOURCE_NOT_FOUND without existence disclosure | DEC-0037,0054 | VS0-CF-X03 |
 | REQ-F15-10 | Use only the seven canonical scope kinds globally; CloudPlatform and CloudProvider accept only Platform scope, CloudProviderParticipation only CloudPlatform scope, and topology resources only CloudProvider scope | DEC-0037 | VS0-SCHEMA-001,008..014 |
@@ -91,18 +91,18 @@ These concepts appear in the shared Slice 0 registry only so FEATURE-0015 can pr
 |----|-----------|----------------|
 | AC-F15-01 | CloudPlatform, CloudProvider, topology chain CRUD works with validation and their registry-declared scope subsets; FEATURE-0015 ends at InfrastructureStack | VS0-CF-F15-01, VS0-CF-F15-02 |
 | AC-F15-02 | CloudProviderParticipation lifecycle, provider request plus CloudPlatform acceptance guard, and pair uniqueness are enforced | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-09 |
-| AC-F15-03 | No ExecutionTarget identity, schema, route, status, writer, conformance, or target lifecycle behavior is introduced by FEATURE-0015 | VS0-CF-F15-01 |
-| AC-F15-04 | Cross-provider target reference denied safely | VS0-CF-X03 |
-| AC-F15-05 | No CanonicalMigrationPlan, CanonicalMigrationRecord, migration controller, or cutover state machine exists in active FEATURE-0015 behavior | — |
+| AC-F15-03 | No ExecutionTarget identity, schema, route, status, writer, conformance, or target lifecycle behavior is introduced by FEATURE-0015 | VS0-CF-F15-01, VS0-CF-F15-25 |
+| AC-F15-04 | Cross-provider target reference denied safely | VS0-CF-X03, VS0-CF-F15-23 |
+| AC-F15-05 | No CanonicalMigrationPlan, CanonicalMigrationRecord, migration controller, or cutover state machine exists in active FEATURE-0015 behavior | — (anti-drift/non-runtime; excluded per ADH-2026-046 decision 3) |
 | AC-F15-06 | PUT and DELETE return 405 for CloudPlatform, CloudProvider, and topology resources; PATCH accepts only application/merge-patch+json | VS0-CF-F15-07 |
-| AC-F15-07 | Every output passes the canonical stale-concept anti-drift gate | Anti-drift |
+| AC-F15-07 | Every output passes the canonical stale-concept anti-drift gate | Anti-drift (non-runtime; excluded per ADH-2026-046 decision 3) |
 | AC-F15-08 | Writer enforcement: unauthorized writes to topology/platform specs, status, and system-owned fields denied; cross-provider references deny safely | VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-X03 |
-| AC-F15-09 | All errors use FEATURE-0012 Problem Details with existing codes | — |
+| AC-F15-09 | All errors use FEATURE-0012 Problem Details with existing codes | — (contract reuse; proven collectively by every error-emitting local case) |
 | AC-F15-10 | Independent suspension holds behave correctly: each administrator may set/clear only its own hold; clearing one hold does not reactivate while the other remains true; suspend/resume denied in terminal/Pending/Terminating phases | VS0-CF-F15-08, VS0-CF-F15-10 |
-| AC-F15-11 | CloudProviderParticipation exposes no mutable spec fields; lifecycle changes occur only through explicit actions requiring If-Match and Idempotency-Key | VS0-CF-F15-03, VS0-CF-F15-04 |
+| AC-F15-11 | CloudProviderParticipation exposes no mutable spec fields; create requires Idempotency-Key only; lifecycle changes on an existing participation occur only through explicit actions requiring If-Match and Idempotency-Key | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
 | AC-F15-12 | Scope reference UID invariant enforced: cloudPlatformRef UID equals scopeRef UID for CloudProviderParticipation; mismatch rejected with VS0_SCOPE_REFERENCE_MISMATCH | VS0-CF-F15-11 |
-| AC-F15-13 | Participation lifecycle/hold-changing actions, resource create/PATCH, and security denials produce correlated, redacted AuditEvent with no secrets | — |
-| AC-F15-14 | CloudPlatform-root requirement enforced: create of CloudProvider/topology/participation denied with CONFLICT/409 VS0_CLOUDPLATFORM_ROOT_REQUIRED until at least one CloudPlatform exists | — |
+| AC-F15-13 | Participation lifecycle/hold-changing actions, resource create/PATCH, and security denials produce correlated, redacted AuditEvent with no secrets | VS0-CF-F15-24 |
+| AC-F15-14 | CloudPlatform-root requirement enforced: create of CloudProvider/topology/participation denied with CONFLICT/409 VS0_CLOUDPLATFORM_ROOT_REQUIRED until at least one CloudPlatform exists | VS0-CF-F15-12 |
 
 ---
 
@@ -116,7 +116,7 @@ If historical fixture comparison remains useful during development, it is a boun
 
 ### 4.1 CloudProviderParticipation Lifecycle and Independent Suspension (VS0-STATE-001)
 
-`CloudProviderParticipation.status` is controller-owned and persists only current lifecycle facts: `phase`, `platformSuspended`, `providerSuspended`, retained `requestExpiresAt`, and standard system status fields — it does not duplicate transition history, which is durable FEATURE-0013 AuditEvent evidence. Both holds initialize to `false`.
+`CloudProviderParticipation.status` is api-server-owned and persists only current lifecycle facts: `phase`, `platformSuspended`, `providerSuspended`, retained `requestExpiresAt`, and standard system status fields — it does not duplicate transition history, which is durable FEATURE-0013 AuditEvent evidence. Both holds initialize to `false`. The FEATURE-0015 API server is the sole status writer for all F0015-owned resources including `CloudProviderParticipation`; there is no separate participation controller. The deterministic scheduler is a system actor that invokes the api-server's expiry transition, not an additional writer authority (ADH-2026-046 decision 1).
 
 ```text
 absent
@@ -136,7 +136,7 @@ Terminating
 
 For accepted participation, the server stores `phase=Active` exactly when both holds are false and `phase=Suspended` when either hold is true. Pending, Terminating, and every terminal phase override the hold-derived phase; the holds remain retained but cannot be changed outside Active or Suspended. Suspend/resume are denied with the participation-state conflict outcome (CONFLICT/409, `VS0_PARTICIPATION_STATE_INVALID`) while phase is Pending, Terminating, Rejected, Withdrawn, Expired, or Terminated. Exactly one non-terminal participation may exist for a `(cloudPlatformUID, cloudProviderUID)` pair; a new request after a terminal record receives a new UID.
 
-FEATURE-0015 exposes no mutable participation spec fields; all lifecycle changes occur only through the explicit actions above. Each action has an empty JSON body and requires `If-Match` plus `Idempotency-Key`; the same key and request returns the original result, while a new key with a stale version returns 412 (STALE_RESOURCE_VERSION). Each hold-changing action produces correlated AuditEvent evidence naming the acting party and resulting effective state.
+FEATURE-0015 exposes no mutable participation spec fields; all lifecycle changes occur only through the explicit actions above. Every action has an empty JSON body and requires `Idempotency-Key`. Create (`participation.request`) targets an absent resource: it requires `Idempotency-Key` only and does not require or accept `If-Match`; its atomic uniqueness key is the non-terminal `(cloudPlatformUID, cloudProviderUID)` pair (ADH-2026-046 decision 2). Every action on an *existing* participation additionally requires `If-Match`; the same key and request returns the original result before version checking, while a new key with a stale version returns 412 (STALE_RESOURCE_VERSION) with no lifecycle/status write and no additional AuditEvent. Each hold-changing action produces correlated AuditEvent evidence naming the acting party and resulting effective state.
 
 An Active `CloudProviderParticipation` is necessary but not sufficient for customer visibility. The CloudPlatform decides which enrolled customer Organizations may see or select an Active participation (FEATURE-0021 owns Organization eligibility; FEATURE-0018 owns individual authorization); this is not stored on `CloudProviderParticipation`. Pending, Rejected, Withdrawn, Expired, Suspended, Terminating, and Terminated participations are never end-user visible.
 

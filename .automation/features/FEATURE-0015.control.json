@@ -15,7 +15,8 @@
       "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-024-geography-and-sovereignty.md",
       "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-037-cloudplatform-provider-participation-installation-isolation.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },

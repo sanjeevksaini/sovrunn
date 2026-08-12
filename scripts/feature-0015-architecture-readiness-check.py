@@ -42,6 +42,22 @@ F15_FEAT = ROOT / "docs/features/FEATURE-0015-canonical-cloud-model-foundation.m
 CLOSURE = ROOT / "docs/reviews/architecture-readiness/FEATURE-0015-architecture-closure-matrix.md"
 PHASE_CTX = ROOT / "docs/context/CURRENT_PHASE_CONTEXT.md"
 STEER = ROOT / ".kiro/steering/slice0-contract.md"
+ADH_045 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md"
+ADH_046 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
+SPEC_DIR = ROOT / ".kiro/specs/canonical-cloud-model-and-alpha-migration"
+
+# F0015-owned resources whose status must resolve solely to api-server (ADH-2026-046 decision 1).
+F15_STATUS_OWNED_KINDS = (
+    "CloudPlatform", "CloudProvider", "HostingLocation", "Datacenter",
+    "FaultDomain", "InfrastructureStack", "CloudProviderParticipation",
+)
+NON_API_SERVER_CONTROLLER_TERMS = (
+    "topology-controller", "stack-controller", "provider-controller",
+    "participation-controller", "delegated-participation-contract-authority",
+)
+# Required F0015-local conformance IDs after ADH-2026-046 decision 3.
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 26)]
+F15_REQUIRED_CF_FIELDS = ("id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate")
 
 # Removed migration concepts that must never be reintroduced as active behavior.
 REMOVED_MIGRATION_TERMS = [
@@ -402,11 +418,168 @@ def check_f15_08_uses_resume_not_suspend(reg: dict) -> None:
           f"(clearing a hold is a resume action, not suspend): {inputs_text!r}")
 
 
+def check_status_writer_conflicts(reg: dict, reg_text: str, spec: str, f15_arch: str, f15_feat: str, trace: str) -> None:
+    """Fail-closed (ADH-2026-046 decision 4a): reject a non-api-server status writer for
+    any F0015-owned resource across ADH-045/046, registry, contract specification, feature
+    authority, architecture boundary, and traceability. Requirements are checked (not edited)."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    for kind_name in F15_STATUS_OWNED_KINDS:
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            continue
+        mutability = str(s.get("mutability", "")).lower()
+        if kind_name != "CloudProviderParticipation" and "api-server" not in mutability:
+            e(f"WRITER045/046: {kind_name} registry mutability does not resolve status to api-server")
+        for term in NON_API_SERVER_CONTROLLER_TERMS:
+            if term in mutability:
+                e(f"WRITER045/046: {kind_name} registry mutability still uses non-api-server controller term '{term}'")
+    writers = reg.get("writers", [])
+    for w in writers:
+        if w.get("id") in ("VS0-WRITER-004", "VS0-WRITER-005"):
+            writer_name = str(w.get("writer", ""))
+            if writer_name in NON_API_SERVER_CONTROLLER_TERMS:
+                e(f"WRITER045/046: {w.get('id')} writer field is a non-api-server controller term: {writer_name}")
+    for label, text in (
+        ("registry (active)", reg_text),
+        ("VS-000 specification", spec),
+        ("F0015 architecture", f15_arch),
+        ("F0015 feature", f15_feat),
+        ("traceability matrix", trace),
+    ):
+        for term in ("topology-controller status", "stack-controller status", "provider-controller status", "participation-controller owns status", "participation-controller owns both"):
+            if term in text and not is_allowed_migration_mention(text, term):
+                e(f"WRITER045/046: {label} still attributes status ownership to a non-api-server controller ('{term}')")
+
+
+def check_participation_create_precondition(f15_arch: str, f15_feat: str, spec: str, reg: dict) -> None:
+    """Fail-closed (ADH-2026-046 decision 4b): reject an If-Match requirement on participation
+    collection CREATE, or missing If-Match/idempotency behavior for EXISTING participation actions."""
+    overbroad_patterns = (
+        r"all participation actions[^.]*require[^.]*if-match",
+        r"every participation action[^.]*require[^.]*if-match",
+        r"participation actions \(create,[^)]*\)[^.]*require[^.]*if-match",
+    )
+    for label, text in (("F0015 architecture", f15_arch), ("F0015 feature", f15_feat), ("VS-000 specification", spec)):
+        lower = text.lower()
+        for pattern in overbroad_patterns:
+            if re.search(pattern, lower):
+                e(f"PRECOND046: {label} states an If-Match requirement scoped to ALL participation "
+                  f"actions including create; create must require Idempotency-Key only (ADH-2026-046 decision 2)")
+        if "existing participation" not in lower and "existing-participation" not in lower:
+            e(f"PRECOND046: {label} must scope the If-Match requirement to actions on an EXISTING participation")
+    writers = reg.get("writers", [])
+    w004 = next((w for w in writers if w.get("id") == "VS0-WRITER-004"), None)
+    if w004:
+        update_method = str(w004.get("updateMethod", "")).lower()
+        if "idempotency-key only" not in update_method and "no if-match" not in update_method:
+            e("PRECOND046: VS0-WRITER-004 updateMethod does not scope create to Idempotency-Key-only (no If-Match)")
+        if "if-match" not in update_method:
+            e("PRECOND046: VS0-WRITER-004 updateMethod does not describe the If-Match requirement for existing-participation actions")
+
+
+def check_f15_proof_matrix_and_mapping(reg: dict, f15_arch: str, f15_feat: str, trace: str) -> None:
+    """Fail-closed (ADH-2026-046 decision 4c/4d): reject any missing F15-01..25 conformance
+    case, incomplete registry fields, or incomplete REQ/AC-to-proof mapping."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    for cf_id in F15_REQUIRED_CF_IDS:
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"PROOF046: required F0015-local conformance case missing from registry: {cf_id}")
+            continue
+        for field in F15_REQUIRED_CF_FIELDS:
+            if field not in entry or entry.get(field) in (None, ""):
+                if field == "expectedError" and entry.get(field, "unset") is None:
+                    continue  # null is a valid explicit value for expectedError
+                if field not in entry:
+                    e(f"PROOF046: {cf_id} missing required registry field '{field}'")
+        if cf_id not in trace:
+            e(f"PROOF046: {cf_id} missing from traceability matrix")
+        if cf_id not in f15_arch:
+            e(f"PROOF046: {cf_id} missing from F0015 architecture §10 mapping")
+    # REQ/AC-to-proof mapping completeness (architecture §10.1)
+    for i in range(1, 19):
+        req_id = f"REQ-F15-{i:02d}"
+        if req_id not in f15_arch:
+            e(f"PROOF046: {req_id} missing from F0015 architecture REQ-to-proof mapping")
+    for i in range(1, 15):
+        ac_id = f"AC-F15-{i:02d}"
+        if ac_id not in f15_arch:
+            e(f"PROOF046: {ac_id} missing from F0015 architecture AC-to-proof mapping")
+        if ac_id not in f15_feat:
+            e(f"PROOF046: {ac_id} missing from F0015 feature Acceptance Criteria table")
+
+
+def check_no_f16_leakage_in_f15_conformance(reg: dict, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-046 decision 4e): reject F0016+ schema/writer/route/conformance
+    claimed as FEATURE-0015 behavior, except explicit labelled non-goal/exclusion references."""
+    confs = reg.get("conformance", [])
+    for c in confs:
+        if c.get("id", "").startswith("VS0-CF-F15-") and c.get("owner") != "FEATURE-0015":
+            e(f"LEAK046: {c.get('id')} is F0015-local-numbered but owner is {c.get('owner')}, not FEATURE-0015")
+    lower = f15_feat.lower()
+    for downstream_id in ("vs0-cf-f10", "vs0-cf-hp01"):
+        if downstream_id in lower and not is_allowed_migration_mention(f15_feat, downstream_id):
+            e(f"LEAK046: F0015 feature cites downstream conformance {downstream_id} without an explicit "
+              f"labelled non-goal/exclusion or 'downstream integration reference, non-owning' annotation")
+
+
+def check_design_tasks_proof_coverage(control_json_path: Path, mode: str) -> None:
+    """Fail-closed (ADH-2026-046 decision 4f): a design/tasks document must have a testable
+    task for every F0015-local conformance case. Deferred to 'post' mode; skipped gracefully
+    at the pre-requirements 'readiness' gate and when design.md/tasks.md do not yet exist,
+    consistent with the script's existing --mode readiness/post pattern."""
+    if mode != "post":
+        return
+    design_path = SPEC_DIR / "design.md"
+    tasks_path = SPEC_DIR / "tasks.md"
+    if not design_path.exists() or not tasks_path.exists():
+        return
+    tasks_text = tasks_path.read_text()
+    for cf_id in F15_REQUIRED_CF_IDS:
+        if cf_id not in tasks_text:
+            e(f"TASKCOV046: tasks.md has no testable task referencing required conformance case {cf_id}")
+
+
+def check_requirements_authority_conflicts(mode: str) -> None:
+    """Fail-closed (ADH-2026-046 decision 4a/4b): if a Kiro requirements.md exists for
+    FEATURE-0015, check it (do not edit it) for a non-api-server status-writer conflict or
+    an overbroad participation create If-Match requirement. requirements.md is regenerated
+    only after this readiness gate passes (per ADH-2026-046 human-approval notes), so an
+    existing pre-046 requirements.md is expected to still contain stale wording until it is
+    regenerated. To avoid blocking the pre-requirements 'readiness' gate on a document that
+    is itself produced only after that gate passes, this check runs under --mode post only,
+    consistent with the script's existing readiness/post deferral pattern (see
+    check_design_tasks_proof_coverage above)."""
+    if mode != "post":
+        return
+    req_path = SPEC_DIR / "requirements.md"
+    if not req_path.exists():
+        return
+    req_text = req_path.read_text()
+    lower = req_text.lower()
+    for term in ("topology-controller status", "stack-controller status", "provider-controller status",
+                 "participation-controller owns status", "participation-controller owns both"):
+        if term in lower and not is_allowed_migration_mention(req_text, term):
+            e(f"WRITER045/046: requirements.md still attributes status ownership to a non-api-server "
+              f"controller ('{term}'); requirements is a checked (not edited) authority per ADH-2026-046 decision 4a")
+    overbroad_patterns = (
+        r"all participation actions[^.]*require[^.]*if-match",
+        r"every participation action[^.]*require[^.]*if-match",
+        r"participation actions \(create,[^)]*\)[^.]*require[^.]*if-match",
+    )
+    for pattern in overbroad_patterns:
+        if re.search(pattern, lower):
+            e(f"PRECOND046: requirements.md states an If-Match requirement scoped to ALL participation "
+              f"actions including create; create must require Idempotency-Key only (ADH-2026-046 decision 2); "
+              f"requirements is a checked (not edited) authority per ADH-2026-046 decision 4b")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="FEATURE-0015 architecture-readiness check")
     parser.add_argument("--mode", choices=["readiness", "post"], default="readiness",
                         help="readiness = pre-requirements gate; post = post-stage boundary check")
-    parser.parse_args()
+    args = parser.parse_args()
 
     reg_text = read(REG_PATH)
     if not reg_text:
@@ -443,6 +616,14 @@ def main() -> None:
     check_no_stale_dual_delegated_acceptance(f15_arch, f15_feat, reg_text, spec)
     check_f15_08_uses_resume_not_suspend(reg)
 
+    # ADH-2026-046 fail-closed guardrails
+    check_status_writer_conflicts(reg, reg_text, spec, f15_arch, f15_feat, trace)
+    check_participation_create_precondition(f15_arch, f15_feat, spec, reg)
+    check_f15_proof_matrix_and_mapping(reg, f15_arch, f15_feat, trace)
+    check_no_f16_leakage_in_f15_conformance(reg, f15_feat)
+    check_design_tasks_proof_coverage(ROOT / ".automation/features/FEATURE-0015.control.json", args.mode)
+    check_requirements_authority_conflicts(args.mode)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -463,6 +644,10 @@ def main() -> None:
         print("  ✓ Traceability (F0015-local conformance only)")
         print("  ✓ Closure matrix: all ARC-F15 rows RESOLVED")
         print("  ✓ Traceability matrix: VS0-CF-F15-11 present")
+        print("  ✓ Status-writer resolution (api-server sole writer; ADH-2026-046 decision 1)")
+        print("  ✓ Participation create-vs-existing preconditions (ADH-2026-046 decision 2)")
+        print("  ✓ Complete F15-01..25 proof matrix and REQ/AC mapping (ADH-2026-046 decision 3)")
+        print("  ✓ No F0016+ leakage into F0015-local conformance (ADH-2026-046 decision 4e)")
         sys.exit(0)
 
 

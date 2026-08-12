@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
     "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,12)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,26)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",

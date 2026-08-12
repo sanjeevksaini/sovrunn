@@ -93,7 +93,9 @@ Conflict stop: if any loaded authority contradicts a higher-precedence authority
 - Every requirement maps to: ADH/DEC authority + owner + schema/writer/state/error IDs + `VS0-CF-<ID>`.
 - Failure mappings `VS0-F01..F20` have one-to-one conformance cases `VS0-CF-F01..F20`.
 - Migration conformance (`VS0-MIG-F01..F03`, `VS0-CF-MIG01..MIG02`, `VS0-CF-MIGF01..MIGF03`) is retired (DEC-0059 supersedes DEC-0058; ADH-2026-045 canonical bootstrap) and must never be reused or reintroduced.
-- FEATURE-0015 local conformance uses `VS0-CF-F15-01..F15-11` and `VS0-CF-X03`.
+- FEATURE-0015 local conformance uses `VS0-CF-F15-01..F15-25` and `VS0-CF-X03`.
+- FEATURE-0015 status writes for `CloudPlatform`, `CloudProvider`, `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`, and `CloudProviderParticipation` resolve to `api-server` as the sole status writer; no separate topology/stack/provider/participation controller exists (ADH-2026-046 decision 1).
+- `CloudProviderParticipation` create requires `Idempotency-Key` only (no `If-Match`); every action on an existing participation requires both `If-Match` and `Idempotency-Key` (ADH-2026-046 decision 2).
 - FEATURE-0015 traceability must NOT use downstream-owned conformance (HP01, F09) as local acceptance evidence; those are integration references only.
 - Registry, traceability matrix, and test contract update atomically in the same change.
 - Run `make vs000-contract-check` and `make phase2r-drift-check` before marking complete.

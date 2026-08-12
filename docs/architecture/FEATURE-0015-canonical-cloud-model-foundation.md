@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Approved boundary (replacement under ADH-2026-045; renamed/re-scoped, no alpha migration) |
+| Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -108,7 +108,7 @@ FEATURE-0015 owns direct creation of `CloudPlatform`, `CloudProvider`, `CloudPro
 
 ### 7.4 Participation Lifecycle and Independent Suspension Holds
 
-`CloudProviderParticipation.status` is controller-owned and persists only current lifecycle facts: `phase`, `platformSuspended`, `providerSuspended`, retained `requestExpiresAt`, and standard system status fields. It does not duplicate transition history, which is durable FEATURE-0013 AuditEvent evidence. Both holds initialize to `false`.
+`CloudProviderParticipation.status` is api-server-owned and persists only current lifecycle facts: `phase`, `platformSuspended`, `providerSuspended`, retained `requestExpiresAt`, and standard system status fields. It does not duplicate transition history, which is durable FEATURE-0013 AuditEvent evidence. Both holds initialize to `false`. The FEATURE-0015 API server is the sole status writer for `CloudPlatform`, `CloudProvider`, `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`, and `CloudProviderParticipation`; there is no independent topology, stack, provider, or participation controller (ADH-2026-046 decision 1). The deterministic scheduler is a system actor that invokes the api-server's expiry transition; it is not an additional status writer or controller authority.
 
 | Action | Actor | From → To | Rule |
 |---|---|---|---|
@@ -125,7 +125,7 @@ FEATURE-0015 owns direct creation of `CloudPlatform`, `CloudProvider`, `CloudPro
 
 Suspend/resume are denied with `VS0_PARTICIPATION_STATE_INVALID` while phase is Pending, Terminating, Rejected, Withdrawn, Expired, or Terminated. Exactly one non-terminal participation may exist for a `(cloudPlatformUID, cloudProviderUID)` pair; a new request after a terminal record receives a new UID. FEATURE-0015 exposes no mutable participation spec fields — lifecycle changes occur only through these explicit actions. Clearing one hold (a resume action) never reactivates the participation while the other party's hold remains true; both holds must be false for the effective state to become Active again. Each hold-changing action produces correlated AuditEvent evidence naming the acting party and resulting effective state. An Active participation is necessary but not sufficient for customer visibility; the CloudPlatform separately governs which enrolled Organizations may see or select it (FEATURE-0021/FEATURE-0018 own that eligibility and authorization).
 
-All participation actions (create, accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release) have an empty JSON body and require `If-Match` (the current `resourceVersion`) plus `Idempotency-Key`. The same key and request digest replayed against the same principal and route returns the original result before version checking; a new key presented with a stale `If-Match` value returns 412 (`STALE_RESOURCE_VERSION`). Concurrent creation of the same non-terminal participation pair permits exactly one success; the loser returns `ALREADY_EXISTS` (409).
+All participation actions have an empty JSON body and require `Idempotency-Key`. `POST` create (`participation.request`) creates an absent resource: it requires `Idempotency-Key` only and does not require or accept `If-Match`; its atomic uniqueness key is the non-terminal `(cloudPlatformUID, cloudProviderUID)` pair — one concurrent create succeeds, the other returns `ALREADY_EXISTS` (409) `VS0_PARTICIPATION_DUPLICATE`, and no duplicate resource or audit event is stored. PATCH and every action on an *existing* participation (accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release) require both `If-Match` (the current `resourceVersion`) and `Idempotency-Key` (ADH-2026-046 decision 2). A missing, malformed, or non-current `If-Match` on an existing-participation action returns 412 (`STALE_RESOURCE_VERSION`), performs no lifecycle/status write, and emits no additional AuditEvent. The same principal, route, key, and request digest replayed returns the original result before version checking; a changed digest with the same key returns `CONFLICT` (409) `VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH`.
 
 ### 7.5 PATCH-Only Update Surface
 
@@ -196,17 +196,63 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 
 | Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance (FEATURE-0015 local) |
 |------------|---------|------------|------------|-----------|--------------------------------------|
-| CloudPlatform | DEC-0037; ADH-020/042/045 | VS0-SCHEMA-008 | VS0-WRITER-002 | — | VS0-CF-F15-01,F15-02,F15-07,F15-11 |
-| CloudProvider | DEC-0037; ADH-020/042/045 | VS0-SCHEMA-009 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-07 |
-| CloudProviderParticipation | DEC-0054; ADH-037/042/045 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-01,F15-02,F15-03,F15-04,F15-08,F15-09,F15-10,F15-11 |
-| HostingLocation | DEC-0041; ADH-024/042/045 | VS0-SCHEMA-011 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-07 |
-| Datacenter | DEC-0041; ADH-024/042/045 | VS0-SCHEMA-012 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-07 |
-| FaultDomain | DEC-0041; ADH-024/042/045 | VS0-SCHEMA-013 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-07 |
-| InfrastructureStack | DEC-0041,0042; ADH-025/042/045 | VS0-SCHEMA-014 | VS0-WRITER-003 | — | VS0-CF-F15-01,F15-02,F15-07 |
-| Cross-provider isolation | DEC-0037,0054; ADH-043/045 | — | VS0-WRITER-003 | — | VS0-CF-X03 |
+| CloudPlatform | DEC-0037; ADH-020/042/045/046 | VS0-SCHEMA-008 | VS0-WRITER-002,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| CloudProvider | DEC-0037; ADH-020/042/045/046 | VS0-SCHEMA-009 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| CloudProviderParticipation | DEC-0054; ADH-037/042/045/046 | VS0-SCHEMA-010 | VS0-WRITER-004,005 | VS0-STATE-001 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-08, VS0-CF-F15-09, VS0-CF-F15-10, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20, VS0-CF-F15-24, VS0-CF-F15-25 |
+| HostingLocation | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-011 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| Datacenter | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-012 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| FaultDomain | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-013 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| InfrastructureStack | DEC-0041,0042; ADH-025/042/045/046 | VS0-SCHEMA-014 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| Cross-provider isolation | DEC-0037,0054; ADH-043/045 | — | VS0-WRITER-003 | — | VS0-CF-X03, VS0-CF-F15-23 |
 | Scope-reference integrity | DEC-0037,0054; ADH-043/045 | VS0-SCHEMA-008,010 | VS0-WRITER-002,004 | — | VS0-CF-F15-11 |
+| Status writer resolution (api-server sole writer) | ADH-2026-046 decision 1 | VS0-SCHEMA-008..010 | VS0-WRITER-005 | — | VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16 |
+| Participation create-versus-existing preconditions and idempotency | ADH-2026-046 decision 2 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
+| Bootstrap-grant boundary | ADH-2026-045; ADH-2026-046 decision 3 | — | VS0-WRITER-002,003,004 | — | VS0-CF-F15-22 |
+| Audit atomicity | DEC-0059; ADH-2026-043 (preserved),046 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-24 |
 
 Downstream integration references (non-owning, FEATURE-0015 does not claim this evidence as local): `VS0-CF-HP01` (FEATURE-0026 cross-feature integration), `VS0-CF-F09` (FEATURE-0023 placement).
+
+### 10.1 REQ-F15 and AC-F15 to F0015-local-proof mapping (ADH-2026-046 decision 3)
+
+Every `REQ-F15-01` through `REQ-F15-18` and every `AC-F15-01` through `AC-F15-14` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
+
+| REQ ID | F0015-local proof case(s) |
+|--------|----------------------------|
+| REQ-F15-01 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14 |
+| REQ-F15-02 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14 |
+| REQ-F15-03 | VS0-CF-F15-01, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-20 |
+| REQ-F15-04 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-23 |
+| REQ-F15-05 | VS0-CF-F15-01, VS0-CF-F15-25 |
+| REQ-F15-06 | VS0-CF-F15-08, VS0-CF-F15-10, VS0-CF-F15-15, VS0-CF-F15-20 |
+| REQ-F15-07 | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20 |
+| REQ-F15-08 | VS0-CF-F15-07, VS0-CF-F15-13, VS0-CF-F15-14 |
+| REQ-F15-09 | VS0-CF-X03, VS0-CF-F15-23 |
+| REQ-F15-10 | VS0-CF-F15-01, VS0-CF-F15-02 |
+| REQ-F15-11 | VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-14 |
+| REQ-F15-12 | Anti-drift/non-runtime — no new top-level Problem code is introduced; proven collectively by every error-emitting F0015-local case (VS0-CF-F15-02, VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-07, VS0-CF-X03, VS0-CF-F15-12, VS0-CF-F15-14, VS0-CF-F15-17, VS0-CF-F15-19, VS0-CF-F15-20), each of which uses only an existing FEATURE-0012 code. Not a standalone runtime-observable scenario. |
+| REQ-F15-13 | **Explicit anti-drift/non-runtime verification gate.** "No `CanonicalMigrationPlan`/`CanonicalMigrationRecord`/migration controller/cutover state machine exists" is an anti-drift claim proven by absence (retired tombstones VS0-SCHEMA-060/061, VS0-WRITER-020/021, VS0-STATE-011 never reused), not a runtime-observable proof case. Excluded from the proof-case mapping per ADH-2026-046 decision 3. |
+| REQ-F15-14 | VS0-CF-F15-11 |
+| REQ-F15-15 | VS0-CF-F15-24 |
+| REQ-F15-16 | VS0-CF-F15-12 |
+| REQ-F15-17 | VS0-CF-F15-22 |
+| REQ-F15-18 | VS0-CF-F15-18, VS0-CF-F15-19 |
+
+| AC ID | F0015-local proof case(s) |
+|-------|----------------------------|
+| AC-F15-01 | VS0-CF-F15-01, VS0-CF-F15-02 |
+| AC-F15-02 | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-09 |
+| AC-F15-03 | VS0-CF-F15-01, VS0-CF-F15-25 |
+| AC-F15-04 | VS0-CF-X03, VS0-CF-F15-23 |
+| AC-F15-05 | **Explicit anti-drift/non-runtime verification gate.** Same rationale as REQ-F15-13; excluded from the proof-case mapping. |
+| AC-F15-06 | VS0-CF-F15-07 |
+| AC-F15-07 | **Explicit anti-drift/non-runtime verification gate.** The canonical stale-concept anti-drift gate is a documentation/registry consistency check, not a runtime-observable scenario. Excluded from the proof-case mapping. |
+| AC-F15-08 | VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-X03 |
+| AC-F15-09 | Contract-reuse claim proven collectively by every error-emitting F0015-local case (VS0-CF-F15-02, VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-07, VS0-CF-X03, VS0-CF-F15-12, VS0-CF-F15-14, VS0-CF-F15-17, VS0-CF-F15-19, VS0-CF-F15-20), each of which uses only an existing FEATURE-0012 Problem Details code. Not a standalone runtime-observable scenario. |
+| AC-F15-10 | VS0-CF-F15-08, VS0-CF-F15-10 |
+| AC-F15-11 | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
+| AC-F15-12 | VS0-CF-F15-11 |
+| AC-F15-13 | VS0-CF-F15-24 |
+| AC-F15-14 | VS0-CF-F15-12 |
 
 ---
 

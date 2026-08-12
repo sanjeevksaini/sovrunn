@@ -11,6 +11,15 @@
 - Human approver: Sanjeev Kumar
 - Approval status: Approved
 
+### Execution corrections
+
+`ADH-2026-046` (approved 2026-08-12) corrects and clarifies this handoff's execution semantics on two points, without changing this handoff's approved product decision:
+
+1. **Status ownership.** The FEATURE-0015 API server is the sole status writer for `CloudPlatform`, `CloudProvider`, `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`, and `CloudProviderParticipation`. There is no separate topology-controller, stack-controller, provider-controller, or participation-controller authority; the deterministic scheduler referenced below invokes the API server's expiry transition rather than acting as an independent writer.
+2. **Participation create versus existing-participation preconditions.** `POST .../cloud-provider-participations` (create) requires `Idempotency-Key` but does not require or accept `If-Match`. PATCH and every action on an *existing* participation require both `If-Match` and `Idempotency-Key`.
+
+See `docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md` for the complete correction.
+
 ## Decision title
 
 Replace alpha runtime migration with a canonical bootstrap

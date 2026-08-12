@@ -145,6 +145,8 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
 - Error responses must not confirm existence of resources the caller cannot access (safe denial).
 - An inaccessible cross-provider reference returns RESOURCE_NOT_FOUND (404) with violation VS0_AUTHORIZATION_SAFE_DENIAL and no existence disclosure. An authorized but structurally invalid same-provider reference returns VALIDATION_FAILED (422). VS0-CF-X03 records the safe-denial violation exactly.
 - CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. CloudPlatform has no Organization reference to validate; it carries an immutable `spec.ownerRegistration` instead (ADH-2026-045 decision 8). A mismatch on the participation reference returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH.
+- `POST` create of a CloudProviderParticipation requires `Idempotency-Key` only; it does not require or accept `If-Match` because it targets an absent resource, keyed atomically by the non-terminal `(cloudPlatformUID, cloudProviderUID)` pair. PATCH and every action on an existing participation require both `If-Match` and `Idempotency-Key` (ADH-2026-045/046).
+- FEATURE-0015 status fields for `CloudPlatform`, `CloudProvider`, `HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`, and `CloudProviderParticipation` are written solely by `api-server`; no separate topology, stack, provider, or participation controller authority exists. The deterministic system scheduler is a system actor that invokes the api-server's expiry transition and is not an additional status writer (ADH-2026-046 decision 1).
 - No error `detail` or `title` string is parsed programmatically by clients; codes and types are the contract.
 
 ---
@@ -165,7 +167,7 @@ Each conformance requirement has a stable registry identifier. `VS0-CF-HP01` own
 | `VS0-CF-T01` | Correlation | Request, decisions, plan, operation, executions and audit form one complete trace graph. |
 | `VS0-CF-I01..I02` | Idempotency and races | Same payload converges; different payload conflicts; one quota/operation wins. |
 | `VS0-CF-D01` | Deletion ordering | Binding revocation precedes cleanup, quota release and instance finalization. |
-| `VS0-CF-F15-01..F15-11` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation lifecycle actions and independent suspension holds, writer denial, PATCH-only update surface (no PUT/DELETE), and scope reference UID invariants. |
+| `VS0-CF-F15-01..F15-25` | FEATURE-0015 local evidence | Canonical resource/scope validation, participation lifecycle actions and independent suspension holds, writer denial, PATCH-only update surface (no PUT/DELETE), scope reference UID invariants, CloudPlatform-root precondition, PATCH accept/deny cases, participation create-versus-existing-action preconditions and idempotency, read/list authorization, bootstrap-grant boundary, topology reference ordering, audit atomicity, and route/action surface closure. |
 
 Each conformance test specifies exact expected state, expected error (code + HTTP + type), and expected side effects.
 
