@@ -193,6 +193,17 @@ def run():
         for f in ("owner","inputs","expectedState","expectedError","expectedSideEffects","gate"):
             if f not in c: e(f"{cid}: missing {f}")
     for x in exp_cf-found_cf: e(f"Missing conformance: {x}")
+    # ADH-2026-049: FEATURE-0015 required-AuditEvent-append failure must map to the
+    # inherited INTERNAL_ERROR/500 outcome, never DEPENDENCY_UNAVAILABLE/503.
+    f15_24 = next((c for c in confs if c.get("id") == "VS0-CF-F15-24"), None)
+    if not f15_24:
+        e("VS0-CF-F15-24 conformance entry missing (ADH-2026-049)")
+    else:
+        if f15_24.get("expectedError") != "INTERNAL_ERROR":
+            e(f"VS0-CF-F15-24 expectedError must be INTERNAL_ERROR (ADH-2026-049), found {f15_24.get('expectedError')!r}")
+        side_effects_049 = str(f15_24.get("expectedSideEffects", "")).lower()
+        if "dependency_unavailable" in side_effects_049 and "not used" not in side_effects_049:
+            e("VS0-CF-F15-24 expectedSideEffects must not assign DEPENDENCY_UNAVAILABLE (ADH-2026-049)")
     for x in found_cf-exp_cf: e(f"Unexpected conformance: {x}")
     retired_confs = reg.get("retiredConformance", [])
     ids_retired_cf = [x.get("id") for x in retired_confs]

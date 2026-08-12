@@ -159,6 +159,7 @@ FEATURE-0013 registry defines AuditEvent and DecisionRecord error semantics. The
   - An `If-Match` header that is missing, malformed, or non-current on an action against an existing participation returns `STALE_RESOURCE_VERSION` (412), preserving the ADH-2026-046 rule.
   - A `CloudProviderParticipation` item action carrying any non-empty JSON body returns `MALFORMED_REQUEST` (400).
   - A malformed/prohibited input under this rule produces no mutation, no idempotency record, and no AuditEvent unless an already-approved audited-denial rule independently applies; this clarification does not broaden the ADH-2026-046/047 audit-denial list.
+- A failure to append the FEATURE-0013 AuditEvent required for a FEATURE-0015 mutation returns the inherited `INTERNAL_ERROR` (500) Problem Details response; the resource mutation and its idempotency completion are not published. `DEPENDENCY_UNAVAILABLE` (503) is not used for this outcome because FEATURE-0015 introduces no durable or external persistence dependency (ADH-2026-049).
 
 ---
 

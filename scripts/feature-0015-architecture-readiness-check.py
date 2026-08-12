@@ -342,6 +342,39 @@ def check_audit_matrix(f15_arch: str, f15_feat: str) -> None:
             e(f"AUDIT: F0015 {label} must explicitly not import VS0-CF-T01")
 
 
+def check_audit_append_failure_mapping(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed (ADH-2026-049): a required-AuditEvent-append failure for a
+    FEATURE-0015 mutation must map to the exact inherited INTERNAL_ERROR/500
+    Problem Details response, never DEPENDENCY_UNAVAILABLE/503, and the
+    mutation/idempotency non-publication rule must remain stated."""
+    confs = reg.get("conformance", [])
+    f15_24 = next((c for c in confs if c.get("id") == "VS0-CF-F15-24"), None)
+    if not f15_24:
+        e("AUDITFAIL049: VS0-CF-F15-24 conformance entry missing")
+        return
+    if f15_24.get("expectedError") != "INTERNAL_ERROR":
+        e(f"AUDITFAIL049: VS0-CF-F15-24 expectedError must be INTERNAL_ERROR, "
+          f"found {f15_24.get('expectedError')!r} (ADH-2026-049)")
+    side_effects = str(f15_24.get("expectedSideEffects", "")).lower()
+    if "dependency_unavailable" in side_effects and "not used" not in side_effects:
+        e("AUDITFAIL049: VS0-CF-F15-24 expectedSideEffects must not assign DEPENDENCY_UNAVAILABLE "
+          "(a mention is allowed only in an explicit 'not used' exclusion)")
+    if "not published" not in side_effects and "unpublished" not in side_effects:
+        e("AUDITFAIL049: VS0-CF-F15-24 expectedSideEffects must state the mutation/idempotency "
+          "non-publication rule on audit-append failure")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("VS-000 specification", spec)):
+        lower = text.lower()
+        if "internal_error" not in lower:
+            e(f"AUDITFAIL049: F0015 {label} must state INTERNAL_ERROR for a required-AuditEvent-append "
+              f"failure (ADH-2026-049)")
+        if "dependency_unavailable" in lower and "not used" not in lower and "must not" not in lower and "must never" not in lower:
+            e(f"AUDITFAIL049: F0015 {label} mentions DEPENDENCY_UNAVAILABLE without explicitly excluding "
+              f"it for the audit-append-failure outcome (ADH-2026-049)")
+        if "not published" not in lower and "unpublished" not in lower:
+            e(f"AUDITFAIL049: F0015 {label} must state the mutation/idempotency non-publication rule "
+              f"for a required-AuditEvent-append failure (ADH-2026-049)")
+
+
 def check_traceability_local_only(f15_arch: str) -> None:
     """Decision (preserved from ADH-2026-043 D7): F0015 traceability uses only
     local conformance IDs; downstream HP01/F09 are not local acceptance evidence."""
@@ -1016,6 +1049,7 @@ def main() -> None:
     check_bootstrap_grant_actions(f15_arch, f15_feat)
     check_api_update_behavior_and_concurrency(f15_feat)
     check_audit_matrix(f15_arch, f15_feat)
+    check_audit_append_failure_mapping(reg, f15_arch, f15_feat, spec)
     check_traceability_local_only(f15_arch)
 
     # Cross-checks
@@ -1075,6 +1109,7 @@ def main() -> None:
         print("  ✓ Participation collection-create body vs. empty item-action body; FEATURE-0021 fields deferred (ADH-2026-047 decision 4)")
         print("  ✓ Contract-executability audit: field classification, route-contract completeness, F15-26..28 proof matrix (ADH-2026-047 decision 5)")
         print("  ✓ ISO-3166-1 alpha-2 assigned-code semantics; four malformed-input outcomes; F15-29..30 proof matrix; per-route design-readiness simulation (ADH-2026-048)")
+        print("  ✓ Required-AuditEvent-append failure maps to INTERNAL_ERROR/500, not DEPENDENCY_UNAVAILABLE; non-publication rule preserved (ADH-2026-049)")
         sys.exit(0)
 
 

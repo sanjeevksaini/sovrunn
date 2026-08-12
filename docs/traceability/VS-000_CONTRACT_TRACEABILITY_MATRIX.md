@@ -207,7 +207,7 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-21 | Read/list authorization (collection, scoped, empty, direct GET) | FEATURE-0015 | security | ADH-2026-045/046 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-22 | Bootstrap-grant boundary (header/body claims ignored) | FEATURE-0015 | security | ADH-2026-045/046 | VS0-WRITER-002,003,004 |
 | VS0-CF-F15-23 | Topology reference ordering (safe denial vs authorized mismatch) | FEATURE-0015 | security | ADH-2026-043/045/046 | VS0-WRITER-003 |
-| VS0-CF-F15-24 | Audit atomicity across F0015 mutations | FEATURE-0015 | observability | ADH-2026-043/046 | VS0-SCHEMA-007 |
+| VS0-CF-F15-24 | Audit atomicity across F0015 mutations; required-AuditEvent-append failure returns INTERNAL_ERROR/500 (not DEPENDENCY_UNAVAILABLE) | FEATURE-0015 | observability | ADH-2026-043/046/049 | VS0-SCHEMA-007 |
 | VS0-CF-F15-25 | F0015 route/action surface closure (no F0016/migration leakage) | FEATURE-0015 | feature | DEC-0059; ADH-2026-045/046 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-26 | Per-kind collection-create request boundary | FEATURE-0015 | feature | ADH-2026-047 decision 1/5 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-27 | Scope derivation single-source proof | FEATURE-0015 | feature | ADH-2026-047 decision 2/5 | VS0-SCHEMA-008..014 |

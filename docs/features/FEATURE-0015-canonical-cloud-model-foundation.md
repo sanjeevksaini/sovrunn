@@ -10,7 +10,7 @@
 | Depended On By | FEATURE-0016, FEATURE-0021, FEATURE-0022 |
 | Architecture Boundary | docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049 |
 
 ---
 
@@ -40,7 +40,7 @@ Establish the seven-scope canonical cloud model identity layer through direct ca
 | REQ-F15-12 | Existing FEATURE-0012 Problem Details codes used for all errors; no new top-level codes | — | VS0-SCHEMA-004 |
 | REQ-F15-13 | No CanonicalMigrationPlan, CanonicalMigrationRecord, migration controller, or cutover state machine is implemented or reintroduced; FEATURE-0001–0014 are retained repository assets, not live state requiring conversion | DEC-0059; ADH-045 | (retired: VS0-SCHEMA-060,061; VS0-WRITER-020,021; VS0-STATE-011) |
 | REQ-F15-14 | Scope reference UID invariant: CloudProviderParticipation `spec.cloudPlatformRef.uid` must equal its CloudPlatform `metadata.scopeRef.uid`. CloudPlatform itself has no Organization reference to validate (ADH-045 decision 8: immutable `spec.ownerRegistration` replaces `ownerOrganizationRef`). Mismatch returns VALIDATION_FAILED (422) with VS0_SCOPE_REFERENCE_MISMATCH | DEC-0037,0054; ADH-043 (preserved),045 | VS0-SCHEMA-010, VS0-CF-F15-11 |
-| REQ-F15-15 | Audit evidence: participation lifecycle/hold-changing actions and resource create/PATCH, and safe-denial/security denials produce AuditEvent (reusing FEATURE-0013) with intentional correlation fields, safe projection/redaction, and no secrets; mutation and its required AuditEvent are one atomic outcome | DEC-0059; ADH-043 (preserved) | VS0-SCHEMA-007 |
+| REQ-F15-15 | Audit evidence: participation lifecycle/hold-changing actions and resource create/PATCH, and safe-denial/security denials produce AuditEvent (reusing FEATURE-0013) with intentional correlation fields, safe projection/redaction, and no secrets; mutation and its required AuditEvent are one atomic outcome; a failure to append the required AuditEvent returns the inherited INTERNAL_ERROR (500) Problem Details response, and the mutation and any idempotency completion are not published; DEPENDENCY_UNAVAILABLE is not used for this outcome | DEC-0059; ADH-043 (preserved),049 | VS0-SCHEMA-007 |
 | REQ-F15-16 | Creation order: a CloudProvider, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, or CloudProviderParticipation create is denied until at least one CloudPlatform exists, returning CONFLICT (409) with VS0_CLOUDPLATFORM_ROOT_REQUIRED | ADH-045 | — |
 | REQ-F15-17 | Bootstrap authorization: server-resolved, deterministic grants only; grants never accepted from header/body; F0015 persists no roles, memberships, or assignments | ADH-045 | — |
 | REQ-F15-18 | Idempotency: POST create/actions require Idempotency-Key; same principal+route+key+digest returns original result; different digest with same key returns CONFLICT/409 with VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH | ADH-045 | — |
@@ -244,6 +244,7 @@ FEATURE-0015 registers exactly seven collection routes, seven item routes, and e
 | Idempotency-Key missing, empty, malformed, or over-length on a route that requires it | MALFORMED_REQUEST | 400 | — |
 | If-Match supplied on a CloudProviderParticipation collection create | MALFORMED_REQUEST | 400 | — |
 | CloudProviderParticipation item action with a non-empty JSON body | MALFORMED_REQUEST | 400 | — |
+| Required FEATURE-0013 AuditEvent append fails for a FEATURE-0015 mutation | INTERNAL_ERROR | 500 | — |
 | Successful collection create | — (201) | 201 | — |
 | Successful PATCH | — (200) | 200 | — |
 

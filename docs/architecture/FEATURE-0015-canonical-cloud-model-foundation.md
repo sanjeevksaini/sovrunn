@@ -5,7 +5,7 @@
 | Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; closed under ADH-2026-047; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -206,6 +206,7 @@ Rules:
 - No secrets: no credential values, protected handles, or secret material in any audit record.
 - Intentional correlation: each audit record links to its subject, actor, and governing participation through UID-pinned references.
 - The mutation and its required AuditEvent are one atomic outcome; audit failure leaves the resource/lifecycle unchanged.
+- A failure to append the required FEATURE-0013 AuditEvent for a FEATURE-0015 mutation returns the inherited FEATURE-0012 `INTERNAL_ERROR` Problem Details response (HTTP 500); the resource mutation and its idempotency completion are not published. `DEPENDENCY_UNAVAILABLE` (503) is not used for this outcome because FEATURE-0015 introduces no durable or external persistence dependency (ADH-2026-049).
 - FEATURE-0015 does not import FEATURE-0026's integration-only trace conformance (VS0-CF-T01).
 
 ### 7.12 ISO-3166 Assigned-Code Semantics and Malformed-Input Outcomes (ADH-2026-048)
@@ -279,7 +280,7 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 | Status writer resolution (api-server sole writer) | ADH-2026-046 decision 1 | VS0-SCHEMA-008..010 | VS0-WRITER-005 | — | VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16 |
 | Participation create-versus-existing preconditions and idempotency | ADH-2026-046 decision 2 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
 | Bootstrap-grant boundary | ADH-2026-045; ADH-2026-046 decision 3 | — | VS0-WRITER-002,003,004 | — | VS0-CF-F15-22 |
-| Audit atomicity | DEC-0059; ADH-2026-043 (preserved),046 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-24 |
+| Audit atomicity; required-AuditEvent-append failure mapping | DEC-0059; ADH-2026-043 (preserved),046,049 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-24 |
 | Closed collection-create request contract | ADH-2026-047 decision 1 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-26 |
 | Scope derivation single-source proof | ADH-2026-047 decision 2 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-27 |
 | Topology immutability correction (name immutable; description PATCHable) | ADH-2026-047 decision 3 | VS0-SCHEMA-011..014 | VS0-WRITER-003 | — | VS0-CF-F15-13, VS0-CF-F15-14 |
