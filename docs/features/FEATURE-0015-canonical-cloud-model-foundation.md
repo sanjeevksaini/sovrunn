@@ -44,6 +44,9 @@ Establish the seven-scope canonical cloud model identity layer through direct ca
 | REQ-F15-16 | Creation order: a CloudProvider, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, or CloudProviderParticipation create is denied until at least one CloudPlatform exists, returning CONFLICT (409) with VS0_CLOUDPLATFORM_ROOT_REQUIRED | ADH-045 | — |
 | REQ-F15-17 | Bootstrap authorization: server-resolved, deterministic grants only; grants never accepted from header/body; F0015 persists no roles, memberships, or assignments | ADH-045 | — |
 | REQ-F15-18 | Idempotency: POST create/actions require Idempotency-Key; same principal+route+key+digest returns original result; different digest with same key returns CONFLICT/409 with VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH | ADH-045 | — |
+| REQ-F15-19 | Closed collection-create request contract: for every F0015 collection POST, the client supplies only metadata.name, the required kind-specific spec fields, and the registered optional kind-specific spec fields; the server rejects metadata.uid/generation/resourceVersion/timestamps, metadata.scopeRef, any status field, a field owned by another feature, or an unknown field; every successful create returns 201 with its exact initial status; a successful PATCH returns 200 with the updated resource | ADH-047 decision 1 | VS0-SCHEMA-008..014 |
+| REQ-F15-20 | Scope derivation: each F0015 resource kind has exactly one server-side scope-derivation source — CloudPlatform and CloudProvider from the deployment Platform-root; CloudProviderParticipation from its resolved spec.cloudPlatformRef (UID-equality enforced); HostingLocation from the CloudProvider UID bound to the authenticated, server-resolved topology.write grant; Datacenter/FaultDomain/InfrastructureStack from their resolved immutable parent reference; a client cannot supply or select metadata.scopeRef for any F0015 resource | ADH-047 decision 2 | VS0-SCHEMA-008..014 |
+| REQ-F15-21 | Participation collection-create body is exactly metadata.name, spec.cloudPlatformRef (UID-pinned), spec.cloudProviderRef (UID-pinned), and spec.environment (development only); spec.providerSelectionModes and spec.permittedHostingLocationRefs are FEATURE-0021-introduced and FEATURE-0021-activated and are neither accepted, stored, defaulted, validated, nor exposed by F0015; item action routes are distinct from create and carry only an empty JSON body plus their required headers | ADH-047 decision 4 | VS0-SCHEMA-010 |
 
 ### 2.2 DESIGN-Delegated Mechanics
 
@@ -70,7 +73,9 @@ These concepts appear in the shared Slice 0 registry only so FEATURE-0015 can pr
 | CanonicalMigrationPlan, CanonicalMigrationRecord, migration controller, cutover state machine | Superseded by canonical bootstrap; no runtime alpha migration | DEC-0059; ADH-045 |
 | ExecutionTarget (any part) | Owned entirely by FEATURE-0016 | ADH-045 decision 9 |
 | SovrunnInstallation | No Phase 2R owner | DEC-0053 deferred |
-| CloudProviderParticipation `spec.providerSelectionModes` | Introduced and activated only by FEATURE-0021 | VS0-SCHEMA-010 field ownership |
+| CloudProviderParticipation `spec.providerSelectionModes` | Introduced and activated only by FEATURE-0021; rejected on F0015 participation create | VS0-SCHEMA-010 field ownership; ADH-047 decision 4 |
+| CloudProviderParticipation `spec.permittedHostingLocationRefs` | Introduced and activated only by FEATURE-0021; rejected on F0015 participation create | VS0-SCHEMA-010 field ownership; ADH-047 decision 4 |
+| Client-supplied `metadata.scopeRef` for any F0015 resource | Scope is always server-derived from exactly one registered source | ADH-047 decision 2 |
 | Platform lifecycle resources | No Phase 2R owner | DEC-0053 deferred |
 | Target qualification writes | FEATURE-0016 | DEC-0042 |
 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036 |
@@ -103,6 +108,9 @@ These concepts appear in the shared Slice 0 registry only so FEATURE-0015 can pr
 | AC-F15-12 | Scope reference UID invariant enforced: cloudPlatformRef UID equals scopeRef UID for CloudProviderParticipation; mismatch rejected with VS0_SCOPE_REFERENCE_MISMATCH | VS0-CF-F15-11 |
 | AC-F15-13 | Participation lifecycle/hold-changing actions, resource create/PATCH, and security denials produce correlated, redacted AuditEvent with no secrets | VS0-CF-F15-24 |
 | AC-F15-14 | CloudPlatform-root requirement enforced: create of CloudProvider/topology/participation denied with CONFLICT/409 VS0_CLOUDPLATFORM_ROOT_REQUIRED until at least one CloudPlatform exists | VS0-CF-F15-12 |
+| AC-F15-15 | Every F0015 collection-create kind enforces its closed client-required/client-optional field boundary; server-owned/status/scope/unknown/deferred fields are rejected; each successful create returns 201 and initializes its exact status | VS0-CF-F15-26 |
+| AC-F15-16 | Every F0015 resource kind derives its scope from exactly one server-side source (Platform-root, participation-from-cloudPlatformRef, HostingLocation-from-grant, descendant-from-parent); a client-supplied or mismatched scope is never honored | VS0-CF-F15-27 |
+| AC-F15-17 | Participation collection-create body accepts exactly metadata.name/spec.cloudPlatformRef/spec.cloudProviderRef/spec.environment, initializes Pending/false holds/seven-day expiry, and rejects FEATURE-0021-owned fields; existing-item participation actions accept only an empty JSON body plus their required headers | VS0-CF-F15-28 |
 
 ---
 
@@ -154,6 +162,40 @@ CloudPlatform exists first. A CloudProvider, HostingLocation, Datacenter, FaultD
 
 The authenticated request context receives server-resolved, deterministic bootstrap grants; grants are never accepted from an HTTP header or request body, and FEATURE-0015 persists no roles, memberships, or assignments. The server-configured bootstrap principal receives `cloudplatform.write` and `cloudprovider.write` at the deployment Platform-root scope to create the first Platform-scoped resources. `topology.write` is CloudProvider-UID scoped; participation actions are scoped to their existing CloudPlatform or CloudProvider target.
 
+### 4.5 Closed Collection-Create Request Contract (ADH-2026-047 decision 1)
+
+For every F0015 collection `POST`, the client supplies only `metadata.name`, the required F0015-owned `spec` fields, and the registered optional F0015-owned `spec` fields for that kind:
+
+| Kind | Client-required create fields | Client-optional create fields | Server-assigned outcome |
+|---|---|---|---|
+| CloudPlatform | `metadata.name`; `spec.ownerRegistration.legalName`; `spec.ownerRegistration.registrationIdentifier`; `spec.ownerRegistration.jurisdictionCode` | `metadata.displayName`; `spec.description` | deployment Platform-root `scopeRef`; `status.phase=Active`; `201` |
+| CloudProvider | `metadata.name`; non-empty `spec.operatingMarkets[]` | `metadata.displayName`; `spec.displayName` | deployment Platform-root `scopeRef`; `status.phase=Active`; `201` |
+| HostingLocation | `metadata.name`; `spec.countryCode`; `spec.locality` | `spec.administrativeAreaCode`; `spec.description` | CloudProvider `scopeRef` from §4.6; `status.phase=Active`; `201` |
+| Datacenter | `metadata.name`; `spec.hostingLocationRef` | `spec.description` | CloudProvider `scopeRef` from resolved parent; `status.phase=Active`; `201` |
+| FaultDomain | `metadata.name`; `spec.datacenterRef` | `spec.description` | CloudProvider `scopeRef` from resolved parent; `status.phase=Active`; `201` |
+| InfrastructureStack | `metadata.name`; `spec.faultDomainRef` | `spec.description` | CloudProvider `scopeRef` from resolved parent; `status.phase=Active`; `201` |
+
+The client must not supply `metadata.uid`, generation, resourceVersion, timestamps, `metadata.scopeRef`, any `status` field, a field owned by another feature, or an unknown field; such requests are rejected. All create routes require `Idempotency-Key`. A successful PATCH returns `200` with the updated resource.
+
+### 4.6 Scope Derivation (ADH-2026-047 decision 2)
+
+Each F0015 resource kind has exactly one server-side scope-derivation source; a client never supplies or selects `metadata.scopeRef`:
+
+- **CloudPlatform, CloudProvider**: immutable deployment Platform-root scope, server-derived.
+- **CloudProviderParticipation**: immutable CloudPlatform scope derived from resolved `spec.cloudPlatformRef`; the referenced CloudPlatform must exist and its UID must equal the resulting `metadata.scopeRef.uid`.
+- **HostingLocation**: immutable CloudProvider scope derived from the CloudProvider UID bound to the authenticated, server-resolved `topology.write` grant. A caller cannot supply or choose `metadata.scopeRef`.
+- **Datacenter, FaultDomain, InfrastructureStack**: immutable CloudProvider scope derived from their resolved immutable parent reference.
+
+Reference resolution and authorization/non-disclosure occur before structural validation; derived-scope mismatches trigger the established safe-denial/validation outcome.
+
+### 4.7 Topology Immutability Correction (ADH-2026-047 decision 3)
+
+`metadata.name` is immutable identity for every F0015 resource, including topology resources (`HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`). For those topology resources, only `spec.description` is PATCHable. **Correction:** ADH-2026-045's topology sentence "Name and description are PATCHable" is corrected to "Description is PATCHable; name is immutable identity."
+
+### 4.8 Participation Collection-Create Body (ADH-2026-047 decision 4)
+
+`POST /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations` requires exactly `metadata.name`, `spec.cloudPlatformRef` (UID-pinned), `spec.cloudProviderRef` (UID-pinned), and `spec.environment` (`development` only). It accepts no optional participation `spec` fields; `spec.providerSelectionModes` and `spec.permittedHostingLocationRefs` are FEATURE-0021-owned and are rejected if present. The server derives `metadata.scopeRef` from `spec.cloudPlatformRef`, assigns `status.phase=Pending`, `status.platformSuspended=false`, `status.providerSuspended=false`, `status.requestExpiresAt=createdAt+7 days`, and returns `201`. This create requires `Idempotency-Key` only; `If-Match` is rejected/not accepted. Item action routes (`:accept`, `:reject`, `:withdraw`, `:suspend`, `:resume`, `:request-release`, `:accept-release`, `:decline-release`) carry an empty JSON body and each require both `If-Match` and `Idempotency-Key`. Scheduler expiry is an internal API-server transition with no public request body.
+
 ---
 
 ## 5. Error Codes Used
@@ -177,6 +219,8 @@ The authenticated request context receives server-resolved, deterministic bootst
 | Invalid reference chain | VALIDATION_FAILED | 422 | — |
 | Stale resourceVersion / stale If-Match | STALE_RESOURCE_VERSION | 412 | — |
 | Scope reference UID mismatch (cloudPlatformRef UID ≠ scopeRef UID) | VALIDATION_FAILED | 422 | VS0_SCOPE_REFERENCE_MISMATCH |
+| Successful collection create | — (201) | 201 | — |
+| Successful PATCH | — (200) | 200 | — |
 
 ---
 

@@ -11,8 +11,7 @@
     "feature_file": "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md",
     "architecture": "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md",
     "handoffs": [
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-047-feature-0015-request-construction-and-scope-derivation-closure.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },
@@ -97,7 +96,6 @@
       "docs/engineering/ai-context-loading-standard.md",
       "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
       "docs/phase2/PHASE2R_REBASELINE.md",
-      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md",
       "docs/architecture/vertical-slices/VS-000-contract-specification.md",
       "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
       ".kiro/steering/slice0-contract.md"

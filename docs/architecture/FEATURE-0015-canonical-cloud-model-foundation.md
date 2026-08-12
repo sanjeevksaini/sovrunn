@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; renamed/re-scoped, no alpha migration) |
+| Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; closed under ADH-2026-047; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -39,13 +39,14 @@ FEATURE-0015 owns only the portions shown in the activation-boundary column. FEA
 
 `ExecutionTarget` (VS0-SCHEMA-015), including its identity, schema, routes, status, writer, conformance, and target lifecycle, belongs in its entirety to FEATURE-0016 (DEC-0059; ADH-2026-045). FEATURE-0015 introduces no `ExecutionTarget` identity, schema, route, status, writer, conformance, or target lifecycle behavior, and ends at `InfrastructureStack`.
 
-### 3.2 CloudProviderParticipation.spec.providerSelectionModes field ownership
+### 3.2 CloudProviderParticipation deferred FEATURE-0021 field ownership (extended by ADH-2026-047 decision 4)
 
 | Field | introducedBy | activatedBy | Writer |
 |-------|-------------|-------------|--------|
 | `spec.providerSelectionModes` | **FEATURE-0021** | **FEATURE-0021** | delegated-participation-contract-authority (VS0-WRITER-004) |
+| `spec.permittedHostingLocationRefs` | **FEATURE-0021** | **FEATURE-0021** | delegated-participation-contract-authority (VS0-WRITER-004) |
 
-FEATURE-0015 must NOT store, validate, default, or mention this field as CONTRACT_ONLY behavior. It is wholly owned by FEATURE-0021.
+FEATURE-0015 must NOT store, validate, default, or mention either field as CONTRACT_ONLY behavior. Both are wholly owned by FEATURE-0021 and are rejected if present on a FEATURE-0015 participation create request (ADH-2026-047 decision 4).
 
 The registry's `fieldOwnership.introducedBy` and `activatedBy` rule governs feature activation boundaries. It does not alter the source-of-truth precedence order: the registry remains the machine-readable expression of the higher-precedence Slice 0 specification.
 
@@ -68,11 +69,12 @@ ServiceRegion remains wholly owned by FEATURE-0022. FEATURE-0016 is only a decla
 
 FEATURE-0021 owns:
 - `CloudProviderParticipation.spec.providerSelectionModes` field (introducedBy/activatedBy FEATURE-0021)
+- `CloudProviderParticipation.spec.permittedHostingLocationRefs` field (introducedBy/activatedBy FEATURE-0021; ADH-2026-047 decision 4)
 - `providerSelectionModes` vocabulary activation in placement evaluation context
 - `ServiceInstance.spec.providerPreferenceRef` evaluation semantics
 - Provider-selection intent evaluation and routing logic
 
-FEATURE-0015 does NOT introduce, store, validate, default, or reference `providerSelectionModes` in any active behavior.
+FEATURE-0015 does NOT introduce, store, validate, default, or reference `providerSelectionModes` or `permittedHostingLocationRefs` in any active behavior; both fields are explicitly rejected on FEATURE-0015 participation create requests.
 
 ---
 
@@ -137,7 +139,59 @@ CloudPlatform exists first. A CloudProvider, `HostingLocation`, `Datacenter`, `F
 
 The authenticated request context receives server-resolved, deterministic bootstrap grants; grants are never accepted from an HTTP header or request body, and FEATURE-0015 persists no roles, memberships, or assignments. The server-configured bootstrap principal receives `cloudplatform.write` and `cloudprovider.write` at the deployment Platform-root scope to create the first Platform-scoped resources; after creation the same action may be narrowed to one target resource UID for PATCH. `topology.write` is CloudProvider-UID scoped; participation actions are scoped to their existing CloudPlatform or CloudProvider target.
 
-### 7.6 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6, preserved)
+### 7.7 Closed Collection-Create Request Contract (ADH-2026-047 decision 1)
+
+For every F0015 collection `POST`, the client supplies only `metadata.name`, the required F0015-owned `spec` fields, and the optional F0015-owned `spec` fields listed for that kind below. The client must not supply `metadata.uid`, generation, resourceVersion, timestamps, `metadata.scopeRef`, any `status` field, a field owned by another feature, or an unknown field — such requests are rejected. The API server assigns identity/version/timestamps, `metadata.scopeRef`, initial status, and required FEATURE-0013 AuditEvent evidence.
+
+| Kind | Client-required create fields | Client-optional create fields | Server-assigned outcome |
+|---|---|---|---|
+| CloudPlatform | `metadata.name`; `spec.ownerRegistration.legalName`; `spec.ownerRegistration.registrationIdentifier`; `spec.ownerRegistration.jurisdictionCode` | `metadata.displayName`; `spec.description` | deployment Platform-root `scopeRef`; `status.phase=Active`; `201` resource response |
+| CloudProvider | `metadata.name`; non-empty `spec.operatingMarkets[]` | `metadata.displayName`; `spec.displayName` | deployment Platform-root `scopeRef`; `status.phase=Active`; `201` resource response |
+| HostingLocation | `metadata.name`; `spec.countryCode`; `spec.locality` | `spec.administrativeAreaCode`; `spec.description` | CloudProvider `scopeRef` derived under §7.8; `status.phase=Active`; `201` resource response |
+| Datacenter | `metadata.name`; `spec.hostingLocationRef` | `spec.description` | CloudProvider `scopeRef` derived from the resolved parent; `status.phase=Active`; `201` resource response |
+| FaultDomain | `metadata.name`; `spec.datacenterRef` | `spec.description` | CloudProvider `scopeRef` derived from the resolved parent; `status.phase=Active`; `201` resource response |
+| InfrastructureStack | `metadata.name`; `spec.faultDomainRef` | `spec.description` | CloudProvider `scopeRef` derived from the resolved parent; `status.phase=Active`; `201` resource response |
+
+All create routes require `Idempotency-Key` under ADH-2026-045/046. A successful PATCH returns `200` with the updated resource. Existing FEATURE-0012 Problem Details semantics govern rejected unknown fields, server-owned fields, unsupported media types, immutable-field attempts, and other invalid input.
+
+### 7.8 Scope Derivation (ADH-2026-047 decision 2)
+
+Each F0015 resource kind has exactly one server-side scope-derivation source; a client never supplies or selects `metadata.scopeRef`:
+
+| Resource kind | Scope derivation source (single authority) |
+|---|---|
+| CloudPlatform | Immutable deployment Platform-root scope, server-derived. |
+| CloudProvider | Immutable deployment Platform-root scope, server-derived. |
+| CloudProviderParticipation | Immutable CloudPlatform scope derived from resolved `spec.cloudPlatformRef`; the referenced CloudPlatform must exist and its UID must equal the resulting `metadata.scopeRef.uid`. |
+| HostingLocation | Immutable CloudProvider scope derived from the CloudProvider UID bound to the authenticated, server-resolved `topology.write` grant. A caller cannot supply or choose `metadata.scopeRef`. |
+| Datacenter | Immutable CloudProvider scope derived from its resolved immutable parent reference (`spec.hostingLocationRef`). |
+| FaultDomain | Immutable CloudProvider scope derived from its resolved immutable parent reference (`spec.datacenterRef`). |
+| InfrastructureStack | Immutable CloudProvider scope derived from its resolved immutable parent reference (`spec.faultDomainRef`). |
+
+Reference resolution and authorization/non-disclosure occur before structural validation; derived-scope mismatches trigger the established safe-denial/validation outcome (`VS0_AUTHORIZATION_SAFE_DENIAL` for an inaccessible reference; `VS0_TOPOLOGY_PROVIDER_MISMATCH` or `VS0_SCOPE_REFERENCE_MISMATCH` for an authorized structural mismatch).
+
+### 7.9 Topology Immutability Correction (ADH-2026-047 decision 3)
+
+`metadata.name` is immutable identity for every F0015 resource, including topology resources (`HostingLocation`, `Datacenter`, `FaultDomain`, `InfrastructureStack`). For those topology resources, only `spec.description` is PATCHable. Parent reference, scope, identity, all metadata system fields, and status are immutable or server-owned.
+
+**Correction:** ADH-2026-045's topology sentence "Name and description are PATCHable" is corrected to **"Description is PATCHable; name is immutable identity."** This corrects wording only; the registry's topology mutability fields (VS0-SCHEMA-011 through VS0-SCHEMA-014) already stated identity/scope immutability and PATCH-only `spec.description` and required no field-level change.
+
+### 7.10 Participation Collection-Create Body (ADH-2026-047 decision 4)
+
+`POST /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations` is a collection-create request, not an item lifecycle action. Its body requires exactly:
+
+- `metadata.name`
+- `spec.cloudPlatformRef` (UID-pinned)
+- `spec.cloudProviderRef` (UID-pinned)
+- `spec.environment` with the only F0015-allowed value, `development`
+
+It accepts no optional participation `spec` fields in F0015. In particular, `spec.providerSelectionModes` and `spec.permittedHostingLocationRefs` are FEATURE-0021-introduced and FEATURE-0021-activated fields (VS0-SCHEMA-010 `fieldOwnership`); F0015 neither accepts, stores, defaults, validates, nor exposes them.
+
+The API server derives `metadata.scopeRef` from `spec.cloudPlatformRef`, assigns `status.phase=Pending`, `status.platformSuspended=false`, `status.providerSuspended=false`, and sets `status.requestExpiresAt=createdAt + 7 days`. It returns `201` with the created participation. The POST requires `Idempotency-Key` only and rejects/does not accept `If-Match`.
+
+The item action routes (`:accept`, `:reject`, `:withdraw`, `:suspend`, `:resume`, `:request-release`, `:accept-release`, `:decline-release`) have an empty JSON body. Each existing-item action requires `If-Match` and `Idempotency-Key` under ADH-2026-046. The scheduler expiry is an internal API-server transition and has no public request body.
+
+### 7.11 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6, preserved)
 
 FEATURE-0015 reuses FEATURE-0013 AuditEvent. The following lifecycle and security events produce audit evidence:
 
@@ -196,25 +250,29 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 
 | Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance (FEATURE-0015 local) |
 |------------|---------|------------|------------|-----------|--------------------------------------|
-| CloudPlatform | DEC-0037; ADH-020/042/045/046 | VS0-SCHEMA-008 | VS0-WRITER-002,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
-| CloudProvider | DEC-0037; ADH-020/042/045/046 | VS0-SCHEMA-009 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
-| CloudProviderParticipation | DEC-0054; ADH-037/042/045/046 | VS0-SCHEMA-010 | VS0-WRITER-004,005 | VS0-STATE-001 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-08, VS0-CF-F15-09, VS0-CF-F15-10, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20, VS0-CF-F15-24, VS0-CF-F15-25 |
-| HostingLocation | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-011 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
-| Datacenter | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-012 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
-| FaultDomain | DEC-0041; ADH-024/042/045/046 | VS0-SCHEMA-013 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
-| InfrastructureStack | DEC-0041,0042; ADH-025/042/045/046 | VS0-SCHEMA-014 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25 |
+| CloudPlatform | DEC-0037; ADH-020/042/045/046/047 | VS0-SCHEMA-008 | VS0-WRITER-002,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| CloudProvider | DEC-0037; ADH-020/042/045/046/047 | VS0-SCHEMA-009 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| CloudProviderParticipation | DEC-0054; ADH-037/042/045/046/047 | VS0-SCHEMA-010 | VS0-WRITER-004,005 | VS0-STATE-001 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-08, VS0-CF-F15-09, VS0-CF-F15-10, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-28 |
+| HostingLocation | DEC-0041; ADH-024/042/045/046/047 | VS0-SCHEMA-011 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| Datacenter | DEC-0041; ADH-024/042/045/046/047 | VS0-SCHEMA-012 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| FaultDomain | DEC-0041; ADH-024/042/045/046/047 | VS0-SCHEMA-013 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| InfrastructureStack | DEC-0041,0042; ADH-025/042/045/046/047 | VS0-SCHEMA-014 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
 | Cross-provider isolation | DEC-0037,0054; ADH-043/045 | — | VS0-WRITER-003 | — | VS0-CF-X03, VS0-CF-F15-23 |
-| Scope-reference integrity | DEC-0037,0054; ADH-043/045 | VS0-SCHEMA-008,010 | VS0-WRITER-002,004 | — | VS0-CF-F15-11 |
+| Scope-reference integrity | DEC-0037,0054; ADH-043/045/047 | VS0-SCHEMA-008,010 | VS0-WRITER-002,004 | — | VS0-CF-F15-11, VS0-CF-F15-27 |
 | Status writer resolution (api-server sole writer) | ADH-2026-046 decision 1 | VS0-SCHEMA-008..010 | VS0-WRITER-005 | — | VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16 |
 | Participation create-versus-existing preconditions and idempotency | ADH-2026-046 decision 2 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
 | Bootstrap-grant boundary | ADH-2026-045; ADH-2026-046 decision 3 | — | VS0-WRITER-002,003,004 | — | VS0-CF-F15-22 |
 | Audit atomicity | DEC-0059; ADH-2026-043 (preserved),046 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-24 |
+| Closed collection-create request contract | ADH-2026-047 decision 1 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-26 |
+| Scope derivation single-source proof | ADH-2026-047 decision 2 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-27 |
+| Topology immutability correction (name immutable; description PATCHable) | ADH-2026-047 decision 3 | VS0-SCHEMA-011..014 | VS0-WRITER-003 | — | VS0-CF-F15-13, VS0-CF-F15-14 |
+| Participation collection-create body vs. empty item-action body | ADH-2026-047 decision 4 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-28 |
 
 Downstream integration references (non-owning, FEATURE-0015 does not claim this evidence as local): `VS0-CF-HP01` (FEATURE-0026 cross-feature integration), `VS0-CF-F09` (FEATURE-0023 placement).
 
-### 10.1 REQ-F15 and AC-F15 to F0015-local-proof mapping (ADH-2026-046 decision 3)
+### 10.1 REQ-F15 and AC-F15 to F0015-local-proof mapping (ADH-2026-046 decision 3; extended by ADH-2026-047 decision 5)
 
-Every `REQ-F15-01` through `REQ-F15-18` and every `AC-F15-01` through `AC-F15-14` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
+Every `REQ-F15-01` through `REQ-F15-21` and every `AC-F15-01` through `AC-F15-17` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
 
 | REQ ID | F0015-local proof case(s) |
 |--------|----------------------------|
@@ -236,6 +294,9 @@ Every `REQ-F15-01` through `REQ-F15-18` and every `AC-F15-01` through `AC-F15-14
 | REQ-F15-16 | VS0-CF-F15-12 |
 | REQ-F15-17 | VS0-CF-F15-22 |
 | REQ-F15-18 | VS0-CF-F15-18, VS0-CF-F15-19 |
+| REQ-F15-19 | VS0-CF-F15-26 |
+| REQ-F15-20 | VS0-CF-F15-27 |
+| REQ-F15-21 | VS0-CF-F15-28 |
 
 | AC ID | F0015-local proof case(s) |
 |-------|----------------------------|
@@ -253,6 +314,9 @@ Every `REQ-F15-01` through `REQ-F15-18` and every `AC-F15-01` through `AC-F15-14
 | AC-F15-12 | VS0-CF-F15-11 |
 | AC-F15-13 | VS0-CF-F15-24 |
 | AC-F15-14 | VS0-CF-F15-12 |
+| AC-F15-15 | VS0-CF-F15-26 |
+| AC-F15-16 | VS0-CF-F15-27 |
+| AC-F15-17 | VS0-CF-F15-28 |
 
 ---
 
@@ -265,6 +329,9 @@ Every `REQ-F15-01` through `REQ-F15-18` and every `AC-F15-01` through `AC-F15-14
 5. FEATURE-0015 must NOT reintroduce `CanonicalMigrationPlan`, `CanonicalMigrationRecord`, a migration controller, or any cutover state machine (DEC-0059; ADH-2026-045). `VS0-SCHEMA-060`, `VS0-SCHEMA-061`, `VS0-WRITER-020`, `VS0-WRITER-021`, and `VS0-STATE-011` are permanently retired and must never be reused.
 6. FEATURE-0015 exposes mutable updates only through `PATCH` with `application/merge-patch+json`; it must never expose `PUT` or `DELETE`.
 7. FEATURE-0015 must not store individual-user or Organization-level participation visibility eligibility on `CloudProviderParticipation`; that belongs to FEATURE-0021 (Organization eligibility) and FEATURE-0018 (individual authorization).
+8. FEATURE-0015 must not accept, store, default, validate, or expose a client-supplied `metadata.scopeRef` for any owned resource kind; every scope is server-derived from exactly one registered source per §7.8 (ADH-2026-047 decision 2).
+9. FEATURE-0015 must not describe topology `metadata.name` as PATCHable; only `spec.description` is PATCHable for topology resources (ADH-2026-047 decision 3).
+10. FEATURE-0015 must not accept, store, default, validate, or expose `spec.providerSelectionModes` or `spec.permittedHostingLocationRefs` on a `CloudProviderParticipation` create request; both are FEATURE-0021-introduced and FEATURE-0021-activated (ADH-2026-047 decision 4).
 
 ---
 

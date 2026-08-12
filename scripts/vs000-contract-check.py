@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
     "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,26)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,29)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -256,6 +256,9 @@ def run():
     pso=participation.get("fieldOwnership",{}).get("spec.providerSelectionModes",{})
     if pso != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("providerSelectionModes must be introduced and activated by FEATURE-0021")
     if any(str(x).startswith("spec.providerSelectionModes:") for x in participation.get("required",[])): e("providerSelectionModes must remain optional before FEATURE-0021")
+    phlr=participation.get("fieldOwnership",{}).get("spec.permittedHostingLocationRefs",{})
+    if phlr != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("permittedHostingLocationRefs must be introduced and activated by FEATURE-0021 (ADH-2026-047 decision 4)")
+    if any(str(x).startswith("spec.permittedHostingLocationRefs:") for x in participation.get("required",[])): e("permittedHostingLocationRefs must remain optional before FEATURE-0021")
     execution=schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{})
     for field in ("spec.infrastructureStackRef","spec.participationRef","spec.targetClass","status.qualification","status.availability","status.maintenanceEpoch","status.factSetRef","status.observedGeneration","status.conditions"):
         if execution.get(field) != {"introducedBy":"FEATURE-0016","activatedBy":"FEATURE-0016"}: e(f"ExecutionTarget.{field} must be FEATURE-0016-owned")

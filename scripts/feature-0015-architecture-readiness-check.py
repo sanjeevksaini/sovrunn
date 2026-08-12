@@ -44,6 +44,7 @@ PHASE_CTX = ROOT / "docs/context/CURRENT_PHASE_CONTEXT.md"
 STEER = ROOT / ".kiro/steering/slice0-contract.md"
 ADH_045 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md"
 ADH_046 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
+ADH_047 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-047-feature-0015-request-construction-and-scope-derivation-closure.md"
 SPEC_DIR = ROOT / ".kiro/specs/canonical-cloud-model-and-alpha-migration"
 
 # F0015-owned resources whose status must resolve solely to api-server (ADH-2026-046 decision 1).
@@ -55,9 +56,22 @@ NON_API_SERVER_CONTROLLER_TERMS = (
     "topology-controller", "stack-controller", "provider-controller",
     "participation-controller", "delegated-participation-contract-authority",
 )
-# Required F0015-local conformance IDs after ADH-2026-046 decision 3.
-F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 26)]
+# Required F0015-local conformance IDs after ADH-2026-047 decision 5 (extends ADH-2026-046 decision 3).
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 29)]
 F15_REQUIRED_CF_FIELDS = ("id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate")
+
+# F0015-owned resource kinds whose create-request contract must be closed (ADH-2026-047 decision 1).
+F15_CREATE_KINDS = (
+    "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
+    "Datacenter", "FaultDomain", "InfrastructureStack",
+)
+# Allowed field classification words for the ADH-2026-047 decision 5 contract-executability audit.
+F15_FIELD_CLASSIFICATIONS = (
+    "request-required", "request-optional", "server-assigned",
+    "action-only", "deferred-to-owner-feature", "forbidden",
+)
+# FEATURE-0021-owned CloudProviderParticipation fields that must be deferred/rejected by FEATURE-0015 (ADH-2026-047 decision 4).
+F15_DEFERRED_PARTICIPATION_FIELDS = ("providerSelectionModes", "permittedHostingLocationRefs")
 
 # Removed migration concepts that must never be reintroduced as active behavior.
 REMOVED_MIGRATION_TERMS = [
@@ -575,6 +589,263 @@ def check_requirements_authority_conflicts(mode: str) -> None:
               f"requirements is a checked (not edited) authority per ADH-2026-046 decision 4b")
 
 
+def check_closed_create_field_matrix(reg: dict, f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 1): every F0015 collection-create kind must
+    have a closed, complete client-required/client-optional create-field table in both
+    the architecture and feature authorities, and the registry's schema requestContract
+    must be present and complete for each kind. Rejects absent/ambiguous create fields."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    for kind_name in F15_CREATE_KINDS:
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            e(f"CREATECONTRACT047: {kind_name} schema not found in registry")
+            continue
+        rc = s.get("requestContract")
+        if not rc:
+            e(f"CREATECONTRACT047: {kind_name} registry schema missing requestContract (ADH-2026-047 decision 1)")
+            continue
+        if "clientRequired" not in rc or not rc.get("clientRequired"):
+            e(f"CREATECONTRACT047: {kind_name} requestContract missing non-empty clientRequired")
+        if "clientOptional" not in rc:
+            e(f"CREATECONTRACT047: {kind_name} requestContract missing clientOptional (use [] if none)")
+        if "createSuccessStatus" not in rc or rc.get("createSuccessStatus") != 201:
+            e(f"CREATECONTRACT047: {kind_name} requestContract must state createSuccessStatus: 201")
+        if kind_name != "CloudProviderParticipation" and rc.get("patchSuccessStatus") != 200:
+            e(f"CREATECONTRACT047: {kind_name} requestContract must state patchSuccessStatus: 200")
+        if "rejects" not in rc and "forbidden" not in rc:
+            e(f"CREATECONTRACT047: {kind_name} requestContract missing rejects/forbidden field list")
+        if "scopeDerivation" not in rc or not rc.get("scopeDerivation"):
+            e(f"CREATECONTRACT047: {kind_name} requestContract missing scopeDerivation")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        for kind_name in F15_CREATE_KINDS:
+            if kind_name not in text:
+                e(f"CREATECONTRACT047: F0015 {label} does not mention {kind_name} in its closed create-field table")
+        if "client-required" not in text.lower() and "client-required create fields" not in text.lower():
+            e(f"CREATECONTRACT047: F0015 {label} must state a closed client-required create-field table (ADH-2026-047 decision 1)")
+        if "client-optional" not in text.lower() and "client-optional create fields" not in text.lower():
+            e(f"CREATECONTRACT047: F0015 {label} must state a closed client-optional create-field table (ADH-2026-047 decision 1)")
+        if "200" not in text or "201" not in text:
+            e(f"CREATECONTRACT047: F0015 {label} must state both the 201 create and 200 PATCH success outcomes (ADH-2026-047 decision 1)")
+
+
+def check_single_scope_derivation_source(reg: dict, f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 2): each F0015 resource kind must have exactly
+    one stated scope-derivation source in the registry schema requestContract and in the
+    architecture/feature authorities. Rejects a client-supplied scope for any kind."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    expected_derivation_marker = {
+        "CloudPlatform": "platform-root",
+        "CloudProvider": "platform-root",
+        "CloudProviderParticipation": "cloudplatformref",
+        "HostingLocation": "topology.write",
+        "Datacenter": "parent reference",
+        "FaultDomain": "parent reference",
+        "InfrastructureStack": "parent reference",
+    }
+    for kind_name, marker in expected_derivation_marker.items():
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            continue
+        rc = s.get("requestContract", {})
+        derivation = str(rc.get("scopeDerivation", "")).lower()
+        if marker.lower() not in derivation:
+            e(f"SCOPEDERIV047: {kind_name} registry requestContract.scopeDerivation does not state its single source ('{marker}')")
+    client_supplied_patterns = (
+        r"client\s+(?:supplies|selects|chooses|provides)\s+(?:its own\s+)?(?:metadata\.)?scoperef",
+        r"caller\s+(?:supplies|selects|chooses|provides)\s+(?:its own\s+)?(?:metadata\.)?scoperef",
+    )
+    for label, text in (
+        ("architecture", f15_arch),
+        ("feature", f15_feat),
+    ):
+        lower = text.lower()
+        if "topology.write" not in text:
+            e(f"SCOPEDERIV047: F0015 {label} must state that HostingLocation scope derives from the topology.write grant (ADH-2026-047 decision 2)")
+        for pattern in client_supplied_patterns:
+            if re.search(pattern, lower) and not is_allowed_migration_mention(text, "scoperef"):
+                e(f"SCOPEDERIV047: F0015 {label} appears to state a client-supplied scopeRef, which is prohibited (ADH-2026-047 decision 2)")
+        if "cannot supply or choose" not in lower and "cannot supply or select" not in lower and "never supplies" not in lower and "client never supplies" not in lower:
+            e(f"SCOPEDERIV047: F0015 {label} must explicitly state a client cannot supply or choose metadata.scopeRef (ADH-2026-047 decision 2)")
+
+
+def check_route_contract_completeness(f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 5b): every F0015 route must state its
+    request-body shape, required headers, success result, error family, status
+    effect, and audit effect together. Uses the existing Decision 1 create-field
+    table, error-codes table, and audit table as the combined route-contract source."""
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        lower = text.lower()
+        required_markers = (
+            ("request-body shape", ("client-required", "empty json body")),
+            ("required headers", ("idempotency-key", "if-match")),
+            ("success result", ("201", "200")),
+            ("error family", ("problem details", "conflict", "validation_failed", "resource_not_found")),
+            ("status effect", ("status.phase",)),
+            ("audit effect", ("auditevent",)),
+        )
+        for element_name, markers in required_markers:
+            if not any(marker in lower for marker in markers):
+                e(f"ROUTECONTRACT047: F0015 {label} does not jointly state the route-contract element '{element_name}' "
+                  f"required by ADH-2026-047 decision 5 (request-body shape, required headers, success result, "
+                  f"error family, status effect, audit effect, local conformance must all be stated)")
+        if "vs0-cf-f15" not in lower:
+            e(f"ROUTECONTRACT047: F0015 {label} does not state local conformance case references for its routes")
+
+
+def check_deferred_participation_fields_rejected(reg: dict, f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 4/5): providerSelectionModes and
+    permittedHostingLocationRefs must both be registered as FEATURE-0021
+    fieldOwnership on CloudProviderParticipation, and must never appear as
+    F0015-accepted/stored/defaulted/validated in the architecture/feature authorities
+    (only as explicitly rejected/deferred-to-owner-feature)."""
+    schemas = reg.get("schemas", [])
+    participation = next((s for s in schemas if str(s.get("identity", "")).endswith("/CloudProviderParticipation")), {})
+    field_ownership = participation.get("fieldOwnership", {})
+    for field in F15_DEFERRED_PARTICIPATION_FIELDS:
+        key = f"spec.{field}"
+        ownership = field_ownership.get(key, {})
+        if ownership.get("introducedBy") != "FEATURE-0021" or ownership.get("activatedBy") != "FEATURE-0021":
+            e(f"DEFERREDFIELD047: registry CloudProviderParticipation.{key} must record "
+              f"introducedBy/activatedBy FEATURE-0021 (ADH-2026-047 decision 4)")
+    accept_patterns = (
+        r"f0015\s+accepts?\s+{field}",
+        r"{field}\s+is\s+accepted\s+by\s+f(?:eature-)?0015",
+        r"{field}\s+is\s+stored\s+by\s+f(?:eature-)?0015",
+        r"{field}\s+is\s+defaulted\s+by\s+f(?:eature-)?0015",
+        r"{field}\s+is\s+validated\s+by\s+f(?:eature-)?0015",
+    )
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        lower = text.lower()
+        for field in F15_DEFERRED_PARTICIPATION_FIELDS:
+            fl = field.lower()
+            for pattern in accept_patterns:
+                if re.search(pattern.format(field=re.escape(fl)), lower):
+                    e(f"DEFERREDFIELD047: F0015 {label} appears to describe '{field}' as F0015-accepted/stored/"
+                      f"defaulted/validated; it must be explicitly rejected/deferred-to-FEATURE-0021")
+            if fl in lower and "feature-0021" not in lower:
+                e(f"DEFERREDFIELD047: F0015 {label} mentions '{field}' without attributing ownership to FEATURE-0021")
+
+
+def check_create_status_and_result_completeness(reg: dict, f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 5): reject a kind's create outcome that does
+    not state its initial status, and reject any requirement text that omits the
+    approved create/PATCH result (201 for create, 200 for PATCH)."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    for kind_name in F15_CREATE_KINDS:
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            continue
+        rc = s.get("requestContract", {})
+        server_assigned = " ".join(str(x) for x in rc.get("serverAssigned", []))
+        if kind_name == "CloudProviderParticipation":
+            if "status.phase=pending" not in server_assigned.lower():
+                e(f"CREATESTATUS047: {kind_name} requestContract.serverAssigned must state its initial status (status.phase=Pending)")
+        else:
+            if "status.phase=active" not in server_assigned.lower():
+                e(f"CREATESTATUS047: {kind_name} requestContract.serverAssigned must state its initial status (status.phase=Active)")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        if "201" not in text:
+            e(f"CREATESTATUS047: F0015 {label} must state the approved create result (201) somewhere in its create-contract description")
+        if "200" not in text:
+            e(f"CREATESTATUS047: F0015 {label} must state the approved PATCH result (200) somewhere in its create-contract description")
+
+
+def check_f15_26_28_conformance_and_mapping(reg: dict, f15_arch: str, f15_feat: str, trace: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 5): VS0-CF-F15-26..28 must be registered with
+    complete fields, present in the traceability matrix and architecture §10 mapping,
+    and REQ-F15-19..21/AC-F15-15..17 must map to them in architecture §10.1 and the
+    feature Acceptance Criteria table."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    for i in range(26, 29):
+        cf_id = f"VS0-CF-F15-{i:02d}"
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"PROOF047: required F0015-local conformance case missing from registry: {cf_id}")
+            continue
+        for field in F15_REQUIRED_CF_FIELDS:
+            if field not in entry or entry.get(field) in (None, ""):
+                if field == "expectedError" and entry.get(field, "unset") is None:
+                    continue
+                if field not in entry:
+                    e(f"PROOF047: {cf_id} missing required registry field '{field}'")
+        if cf_id not in trace:
+            e(f"PROOF047: {cf_id} missing from traceability matrix")
+        if cf_id not in f15_arch:
+            e(f"PROOF047: {cf_id} missing from F0015 architecture §10 mapping")
+    for i in range(19, 22):
+        req_id = f"REQ-F15-{i:02d}"
+        if req_id not in f15_arch:
+            e(f"PROOF047: {req_id} missing from F0015 architecture REQ-to-proof mapping")
+        if req_id not in f15_feat:
+            e(f"PROOF047: {req_id} missing from F0015 feature authority")
+    for i in range(15, 18):
+        ac_id = f"AC-F15-{i:02d}"
+        if ac_id not in f15_arch:
+            e(f"PROOF047: {ac_id} missing from F0015 architecture AC-to-proof mapping")
+        if ac_id not in f15_feat:
+            e(f"PROOF047: {ac_id} missing from F0015 feature Acceptance Criteria table")
+
+
+def check_no_stale_topology_patch_wording(adh_045: str, f15_arch: str, f15_feat: str, reg_text: str) -> None:
+    """Fail-closed (ADH-2026-047 decision 5): reject the stale ADH-045 topology wording
+    'Name and description are PATCHable' anywhere it is not explicitly corrected/superseded."""
+    stale_phrase = "name and description are patchable"
+    for label, text in (
+        ("ADH-2026-045", adh_045),
+        ("F0015 architecture", f15_arch),
+        ("F0015 feature", f15_feat),
+        ("registry", reg_text),
+    ):
+        lower = text.lower()
+        idx = 0
+        while True:
+            pos = lower.find(stale_phrase, idx)
+            if pos == -1:
+                break
+            window = lower[max(0, pos - 300):pos + len(stale_phrase) + 300]
+            if "correct" not in window and "superseded" not in window:
+                e(f"STALETOPOLOGY047: {label} still contains uncorrected stale wording "
+                  f"'Name and description are PATCHable' (ADH-2026-047 decision 3)")
+            idx = pos + len(stale_phrase)
+
+
+def check_topology_name_immutable_identity(f15_arch: str, f15_feat: str, reg: dict) -> None:
+    """Fail-closed (ADH-2026-047 decision 3): confirm metadata.name is stated as
+    immutable identity for every F0015 resource including topology, and that only
+    spec.description is PATCHable for topology resources in the registry."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    for kind_name in ("HostingLocation", "Datacenter", "FaultDomain", "InfrastructureStack"):
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            continue
+        mutability = str(s.get("mutability", "")).lower()
+        if "name is immutable identity" not in mutability and "identity" not in mutability.split("immutable")[0] and "identity/scope" not in mutability and "identity/scope/parent-ref" not in mutability:
+            e(f"TOPOLOGYNAME047: {kind_name} registry mutability does not clearly state immutable identity for metadata.name")
+        if "description is patchable" not in mutability and "description patch-only" not in mutability:
+            e(f"TOPOLOGYNAME047: {kind_name} registry mutability does not state description is the sole PATCHable topology field")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        lower = text.lower()
+        if "name is immutable identity" not in lower:
+            e(f"TOPOLOGYNAME047: F0015 {label} must state 'name is immutable identity' for topology resources (ADH-2026-047 decision 3)")
+
+
+def check_contract_executability_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str) -> None:
+    """ADH-2026-047 decision 5: deterministic, fail-closed contract-executability
+    audit run as part of the default readiness gate before requirements generation.
+    Composes the individual decision-5 sub-checks below."""
+    check_closed_create_field_matrix(reg, f15_arch, f15_feat)
+    check_single_scope_derivation_source(reg, f15_arch, f15_feat)
+    check_route_contract_completeness(f15_arch, f15_feat)
+    check_deferred_participation_fields_rejected(reg, f15_arch, f15_feat)
+    check_create_status_and_result_completeness(reg, f15_arch, f15_feat)
+    check_f15_26_28_conformance_and_mapping(reg, f15_arch, f15_feat, trace)
+    check_topology_name_immutable_identity(f15_arch, f15_feat, reg)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="FEATURE-0015 architecture-readiness check")
     parser.add_argument("--mode", choices=["readiness", "post"], default="readiness",
@@ -624,6 +895,12 @@ def main() -> None:
     check_design_tasks_proof_coverage(ROOT / ".automation/features/FEATURE-0015.control.json", args.mode)
     check_requirements_authority_conflicts(args.mode)
 
+    # ADH-2026-047 decision 5: fail-closed contract-executability audit, run as part
+    # of the default readiness gate (before requirements-stage Kiro invocation).
+    adh_045_text = read(ADH_045)
+    check_contract_executability_audit(reg, f15_arch, f15_feat, trace)
+    check_no_stale_topology_patch_wording(adh_045_text, f15_arch, f15_feat, reg_text)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -648,6 +925,11 @@ def main() -> None:
         print("  ✓ Participation create-vs-existing preconditions (ADH-2026-046 decision 2)")
         print("  ✓ Complete F15-01..25 proof matrix and REQ/AC mapping (ADH-2026-046 decision 3)")
         print("  ✓ No F0016+ leakage into F0015-local conformance (ADH-2026-046 decision 4e)")
+        print("  ✓ Closed collection-create request contract (per-kind client field boundary; ADH-2026-047 decision 1)")
+        print("  ✓ Single-source scope derivation per resource kind (ADH-2026-047 decision 2)")
+        print("  ✓ Topology name-immutable/description-PATCHable correction; no stale ADH-045 wording (ADH-2026-047 decision 3)")
+        print("  ✓ Participation collection-create body vs. empty item-action body; FEATURE-0021 fields deferred (ADH-2026-047 decision 4)")
+        print("  ✓ Contract-executability audit: field classification, route-contract completeness, F15-26..28 proof matrix (ADH-2026-047 decision 5)")
         sys.exit(0)
 
 
