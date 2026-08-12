@@ -11,10 +11,6 @@
     "feature_file": "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md",
     "architecture": "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md",
     "handoffs": [
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-020-cloudprovider-identity-and-scope.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-024-geography-and-sovereignty.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-037-cloudplatform-provider-participation-installation-isolation.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
     ],
@@ -107,10 +103,7 @@
       ".kiro/steering/slice0-contract.md"
     ],
     "stages": {
-      "requirements": [
-        "docs/resource-specs/RESOURCE_MODEL_PHASE1.md",
-        "docs/api/API_CONTRACT_PHASE1.md"
-      ],
+      "requirements": [],
       "design": [
         "docs/engineering/go-coding-guardrails.md",
         "docs/architecture/controller-reconciliation-model.md",
