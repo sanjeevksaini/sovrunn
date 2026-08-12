@@ -11,7 +11,7 @@
     "feature_file": "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md",
     "architecture": "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md",
     "handoffs": [
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-047-feature-0015-request-construction-and-scope-derivation-closure.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-048-feature-0015-input-contract-clarification.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },
@@ -121,7 +121,7 @@
       ]
     },
     "budgets": {
-      "requirements": 325000,
+      "requirements": 350000,
       "design": 700000,
       "tasks": 420000,
       "implementation": 420000,

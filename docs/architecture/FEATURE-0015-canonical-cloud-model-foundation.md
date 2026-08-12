@@ -5,7 +5,7 @@
 | Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; closed under ADH-2026-047; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -208,6 +208,23 @@ Rules:
 - The mutation and its required AuditEvent are one atomic outcome; audit failure leaves the resource/lifecycle unchanged.
 - FEATURE-0015 does not import FEATURE-0026's integration-only trace conformance (VS0-CF-T01).
 
+### 7.12 ISO-3166 Assigned-Code Semantics and Malformed-Input Outcomes (ADH-2026-048)
+
+For FEATURE-0015, an ISO-3166-1 alpha-2 value (`CloudPlatform.spec.ownerRegistration.jurisdictionCode`, `CloudProvider.spec.operatingMarkets[]`, `HostingLocation.spec.countryCode`) means an **assigned** code from a fixed, repository-owned, version-pinned static dataset. The dataset contains the assigned ISO-3166-1 alpha-2 code list as of `2026-08-12`; it is compiled into or bundled with the repository, requires no network request, and introduces no third-party runtime dependency. A syntactically valid but unassigned value such as `ZZ` is rejected with the existing `VALIDATION_FAILED` (422) Problem Details contract. `HostingLocation.spec.administrativeAreaCode` remains syntax-plus-country-prefix validation only: it must match the existing ISO-3166-2 shape when present and share the same two-letter prefix as `spec.countryCode`; F0015 introduces no ISO-3166-2 membership dataset.
+
+Four exact header/body outcomes reuse only existing FEATURE-0012 top-level Problem codes; no new top-level code or violation code is introduced:
+
+| Input | Exact outcome |
+|---|---|
+| Required `Idempotency-Key` missing, empty, malformed, or over the shared length limit | `MALFORMED_REQUEST` / 400 |
+| `If-Match` supplied on a participation collection-create request | `MALFORMED_REQUEST` / 400 |
+| `If-Match` missing, malformed, or non-current on an existing-participation action | `STALE_RESOURCE_VERSION` / 412 (preserved ADH-2026-046 rule) |
+| Participation item action with any non-empty JSON body | `MALFORMED_REQUEST` / 400 |
+
+A malformed/prohibited input under this rule produces no mutation, no idempotency record, and no AuditEvent unless an already-approved audited-denial rule independently applies; this clarification does not broaden the ADH-2026-046/047 audit-denial list.
+
+The following are deterministic design mechanics that the F0015 design must define exactly, without seeking new architecture authority: idempotency reservation states `InFlight`/`Completed`/`Aborted` with waiter wake-up on both terminal states and abort/release of an in-flight reservation on validation failure, stale version, audit failure, or recovered panic; idempotency records written only for completed replayable outcomes consistent with the approved audit policy; precise in-memory audit/mutation coordination wording stating that a resource/idempotency change is not published until its required audit append succeeds, with no durable cross-store transaction claim; and Go 1.22 `http.ServeMux` registration using explicit method/path patterns and `Request.PathValue` with seven collection, seven item, and eight participation-action registrations (22 total), using no wildcard, reflection, or auto-registration.
+
 ---
 
 ## 8. Explicitly Excluded (FEATURE-0015 Must Not Implement)
@@ -267,12 +284,14 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 | Scope derivation single-source proof | ADH-2026-047 decision 2 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-27 |
 | Topology immutability correction (name immutable; description PATCHable) | ADH-2026-047 decision 3 | VS0-SCHEMA-011..014 | VS0-WRITER-003 | — | VS0-CF-F15-13, VS0-CF-F15-14 |
 | Participation collection-create body vs. empty item-action body | ADH-2026-047 decision 4 | VS0-SCHEMA-010 | VS0-WRITER-004 | VS0-STATE-001 | VS0-CF-F15-28 |
+| ISO-3166-1 alpha-2 assigned-code semantics | ADH-2026-048 decision 1 | VS0-SCHEMA-008,009,011 | — | — | VS0-CF-F15-29 |
+| Idempotency-Key/If-Match/item-action-body malformed-input outcomes | ADH-2026-048 decision 2 | VS0-SCHEMA-010 | VS0-WRITER-004 | — | VS0-CF-F15-30 |
 
 Downstream integration references (non-owning, FEATURE-0015 does not claim this evidence as local): `VS0-CF-HP01` (FEATURE-0026 cross-feature integration), `VS0-CF-F09` (FEATURE-0023 placement).
 
 ### 10.1 REQ-F15 and AC-F15 to F0015-local-proof mapping (ADH-2026-046 decision 3; extended by ADH-2026-047 decision 5)
 
-Every `REQ-F15-01` through `REQ-F15-21` and every `AC-F15-01` through `AC-F15-17` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
+Every `REQ-F15-01` through `REQ-F15-23` and every `AC-F15-01` through `AC-F15-19` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
 
 | REQ ID | F0015-local proof case(s) |
 |--------|----------------------------|
@@ -297,6 +316,8 @@ Every `REQ-F15-01` through `REQ-F15-21` and every `AC-F15-01` through `AC-F15-17
 | REQ-F15-19 | VS0-CF-F15-26 |
 | REQ-F15-20 | VS0-CF-F15-27 |
 | REQ-F15-21 | VS0-CF-F15-28 |
+| REQ-F15-22 | VS0-CF-F15-29 |
+| REQ-F15-23 | VS0-CF-F15-30 |
 
 | AC ID | F0015-local proof case(s) |
 |-------|----------------------------|
@@ -317,6 +338,8 @@ Every `REQ-F15-01` through `REQ-F15-21` and every `AC-F15-01` through `AC-F15-17
 | AC-F15-15 | VS0-CF-F15-26 |
 | AC-F15-16 | VS0-CF-F15-27 |
 | AC-F15-17 | VS0-CF-F15-28 |
+| AC-F15-18 | VS0-CF-F15-29 |
+| AC-F15-19 | VS0-CF-F15-30 |
 
 ---
 
@@ -332,6 +355,7 @@ Every `REQ-F15-01` through `REQ-F15-21` and every `AC-F15-01` through `AC-F15-17
 8. FEATURE-0015 must not accept, store, default, validate, or expose a client-supplied `metadata.scopeRef` for any owned resource kind; every scope is server-derived from exactly one registered source per §7.8 (ADH-2026-047 decision 2).
 9. FEATURE-0015 must not describe topology `metadata.name` as PATCHable; only `spec.description` is PATCHable for topology resources (ADH-2026-047 decision 3).
 10. FEATURE-0015 must not accept, store, default, validate, or expose `spec.providerSelectionModes` or `spec.permittedHostingLocationRefs` on a `CloudProviderParticipation` create request; both are FEATURE-0021-introduced and FEATURE-0021-activated (ADH-2026-047 decision 4).
+11. FEATURE-0015 must treat an ISO-3166-1 alpha-2 value as valid only if it is an assigned code from the fixed, repository-owned, version-pinned dataset; a syntactically valid but unassigned code must be rejected with VALIDATION_FAILED, and `administrativeAreaCode` must never require an ISO-3166-2 membership dataset (ADH-2026-048 decision 1). FEATURE-0015 must not introduce a new top-level Problem code or violation code for the four malformed-input outcomes in §7.12 (ADH-2026-048 decision 2).
 
 ---
 

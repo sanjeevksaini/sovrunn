@@ -10,7 +10,7 @@
 | Depended On By | FEATURE-0016, FEATURE-0021, FEATURE-0022 |
 | Architecture Boundary | docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048 |
 
 ---
 
@@ -47,6 +47,8 @@ Establish the seven-scope canonical cloud model identity layer through direct ca
 | REQ-F15-19 | Closed collection-create request contract: for every F0015 collection POST, the client supplies only metadata.name, the required kind-specific spec fields, and the registered optional kind-specific spec fields; the server rejects metadata.uid/generation/resourceVersion/timestamps, metadata.scopeRef, any status field, a field owned by another feature, or an unknown field; every successful create returns 201 with its exact initial status; a successful PATCH returns 200 with the updated resource | ADH-047 decision 1 | VS0-SCHEMA-008..014 |
 | REQ-F15-20 | Scope derivation: each F0015 resource kind has exactly one server-side scope-derivation source — CloudPlatform and CloudProvider from the deployment Platform-root; CloudProviderParticipation from its resolved spec.cloudPlatformRef (UID-equality enforced); HostingLocation from the CloudProvider UID bound to the authenticated, server-resolved topology.write grant; Datacenter/FaultDomain/InfrastructureStack from their resolved immutable parent reference; a client cannot supply or select metadata.scopeRef for any F0015 resource | ADH-047 decision 2 | VS0-SCHEMA-008..014 |
 | REQ-F15-21 | Participation collection-create body is exactly metadata.name, spec.cloudPlatformRef (UID-pinned), spec.cloudProviderRef (UID-pinned), and spec.environment (development only); spec.providerSelectionModes and spec.permittedHostingLocationRefs are FEATURE-0021-introduced and FEATURE-0021-activated and are neither accepted, stored, defaulted, validated, nor exposed by F0015; item action routes are distinct from create and carry only an empty JSON body plus their required headers | ADH-047 decision 4 | VS0-SCHEMA-010 |
+| REQ-F15-22 | An ISO-3166-1 alpha-2 value (CloudPlatform spec.ownerRegistration.jurisdictionCode, CloudProvider spec.operatingMarkets[], HostingLocation spec.countryCode) means an assigned code from a fixed, repository-owned, version-pinned static dataset (as of 2026-08-12); a syntactically valid but unassigned code (e.g. ZZ) is rejected with VALIDATION_FAILED (422); HostingLocation spec.administrativeAreaCode remains syntax-plus-country-prefix validation only, with no ISO-3166-2 membership dataset | ADH-048 decision 1 | VS0-SCHEMA-008,009,011 |
+| REQ-F15-23 | Four exact malformed/prohibited-input outcomes, reusing only existing FEATURE-0012 top-level Problem codes: a missing/empty/malformed/over-length Idempotency-Key on a route that requires it returns MALFORMED_REQUEST (400); an If-Match header on a CloudProviderParticipation collection create returns MALFORMED_REQUEST (400); a missing/malformed/non-current If-Match on an existing-participation action returns STALE_RESOURCE_VERSION (412, preserved ADH-046 rule); a non-empty JSON body on a participation item action returns MALFORMED_REQUEST (400); none of these produce a mutation, idempotency record, or AuditEvent unless an already-approved audited-denial rule independently applies | ADH-048 decision 2 | VS0-SCHEMA-010 |
 
 ### 2.2 DESIGN-Delegated Mechanics
 
@@ -111,6 +113,8 @@ These concepts appear in the shared Slice 0 registry only so FEATURE-0015 can pr
 | AC-F15-15 | Every F0015 collection-create kind enforces its closed client-required/client-optional field boundary; server-owned/status/scope/unknown/deferred fields are rejected; each successful create returns 201 and initializes its exact status | VS0-CF-F15-26 |
 | AC-F15-16 | Every F0015 resource kind derives its scope from exactly one server-side source (Platform-root, participation-from-cloudPlatformRef, HostingLocation-from-grant, descendant-from-parent); a client-supplied or mismatched scope is never honored | VS0-CF-F15-27 |
 | AC-F15-17 | Participation collection-create body accepts exactly metadata.name/spec.cloudPlatformRef/spec.cloudProviderRef/spec.environment, initializes Pending/false holds/seven-day expiry, and rejects FEATURE-0021-owned fields; existing-item participation actions accept only an empty JSON body plus their required headers | VS0-CF-F15-28 |
+| AC-F15-18 | A syntactically valid but unassigned ISO-3166-1 alpha-2 value is rejected with VALIDATION_FAILED against the fixed assigned-code dataset for jurisdictionCode, operatingMarkets, and countryCode; administrativeAreaCode validation remains syntax-plus-country-prefix only | VS0-CF-F15-29 |
+| AC-F15-19 | A malformed/missing Idempotency-Key, an If-Match on participation create, and a non-empty participation item-action body each return MALFORMED_REQUEST with no mutation, idempotency record, or AuditEvent beyond an already-approved audited denial | VS0-CF-F15-30 |
 
 ---
 
@@ -196,6 +200,23 @@ Reference resolution and authorization/non-disclosure occur before structural va
 
 `POST /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations` requires exactly `metadata.name`, `spec.cloudPlatformRef` (UID-pinned), `spec.cloudProviderRef` (UID-pinned), and `spec.environment` (`development` only). It accepts no optional participation `spec` fields; `spec.providerSelectionModes` and `spec.permittedHostingLocationRefs` are FEATURE-0021-owned and are rejected if present. The server derives `metadata.scopeRef` from `spec.cloudPlatformRef`, assigns `status.phase=Pending`, `status.platformSuspended=false`, `status.providerSuspended=false`, `status.requestExpiresAt=createdAt+7 days`, and returns `201`. This create requires `Idempotency-Key` only; `If-Match` is rejected/not accepted. Item action routes (`:accept`, `:reject`, `:withdraw`, `:suspend`, `:resume`, `:request-release`, `:accept-release`, `:decline-release`) carry an empty JSON body and each require both `If-Match` and `Idempotency-Key`. Scheduler expiry is an internal API-server transition with no public request body.
 
+### 4.9 ISO-3166 Assigned-Code Semantics and Malformed-Input Outcomes (ADH-2026-048)
+
+For FEATURE-0015, an ISO-3166-1 alpha-2 value (`CloudPlatform.spec.ownerRegistration.jurisdictionCode`, `CloudProvider.spec.operatingMarkets[]`, `HostingLocation.spec.countryCode`) means an **assigned** code from a fixed, repository-owned, version-pinned static dataset (as of `2026-08-12`), not merely a syntactically valid two-letter code. A syntactically valid but unassigned code (e.g. `ZZ`) is rejected with `VALIDATION_FAILED` (422). `HostingLocation.spec.administrativeAreaCode` remains syntax-plus-country-prefix validation only (matching the existing ISO-3166-2 shape with the same two-letter prefix as `spec.countryCode`); F0015 introduces no ISO-3166-2 membership dataset.
+
+Four exact header/body outcomes reuse only existing FEATURE-0012 top-level Problem codes; no new top-level code or violation code is introduced:
+
+| Input | Exact outcome |
+|---|---|
+| Required `Idempotency-Key` missing, empty, malformed, or over the shared length limit | `MALFORMED_REQUEST` / 400 |
+| `If-Match` supplied on a participation collection-create request | `MALFORMED_REQUEST` / 400 |
+| `If-Match` missing, malformed, or non-current on an existing-participation action | `STALE_RESOURCE_VERSION` / 412 (preserved ADH-2026-046 rule) |
+| Participation item action with any non-empty JSON body | `MALFORMED_REQUEST` / 400 |
+
+A malformed/prohibited input under this rule produces no mutation, no idempotency record, and no AuditEvent unless an already-approved audited-denial rule independently applies; this clarification does not broaden the ADH-2026-046/047 audit-denial list.
+
+FEATURE-0015 registers exactly seven collection routes, seven item routes, and eight participation-action routes (22 total) using Go 1.22 `http.ServeMux` explicit method/path patterns and `Request.PathValue`, with no wildcard, reflection, or auto-registration.
+
 ---
 
 ## 5. Error Codes Used
@@ -219,6 +240,10 @@ Reference resolution and authorization/non-disclosure occur before structural va
 | Invalid reference chain | VALIDATION_FAILED | 422 | — |
 | Stale resourceVersion / stale If-Match | STALE_RESOURCE_VERSION | 412 | — |
 | Scope reference UID mismatch (cloudPlatformRef UID ≠ scopeRef UID) | VALIDATION_FAILED | 422 | VS0_SCOPE_REFERENCE_MISMATCH |
+| ISO-3166-1 alpha-2 value is syntactically valid but unassigned | VALIDATION_FAILED | 422 | — |
+| Idempotency-Key missing, empty, malformed, or over-length on a route that requires it | MALFORMED_REQUEST | 400 | — |
+| If-Match supplied on a CloudProviderParticipation collection create | MALFORMED_REQUEST | 400 | — |
+| CloudProviderParticipation item action with a non-empty JSON body | MALFORMED_REQUEST | 400 | — |
 | Successful collection create | — (201) | 201 | — |
 | Successful PATCH | — (200) | 200 | — |
 

@@ -45,6 +45,7 @@ STEER = ROOT / ".kiro/steering/slice0-contract.md"
 ADH_045 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canonical-bootstrap-no-alpha-runtime-migration.md"
 ADH_046 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
 ADH_047 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-047-feature-0015-request-construction-and-scope-derivation-closure.md"
+ADH_048 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-048-feature-0015-input-contract-clarification.md"
 SPEC_DIR = ROOT / ".kiro/specs/canonical-cloud-model-and-alpha-migration"
 
 # F0015-owned resources whose status must resolve solely to api-server (ADH-2026-046 decision 1).
@@ -56,8 +57,15 @@ NON_API_SERVER_CONTROLLER_TERMS = (
     "topology-controller", "stack-controller", "provider-controller",
     "participation-controller", "delegated-participation-contract-authority",
 )
-# Required F0015-local conformance IDs after ADH-2026-047 decision 5 (extends ADH-2026-046 decision 3).
-F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 29)]
+# Required F0015-local conformance IDs after ADH-2026-048 decision 4 (extends ADH-2026-046 decision 3 / ADH-2026-047 decision 5).
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 31)]
+
+# F0015-owned resource kinds whose ISO-3166-1 alpha-2 fields must state assigned-code semantics (ADH-2026-048 decision 1).
+F15_ISO_ALPHA2_KINDS = ("CloudPlatform", "CloudProvider", "HostingLocation")
+
+# The exact 22-route count required by ADH-2026-048 decision 3/4: 7 collection + 7 item + 8 action registrations.
+F15_EXPECTED_ROUTE_COUNTS = {"collection": 7, "item": 7, "action": 8}
+F15_EXPECTED_TOTAL_ROUTES = 22
 F15_REQUIRED_CF_FIELDS = ("id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate")
 
 # F0015-owned resource kinds whose create-request contract must be closed (ADH-2026-047 decision 1).
@@ -833,6 +841,138 @@ def check_topology_name_immutable_identity(f15_arch: str, f15_feat: str, reg: di
             e(f"TOPOLOGYNAME047: F0015 {label} must state 'name is immutable identity' for topology resources (ADH-2026-047 decision 3)")
 
 
+def check_iso_assigned_code_semantics(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed (ADH-2026-048 decision 1): every F0015 ISO-3166-1 alpha-2 field must be
+    annotated as 'assigned' membership (not merely syntax-valid) in the registry, and the
+    architecture/feature/specification authorities must state the assigned-code rule and
+    the administrativeAreaCode syntax-plus-prefix-only boundary."""
+    schemas = reg.get("schemas", [])
+    schema_by_kind = {str(s.get("identity", "")).rsplit("/", 1)[-1]: s for s in schemas}
+    for kind_name in F15_ISO_ALPHA2_KINDS:
+        s = schema_by_kind.get(kind_name)
+        if not s:
+            e(f"ISO048: {kind_name} schema not found in registry")
+            continue
+        required = " ".join(str(x) for x in s.get("required", []))
+        if "iso-3166-1-alpha2" in required.lower() and "assigned" not in required.lower():
+            e(f"ISO048: {kind_name} registry required-field annotation states ISO-3166-1-alpha2 "
+              f"without 'assigned' membership semantics (ADH-2026-048 decision 1)")
+    hosting = schema_by_kind.get("HostingLocation", {})
+    optional_fields = " ".join(str(x) for x in hosting.get("optional", []))
+    if "administrativeareacode" in optional_fields.lower() and "iso-3166-2" not in optional_fields.lower():
+        e("ISO048: HostingLocation registry optional-field annotation for administrativeAreaCode "
+          "must retain its ISO-3166-2 syntax shape")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("VS-000 specification", spec)):
+        lower = text.lower()
+        if "assigned" not in lower or "iso-3166-1" not in lower.replace(" ", "-").replace("iso 3166", "iso-3166"):
+            e(f"ISO048: F0015 {label} must state that an ISO-3166-1 alpha-2 value means an "
+              f"assigned code from a fixed dataset, not merely a syntactically valid code (ADH-2026-048 decision 1)")
+        if "administrativeareacode" not in lower.replace(" ", "").replace("_", ""):
+            continue
+        if "no iso-3166-2" not in lower and "no islo-3166-2" not in lower and "introduces no iso-3166-2" not in lower:
+            e(f"ISO048: F0015 {label} must state administrativeAreaCode introduces no ISO-3166-2 "
+              f"membership dataset (ADH-2026-048 decision 1)")
+
+
+def check_four_malformed_input_outcomes(f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed (ADH-2026-048 decision 2): the four exact header/body outcomes must be
+    stated using only existing FEATURE-0012 top-level Problem codes in every allowed
+    active F0015 authority."""
+    required_phrases = (
+        "idempotency-key",
+        "malformed_request",
+        "stale_resource_version",
+    )
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("VS-000 specification", spec)):
+        lower = text.lower()
+        for phrase in required_phrases:
+            if phrase not in lower:
+                e(f"MALFORMED048: F0015 {label} must state '{phrase}' as part of the four "
+                  f"ADH-2026-048 decision 2 malformed-input outcomes")
+        if "non-empty" not in lower and "nonempty" not in lower:
+            e(f"MALFORMED048: F0015 {label} must state the non-empty item-action-body outcome "
+              f"(ADH-2026-048 decision 2)")
+        if "if-match" not in lower:
+            e(f"MALFORMED048: F0015 {label} must state the If-Match-on-create outcome (ADH-2026-048 decision 2)")
+
+
+def check_f15_29_30_conformance_and_mapping(reg: dict, f15_arch: str, f15_feat: str, trace: str) -> None:
+    """Fail-closed (ADH-2026-048 decisions 1/2/4): VS0-CF-F15-29..30 must be registered with
+    complete fields, present in the traceability matrix and architecture §10 mapping, and
+    REQ-F15-22..23/AC-F15-18..19 must map to them in architecture §10.1 and the feature
+    Acceptance Criteria table."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    for i in range(29, 31):
+        cf_id = f"VS0-CF-F15-{i:02d}"
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"PROOF048: required F0015-local conformance case missing from registry: {cf_id}")
+            continue
+        for field in F15_REQUIRED_CF_FIELDS:
+            if field not in entry or entry.get(field) in (None, ""):
+                if field == "expectedError" and entry.get(field, "unset") is None:
+                    continue
+                if field not in entry:
+                    e(f"PROOF048: {cf_id} missing required registry field '{field}'")
+        if entry and entry.get("expectedError") not in ("VALIDATION_FAILED", "MALFORMED_REQUEST"):
+            e(f"PROOF048: {cf_id} expectedError must be an existing FEATURE-0012 code "
+              f"(VALIDATION_FAILED or MALFORMED_REQUEST); no new top-level code is introduced")
+        if cf_id not in trace:
+            e(f"PROOF048: {cf_id} missing from traceability matrix")
+        if cf_id not in f15_arch:
+            e(f"PROOF048: {cf_id} missing from F0015 architecture §10 mapping")
+    for i in range(22, 24):
+        req_id = f"REQ-F15-{i:02d}"
+        if req_id not in f15_arch:
+            e(f"PROOF048: {req_id} missing from F0015 architecture REQ-to-proof mapping")
+        if req_id not in f15_feat:
+            e(f"PROOF048: {req_id} missing from F0015 feature authority")
+    for i in range(18, 20):
+        ac_id = f"AC-F15-{i:02d}"
+        if ac_id not in f15_arch:
+            e(f"PROOF048: {ac_id} missing from F0015 architecture AC-to-proof mapping")
+        if ac_id not in f15_feat:
+            e(f"PROOF048: {ac_id} missing from F0015 feature Acceptance Criteria table")
+
+
+def check_per_route_design_readiness_simulation(f15_arch: str, f15_feat: str) -> None:
+    """Fail-closed (ADH-2026-048 decision 4): the F0015 authorities must jointly state the
+    complete per-route pipeline and the explicit 22-route registration count (7 collection +
+    7 item + 8 action), failing closed on an unspecified observable input outcome, missing
+    per-route mapping, unassigned ISO code accepted, non-empty action body accepted, or a
+    route-count/pattern mismatch."""
+    pipeline_stage_markers = (
+        ("body/header shape", ("empty json body", "client-required")),
+        ("authn/authz", ("authoriz", "authenticat")),
+        ("root/reference/safe-denial ordering", ("cloudplatform_root_required", "safe-denial", "safe denial")),
+        ("structural/semantic validation", ("validation_failed", "structural")),
+        ("exact problem outcome", ("problem details", "malformed_request", "conflict")),
+        ("state/status result", ("status.phase",)),
+        ("audit effect", ("auditevent",)),
+        ("idempotency/race outcome", ("idempotency",)),
+        ("local conformance test", ("vs0-cf-f15",)),
+    )
+    route_count_markers = ("seven collection", "seven item", "eight", "22 total", "22 route", "22-route")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
+        lower = text.lower()
+        for stage_name, markers in pipeline_stage_markers:
+            if not any(marker in lower for marker in markers):
+                e(f"ROUTESIM048: F0015 {label} does not jointly state the per-route pipeline stage "
+                  f"'{stage_name}' required by ADH-2026-048 decision 4")
+        if not any(marker in lower for marker in route_count_markers):
+            e(f"ROUTESIM048: F0015 {label} does not state the explicit 22-route registration count "
+              f"(7 collection + 7 item + 8 action) required by ADH-2026-048 decision 3/4")
+
+
+def check_input_contract_clarification_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str, spec: str) -> None:
+    """ADH-2026-048: deterministic, fail-closed per-route design-readiness simulation and
+    input-contract clarification audit, composing the individual decision sub-checks below."""
+    check_iso_assigned_code_semantics(reg, f15_arch, f15_feat, spec)
+    check_four_malformed_input_outcomes(f15_arch, f15_feat, spec)
+    check_f15_29_30_conformance_and_mapping(reg, f15_arch, f15_feat, trace)
+    check_per_route_design_readiness_simulation(f15_arch, f15_feat)
+
+
 def check_contract_executability_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str) -> None:
     """ADH-2026-047 decision 5: deterministic, fail-closed contract-executability
     audit run as part of the default readiness gate before requirements generation.
@@ -901,6 +1041,10 @@ def main() -> None:
     check_contract_executability_audit(reg, f15_arch, f15_feat, trace)
     check_no_stale_topology_patch_wording(adh_045_text, f15_arch, f15_feat, reg_text)
 
+    # ADH-2026-048: input-contract clarification (ISO assigned-code semantics, four
+    # malformed-input outcomes, F15-29..30 proof matrix, per-route design-readiness simulation).
+    check_input_contract_clarification_audit(reg, f15_arch, f15_feat, trace, spec)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -930,6 +1074,7 @@ def main() -> None:
         print("  ✓ Topology name-immutable/description-PATCHable correction; no stale ADH-045 wording (ADH-2026-047 decision 3)")
         print("  ✓ Participation collection-create body vs. empty item-action body; FEATURE-0021 fields deferred (ADH-2026-047 decision 4)")
         print("  ✓ Contract-executability audit: field classification, route-contract completeness, F15-26..28 proof matrix (ADH-2026-047 decision 5)")
+        print("  ✓ ISO-3166-1 alpha-2 assigned-code semantics; four malformed-input outcomes; F15-29..30 proof matrix; per-route design-readiness simulation (ADH-2026-048)")
         sys.exit(0)
 
 
