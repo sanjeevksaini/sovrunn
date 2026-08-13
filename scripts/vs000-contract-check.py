@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
     "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,34)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -232,6 +232,37 @@ def run():
             e(f"VS0-CF-F15-19 expectedError must remain CONFLICT (ADH-2026-050), found {f15_19.get('expectedError')!r}")
         if f15_19.get("expectedViolation") != "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH":
             e(f"VS0-CF-F15-19 expectedViolation must remain VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH (ADH-2026-050), found {f15_19.get('expectedViolation')!r}")
+    # ADH-2026-054: replay is bound to the concrete item target and is allowed
+    # only after current authorization and safe target/reference access.
+    for case_id, entry in (("VS0-CF-F15-18", f15_18), ("VS0-CF-F15-19", f15_19)):
+        if not entry:
+            continue
+        inputs_lower = str(entry.get("inputs", "")).lower()
+        for marker in ("concrete cloudproviderparticipation uid", "current server-resolved authorization", "safe target/reference access"):
+            if marker not in inputs_lower:
+                e(f"{case_id} inputs must state {marker!r} (ADH-2026-054)")
+    f15_22 = next((c for c in confs if c.get("id") == "VS0-CF-F15-22"), None)
+    f15_30 = next((c for c in confs if c.get("id") == "VS0-CF-F15-30"), None)
+    if not f15_22:
+        e("VS0-CF-F15-22 conformance entry missing (ADH-2026-054)")
+    else:
+        inputs_054 = str(f15_22.get("inputs", "")).lower()
+        effects_054 = str(f15_22.get("expectedSideEffects", "")).lower()
+        for marker in ("x-sovrunn-bootstrap-grant", "bootstrapgrant", "syntactically valid duplicate-free"):
+            if marker not in inputs_054:
+                e(f"VS0-CF-F15-22 inputs must state {marker!r} (ADH-2026-054)")
+        for marker in ("header detection follows authentication", "body-member detection precedes current authorization"):
+            if marker not in effects_054:
+                e(f"VS0-CF-F15-22 expectedSideEffects must state {marker!r} (ADH-2026-054)")
+    if not f15_30:
+        e("VS0-CF-F15-30 conformance entry missing (ADH-2026-054)")
+    else:
+        inputs_054 = str(f15_30.get("inputs", "")).lower()
+        effects_054 = str(f15_30.get("expectedSideEffects", "")).lower()
+        if "does not contain the reserved top-level bootstrapgrant" not in inputs_054:
+            e("VS0-CF-F15-30 inputs must exclude the reserved bootstrapGrant carrier (ADH-2026-054)")
+        if "governed instead by vs0-cf-f15-22" not in effects_054:
+            e("VS0-CF-F15-30 expectedSideEffects must delegate reserved bootstrapGrant to F15-22 (ADH-2026-054)")
     # ADH-2026-051: the exact durable-audit boundary requires an AuditEvent side effect
     # for every authenticated authorization/safe-denial category it names, and VS0-CF-F15-31
     # must prove the new AUTH_REQUIRED local case without altering the inherited F01 case.

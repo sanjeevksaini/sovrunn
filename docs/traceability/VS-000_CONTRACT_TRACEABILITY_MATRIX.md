@@ -201,11 +201,11 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-15 | Participation creation initial state | FEATURE-0015 | feature | DEC-0054; ADH-2026-045/046 | VS0-SCHEMA-010, VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-16 | Scheduler expiry transition | FEATURE-0015 | feature | ADH-2026-045/046 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-17 | Existing-participation If-Match precondition denial | FEATURE-0015 | feature | ADH-2026-046 decision 2 | VS0-WRITER-004 |
-| VS0-CF-F15-18 | Idempotency-Key replay original-result return across all seven collection creates and eight participation create/actions | FEATURE-0015 | idempotency | ADH-2026-045/046 decision 2/050 | VS0-SCHEMA-008..014, VS0-WRITER-002,003,004 |
-| VS0-CF-F15-19 | Idempotency-Key reuse with changed digest across all seven collection creates and eight participation create/actions | FEATURE-0015 | idempotency | ADH-2026-045/046 decision 2/050 | VS0-SCHEMA-008..014, VS0-WRITER-002,003,004 |
+| VS0-CF-F15-18 | Target-bound, currently-authorized Idempotency-Key replay original-result return across all seven collection creates and eight participation item actions | FEATURE-0015 | idempotency | ADH-2026-045/046 decision 2/050/054 | VS0-SCHEMA-008..014, VS0-WRITER-002,003,004 |
+| VS0-CF-F15-19 | Target-bound, currently-authorized Idempotency-Key reuse with changed digest across all seven collection creates and eight participation item actions | FEATURE-0015 | idempotency | ADH-2026-045/046 decision 2/050/054 | VS0-SCHEMA-008..014, VS0-WRITER-002,003,004 |
 | VS0-CF-F15-20 | Explicit participation transition authorization and invalid-source-state denial | FEATURE-0015 | feature | DEC-0054; ADH-2026-045/046 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-21 | Read/list authorization (collection, scoped, empty, direct GET) | FEATURE-0015 | security | ADH-2026-045/046 | VS0-SCHEMA-008..014 |
-| VS0-CF-F15-22 | Bootstrap-grant boundary (header/body claims ignored) | FEATURE-0015 | security | ADH-2026-045/046 | VS0-WRITER-002,003,004 |
+| VS0-CF-F15-22 | Exact forged-grant carriers and 401/403/400 precedence | FEATURE-0015 | security | ADH-2026-045/046/054 | VS0-WRITER-002,003,004 |
 | VS0-CF-F15-23 | Topology reference ordering (safe denial vs authorized mismatch) | FEATURE-0015 | security | ADH-2026-043/045/046 | VS0-WRITER-003 |
 | VS0-CF-F15-24 | Audit atomicity across F0015 mutations; exact durable-audit boundary for authenticated authorization/safe denials; required-AuditEvent-append failure returns INTERNAL_ERROR/500 (not DEPENDENCY_UNAVAILABLE) | FEATURE-0015 | observability | ADH-2026-043/046/049/051 | VS0-SCHEMA-007 |
 | VS0-CF-F15-25 | F0015 route/action surface closure (no F0016/migration leakage) | FEATURE-0015 | feature | DEC-0059; ADH-2026-045/046 | VS0-SCHEMA-008..014 |
@@ -217,6 +217,14 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-31 | Missing/invalid authentication on any F0015 owned method/path pattern (AUTH_REQUIRED local proof; does not replace inherited VS0-CF-F01) | FEATURE-0015 | security | ADH-2026-051 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-32 | CloudPlatform/CloudProvider metadata.name duplicate rejection (ALREADY_EXISTS local proof) | FEATURE-0015 | feature | ADH-2026-052 | VS0-SCHEMA-008,009 |
 | VS0-CF-F15-33 | Registry-declared schema-constraint violation on collection create, excluding duplicate name (F15-32), unassigned ISO code (F15-29), and malformed/prohibited header/body (F15-30) | FEATURE-0015 | feature | ADH-2026-052 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-34 | HEAD matched to a GET pattern returns 405 without increasing registrations | FEATURE-0015 | feature | ADH-2026-055 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-35 | Forged header denial precedes unsupported PATCH media validation | FEATURE-0015 | security | ADH-2026-055 | VS0-SCHEMA-004,007 |
+| VS0-CF-F15-36 | Bounded completed-idempotency retention, deterministic eviction, and waiter cancellation | FEATURE-0015 | idempotency | ADH-2026-055 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-37 | RFC 7396 staged PATCH/null behavior and deterministic LIST ordering | FEATURE-0015 | feature | ADH-2026-055 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-38 | PATCH current-version conditional update and lock recheck | FEATURE-0015 | feature | ADH-2026-056 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-39 | Exact scoped read actions and safe GET/LIST outcomes | FEATURE-0015 | security | ADH-2026-056 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-40 | Completed replay response allowlist and Aborted re-reservation | FEATURE-0015 | idempotency | ADH-2026-056 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-41 | Mutable-spec writer-boundary denial | FEATURE-0015 | security | DEC-0037; ADH-2026-057 | VS0-WRITER-002,003 |
 
 ## FEATURE-0015 Migration Conformance — Retired (Canonical Bootstrap)
 
@@ -251,7 +259,7 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..33) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051).
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..40) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051).
 
 ---
 

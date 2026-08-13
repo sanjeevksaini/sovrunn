@@ -65,6 +65,21 @@ def require(errors: list[str], condition: bool, message: str) -> None:
 def check_f0015(registry: dict, errors: list[str]) -> None:
     cases = by_id(registry)
 
+    writer_boundary = cases.get("VS0-CF-F15-41")
+    require(errors, writer_boundary is not None,
+            "WRITER_BOUNDARY: missing VS0-CF-F15-41 (ADH-2026-057)")
+    if writer_boundary:
+        contract = " ".join(str(writer_boundary.get(field, "")) for field in (
+            "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate",
+        )).lower()
+        for marker in (
+            "cloudplatform spec.description", "cloudprovider spec.displayname/spec.operatingmarkets",
+            "topology spec.description", "authorization_denied", "before semantic patch processing",
+            "no resource mutation", "no auditevent", "no idempotency record",
+        ):
+            require(errors, marker in contract,
+                    f"WRITER_BOUNDARY: F15-41 must state {marker!r} (ADH-2026-057)")
+
     # Every collection create/action is covered by the already-approved
     # idempotency replay and changed-digest rules.
     for case_id in ("VS0-CF-F15-18", "VS0-CF-F15-19"):
@@ -88,6 +103,47 @@ def check_f0015(registry: dict, errors: list[str]) -> None:
         require(errors,
                 cases["VS0-CF-F15-19"].get("expectedViolation") == "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH",
                 "IDEMPOTENCY: F15-19 must use VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH")
+
+    # ADH-2026-054 closes the cross-target/revoked-grant replay gap.  The
+    # same all-route cases must also state the concrete item target and the
+    # current server-side authorization/safe-access checks that precede a
+    # completed replay.
+    for case_id in ("VS0-CF-F15-18", "VS0-CF-F15-19"):
+        case = cases.get(case_id)
+        if not case:
+            continue
+        inputs = str(case.get("inputs", "")).lower()
+        for marker in (
+            "concrete cloudproviderparticipation uid",
+            "current server-resolved authorization",
+            "safe target/reference access",
+        ):
+            require(errors, marker in inputs,
+                    f"IDEMPOTENCY: {case_id} must state {marker!r} (ADH-2026-054)")
+
+    forged = cases.get("VS0-CF-F15-22")
+    require(errors, forged is not None,
+            "FORGED_GRANT: missing VS0-CF-F15-22 (ADH-2026-054)")
+    if forged:
+        inputs = str(forged.get("inputs", "")).lower()
+        effects = str(forged.get("expectedSideEffects", "")).lower()
+        for marker in ("x-sovrunn-bootstrap-grant", "bootstrapgrant", "syntactically valid duplicate-free"):
+            require(errors, marker in inputs,
+                    f"FORGED_GRANT: F15-22 must state {marker!r} carrier semantics (ADH-2026-054)")
+        for marker in ("header detection follows authentication", "body-member detection precedes current authorization"):
+            require(errors, marker in effects,
+                    f"FORGED_GRANT: F15-22 must state {marker!r} precedence (ADH-2026-054)")
+
+    malformed = cases.get("VS0-CF-F15-30")
+    require(errors, malformed is not None,
+            "FORGED_GRANT: missing VS0-CF-F15-30 (ADH-2026-054)")
+    if malformed:
+        inputs = str(malformed.get("inputs", "")).lower()
+        effects = str(malformed.get("expectedSideEffects", "")).lower()
+        require(errors, "does not contain the reserved top-level bootstrapgrant" in inputs,
+                "FORGED_GRANT: F15-30 must exclude the reserved body carrier (ADH-2026-054)")
+        require(errors, "governed instead by vs0-cf-f15-22" in effects,
+                "FORGED_GRANT: F15-30 must delegate the reserved body carrier to F15-22 (ADH-2026-054)")
 
     # The active F0015 audit rule says authorization and safe denials produce
     # evidence.  Every local case expressing one of those outcomes must carry

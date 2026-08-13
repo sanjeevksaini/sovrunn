@@ -62,7 +62,7 @@ NON_API_SERVER_CONTROLLER_TERMS = (
 # ADH-2026-047 decision 5 / ADH-2026-048 decision 4 / ADH-2026-051), including VS0-CF-F15-31
 # (AUTH_REQUIRED local proof), VS0-CF-F15-32 (name-uniqueness local proof), and VS0-CF-F15-33
 # (registry-declared schema-constraint validation local proof).
-F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 34)]
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 42)]
 
 # ADH-2026-051: exact durable-audit boundary. These local cases are covered denial categories
 # and must each carry an AuditEvent side effect; the remaining denial categories (missing/invalid
@@ -88,6 +88,12 @@ F15_PARTICIPATION_ACTIONS = (
     "accept", "reject", "withdraw", "suspend", "resume",
     "request-release", "accept-release", "decline-release",
 )
+
+F15_PARTICIPATION_ACTION_ROUTE_PREFIX = (
+    "/apis/governance.sovrunn.io/v1alpha1/"
+    "cloud-provider-participations/{uid}/actions"
+)
+F15_RETIRED_ACTION_ROUTE_FRAGMENT = "/{uid}:"
 
 # F0015-owned resource kinds whose create-request contract must be closed (ADH-2026-047 decision 1).
 F15_CREATE_KINDS = (
@@ -1093,9 +1099,10 @@ def check_per_route_design_readiness_simulation(f15_arch: str, f15_feat: str) ->
         if not any(marker in lower for marker in method_pattern_markers):
             e(f"ROUTEARITH051: F0015 {label} does not state the exact 35 explicit Go 1.22 "
               f"method/path registration count required by ADH-2026-051")
-        if "path-only" not in lower and "internal method" not in lower and "internal http-method dispatch" not in lower:
-            e(f"ROUTEARITH051: F0015 {label} must prohibit path-only handler registration, wildcard "
-              f"registration, reflection, or internal HTTP-method dispatch (ADH-2026-051)")
+        if "path-only" not in lower and "catch-all" not in lower and "internal method" not in lower and "internal http-method dispatch" not in lower:
+            e(f"ROUTEARITH051: F0015 {label} must prohibit path-only or catch-all handler registration, "
+              f"reflection, or internal HTTP-method dispatch while allowing the declared complete {{uid}} "
+              f"ServeMux wildcard segment (ADH-2026-051,053)")
 
 
 def check_exact_durable_audit_boundary(reg: dict) -> None:
@@ -1191,6 +1198,178 @@ def check_validation_proof_coverage_and_mapping(reg: dict, f15_arch: str, trace:
             e(f"VALIDATIONPROOF052: {required_id} missing from F0015 architecture §10 mapping")
 
 
+def check_forged_grant_and_idempotency_closure(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed (ADH-2026-054): exact forged-grant carriers and target-bound,
+    currently-authorized replay must remain explicit in the controlling authorities."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    for cf_id, required in (
+        ("VS0-CF-F15-18", ("concrete cloudproviderparticipation uid", "current server-resolved authorization", "safe target/reference access")),
+        ("VS0-CF-F15-19", ("concrete cloudproviderparticipation uid", "current server-resolved authorization", "safe target/reference access")),
+        ("VS0-CF-F15-22", ("x-sovrunn-bootstrap-grant", "bootstrapgrant", "syntactically valid duplicate-free")),
+        ("VS0-CF-F15-30", ("does not contain the reserved top-level bootstrapgrant",)),
+    ):
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"ADH054: required conformance entry missing: {cf_id}")
+            continue
+        inputs = str(entry.get("inputs", "")).lower()
+        for marker in required:
+            if marker not in inputs:
+                e(f"ADH054: {cf_id} inputs must state '{marker}'")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("specification", spec)):
+        lower = text.lower()
+        for marker in ("x-sovrunn-bootstrap-grant", "bootstrapgrant", "concrete target uid"):
+            if marker not in lower:
+                e(f"ADH054: F0015 {label} must state '{marker}'")
+        if "current authorization" not in lower or "safe access" not in lower:
+            e(f"ADH054: F0015 {label} must require current authorization and safe access before replay")
+
+
+def check_executable_route_and_retention_closure(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed ADH-2026-055 executable method/precedence/retention closure."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    required = {
+        "VS0-CF-F15-34": ("head request", "returns http 405", "no top-level problem code", "35 explicit"),
+        "VS0-CF-F15-35": ("x-sovrunn-bootstrap-grant", "authorization_denied", "precedes media"),
+        "VS0-CF-F15-36": ("24 hours", "10000", "inflight"),
+        "VS0-CF-F15-37": ("rfc 7396", "metadata.uid", "post-merge"),
+    }
+    for cf_id, markers in required.items():
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"ADH055: required conformance entry missing: {cf_id}")
+            continue
+        haystack = " ".join(str(entry.get(field, "")) for field in ("inputs", "expectedState", "expectedError", "expectedSideEffects")).lower()
+        for marker in markers:
+            if marker not in haystack:
+                e(f"ADH055: {cf_id} must state '{marker}'")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("specification", spec)):
+        lower = text.lower()
+        for marker in ("adh-2026-055", "24 hours", "10,000", "metadata.uid"):
+            if marker not in lower:
+                e(f"ADH055: F0015 {label} must state '{marker}'")
+
+
+def check_patch_read_and_replay_closure(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed ADH-2026-056 PATCH/read/replay closure."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    required = {
+        "VS0-CF-F15-38": ("if-match", "stale_resource_version", "publication lock"),
+        "VS0-CF-F15-39": ("cloudplatform.read", "cloudprovider.read", "topology.read", "participation.read"),
+        "VS0-CF-F15-40": ("content-type application/json", "process lifetime", "aborted"),
+    }
+    for cf_id, markers in required.items():
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"ADH056: required conformance entry missing: {cf_id}")
+            continue
+        haystack = " ".join(str(entry.get(field, "")) for field in ("inputs", "expectedState", "expectedError", "expectedSideEffects")).lower()
+        for marker in markers:
+            if marker not in haystack:
+                e(f"ADH056: {cf_id} must state '{marker}'")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("specification", spec)):
+        lower = text.lower()
+        for marker in ("adh-2026-056", "if-match", "cloudplatform.read", "content-type: application/json"):
+            if marker not in lower:
+                e(f"ADH056: F0015 {label} must state '{marker}'")
+
+
+def check_mutable_spec_writer_enforcement_closure(reg: dict, f15_arch: str, f15_feat: str, spec: str) -> None:
+    """Fail-closed ADH-2026-057 writer-boundary proof closure."""
+    entry = {c.get("id"): c for c in reg.get("conformance", [])}.get("VS0-CF-F15-41")
+    if not entry:
+        e("ADH057: required conformance entry missing: VS0-CF-F15-41")
+        return
+    haystack = " ".join(str(entry.get(field, "")) for field in (
+        "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate",
+    )).lower()
+    for marker in (
+        "cloudplatform spec.description", "cloudprovider spec.displayname/spec.operatingmarkets",
+        "topology spec.description", "authorization_denied", "before semantic patch processing",
+        "no resource mutation", "no auditevent", "no idempotency record",
+    ):
+        if marker not in haystack:
+            e(f"ADH057: VS0-CF-F15-41 must state '{marker}'")
+    for label, text in (("architecture", f15_arch), ("feature", f15_feat), ("specification", spec)):
+        lower = text.lower()
+        if "adh-2026-057" not in lower or "vs0-cf-f15-41" not in lower:
+            e(f"ADH057: F0015 {label} must trace VS0-CF-F15-41 and ADH-2026-057")
+
+def check_servemux_participation_action_routes(
+    f15_arch: str,
+    f15_feat: str,
+    spec: str,
+    steer: str,
+) -> None:
+    """Fail-closed (ADH-2026-053): participation action paths must use a
+    complete ServeMux {uid} wildcard segment followed by a literal actions
+    segment. The retired /{uid}:<action> notation is forbidden. This
+    correction preserves the 22-logical-path / 35-registration invariant."""
+    authorities = (
+        ("architecture boundary", f15_arch),
+        ("feature authority", f15_feat),
+        ("contract specification", spec),
+        ("Slice 0 steering", steer),
+    )
+
+    retired_route_prohibition = (
+        f"The retired `{F15_RETIRED_ACTION_ROUTE_FRAGMENT}<action>` form "
+        "is not an allowed FEATURE-0015 route form"
+    )
+
+    for label, text in authorities:
+        text_without_explicit_prohibition = text.replace(
+            retired_route_prohibition,
+            "",
+        )
+        if F15_RETIRED_ACTION_ROUTE_FRAGMENT in text_without_explicit_prohibition:
+            e(
+                f"ACTIONURI053: {label} must not use the retired "
+                f"'{F15_RETIRED_ACTION_ROUTE_FRAGMENT}<action>' route form "
+                "as an active route"
+            )
+        if 'r.PathValue("uid")' not in text:
+            e(
+                f"ACTIONURI053: {label} must state "
+                '`r.PathValue("uid")` for the complete {uid} wildcard segment'
+            )
+        if "22 logical endpoint paths" not in text:
+            e(
+                f"ACTIONURI053: {label} must retain the "
+                "22-logical-endpoint-path invariant"
+            )
+        if "35 explicit" not in text:
+            e(
+                f"ACTIONURI053: {label} must retain the "
+                "35-explicit-registration invariant"
+            )
+
+    for label, text in (
+        ("architecture boundary", f15_arch),
+        ("feature authority", f15_feat),
+        ("contract specification", spec),
+    ):
+        for action in F15_PARTICIPATION_ACTIONS:
+            route = f"{F15_PARTICIPATION_ACTION_ROUTE_PREFIX}/{action}"
+            if route not in text:
+                e(
+                    f"ACTIONURI053: {label} missing required "
+                    f"participation action route '{route}'"
+                )
+
+    steering_template = f"{F15_PARTICIPATION_ACTION_ROUTE_PREFIX}/<action>"
+    if steering_template not in steer:
+        e(
+            "ACTIONURI053: Slice 0 steering must state the "
+            f"participation action route template '{steering_template}'"
+        )
+    for action in F15_PARTICIPATION_ACTIONS:
+        if action not in steer:
+            e(
+                f"ACTIONURI053: Slice 0 steering must enumerate "
+                f"participation action '{action}'"
+            )
+
 def check_input_contract_clarification_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str, spec: str) -> None:
     """ADH-2026-048: deterministic, fail-closed per-route design-readiness simulation and
     input-contract clarification audit, composing the individual decision sub-checks below."""
@@ -1230,6 +1409,7 @@ def main() -> None:
     spec = read(SPEC_PATH)
     closure = read(CLOSURE)
     trace = read(TRACE_PATH)
+    steer = read(STEER)
 
     # Fail-closed rejection of reintroduced migration concepts
     check_no_reintroduced_migration_concepts(reg, f15_arch, f15_feat)
@@ -1285,6 +1465,21 @@ def main() -> None:
     # corrected REQ-F15-01/02/04/03/06 proof-map traceability and the VS0-CF-F15-21 misassignment guard.
     check_validation_proof_coverage_and_mapping(reg, f15_arch, trace)
 
+    # ADH-2026-054: exact forged-grant carrier/precedence and target-bound replay closure.
+    check_forged_grant_and_idempotency_closure(reg, f15_arch, f15_feat, spec)
+
+    # ADH-2026-055: executable method, precedence, retention, PATCH, and LIST closure.
+    check_executable_route_and_retention_closure(reg, f15_arch, f15_feat, spec)
+
+    # ADH-2026-056: PATCH conditional update, exact read grants, and replay response closure.
+    check_patch_read_and_replay_closure(reg, f15_arch, f15_feat, spec)
+
+    # ADH-2026-057: mutable-spec wrong-administrator write proof closure.
+    check_mutable_spec_writer_enforcement_closure(reg, f15_arch, f15_feat, spec)
+
+        # ADH-2026-053: ServeMux-compatible participation item-action route form.
+    check_servemux_participation_action_routes(f15_arch, f15_feat, spec, steer)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -1320,6 +1515,11 @@ def main() -> None:
         print("  ✓ Exact durable-audit boundary: covered denials carry AuditEvent side effects; VS0-CF-F15-31 proves AUTH_REQUIRED without altering VS0-CF-F01 (ADH-2026-051)")
         print("  ✓ Corrected route model: 22 logical endpoint paths, 35 explicit Go 1.22 method/path registrations, no path-only/wildcard/reflection dispatch (ADH-2026-051)")
         print("  ✓ Validation-proof coverage: VS0-CF-F15-32 (name uniqueness) and VS0-CF-F15-33 (schema-constraint validation) local proof; corrected REQ-F15-01/02/04/03/06 mapping; no VS0-CF-F15-21 misassignment (ADH-2026-052)")
+        print("  ✓ Forged-grant carrier precedence and target-bound, currently-authorized idempotency replay closure (ADH-2026-054)")
+        print("  ✓ Executable HEAD/media precedence, bounded idempotency, RFC 7396 PATCH, and deterministic LIST closure (ADH-2026-055)")
+        print("  ✓ PATCH If-Match, exact scoped read actions, and replay response allowlist closure (ADH-2026-056)")
+        print("  ✓ Exact wrong-administrator mutable-spec PATCH denial and acceptance-proof closure (ADH-2026-057)")
+        print("  ✓ ServeMux-compatible participation action routes: eight /actions/<action> paths use complete {uid} wildcards; retired /{uid}:<action> form rejected (ADH-2026-053)")
         sys.exit(0)
 
 
