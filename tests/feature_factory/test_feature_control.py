@@ -216,6 +216,15 @@ Long-form commit detail is allowed in the plan.
         self.assertIn('"make", "ff-feature-gate"', source[checkpoint:])
         self.assertIn("if completed_final_commit:", source)
 
+    def test_interrupted_task_can_resume_only_within_declared_scope(self):
+        plan = orchestrator.blocks(self.task_plan_fixture)
+        allowed = orchestrator.allowed_resume_paths(
+            ROOT / ".automation/state/FEATURE-0099.json", plan, [[1]]
+        )
+        self.assertIn("internal/example/service.go", allowed)
+        self.assertIn("internal/example/internal_test.go", allowed)
+        self.assertNotIn("internal/other/escape.go", allowed)
+
     def test_generic_scripts_compile(self):
         scripts = [
             "feature-control.py",

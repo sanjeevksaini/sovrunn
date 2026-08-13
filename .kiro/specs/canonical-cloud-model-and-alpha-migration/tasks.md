@@ -199,12 +199,14 @@ Refs: FEATURE-0015 Task 1, REQ-F15-01..04, DEC-0037/0041/0054/0059
 - `api/schemas/provider.json`
 - `api/schemas/resource-pool.json`
 - `tests/conformance/fixtures/adapter-configuration.json`
+- `tests/conformance/fixtures/adapter-configuration.yaml`
 - `tests/conformance/fixtures/datacenter-failure-domain.json`
 - `tests/conformance/fixtures/decision/positive/F13-COMPAT-06.json`
 - `tests/conformance/fixtures/decision/positive/F13-COMPAT-08.json`
 - `tests/conformance/fixtures/decision/positive/F13-SCOPE-06.json`
 - `tests/conformance/fixtures/decision/positive/_shared-bundle.json`
 - `tests/conformance/fixtures/discovered-database.json`
+- `tests/conformance/fixtures/discovered-database.yaml`
 - `tests/conformance/fixtures/infrastructure-stack.json`
 - `tests/conformance/fixtures/negative/decision/F13-CF-08.a.json`
 - `tests/conformance/fixtures/negative/decision/F13-CF-08.b.json`
@@ -275,10 +277,14 @@ Refs: FEATURE-0015 Task 1, REQ-F15-01..04, DEC-0037/0041/0054/0059
 - `tests/conformance/fixtures/negative/feature0014/zero-parent-datacenter.json`
 - `tests/conformance/fixtures/negative/feature0014/zero-parent-stack.json`
 - `tests/conformance/fixtures/operation-provider.json`
+- `tests/conformance/fixtures/operation-provider.yaml`
 - `tests/conformance/fixtures/provider-datacenter.json`
 - `tests/conformance/fixtures/provider-location.json`
 - `tests/conformance/fixtures/provider.json`
 - `tests/conformance/fixtures/resource-pool.json`
+- `tests/conformance/fixtures/resource-pool.yaml`
+- `api/schemas/baseline/BASELINE_MANIFEST.json`
+- `api/schemas/baseline/BASELINE_APPROVALS.json`
 
 **Included tests:**
 - `internal/apimeta/scope_test.go`: verify seven canonical values; verify rejected legacy values; verify CloudPlatform/CloudProvider acceptance.

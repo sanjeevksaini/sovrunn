@@ -91,8 +91,16 @@ def verify_command(raw: str, feature: str) -> list[str]:
 
 
 def changed_paths() -> list[str]:
-    output = run(["git", "status", "--porcelain"], capture=True)
+    output = run(["git", "status", "--porcelain=v1", "--untracked-files=all"], capture=True)
     return [line[3:] for line in output.splitlines() if len(line) > 3]
+
+
+def allowed_resume_paths(state_path: Path, plan: dict[int, str], batches: list[list[int]]) -> set[str]:
+    """Allow an interrupted first task to resume only inside its declared scope."""
+    if not batches or not batches[0]:
+        raise ValueError("no selected task for resume scope")
+    task = batches[0][0]
+    return {str(state_path.relative_to(ROOT)), *task_writable_paths(plan[task])}
 
 
 def task_batches(
@@ -208,7 +216,7 @@ def main() -> None:
                 print(f"{args.feature} already has all approved tasks committed")
             return
         raise SystemExit(f"ERROR: no approved successor after committed task {last_raw}")
-    allowed_dirty = {str(state_path.relative_to(ROOT))}
+    allowed_dirty = allowed_resume_paths(state_path, plan, batches)
     unexpected = [path for path in changed_paths() if path not in allowed_dirty]
     if unexpected:
         raise SystemExit("ERROR: working tree is not ready: " + ", ".join(unexpected))
