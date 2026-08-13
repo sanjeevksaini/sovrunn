@@ -393,6 +393,7 @@ go test -v ./internal/cloudmodel/isocodes/...
 - `internal/cloudmodel/validate/iso.go` (assigned-code validation; administrativeAreaCode syntax)
 - `internal/cloudmodel/validate/headers.go` (Idempotency-Key/If-Match/action-body preconditions)
 - `internal/cloudmodel/validate/schema.go` (complete VS0-SCHEMA-008..014 constraint validation)
+- `internal/cloudmodel/validate/stageset.go` (StageSet-compatible composition adapters that plug FEATURE-0015 validators into inherited FEATURE-0012 stages without route invocation)
 - `internal/api/decode.go` (bounded two-phase JSON decode, duplicate-member detection, route-safe reference extraction)
 - `internal/api/patch.go` (RFC 7396 staged merge-patch application)
 - `internal/cloudmodel/validate/doc.go`
@@ -405,6 +406,7 @@ go test -v ./internal/cloudmodel/isocodes/...
 - `internal/cloudmodel/validate/iso_test.go`: assigned US/IN accepted; unassigned ZZ rejected; administrativeAreaCode prefix.
 - `internal/cloudmodel/validate/headers_test.go`: missing/empty/malformed/over-length Idempotency-Key; If-Match on participation create; non-empty action body.
 - `internal/cloudmodel/validate/schema_test.go`: every registered required field, field type/range/format/reference constraint, and per-kind request-contract constraint from VS0-SCHEMA-008..014.
+- `internal/cloudmodel/validate/stageset_test.go`: independently compose the inherited FEATURE-0012 `DefaultingStage`, `ValidationStage`, and `StageSet` with FEATURE-0015 validator adapters for collection-create, PATCH, and item-action classifications; prove the inherited stage order is retained and no HTTP handler is required.
 - `internal/api/decode_test.go`: inherited bounded-body limit; malformed JSON; duplicate object member at every relevant nesting level; phase-one route-safe extraction; phase-two strict closed-contract decode.
 - `internal/api/patch_test.go`: RFC 7396 staged clone; `null` removal only for optional mutable `spec.description`/`spec.displayName`; required `spec.operatingMarkets: null` rejected; post-merge schema/immutable/system-owned/deferred/unknown-field validation before publication.
 
@@ -420,7 +422,7 @@ go test -v ./internal/cloudmodel/validate/...
 
 **Acceptance criteria:**
 - All validation functions are pure (no I/O, no wall-clock reads except injected timestamps, no map-iteration-order dependence).
-- FEATURE-0015 validators are plugged into the inherited FEATURE-0012 `internal/apivalid` `StageSet` for collection create, PATCH, and participation actions; they do not fork, replace, or bypass the layer 5–7 pipeline.
+- Task 4 supplies independently tested, StageSet-compatible FEATURE-0015 validator compositions for collection-create, PATCH, and participation-action classifications; it reuses the inherited FEATURE-0012 `DefaultingStage`, `ValidationStage`, and `StageSet` without route invocation, fork, replacement, or bypass. Tasks 11–15 own actual handler invocation.
 - Closed create-contract classification: only client-required and client-optional fields accepted per kind.
 - Scope-kind subset: CloudPlatform/CloudProvider accept only Platform; participation only CloudPlatform; topology only CloudProvider.
 - Immutable fields: identity, references, ownerRegistration, topology name.
@@ -642,11 +644,11 @@ go test -v ./internal/cloudmodel/...
 
 **Internal sequencing:** Build idempotency core first, then work package 10's audit-publication coordinator, then compose the scheduler with that audit-aware expiry operation in `internal/server`; this is internal Task 8 sequencing, not a dependency cycle.
 
-**Requirements traceability:** REQ-F15-18 (idempotency semantics).
+**Requirements traceability:** REQ-F15-03 (participation lifecycle/expiry), REQ-F15-06 (scheduler expiry), REQ-F15-15 (audit atomicity and append-failure non-publication), REQ-F15-18 (idempotency semantics).
 
-**Design traceability:** Design DD-08 (idempotency namespace and digest), §5.1 step 9 (conditional idempotency branch), §7.1 (idempotency tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-08 (idempotency namespace and digest), DD-09 (audit/mutation coordinator), §4.6 (deterministic scheduler), §5.1 steps 9 and 14 (idempotency and publication), §7.1 (idempotency/audit/scheduler tests), §8.1 (IMPLEMENT).
 
-**Architecture decisions:** ADH-2026-045 (idempotency key), ADH-2026-050 (all-route coverage), ADH-2026-054 (replay isolation and recheck), ADH-2026-055 (retention), ADH-2026-056 (replay response).
+**Architecture decisions:** DEC-0054 (participation lifecycle); ADH-2026-045 (scheduler expiry and idempotency key), ADH-2026-046 (api-server status writer and scheduler system actor), ADH-2026-049 (audit append failure), ADH-2026-050 (all-route coverage), ADH-2026-051 (audited-denial boundary), ADH-2026-054 (replay isolation and recheck), ADH-2026-055 (retention), ADH-2026-056 (replay response).
 
 **Risks addressed:** Approved architecture boundary, anti-drift, and execution controls applicable to this task.
 
@@ -682,7 +684,7 @@ go test -race ./internal/cloudmodel/... ./internal/server/...
 - The 24-hour and 10,000-entry cap applies only to Completed records; earliest-expiry then lexical eviction; InFlight is never evicted.
 - Fresh request correlation on every request; requestId, correlation, ETag, Location, entity/transport headers not replayed.
 - PATCH never requires, looks up, reserves, completes, or aborts idempotency state.
-- AC-F15-11 (idempotency on creates/actions), AC-F15-19 (changed-digest conflict).
+- AC-F15-02 (participation lifecycle and expiry), AC-F15-11 (idempotency on creates/actions), AC-F15-13 (audit evidence), AC-F15-19 (changed-digest conflict).
 
 **Security/observability impact:**
 - Security: Replay requires current auth/authz/safe-access recheck before disclosure.
@@ -710,8 +712,8 @@ entry retention, and completed-replay per ADH-2026-050/054/055/056.
 - PATCH has no idempotency state
 - Includes work package 10: AuditEvent append-before-publication orchestration.
 
-Refs: FEATURE-0015 Task 8, REQ-F15-18, ADH-2026-050, ADH-2026-054,
-ADH-2026-055, ADH-2026-056
+Refs: FEATURE-0015 Task 8, REQ-F15-03/06/15/18, DEC-0054,
+ADH-2026-045/046/049/050/051/054/055/056
 ```
 
 ---
@@ -1444,10 +1446,7 @@ wait "$server_pid"
 wait_status=$?
 set -e
 server_pid=''
-case "$wait_status" in
-  0|143) ;; # graceful exit or expected SIGTERM termination
-  *) trap - EXIT INT TERM; rm -f "$api_log"; rm -rf "$server_dir"; exit "$wait_status" ;;
-esac
+[ "$wait_status" -eq 0 ] || { trap - EXIT INT TERM; rm -f "$api_log"; rm -rf "$server_dir"; exit "$wait_status"; }
 trap - EXIT INT TERM
 rm -f "$api_log"
 rm -rf "$server_dir"
@@ -1469,7 +1468,7 @@ git status --short
 - The preceding implementation tasks have run `make fmt`; this non-mutating checkpoint runs `make test`, `make vet`, and `go test -race ./...` and fails if `git diff` reveals a formatter-induced change.
 - `make ff-feature-gate FEATURE=FEATURE-0015` passes (no drift, no missing acceptance, no staged generated artifacts, Phase 2R scope boundaries satisfied).
 - A temporary-path `go build -o <current-run-mktemp-dir>/sovrunn-api ./cmd/sovrunn-api` succeeds, then the checkpoint starts that actual binary; `/healthz` and `/readyz` both return successful responses; the owned process is then terminated and successfully waited. No `bin/` artifact is created or updated.
-- The bounded smoke procedure starts the direct server binary (which must not fork descendants), uses unique `mktemp` artifacts, waits at most 30 seconds for readiness, uses bounded curl connect/overall timeouts, preserves start/readiness/probe/termination failure status, explicitly accepts only graceful exit or expected SIGTERM status, and cannot leave the owned API-server process running.
+- The bounded smoke procedure starts the direct server binary (which must not fork descendants), uses unique `mktemp` artifacts, waits at most 30 seconds for readiness, uses bounded curl connect/overall timeouts, preserves start/readiness/probe/termination failure status, and accepts SIGTERM only when the server completes its graceful shutdown with exit status 0; a signal-derived exit fails the checkpoint. It cannot leave the owned API-server process running.
 - `git diff --check` passes; `git diff` and `git status --short` are reviewed.
 - Any unexpected or generated artifact is reported as a failed cleanliness check. It is not deleted or otherwise cleaned up by this task; only an exact, current-run artifact explicitly identified by its generating command may be handled under separate user direction.
 - Any formatter-induced change detected by `git diff` or `git status --short` fails this non-mutating checkpoint; it is not silently accepted or cleaned up.
@@ -1533,10 +1532,10 @@ Every approved REQ and AC appears exactly once below with its task disposition. 
 |--------|---------|------------------|
 | REQ-F15-01 | Task 1, 4, 11 | CloudPlatform type, validation/uniqueness, handlers |
 | REQ-F15-02 | Task 1, 4, 11 | CloudProvider type, ISO dataset, validation/uniqueness, handlers |
-| REQ-F15-03 | Task 1, 4, 6, 14, 15 | CloudProviderParticipation type, lifecycle, pair uniqueness, handlers, actions |
+| REQ-F15-03 | Task 1, 4, 6, 8, 14, 15 | CloudProviderParticipation type, lifecycle, audit-aware scheduler expiry composition, pair uniqueness, handlers, actions |
 | REQ-F15-04 | Task 1, 4, 13 | Topology chain types, ISO dataset (HostingLocation), validation/uniqueness, handlers |
 | REQ-F15-05 | No-task ledger (EXCLUDED) | Feature ends at InfrastructureStack; no ExecutionTarget introduced |
-| REQ-F15-06 | Task 6, 15 | Lifecycle actions, independent holds, scheduler expiry, action handlers |
+| REQ-F15-06 | Task 6, 8, 15 | Lifecycle actions, scheduler core, audit-aware scheduler expiry composition, independent holds, action handlers |
 | REQ-F15-07 | Task 6, 14, 15 | No mutable participation spec; create Idempotency-Key only; action preconditions |
 | REQ-F15-08 | Task 11, 13, 14 | PATCH-only merge-patch surface; PUT/DELETE 405 |
 | REQ-F15-09 | Task 4, 13 | Safe cross-provider denial validation and handler enforcement |
@@ -1561,7 +1560,7 @@ Every approved REQ and AC appears exactly once below with its task disposition. 
 | AC ID | Task(s) | Coverage summary |
 |-------|---------|------------------|
 | AC-F15-01 | Task 1, 4, 11, 13, 16, 17 | CloudPlatform/CloudProvider/topology collection create, GET/LIST, permitted PATCH with scope subsets; ends at InfrastructureStack |
-| AC-F15-02 | Task 1, 4, 6, 14, 15, 17 | Participation lifecycle, acceptance guard, pair uniqueness |
+| AC-F15-02 | Task 1, 4, 6, 8, 14, 15, 17 | Participation lifecycle, audit-aware scheduler expiry composition, acceptance guard, pair uniqueness |
 | AC-F15-03 | No-task ledger (EXCLUDED), Task 16, 17 | No ExecutionTarget behavior introduced; verified by route surface |
 | AC-F15-04 | Task 4, 13, 17 | Cross-provider target reference denied safely |
 | AC-F15-05 | No-task ledger (CONTRACT_ONLY) | No migration mechanism exists; anti-drift/non-runtime gate |
