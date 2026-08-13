@@ -6,6 +6,7 @@ import sys
 import subprocess
 from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/feature_factory/fixtures/FEATURE-0014.control.json"
@@ -26,6 +27,9 @@ closeout = load_module("feature_closeout", ROOT / "scripts/feature-closeout.py")
 orchestrator = load_module("feature_orchestrator", ROOT / "scripts/feature-orchestrator.py")
 cursor_prompt = load_module("generic_cursor_prompt", ROOT / "scripts/generic-cursor-prompt.py")
 receipt = load_module("receipt_check", ROOT / "scripts/receipt-check.py")
+task_boundary = load_module(
+    "generic_feature_boundary_check", ROOT / "scripts/generic-feature-boundary-check.py"
+)
 kiro_semantic = load_module(
     "kiro_semantic_check", ROOT / "scripts/kiro-semantic-check.py"
 )
@@ -439,6 +443,25 @@ class TaskBatchTests(unittest.TestCase):
     def test_sequence_drift_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "expected Task 2, got 3"):
             orchestrator.task_batches([1, 2, 3], "1", 3, None, 2, True)
+
+
+class GenericTaskBoundaryTests(unittest.TestCase):
+    def test_changed_paths_expands_untracked_directories_to_files(self):
+        with patch.object(
+            task_boundary.subprocess,
+            "run",
+            return_value=subprocess.CompletedProcess(
+                args=[],
+                returncode=0,
+                stdout="?? internal/cloudmodel/validate/schema.go\n",
+                stderr="",
+            ),
+        ) as run:
+            self.assertEqual(task_boundary.changed_paths(), ["internal/cloudmodel/validate/schema.go"])
+        self.assertEqual(
+            run.call_args.args[0],
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        )
 
 
 class ReceiptCheckTests(unittest.TestCase):
