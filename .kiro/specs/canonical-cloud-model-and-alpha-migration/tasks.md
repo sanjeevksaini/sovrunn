@@ -379,7 +379,7 @@ go test -v ./internal/cloudmodel/isocodes/...
 
 **Requirements traceability:** REQ-F15-01 (CloudPlatform validation), REQ-F15-02 (CloudProvider validation), REQ-F15-03 (participation validation), REQ-F15-04 (topology validation), REQ-F15-14 (scope-reference UID invariant), REQ-F15-19 (closed create contract), REQ-F15-20 (scope derivation), REQ-F15-21 (participation body), REQ-F15-22 (assigned ISO), REQ-F15-23 (malformed inputs).
 
-**Design traceability:** Design §5.1 (per-route pipeline), §5.3 (determinism), §7.1 (validate tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §5.1 (per-route pipeline), §5.3 (determinism), §7.1 (validate tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0037 (scope kinds), DEC-0041 (topology), DEC-0054 (participation); ADH-2026-047 (closed contract, scope derivation, immutability), ADH-2026-048 (ISO assigned codes, header/body rules).
 
@@ -420,6 +420,7 @@ go test -v ./internal/cloudmodel/validate/...
 
 **Acceptance criteria:**
 - All validation functions are pure (no I/O, no wall-clock reads except injected timestamps, no map-iteration-order dependence).
+- FEATURE-0015 validators are plugged into the inherited FEATURE-0012 `internal/apivalid` `StageSet` for collection create, PATCH, and participation actions; they do not fork, replace, or bypass the layer 5–7 pipeline.
 - Closed create-contract classification: only client-required and client-optional fields accepted per kind.
 - Scope-kind subset: CloudPlatform/CloudProvider accept only Platform; participation only CloudPlatform; topology only CloudProvider.
 - Immutable fields: identity, references, ownerRegistration, topology name.
@@ -517,7 +518,7 @@ go test -race ./internal/cloudmodel/...
 
 ### Task 6: Participation lifecycle and deterministic expiry
 
-**Purpose:** Implement VS0-STATE-001 transitions, independent suspension holds (platformSuspended, providerSuspended), derived effective phase, and lifecycle validation.
+**Purpose:** Implement VS0-STATE-001 transitions, independent suspension holds (platformSuspended, providerSuspended), derived effective phase, lifecycle validation, and an independently testable expiry-scheduler core.
 
 **Dependencies:** Task 1 (types) and Task 4 (validation/store lock and staging primitives).
 
@@ -554,7 +555,7 @@ go test -v ./internal/cloudmodel/...
 
 **Security/observability impact:**
 - Security: Hold-changing actions are scoped to the acting party's grant.
-- Observability: Lifecycle transitions are logged and audited.
+- Observability: Lifecycle transitions carry scheduler execution metadata; Task 8 owns AuditEvent append-before-publication and server composition.
 
 **Exclusions:**
 - No end-user visibility eligibility (FEATURE-0021).
@@ -573,7 +574,7 @@ per DEC-0054, ADH-2026-037, ADH-2026-046.
 - Active/Suspended→Terminating→Terminated
 - Clearing one hold never reactivates while other remains true
 - Suspend/resume denied in Pending/Terminating/terminal
-- Includes work package 7: deterministic scheduler and API-server lifecycle wiring.
+- Includes work package 7: deterministic scheduler core with an injected expiry operation.
 
 Refs: FEATURE-0015 Task 6, REQ-F15-03/06/07, DEC-0054, ADH-2026-046
 ```
@@ -582,7 +583,7 @@ Refs: FEATURE-0015 Task 6, REQ-F15-03/06/07, DEC-0054, ADH-2026-046
 
 #### Work package 7 (within Task 6): Deterministic participation-expiry scheduler
 
-**Purpose:** Implement internal scheduler component that invokes api-server expiry transition for Pending participations at requestExpiresAt; not a public route or controller.
+**Purpose:** Implement an internal scheduler core that invokes an injected expiry operation for Pending participations at requestExpiresAt; it is not a public route or controller.
 
 **External dependencies:** Task 1 (types) and Task 4 (store lock and staging primitives).
 
@@ -597,12 +598,10 @@ Refs: FEATURE-0015 Task 6, REQ-F15-03/06/07, DEC-0054, ADH-2026-046
 **Risks addressed:** Approved architecture boundary, anti-drift, and execution controls applicable to this work package.
 
 **Included writable paths:**
-- `internal/cloudmodel/scheduler.go` (expiry scheduler with injected clock/ticker, stable-order processing, concurrency guard, recheck, api-server expiry invocation)
-- `internal/server/server.go` (start/stop scheduler with server lifecycle)
-- `cmd/sovrunn-api/main.go` (wire graceful shutdown into server stop)
+- `internal/cloudmodel/scheduler.go` (expiry scheduler with injected clock/ticker, stable-order processing, concurrency guard, recheck, and injected expiry operation)
 
 **Included tests:**
-- `internal/cloudmodel/scheduler_test.go`: due-time computation from earliest Pending requestExpiresAt; signal on create/action; stable ascending UID order; concurrency guard prevents race; recheck before expiry; idempotent expiry; scheduler start/stop; no public route or controller.
+- `internal/cloudmodel/scheduler_test.go`: due-time computation from earliest Pending requestExpiresAt; signal on create/action; stable ascending UID order; concurrency guard prevents race; recheck before expiry; idempotent expiry; injected-operation failure/no-publication behavior; scheduler start/stop core; no public route or controller.
 
 **Included verification commands:**
 ```bash
@@ -616,30 +615,32 @@ go test -v ./internal/cloudmodel/...
 - Scheduler wakes at earliest Pending requestExpiresAt; waits if none.
 - Processes due candidates in stable ascending UID order.
 - Acquires same concurrency guard as participation actions.
-- Rechecks Pending, expired, and version before invoking api-server expiry.
-- Invokes api-server expiry transition rather than writing status directly.
+- Rechecks Pending, expired, and version before calling the injected expiry operation.
+- Does not write status or publish expiry itself; Task 8 supplies the audit-aware api-server expiry operation.
 - Idempotent: already non-Pending participation is not transitioned again.
-- Scheduler started during api-server startup; stopped on graceful shutdown.
+- No server startup/shutdown or AuditEvent composition in this task; Task 8 owns final lifecycle wiring after the audit coordinator exists.
 - No public route, controller, or external persistence dependency.
 - AC-F15-02 (participation lifecycle and expiry).
 
 **Security/observability impact:**
 - Security: Scheduler is an internal system actor with no external surface.
-- Observability: Expiry transitions are logged and audited with scheduler execution ID.
+- Observability: The scheduler core supplies a scheduler execution ID to its injected operation; Task 8 owns durable AuditEvent evidence.
 
 **Exclusions:**
 - No public expiry route or action.
 - No separate participation controller authority.
 
-**Parent commit inclusion:** The Task 6 commit includes this work package's scheduler and server start/stop wiring.
+**Parent commit inclusion:** The Task 6 commit includes lifecycle and scheduler-core behavior only; it contains no server lifecycle or audit-publication wiring.
 
 ---
 
 ### Task 8: Idempotency and audit-publication coordination
 
-**Purpose:** Implement idempotency namespace, digest, reservation states (InFlight/Completed/Aborted), waiter/abort/release, 24-hour/10,000-entry retention, and completed-replay semantics.
+**Purpose:** Implement idempotency namespace, digest, reservation states (InFlight/Completed/Aborted), waiter/abort/release, 24-hour/10,000-entry retention, completed-replay semantics, and final audit-aware scheduler/server composition.
 
-**Dependencies:** Task 1 (types), Task 4 (validation/store lock and staging primitives), and Task 6 (scheduler/server lifecycle composition).
+**Dependencies:** Task 1 (types), Task 4 (validation/store lock and staging primitives), and Task 6 (lifecycle and injected scheduler core).
+
+**Internal sequencing:** Build idempotency core first, then work package 10's audit-publication coordinator, then compose the scheduler with that audit-aware expiry operation in `internal/server`; this is internal Task 8 sequencing, not a dependency cycle.
 
 **Requirements traceability:** REQ-F15-18 (idempotency semantics).
 
@@ -651,10 +652,10 @@ go test -v ./internal/cloudmodel/...
 
 **Writable paths:**
 - `internal/cloudmodel/idempotency.go` (namespace, digest, reservation, waiter/abort/release, retention/eviction)
-- `internal/server/server.go` (final lifecycle composition: stop scheduler, abort in-flight idempotency reservations, wake waiters, then complete server shutdown)
+- `internal/server/server.go` (after work package 10, compose scheduler startup/shutdown with the audit-aware expiry operation; stop scheduler, abort in-flight idempotency reservations, wake waiters, then complete server shutdown)
 - `cmd/sovrunn-api/main.go` (process signal/shutdown wiring for the composed server lifecycle)
 - `internal/cloudmodel/idempotency_test.go`
-- `internal/server/server_test.go` (combined graceful shutdown: scheduler stops, in-flight reservation aborts, waiters wake, no further scheduler transition occurs, process/server completion follows)
+- `internal/server/server_test.go` (scheduler start/stop; AuditEvent append-before-expiry publication; append failure prevents expiry publication; combined graceful shutdown ordering: scheduler stops, in-flight reservation aborts, waiters wake, no further scheduler transition occurs, process/server completion follows)
 
 **Tests:**
 - `internal/cloudmodel/idempotency_test.go`: namespace = (principal, registered pattern, target UID when present, key); same-key/same-digest replay returns stored success; same-key/different-digest returns CONFLICT/VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH; changed If-Match on action = different digest; InFlight/Completed/Aborted states; waiter detachment on cancellation; abort wakes waiters; completed-only 24-hour/10,000-entry retention; earliest-expiry then lexical eviction; InFlight never evicted; fresh request correlation on replay; validation, uniqueness, lifecycle-source-state, stale-version, audit-failure, recovered-panic, and graceful-shutdown aborts; completed replay requires current auth/authz/safe-access; race tests (`go test -race`).
@@ -665,7 +666,7 @@ make fmt
 make test
 make vet
 go test -v ./internal/cloudmodel/...
-go test -race ./internal/cloudmodel/...
+go test -race ./internal/cloudmodel/... ./internal/server/...
 ```
 
 **Acceptance criteria:**
@@ -676,7 +677,8 @@ go test -race ./internal/cloudmodel/...
 - Only successful collection creates and successful participation actions complete replay records.
 - Validation, uniqueness, lifecycle-source-state, stale-version, audit-append failure, panic, shutdown abort reservation and wake waiters.
 - Graceful API-server shutdown invokes the coordinator's in-flight reservation abort, wakes waiting callers, and completes before process exit.
-- Final server composition stops the scheduler before completing idempotency abort/waiter wake-up and process exit; tests prove this combined ordering.
+- After work package 10's coordinator exists, final server composition starts the scheduler with the audit-aware expiry operation; it appends the AuditEvent before expiry publication, and an append failure returns INTERNAL_ERROR with no expiry publication.
+- Final server composition stops the scheduler before completing idempotency abort/waiter wake-up and process exit; `internal/server/server_test.go` proves scheduler start/stop, audit-before-expiry, append-failure non-publication, and combined shutdown ordering under the race detector.
 - The 24-hour and 10,000-entry cap applies only to Completed records; earliest-expiry then lexical eviction; InFlight is never evicted.
 - Fresh request correlation on every request; requestId, correlation, ETag, Location, entity/transport headers not replayed.
 - PATCH never requires, looks up, reserves, completes, or aborts idempotency state.
@@ -836,7 +838,7 @@ Refs: FEATURE-0015 Task 9, REQ-F15-17, ADH-2026-045, ADH-2026-054
 
 **Requirements traceability:** REQ-F15-01 (CloudPlatform validation), REQ-F15-08 (PATCH-only), REQ-F15-11 (writer enforcement), REQ-F15-15 (audit atomicity), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-23 (malformed/prohibited inputs), REQ-F15-24 (AUTH_REQUIRED).
 
-**Design traceability:** Design §4.2 (route model), §4.3 (closed create contract), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §4.2 (route model), §4.3 (closed create contract), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0037 (CloudPlatform), ADH-2026-045 (ownerRegistration), ADH-2026-047 (closed contract, scope derivation), ADH-2026-056 (PATCH conditional update, reads).
 
@@ -849,6 +851,7 @@ Refs: FEATURE-0015 Task 9, REQ-F15-17, ADH-2026-045, ADH-2026-054
 **Tests:**
 - `internal/api/cloudplatform_collection_test.go`: authenticated LIST with cloudplatform.read returns ascending metadata.uid; LIST without read grant returns 403 with exactly one AuditEvent; inaccessible GET returns safe 404 with exactly one redacted AuditEvent; authorized create with closed contract returns 201 + exact initial status; server-derived Platform-root scope; Idempotency-Key required; same-key/same-digest replay and same-key/different-digest CONFLICT create no additional AuditEvent; duplicate name ALREADY_EXISTS and malformed input create no AuditEvent; missing auth AUTH_REQUIRED creates no AuditEvent; client-supplied status/system-owned metadata is audited, while client-supplied scopeRef/unknown/deferred field is unaudited; successful create appends exactly one AuditEvent; audit-append failure returns INTERNAL_ERROR with no publication.
 - `internal/api/cloudplatform_item_test.go`: authorized GET returns resource; authorized PATCH spec.description returns 200 + updated resource and exactly one AuditEvent; stale/missing/malformed If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; immutable ownerRegistration/name PATCH returns `VALIDATION_FAILED` / 422 with `VS0_PATCH_IMMUTABLE_FIELD` and no AuditEvent; client status write returns audited `AUTHORIZATION_DENIED` / 403 with `VS0_STATUS_FIELD_WRITE`; wrong-administrator PATCH returns `AUTHORIZATION_DENIED` / 403 before semantic processing with no AuditEvent; forged bootstrap header is denied/audited `AUTHORIZATION_DENIED` / 403 before an otherwise unsupported PATCH media type could return 415; PUT/DELETE return 405 with no AuditEvent; PATCH never requires idempotency state.
+- `internal/api/cloudplatform_collection_test.go` and `internal/api/cloudplatform_item_test.go`: collection-create and PATCH invoke the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
 
 **Verification commands:**
 ```bash
@@ -862,6 +865,7 @@ go test -v ./internal/api/...
 - CloudPlatform collection: GET /apis/core.sovrunn.io/v1alpha1/cloud-platforms (LIST); POST (create).
 - CloudPlatform item: GET /apis/core.sovrunn.io/v1alpha1/cloud-platforms/{uid}; PATCH (spec.description only).
 - Per-route pipeline order: auth → route/method gate → headers → media/decode → coarse action-grant → root gate → safe resolution/scope derivation/exact authz → strict decode/classify → idempotency (create only) → scope derivation (create) → validation → version comparison (PATCH) → publication coordinator.
+- Collection-create and PATCH use the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - Closed create contract: only metadata.name, spec.ownerRegistration.{legalName, registrationIdentifier, jurisdictionCode}, optional metadata.displayName, optional spec.description accepted.
 - Server-derived Platform-root scope; no client-supplied scope.
 - PATCH-only; PUT/DELETE return 405; PATCH requires application/merge-patch+json and If-Match.
@@ -910,7 +914,7 @@ ADH-2026-047, ADH-2026-056
 
 **Requirements traceability:** REQ-F15-02 (CloudProvider validation), REQ-F15-08 (PATCH-only), REQ-F15-11 (writer enforcement), REQ-F15-15 (audit atomicity), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-22 (assigned ISO), REQ-F15-23 (malformed/prohibited inputs), REQ-F15-24 (AUTH_REQUIRED).
 
-**Design traceability:** Design §4.2 (route model), §4.3 (closed create contract), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §4.2 (route model), §4.3 (closed create contract), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0037 (CloudProvider), ADH-2026-047 (closed contract, scope derivation), ADH-2026-048 (assigned ISO), ADH-2026-056 (PATCH conditional update, reads).
 
@@ -923,6 +927,7 @@ ADH-2026-047, ADH-2026-056
 **Included tests:**
 - `internal/api/cloudprovider_collection_test.go`: authenticated LIST with cloudprovider.read; LIST without read grant 403 with exactly one AuditEvent; authorized create with closed contract returns 201 + exact initial status; server-derived Platform-root scope; root gate absent CloudPlatform returns audited CONFLICT/VS0_CLOUDPLATFORM_ROOT_REQUIRED and audit-append failure substitutes INTERNAL_ERROR with no publication; non-empty operatingMarkets with assigned codes (US, IN) accepted; unassigned code (ZZ), duplicate name ALREADY_EXISTS, malformed input, replay/mismatch, and missing auth have no AuditEvent; client-supplied status/system-owned metadata is audited, while client-supplied scopeRef/unknown/deferred fields are unaudited; successful create appends exactly one AuditEvent; audit-append failure INTERNAL_ERROR with no publication.
 - `internal/api/cloudprovider_item_test.go`: authorized GET returns resource; authorized PATCH spec.displayName or spec.operatingMarkets returns 200 + updated with exactly one AuditEvent; stale/missing/malformed If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; immutable name PATCH returns `VALIDATION_FAILED` / 422 with `VS0_PATCH_IMMUTABLE_FIELD` and no AuditEvent; client status write returns audited `AUTHORIZATION_DENIED` / 403 with `VS0_STATUS_FIELD_WRITE`; wrong-administrator PATCH returns `AUTHORIZATION_DENIED` / 403 before semantic processing with no AuditEvent; forged bootstrap header is denied/audited `AUTHORIZATION_DENIED` / 403 before unsupported PATCH media is evaluated; PUT/DELETE 405 and PATCH idempotency absence create no AuditEvent.
+- `internal/api/cloudprovider_collection_test.go` and `internal/api/cloudprovider_item_test.go`: collection-create and PATCH invoke the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
 
 **Included verification commands:**
 ```bash
@@ -935,6 +940,7 @@ go test -v ./internal/api/...
 **Included acceptance criteria:**
 - CloudProvider collection: GET /apis/core.sovrunn.io/v1alpha1/cloud-providers (LIST); POST (create).
 - CloudProvider item: GET /apis/core.sovrunn.io/v1alpha1/cloud-providers/{uid}; PATCH (spec.displayName, spec.operatingMarkets).
+- Collection-create and PATCH use the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - Closed create contract: metadata.name, non-empty spec.operatingMarkets[], optional metadata.displayName, optional spec.displayName.
 - Server-derived Platform-root scope.
 - Root gate: CloudProvider create is denied until CloudPlatform exists with audited `CONFLICT` / `VS0_CLOUDPLATFORM_ROOT_REQUIRED`; AuditEvent append failure returns `INTERNAL_ERROR` and publishes neither denial nor mutation.
@@ -965,7 +971,7 @@ go test -v ./internal/api/...
 
 **Requirements traceability:** REQ-F15-04 (topology validation), REQ-F15-08 (PATCH-only), REQ-F15-09 (safe cross-provider denial), REQ-F15-11 (writer enforcement), REQ-F15-15 (audit atomicity), REQ-F15-16 (root gate), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-22 (assigned ISO for HostingLocation), REQ-F15-23 (malformed/prohibited inputs), REQ-F15-24 (AUTH_REQUIRED).
 
-**Design traceability:** Design §4.2 (route model), §4.3 (closed create contract), §4.4 (scope derivation), §5.1 (per-route pipeline step 6 root gate), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §4.2 (route model), §4.3 (closed create contract), §4.4 (scope derivation), §5.1 (per-route pipeline step 6 root gate), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0041 (topology), ADH-2026-045 (root gate), ADH-2026-047 (closed contract, scope derivation, immutability), ADH-2026-048 (assigned ISO), ADH-2026-056 (PATCH conditional update, reads).
 
@@ -980,6 +986,7 @@ go test -v ./internal/api/...
 **Tests:**
 - `internal/api/hostinglocation_collection_test.go`, `internal/api/datacenter_collection_test.go`, `internal/api/faultdomain_collection_test.go`, `internal/api/infrastructurestack_collection_test.go`: authenticated LIST with topology.read returns ascending metadata.uid; LIST without read grant returns 403 with exactly one AuditEvent; authorized create with closed contract returns 201 + exact initial status and one AuditEvent; HostingLocation: server-derived CloudProvider scope from topology.write grant, assigned countryCode (US accepted, ZZ rejected), optional administrativeAreaCode (syntax-plus-prefix only); Datacenter/FaultDomain/InfrastructureStack: server-derived CloudProvider scope from resolved immutable parent reference; root gate and inaccessible reference produce exactly one required redacted AuditEvent, with append failure substituting INTERNAL_ERROR/no publication; duplicate name, malformed/unknown/scope input, unassigned ISO, visible mismatch, idempotency replay/mismatch, and missing authentication produce no AuditEvent; client-supplied status/system-owned metadata is audited; successful create appends AuditEvent.
 - `internal/api/hostinglocation_item_test.go`, `internal/api/datacenter_item_test.go`, `internal/api/faultdomain_item_test.go`, `internal/api/infrastructurestack_item_test.go`: authorized GET returns resource; authorized PATCH spec.description returns 200 + updated with exactly one AuditEvent; stale/missing/malformed If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; immutable name and, for Datacenter/FaultDomain/InfrastructureStack only, immutable parent-reference PATCH return `VALIDATION_FAILED` / 422 with `VS0_PATCH_IMMUTABLE_FIELD` and no AuditEvent; client status write returns audited `AUTHORIZATION_DENIED` / 403 with `VS0_STATUS_FIELD_WRITE`; wrong-administrator PATCH returns `AUTHORIZATION_DENIED` / 403 before semantic processing with no AuditEvent; forged bootstrap header is denied/audited `AUTHORIZATION_DENIED` / 403 before unsupported PATCH media is evaluated; PUT/DELETE 405 and PATCH idempotency absence create no AuditEvent.
+- Topology collection-create and PATCH tests prove use of the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
 
 **Verification commands:**
 ```bash
@@ -993,6 +1000,7 @@ go test -v ./internal/api/...
 - Four topology kinds: HostingLocation, Datacenter, FaultDomain, InfrastructureStack.
 - Collection paths: GET /apis/infrastructure.sovrunn.io/v1alpha1/{kind} (LIST); POST (create).
 - Item paths: GET /apis/infrastructure.sovrunn.io/v1alpha1/{kind}/{uid}; PATCH (spec.description only).
+- Topology collection-create and PATCH use the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - HostingLocation closed create: metadata.name, spec.countryCode (assigned), spec.locality, optional spec.administrativeAreaCode (syntax-plus-prefix), optional spec.description.
 - Datacenter/FaultDomain/InfrastructureStack closed create: metadata.name, immutable parent ref, optional spec.description.
 - Root gate: create denied until CloudPlatform exists (CONFLICT/VS0_CLOUDPLATFORM_ROOT_REQUIRED).
@@ -1053,7 +1061,7 @@ DEC-0041, ADH-2026-045, ADH-2026-047, ADH-2026-048, ADH-2026-056
 
 **Requirements traceability:** REQ-F15-03 (participation registration), REQ-F15-07 (create preconditions), REQ-F15-14 (scope-reference UID invariant), REQ-F15-15 (audit atomicity), REQ-F15-16 (root gate), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-21 (participation create body), REQ-F15-23 (If-Match on create rejected), REQ-F15-24 (AUTH_REQUIRED).
 
-**Design traceability:** Design §4.2 (route model, no PATCH registration for participation), §4.3 (closed create contract), §4.4 (scope derivation), §4.5 (lifecycle), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §4.2 (route model, no PATCH registration for participation), §4.3 (closed create contract), §4.4 (scope derivation), §4.5 (lifecycle), §5.1 (per-route pipeline), §6.1 (authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0054 (participation), ADH-2026-045 (root gate), ADH-2026-046 (create Idempotency-Key only; actions require both preconditions), ADH-2026-047 (closed contract decision 4), ADH-2026-048 (If-Match on create MALFORMED_REQUEST), ADH-2026-056 (reads).
 
@@ -1066,6 +1074,7 @@ DEC-0041, ADH-2026-045, ADH-2026-047, ADH-2026-048, ADH-2026-056
 **Tests:**
 - `internal/api/participation_collection_test.go`: authenticated LIST with participation.read returns ascending metadata.uid; LIST without read grant 403 with exactly one AuditEvent; authorized create with exactly four fields (metadata.name, spec.cloudPlatformRef, spec.cloudProviderRef, spec.environment=development) returns 201 + Pending/false holds/seven-day expiry and exactly one AuditEvent; server-derived CloudPlatform scope from cloudPlatformRef; cloudPlatformRef.uid = scopeRef.uid invariant enforced; root gate and inaccessible reference produce exactly one required redacted AuditEvent, with append failure substituting INTERNAL_ERROR/no publication; mismatch, duplicate participation name or non-terminal pair, malformed body/headers, idempotency replay/mismatch, and missing authentication produce no AuditEvent; client-supplied status/system-owned metadata is audited, while client-supplied scopeRef/unknown/deferred fields are unaudited; FEATURE-0021 fields (providerSelectionModes, permittedHostingLocationRefs) rejected as UNKNOWN_FIELD.
 - `internal/api/participation_item_test.go`: authorized GET returns resource; no PATCH registration (item lifecycle changes only through explicit action routes).
+- `internal/api/participation_collection_test.go`: collection-create invokes the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
 
 **Verification commands:**
 ```bash
@@ -1078,6 +1087,7 @@ go test -v ./internal/api/...
 **Acceptance criteria:**
 - CloudProviderParticipation collection: GET /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations (LIST); POST (create).
 - CloudProviderParticipation item: GET /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations/{uid} (no PATCH registration).
+- Collection-create uses the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - Closed create contract: exactly metadata.name, spec.cloudPlatformRef, spec.cloudProviderRef, spec.environment (development only); no optional fields.
 - FEATURE-0021 fields (providerSelectionModes, permittedHostingLocationRefs) rejected as UNKNOWN_FIELD.
 - Server-derived CloudPlatform scope from resolved cloudPlatformRef.
@@ -1136,7 +1146,7 @@ DEC-0054, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-056
 
 **Requirements traceability:** REQ-F15-03 (lifecycle), REQ-F15-06 (independent holds), REQ-F15-07 (action preconditions), REQ-F15-15 (audit atomicity), REQ-F15-17 (server-resolved grants), REQ-F15-18 (idempotency), REQ-F15-21 (empty action body), REQ-F15-23 (non-empty body MALFORMED_REQUEST), REQ-F15-24 (AUTH_REQUIRED).
 
-**Design traceability:** Design §4.2 (eight action routes), §4.5 (lifecycle), §5.1 (per-route pipeline step 4 body validation, step 13 source-state validation), §6.1 (action-scoped authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
+**Design traceability:** Design DD-02 (reuse FEATURE-0012 `internal/apivalid` `StageSet`), §4.2 (eight action routes), §4.5 (lifecycle), §5.1 (per-route pipeline step 4 body validation, step 13 source-state validation), §6.1 (action-scoped authorization), §7.1 (handler tests), §8.1 (IMPLEMENT).
 
 **Architecture decisions:** DEC-0054 (participation), ADH-2026-046 (action preconditions, independent holds), ADH-2026-050 (all-route idempotency coverage), ADH-2026-053 (action routes use /actions/<action>, not /{uid}:<action>), ADH-2026-054 (item-action idempotency binds concrete target UID; replay rechecks current auth/safe-access), ADH-2026-048 (non-empty body without valid duplicate-free top-level bootstrapGrant MALFORMED_REQUEST).
 
@@ -1147,6 +1157,7 @@ DEC-0054, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-056
 
 **Tests:**
 - `internal/api/participation_actions_test.go`: each of eight actions (accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release) with valid source state returns 200 + updated participation and exactly one AuditEvent; empty JSON body (EOF/zero bytes) accepted; whitespace/`{}`/non-empty body without valid duplicate-free top-level bootstrapGrant MALFORMED_REQUEST with no AuditEvent; If-Match + Idempotency-Key required; missing/malformed/stale If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; when both a stale If-Match and invalid lifecycle source state are supplied, stale-version 412 wins and lifecycle validation is not reached; a current If-Match plus invalid source state returns `CONFLICT` / 409 with `VS0_PARTICIPATION_STATE_INVALID` and no AuditEvent; same-key/different-digest returns `CONFLICT` / 409 with `VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH` and no AuditEvent; same-key/same-digest replays without a second AuditEvent; valid duplicate-free bootstrapGrant, forged headers, safe inaccessible target/reference, and any other registered audited denial append exactly one redacted AuditEvent; audit-append failure always returns INTERNAL_ERROR with no response/mutation/lifecycle/idempotency publication; action-scoped authorization (accept/reject/request-release: CloudPlatform grant; withdraw/accept-release/decline-release: CloudProvider grant; suspend/resume: resolve exactly one matching current scoped grant; zero/multiple matches fail closed); suspend sets only acting party hold; resume clears only acting party hold; clearing one hold does not reactivate while other remains true; suspend/resume denied in Pending/Terminating/terminal; decline-release resolves to correct hold-derived prior effective Active/Suspended; missing auth AUTH_REQUIRED; idempotency binds concrete target UID (no replay for another target); replay rechecks current auth/authz/safe-access (revoked grant denies without stored-result disclosure); action registration uses /actions/<action>, not /{uid}:<action>.
+- `internal/api/participation_actions_test.go`: each action invocation uses the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
 
 **Verification commands:**
 ```bash
@@ -1160,6 +1171,7 @@ go test -v ./internal/api/...
 - Eight action routes: POST /apis/governance.sovrunn.io/v1alpha1/cloud-provider-participations/{uid}/actions/<action> where <action> is accept, reject, withdraw, suspend, resume, request-release, accept-release, decline-release.
 - {uid} is a complete Go 1.22 http.ServeMux wildcard segment, read with r.PathValue("uid").
 - Empty JSON body contract: EOF/zero bytes accepted; whitespace/`{}`/non-empty body without valid duplicate-free top-level bootstrapGrant MALFORMED_REQUEST.
+- Item-action validation uses the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - Action preconditions: If-Match + Idempotency-Key required; missing/malformed If-Match STALE_RESOURCE_VERSION.
 - Lifecycle source-state validation: invalid source state CONFLICT/VS0_PARTICIPATION_STATE_INVALID.
 - Independent hold logic: suspend sets only acting party hold; resume clears only acting party hold; clearing one does not reactivate while other true.
