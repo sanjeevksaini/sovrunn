@@ -28,7 +28,7 @@ def run(args: list[str], *, capture: bool = False) -> str:
 def blocks(text: str) -> dict[int, str]:
     found: dict[int, str] = {}
     for match in re.finditer(
-        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^---\s*$|^### Task \d+\s*:|^## [^#]|\Z)", text
+        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)", text
     ):
         found[int(match.group(1))] = match.group(0).rstrip()
     return found
@@ -40,7 +40,7 @@ def commit_message(block: str) -> str | None:
     matches = list(
         re.finditer(r"(?ms)^\*\*Commit message:\*\*\s*\n```[^\n]*\n(.*?)^```\s*$", block)
     )
-    if len(matches) != 1:
+    if not matches:
         raise SystemExit("ERROR: task must contain one fenced Commit message: section")
     lines = [line.strip() for line in matches[0].group(1).splitlines() if line.strip()]
     if not lines:
@@ -56,14 +56,18 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
             block,
         )
     )
-    if len(matches) != 1:
+    if not matches:
         rendered = "/".join(headings)
-        raise SystemExit(f"ERROR: task must contain exactly one {rendered}: section")
-    return re.findall(r"`([^`]+)`", matches[0].group(1))
+        raise SystemExit(f"ERROR: task must contain a {rendered}: section")
+    return [
+        path
+        for match in matches
+        for path in re.findall(r"(?m)^\s*-\s+`([^`]+)`", match.group(1))
+    ]
 
 
 def task_writable_paths(block: str) -> list[str]:
-    paths = section_paths(block, ("Writable paths",))
+    paths = section_paths(block, ("Writable paths", "Included writable paths"))
     paths.extend(section_paths(block, ("Tests", "Included tests")))
     return list(dict.fromkeys(paths))
 

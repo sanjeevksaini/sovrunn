@@ -159,9 +159,10 @@ feat(example): add service
 Long-form commit detail is allowed in the plan.
 ```
 
----
-
 #### Work package 2 (within Task 1): Internal work
+
+**Included writable paths:**
+- `internal/example/internal.go`
 
 **Included tests:**
 - `internal/example/internal_test.go`
@@ -184,7 +185,12 @@ Long-form commit detail is allowed in the plan.
         self.assertEqual(sorted(plan), [1, 18])
         self.assertEqual(
             cursor_prompt.writable_paths(plan[1]),
-            ["internal/example/service.go", "internal/example/service_test.go"],
+            [
+                "internal/example/service.go",
+                "internal/example/internal.go",
+                "internal/example/service_test.go",
+                "internal/example/internal_test.go",
+            ],
         )
         self.assertEqual(cursor_prompt.commit_message(plan[1]), "feat(example): add service")
 
@@ -194,7 +200,12 @@ Long-form commit detail is allowed in the plan.
         self.assertEqual(orchestrator.verification_checkpoint_ids(plan), [18])
         self.assertEqual(
             orchestrator.task_writable_paths(plan[1]),
-            ["internal/example/service.go", "internal/example/service_test.go"],
+            [
+                "internal/example/service.go",
+                "internal/example/internal.go",
+                "internal/example/service_test.go",
+                "internal/example/internal_test.go",
+            ],
         )
         self.assertEqual(orchestrator.commit_message(plan[1]), "feat(example): add service")
         self.assertIsNone(orchestrator.commit_message(plan[18]))

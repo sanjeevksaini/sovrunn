@@ -20,7 +20,7 @@ def sha256(path: Path) -> str:
 def task_blocks(text: str) -> dict[int, str]:
     blocks: dict[int, str] = {}
     pattern = re.compile(
-        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^---\s*$|^### Task \d+\s*:|^## [^#]|\Z)"
+        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)"
     )
     for match in pattern.finditer(text):
         blocks[int(match.group(1))] = match.group(0).rstrip()
@@ -35,10 +35,14 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
             block,
         )
     )
-    if len(matches) != 1:
+    if not matches:
         rendered = "/".join(headings)
-        raise SystemExit(f"ERROR: task must contain exactly one {rendered}: section")
-    paths = re.findall(r"`([^`]+)`", matches[0].group(1))
+        raise SystemExit(f"ERROR: task must contain a {rendered}: section")
+    paths = [
+        path
+        for match in matches
+        for path in re.findall(r"(?m)^\s*-\s+`([^`]+)`", match.group(1))
+    ]
     if not paths:
         rendered = "/".join(headings)
         raise SystemExit(f"ERROR: task {rendered}: section must list repository paths")
@@ -46,7 +50,7 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
 
 
 def writable_paths(block: str) -> list[str]:
-    paths = section_paths(block, ("Writable paths",))
+    paths = section_paths(block, ("Writable paths", "Included writable paths"))
     paths.extend(section_paths(block, ("Tests", "Included tests")))
     paths = list(dict.fromkeys(paths))
     for path in paths:
