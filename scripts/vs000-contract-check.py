@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
     "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,32)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,34)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -251,6 +251,30 @@ def run():
         if f15_31.get("expectedError") != "AUTH_REQUIRED": e("VS0-CF-F15-31 expectedError must be AUTH_REQUIRED (ADH-2026-051)")
         if "no mutation" not in str(f15_31.get("expectedSideEffects", "")).lower():
             e("VS0-CF-F15-31 expectedSideEffects must state no mutation (ADH-2026-051)")
+    # ADH-2026-052: FEATURE-0015 must have exact local proof cases for CloudPlatform/CloudProvider
+    # name-uniqueness rejection (F15-32) and general registry-declared schema-constraint validation
+    # (F15-33), and F15-33 must explicitly exclude duplicate name, unassigned ISO code, and
+    # malformed/prohibited header/body outcomes already covered by other cases.
+    f15_32 = next((c for c in confs if c.get("id") == "VS0-CF-F15-32"), None)
+    if not f15_32:
+        e("VS0-CF-F15-32 conformance entry missing (ADH-2026-052)")
+    else:
+        if f15_32.get("owner") != "FEATURE-0015": e("VS0-CF-F15-32 owner must be FEATURE-0015 (ADH-2026-052)")
+        if f15_32.get("expectedError") != "ALREADY_EXISTS": e("VS0-CF-F15-32 expectedError must be ALREADY_EXISTS (ADH-2026-052)")
+        inputs_32 = str(f15_32.get("inputs", "")).lower()
+        for required in ("cloudplatform", "cloudprovider", "metadata.name", "duplicate"):
+            if required not in inputs_32:
+                e(f"VS0-CF-F15-32 inputs must name '{required}' (ADH-2026-052)")
+    f15_33 = next((c for c in confs if c.get("id") == "VS0-CF-F15-33"), None)
+    if not f15_33:
+        e("VS0-CF-F15-33 conformance entry missing (ADH-2026-052)")
+    else:
+        if f15_33.get("owner") != "FEATURE-0015": e("VS0-CF-F15-33 owner must be FEATURE-0015 (ADH-2026-052)")
+        if f15_33.get("expectedError") != "VALIDATION_FAILED": e("VS0-CF-F15-33 expectedError must be VALIDATION_FAILED (ADH-2026-052)")
+        inputs_33 = str(f15_33.get("inputs", "")).lower()
+        for required in ("duplicate name", "unassigned", "malformed"):
+            if required not in inputs_33:
+                e(f"VS0-CF-F15-33 inputs must explicitly exclude '{required}' outcomes covered by other cases (ADH-2026-052)")
     for x in found_cf-exp_cf: e(f"Unexpected conformance: {x}")
     retired_confs = reg.get("retiredConformance", [])
     ids_retired_cf = [x.get("id") for x in retired_confs]

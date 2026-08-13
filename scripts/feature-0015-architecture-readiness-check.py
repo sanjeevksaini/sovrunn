@@ -58,9 +58,11 @@ NON_API_SERVER_CONTROLLER_TERMS = (
     "topology-controller", "stack-controller", "provider-controller",
     "participation-controller", "delegated-participation-contract-authority",
 )
-# Required F0015-local conformance IDs after ADH-2026-051 (extends ADH-2026-046 decision 3 /
-# ADH-2026-047 decision 5 / ADH-2026-048 decision 4), including VS0-CF-F15-31 (AUTH_REQUIRED local proof).
-F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 32)]
+# Required F0015-local conformance IDs after ADH-2026-052 (extends ADH-2026-046 decision 3 /
+# ADH-2026-047 decision 5 / ADH-2026-048 decision 4 / ADH-2026-051), including VS0-CF-F15-31
+# (AUTH_REQUIRED local proof), VS0-CF-F15-32 (name-uniqueness local proof), and VS0-CF-F15-33
+# (registry-declared schema-constraint validation local proof).
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 34)]
 
 # ADH-2026-051: exact durable-audit boundary. These local cases are covered denial categories
 # and must each carry an AuditEvent side effect; the remaining denial categories (missing/invalid
@@ -1124,6 +1126,71 @@ def check_exact_durable_audit_boundary(reg: dict) -> None:
                 e(f"AUTHPROOF051: VS0-CF-F15-31 expectedSideEffects must state '{required}'")
 
 
+def check_validation_proof_coverage_and_mapping(reg: dict, f15_arch: str, trace: str) -> None:
+    """Fail-closed (ADH-2026-052): CloudPlatform/CloudProvider name-uniqueness and
+    general registry-declared schema-constraint validation each require an exact
+    local proof case (VS0-CF-F15-32, VS0-CF-F15-33) distinct from the existing
+    scope-subset/root/PATCH/topology-ordering cases; the F0015-local proof map must
+    cite them for REQ-F15-01/02/04, cite VS0-CF-F15-16 for REQ-F15-03/06 (scheduler
+    expiry), and must never falsely assign VS0-CF-F15-21 to an unrelated REQ/AC."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    f15_32 = confs.get("VS0-CF-F15-32")
+    if not f15_32:
+        e("VALIDATIONPROOF052: VS0-CF-F15-32 conformance entry missing")
+    else:
+        if f15_32.get("owner") != "FEATURE-0015":
+            e("VALIDATIONPROOF052: VS0-CF-F15-32 owner must be FEATURE-0015")
+        if f15_32.get("expectedError") != "ALREADY_EXISTS":
+            e("VALIDATIONPROOF052: VS0-CF-F15-32 expectedError must be ALREADY_EXISTS")
+    f15_33 = confs.get("VS0-CF-F15-33")
+    if not f15_33:
+        e("VALIDATIONPROOF052: VS0-CF-F15-33 conformance entry missing")
+    else:
+        if f15_33.get("owner") != "FEATURE-0015":
+            e("VALIDATIONPROOF052: VS0-CF-F15-33 owner must be FEATURE-0015")
+        if f15_33.get("expectedError") != "VALIDATION_FAILED":
+            e("VALIDATIONPROOF052: VS0-CF-F15-33 expectedError must be VALIDATION_FAILED")
+        f33_inputs = str(f15_33.get("inputs", "")).lower()
+        for excluded in ("duplicate name", "unassigned", "malformed"):
+            if excluded not in f33_inputs:
+                e(f"VALIDATIONPROOF052: VS0-CF-F15-33 inputs must explicitly exclude '{excluded}' outcomes")
+
+    # Corrected REQ-to-proof mapping (ADH-2026-052 decision 2). Parsed directly from the
+    # "| REQ ID | proof case(s) |" table rows in F0015 architecture §10.1.
+    req_rows: dict[str, str] = {}
+    for line in f15_arch.splitlines():
+        m = re.match(r"^\|\s*(REQ-F15-\d+)\s*\|\s*(.+?)\s*\|$", line.strip())
+        if m:
+            req_rows[m.group(1)] = m.group(2)
+    for req_id, must_contain in (
+        ("REQ-F15-01", ("VS0-CF-F15-32", "VS0-CF-F15-33")),
+        ("REQ-F15-02", ("VS0-CF-F15-32", "VS0-CF-F15-33")),
+        ("REQ-F15-04", ("VS0-CF-F15-33",)),
+        ("REQ-F15-03", ("VS0-CF-F15-16",)),
+        ("REQ-F15-06", ("VS0-CF-F15-16",)),
+    ):
+        row = req_rows.get(req_id)
+        if row is None:
+            e(f"VALIDATIONPROOF052: {req_id} row not found in the REQ-to-local-proof mapping")
+            continue
+        for cf_id in must_contain:
+            if cf_id not in row:
+                e(f"VALIDATIONPROOF052: {req_id} must map to {cf_id} (ADH-2026-052 decision 2)")
+
+    # VS0-CF-F15-21 must remain the exact proof for read/list authorization only; the
+    # F0015-local REQ-to-proof map must never assign it to an unrelated REQ identifier.
+    for req_id, row in req_rows.items():
+        if "VS0-CF-F15-21" in row:
+            e(f"VALIDATIONPROOF052: {req_id} must not falsely assign VS0-CF-F15-21 "
+              f"(reserved for authenticated LIST/GET/read authorization scenarios only)")
+
+    for required_id in ("VS0-CF-F15-32", "VS0-CF-F15-33"):
+        if required_id not in trace:
+            e(f"VALIDATIONPROOF052: {required_id} missing from traceability matrix")
+        if required_id not in f15_arch:
+            e(f"VALIDATIONPROOF052: {required_id} missing from F0015 architecture §10 mapping")
+
+
 def check_input_contract_clarification_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str, spec: str) -> None:
     """ADH-2026-048: deterministic, fail-closed per-route design-readiness simulation and
     input-contract clarification audit, composing the individual decision sub-checks below."""
@@ -1213,6 +1280,11 @@ def main() -> None:
     # route arithmetic (composed inside check_per_route_design_readiness_simulation above).
     check_exact_durable_audit_boundary(reg)
 
+    # ADH-2026-052: CloudPlatform/CloudProvider name-uniqueness (VS0-CF-F15-32) and general
+    # registry-declared schema-constraint validation (VS0-CF-F15-33) local proof, plus the
+    # corrected REQ-F15-01/02/04/03/06 proof-map traceability and the VS0-CF-F15-21 misassignment guard.
+    check_validation_proof_coverage_and_mapping(reg, f15_arch, trace)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -1247,6 +1319,7 @@ def main() -> None:
         print("  ✓ All-route idempotency conformance coverage: F15-18/19 cover all seven collection creates and eight participation actions (ADH-2026-050)")
         print("  ✓ Exact durable-audit boundary: covered denials carry AuditEvent side effects; VS0-CF-F15-31 proves AUTH_REQUIRED without altering VS0-CF-F01 (ADH-2026-051)")
         print("  ✓ Corrected route model: 22 logical endpoint paths, 35 explicit Go 1.22 method/path registrations, no path-only/wildcard/reflection dispatch (ADH-2026-051)")
+        print("  ✓ Validation-proof coverage: VS0-CF-F15-32 (name uniqueness) and VS0-CF-F15-33 (schema-constraint validation) local proof; corrected REQ-F15-01/02/04/03/06 mapping; no VS0-CF-F15-21 misassignment (ADH-2026-052)")
         sys.exit(0)
 
 

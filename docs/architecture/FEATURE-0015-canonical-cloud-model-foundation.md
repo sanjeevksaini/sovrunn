@@ -5,7 +5,7 @@
 | Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; closed under ADH-2026-047; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049, ADH-2026-050, ADH-2026-051 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049, ADH-2026-050, ADH-2026-051, ADH-2026-052 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -294,13 +294,13 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 
 | Owned Item | DEC/ADH | VS0 Schema | VS0 Writer | VS0 State | VS0 Conformance (FEATURE-0015 local) |
 |------------|---------|------------|------------|-----------|--------------------------------------|
-| CloudPlatform | DEC-0037; ADH-020/042/045/046/047/050 | VS0-SCHEMA-008 | VS0-WRITER-002,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
-| CloudProvider | DEC-0037; ADH-020/042/045/046/047/050 | VS0-SCHEMA-009 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| CloudPlatform | DEC-0037; ADH-020/042/045/046/047/050/052 | VS0-SCHEMA-008 | VS0-WRITER-002,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-32, VS0-CF-F15-33 |
+| CloudProvider | DEC-0037; ADH-020/042/045/046/047/050/052 | VS0-SCHEMA-009 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-29, VS0-CF-F15-32, VS0-CF-F15-33 |
 | CloudProviderParticipation | DEC-0054; ADH-037/042/045/046/047/050 | VS0-SCHEMA-010 | VS0-WRITER-004,005 | VS0-STATE-001 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-08, VS0-CF-F15-09, VS0-CF-F15-10, VS0-CF-F15-11, VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-28 |
-| HostingLocation | DEC-0041; ADH-024/042/045/046/047/050 | VS0-SCHEMA-011 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
-| Datacenter | DEC-0041; ADH-024/042/045/046/047/050 | VS0-SCHEMA-012 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
-| FaultDomain | DEC-0041; ADH-024/042/045/046/047/050 | VS0-SCHEMA-013 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
-| InfrastructureStack | DEC-0041,0042; ADH-025/042/045/046/047/050 | VS0-SCHEMA-014 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27 |
+| HostingLocation | DEC-0041; ADH-024/042/045/046/047/050/052 | VS0-SCHEMA-011 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-29, VS0-CF-F15-33 |
+| Datacenter | DEC-0041; ADH-024/042/045/046/047/050/052 | VS0-SCHEMA-012 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-33 |
+| FaultDomain | DEC-0041; ADH-024/042/045/046/047/050/052 | VS0-SCHEMA-013 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-33 |
+| InfrastructureStack | DEC-0041,0042; ADH-025/042/045/046/047/050/052 | VS0-SCHEMA-014 | VS0-WRITER-003,005 | — | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-07, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-21, VS0-CF-F15-24, VS0-CF-F15-25, VS0-CF-F15-26, VS0-CF-F15-27, VS0-CF-F15-33 |
 | Cross-provider isolation | DEC-0037,0054; ADH-043/045 | — | VS0-WRITER-003 | — | VS0-CF-X03, VS0-CF-F15-23 |
 | Scope-reference integrity | DEC-0037,0054; ADH-043/045/047 | VS0-SCHEMA-008,010 | VS0-WRITER-002,004 | — | VS0-CF-F15-11, VS0-CF-F15-27 |
 | Status writer resolution (api-server sole writer) | ADH-2026-046 decision 1 | VS0-SCHEMA-008..010 | VS0-WRITER-005 | — | VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16 |
@@ -309,6 +309,8 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 | Audit atomicity; required-AuditEvent-append failure mapping; exact durable-audit boundary | DEC-0059; ADH-2026-043 (preserved),046,049,051 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-12, VS0-CF-F15-16, VS0-CF-F15-21, VS0-CF-F15-22, VS0-CF-F15-23, VS0-CF-F15-24, VS0-CF-X03 |
 | Authentication local proof for every owned method/path pattern | ADH-2026-051 | VS0-SCHEMA-008..014 | — | — | VS0-CF-F15-31 |
 | Exact route model and registration arithmetic (22 logical paths; 35 Go 1.22 method/path registrations) | ADH-2026-051 | VS0-SCHEMA-008..014 | — | — | VS0-CF-F15-25 |
+| CloudPlatform/CloudProvider name-uniqueness proof | ADH-2026-052 | VS0-SCHEMA-008,009 | VS0-WRITER-002,003 | — | VS0-CF-F15-32 |
+| Registry-declared schema-constraint validation proof (excluding duplicate name, unassigned ISO code, and malformed/prohibited header/body) | ADH-2026-052 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003 | — | VS0-CF-F15-33 |
 | Closed collection-create request contract | ADH-2026-047 decision 1 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-26 |
 | Scope derivation single-source proof | ADH-2026-047 decision 2 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-27 |
 | Topology immutability correction (name immutable; description PATCHable) | ADH-2026-047 decision 3 | VS0-SCHEMA-011..014 | VS0-WRITER-003 | — | VS0-CF-F15-13, VS0-CF-F15-14 |
@@ -324,12 +326,12 @@ Every `REQ-F15-01` through `REQ-F15-24` and every `AC-F15-01` through `AC-F15-20
 
 | REQ ID | F0015-local proof case(s) |
 |--------|----------------------------|
-| REQ-F15-01 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14 |
-| REQ-F15-02 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14 |
-| REQ-F15-03 | VS0-CF-F15-01, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-20 |
-| REQ-F15-04 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-23 |
+| REQ-F15-01 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-32, VS0-CF-F15-33 |
+| REQ-F15-02 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-12, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-29, VS0-CF-F15-32, VS0-CF-F15-33 |
+| REQ-F15-03 | VS0-CF-F15-01, VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-20 |
+| REQ-F15-04 | VS0-CF-F15-01, VS0-CF-F15-02, VS0-CF-F15-13, VS0-CF-F15-14, VS0-CF-F15-23, VS0-CF-F15-33 |
 | REQ-F15-05 | VS0-CF-F15-01, VS0-CF-F15-25 |
-| REQ-F15-06 | VS0-CF-F15-08, VS0-CF-F15-10, VS0-CF-F15-15, VS0-CF-F15-20 |
+| REQ-F15-06 | VS0-CF-F15-08, VS0-CF-F15-10, VS0-CF-F15-15, VS0-CF-F15-16, VS0-CF-F15-20 |
 | REQ-F15-07 | VS0-CF-F15-03, VS0-CF-F15-04, VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19, VS0-CF-F15-20 |
 | REQ-F15-08 | VS0-CF-F15-07, VS0-CF-F15-13, VS0-CF-F15-14 |
 | REQ-F15-09 | VS0-CF-X03, VS0-CF-F15-23 |
@@ -388,6 +390,7 @@ Every `REQ-F15-01` through `REQ-F15-24` and every `AC-F15-01` through `AC-F15-20
 10. FEATURE-0015 must not accept, store, default, validate, or expose `spec.providerSelectionModes` or `spec.permittedHostingLocationRefs` on a `CloudProviderParticipation` create request; both are FEATURE-0021-introduced and FEATURE-0021-activated (ADH-2026-047 decision 4).
 11. FEATURE-0015 must treat an ISO-3166-1 alpha-2 value as valid only if it is an assigned code from the fixed, repository-owned, version-pinned dataset; a syntactically valid but unassigned code must be rejected with VALIDATION_FAILED, and `administrativeAreaCode` must never require an ISO-3166-2 membership dataset (ADH-2026-048 decision 1). FEATURE-0015 must not introduce a new top-level Problem code or violation code for the four malformed-input outcomes in §7.12 (ADH-2026-048 decision 2).
 12. FEATURE-0015 must not produce a durable AuditEvent for missing/invalid authentication, malformed/prohibited body/header/field input, unsupported method/media type, stale If-Match, same-key replay, changed-digest idempotency conflict, pair-uniqueness conflict, or an invalid participation source state; it must produce exactly one redacted AuditEvent for each category listed in §7.11 (ADH-2026-051). FEATURE-0015 must not describe its route model as 22 explicit Go 1.22 method/path registrations; it owns exactly 22 logical endpoint paths and registers exactly 35 explicit method/path patterns (§7.13; ADH-2026-051). FEATURE-0015 must not treat inherited `VS0-CF-F01` as local proof for `AUTH_REQUIRED`/401; `VS0-CF-F15-31` is the exact F0015-local proof (ADH-2026-051).
+13. FEATURE-0015 must not treat `VS0-CF-F15-01`, `02`, `12`, `13`, `14`, or `23` as exact proof of CloudPlatform/CloudProvider name-duplicate rejection or general collection-create schema-constraint failure; `VS0-CF-F15-32` is the exact local proof for name uniqueness, and `VS0-CF-F15-33` is the exact local proof for a registry-declared schema constraint other than a duplicate name, an unassigned ISO-3166-1 alpha-2 code (`VS0-CF-F15-29`), or a malformed/prohibited header/body condition (`VS0-CF-F15-30`) (ADH-2026-052). FEATURE-0015 must not falsely assign `VS0-CF-F15-21` to an unrelated REQ or AC identifier; it is the exact local proof for authenticated LIST without read grant, filtered LIST, empty authorized LIST, and inaccessible GET/reference resolution only (ADH-2026-052).
 
 ---
 

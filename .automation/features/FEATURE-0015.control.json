@@ -14,7 +14,8 @@
       "docs/reviews/architecture-decision-handoffs/ADH-2026-048-feature-0015-input-contract-clarification.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-049-feature-0015-audit-append-failure-outcome.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-050-feature-0015-all-route-idempotency-conformance-coverage.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-051-feature-0015-contract-closure-and-pre-generation-gate.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-051-feature-0015-contract-closure-and-pre-generation-gate.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-052-feature-0015-validation-proof-and-requirements-consistency.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },

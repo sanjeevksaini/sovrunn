@@ -122,6 +122,32 @@ def check_f0015(registry: dict, errors: list[str]) -> None:
         require(errors, "no mutation" in str(auth_case.get("expectedSideEffects", "")).lower(),
                 "AUTHN: F15-31 must state no mutation side effect")
 
+    # ADH-2026-052: CloudPlatform/CloudProvider name-uniqueness and general
+    # registry-declared schema-constraint validation must each have exact local
+    # proof; the older cases already covering scope-subset/root/PATCH/topology-
+    # ordering scenarios cannot stand in for these two absent scenarios.
+    name_uniqueness_case = cases.get("VS0-CF-F15-32")
+    require(errors, name_uniqueness_case is not None,
+            "VALIDATIONPROOF: missing F0015-local VS0-CF-F15-32 for CloudPlatform/CloudProvider name-uniqueness rejection")
+    if name_uniqueness_case:
+        require(errors, name_uniqueness_case.get("owner") == "FEATURE-0015",
+                "VALIDATIONPROOF: F15-32 must be owned by FEATURE-0015")
+        require(errors, name_uniqueness_case.get("expectedError") == "ALREADY_EXISTS",
+                "VALIDATIONPROOF: F15-32 must map a duplicate metadata.name to ALREADY_EXISTS")
+
+    schema_constraint_case = cases.get("VS0-CF-F15-33")
+    require(errors, schema_constraint_case is not None,
+            "VALIDATIONPROOF: missing F0015-local VS0-CF-F15-33 for registry-declared schema-constraint validation")
+    if schema_constraint_case:
+        require(errors, schema_constraint_case.get("owner") == "FEATURE-0015",
+                "VALIDATIONPROOF: F15-33 must be owned by FEATURE-0015")
+        require(errors, schema_constraint_case.get("expectedError") == "VALIDATION_FAILED",
+                "VALIDATIONPROOF: F15-33 must map a registry-declared schema-constraint violation to VALIDATION_FAILED")
+        f33_inputs = str(schema_constraint_case.get("inputs", "")).lower()
+        for excluded in ("duplicate name", "unassigned", "malformed"):
+            require(errors, excluded in f33_inputs,
+                    f"VALIDATIONPROOF: F15-33 inputs must explicitly exclude '{excluded}' outcomes covered by other cases")
+
     # Route terminology must distinguish externally visible endpoint paths from
     # Go 1.22 method-qualified ServeMux registrations.  This catches impossible
     # registration arithmetic before requirements/design generation.
@@ -151,7 +177,7 @@ def main() -> None:
             print(f"  ✗ {error}")
         print("Kiro requirements/design/tasks generation is BLOCKED until the feature contract closes.")
         raise SystemExit(1)
-    print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, and registration evidence")
+    print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
 
 
 if __name__ == "__main__":

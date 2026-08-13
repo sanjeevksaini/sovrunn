@@ -34,13 +34,13 @@
 | VS0-SCHEMA-005 | DecisionProfile | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-F07..F09 |
 | VS0-SCHEMA-006 | DecisionRecord | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-HP01,T01 |
 | VS0-SCHEMA-007 | AuditEvent | FEATURE-0013 | DEC-0026/0036; ADH-2026-017 | FEATURE-0013 schema | VS0-CF-HP01,T01 |
-| VS0-SCHEMA-008 | CloudPlatform | FEATURE-0015 | DEC-0037, ADH-2026-042/045/046/047/048/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31 |
-| VS0-SCHEMA-009 | CloudProvider | FEATURE-0015 | DEC-0037, ADH-2026-042/045/046/047/048/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31 |
+| VS0-SCHEMA-008 | CloudPlatform | FEATURE-0015 | DEC-0037, ADH-2026-042/045/046/047/048/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31,32,33 |
+| VS0-SCHEMA-009 | CloudProvider | FEATURE-0015 | DEC-0037, ADH-2026-042/045/046/047/048/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31,32,33 |
 | VS0-SCHEMA-010 | CloudProviderParticipation | FEATURE-0015 | DEC-0054; ADH-2026-037/042/045/046/047/048/050/051 | canonical data model | VS0-CF-F15-01..04,08..10,15..21,25,26,27,28,30,31 |
-| VS0-SCHEMA-011 | HostingLocation | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/048/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31 |
-| VS0-SCHEMA-012 | Datacenter | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31 |
-| VS0-SCHEMA-013 | FaultDomain | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31 |
-| VS0-SCHEMA-014 | InfrastructureStack | FEATURE-0015 | DEC-0041/0042; ADH-2026-025/042/045/046/047/050/051 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31 |
+| VS0-SCHEMA-011 | HostingLocation | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/048/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,29,30,31,33 |
+| VS0-SCHEMA-012 | Datacenter | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
+| VS0-SCHEMA-013 | FaultDomain | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
+| VS0-SCHEMA-014 | InfrastructureStack | FEATURE-0015 | DEC-0041/0042; ADH-2026-025/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
 | VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045 | canonical data model | VS0-CF-F10,X03 |
 | VS0-SCHEMA-016 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
 | VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
@@ -215,6 +215,8 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-29 | ISO-3166-1 alpha-2 assigned-code rejection (syntactically valid but unassigned value denied) | FEATURE-0015 | feature | ADH-2026-048 decision 1 | VS0-SCHEMA-008,009,011 |
 | VS0-CF-F15-30 | Idempotency-Key/If-Match/item-action-body malformed-input outcomes | FEATURE-0015 | feature | ADH-2026-048 decision 2 | VS0-SCHEMA-010, VS0-WRITER-004 |
 | VS0-CF-F15-31 | Missing/invalid authentication on any F0015 owned method/path pattern (AUTH_REQUIRED local proof; does not replace inherited VS0-CF-F01) | FEATURE-0015 | security | ADH-2026-051 | VS0-SCHEMA-008..014 |
+| VS0-CF-F15-32 | CloudPlatform/CloudProvider metadata.name duplicate rejection (ALREADY_EXISTS local proof) | FEATURE-0015 | feature | ADH-2026-052 | VS0-SCHEMA-008,009 |
+| VS0-CF-F15-33 | Registry-declared schema-constraint violation on collection create, excluding duplicate name (F15-32), unassigned ISO code (F15-29), and malformed/prohibited header/body (F15-30) | FEATURE-0015 | feature | ADH-2026-052 | VS0-SCHEMA-008..014 |
 
 ## FEATURE-0015 Migration Conformance — Retired (Canonical Bootstrap)
 
@@ -249,7 +251,7 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..31) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051).
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..33) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051).
 
 ---
 
