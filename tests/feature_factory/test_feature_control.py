@@ -24,6 +24,7 @@ control = load_module("feature_control", ROOT / "scripts/feature-control.py")
 delta = load_module("semantic_delta", ROOT / "scripts/semantic-delta.py")
 closeout = load_module("feature_closeout", ROOT / "scripts/feature-closeout.py")
 orchestrator = load_module("feature_orchestrator", ROOT / "scripts/feature-orchestrator.py")
+cursor_prompt = load_module("generic_cursor_prompt", ROOT / "scripts/generic-cursor-prompt.py")
 receipt = load_module("receipt_check", ROOT / "scripts/receipt-check.py")
 kiro_semantic = load_module(
     "kiro_semantic_check", ROOT / "scripts/kiro-semantic-check.py"
@@ -142,6 +143,68 @@ class SemanticDeltaTests(unittest.TestCase):
 
 
 class ScriptSafetyTests(unittest.TestCase):
+    task_plan_fixture = """\
+### Task 1: Parent implementation task
+
+**Writable paths:**
+- `internal/example/service.go`
+
+**Tests:**
+- `internal/example/service_test.go`
+
+**Commit message:**
+```
+feat(example): add service
+
+Long-form commit detail is allowed in the plan.
+```
+
+---
+
+#### Work package 2 (within Task 1): Internal work
+
+**Included tests:**
+- `internal/example/internal_test.go`
+
+### Task 18: Verification checkpoint
+
+**Writable paths:**
+- None (verification only).
+
+**Tests:**
+- None (runs existing checks).
+
+**Commit message:** None — verification only.
+
+## 3. No-task ledger
+"""
+
+    def test_approved_task_heading_and_sections_are_parsed(self):
+        plan = cursor_prompt.task_blocks(self.task_plan_fixture)
+        self.assertEqual(sorted(plan), [1, 18])
+        self.assertEqual(
+            cursor_prompt.writable_paths(plan[1]),
+            ["internal/example/service.go", "internal/example/service_test.go"],
+        )
+        self.assertEqual(cursor_prompt.commit_message(plan[1]), "feat(example): add service")
+
+    def test_orchestrator_excludes_non_commit_checkpoint(self):
+        plan = orchestrator.blocks(self.task_plan_fixture)
+        self.assertEqual(orchestrator.commit_task_ids(plan), [1])
+        self.assertEqual(orchestrator.verification_checkpoint_ids(plan), [18])
+        self.assertEqual(
+            orchestrator.task_writable_paths(plan[1]),
+            ["internal/example/service.go", "internal/example/service_test.go"],
+        )
+        self.assertEqual(orchestrator.commit_message(plan[1]), "feat(example): add service")
+        self.assertIsNone(orchestrator.commit_message(plan[18]))
+
+    def test_verification_checkpoint_is_not_a_cursor_or_commit_task(self):
+        source = (ROOT / "scripts/feature-orchestrator.py").read_text()
+        checkpoint = source.index("def run_verification_checkpoint")
+        self.assertIn('"make", "ff-feature-gate"', source[checkpoint:])
+        self.assertIn("if completed_final_commit:", source)
+
     def test_generic_scripts_compile(self):
         scripts = [
             "feature-control.py",
