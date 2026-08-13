@@ -255,7 +255,7 @@ func TestValidateScope_WideningDisallowedScope(t *testing.T) {
 	assertScopeViolation(t, p, CodeScopeWidening, ptrMetadataScopeRefKind)
 }
 
-func TestValidateScope_AllSixGovernanceScopesAccepted(t *testing.T) {
+func TestValidateScope_AllSevenGovernanceScopesAccepted(t *testing.T) {
 	t.Parallel()
 
 	nonPlatform := []struct {
@@ -266,7 +266,8 @@ func TestValidateScope_AllSixGovernanceScopesAccepted(t *testing.T) {
 		{apimeta.ScopeOrganizationUnit, "ou-1"},
 		{apimeta.ScopeTenant, "tenant-1"},
 		{apimeta.ScopeProject, "project-1"},
-		{apimeta.ScopeProvider, "provider-1"},
+		{apimeta.ScopeCloudPlatform, "cloud-platform-1"},
+		{apimeta.ScopeCloudProvider, "cloud-provider-1"},
 	}
 	for _, tc := range nonPlatform {
 		tc := tc

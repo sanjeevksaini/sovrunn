@@ -17,7 +17,7 @@ const datacenterFailureDomainSchemaID = "api/schemas/datacenter-failure-domain.j
 // datacenterFailureDomainScopeConstraint constrains metadata.scopeRef to
 // Provider (F14-REQ-06). Offline only: no existence lookup.
 var datacenterFailureDomainScopeConstraint = apiref.Constraint{
-	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeProvider},
+	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 }
 
 // datacenterFailureDomainParentConstraint constrains the single immediate

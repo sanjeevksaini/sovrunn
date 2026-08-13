@@ -959,7 +959,7 @@ func checkApirefConstraintBehavior() []FitnessFinding {
 	}
 	badScope := apiref.TypedRef{
 		APIVersion: "core.sovrunn.io/v1alpha1",
-		Kind:       string(apimeta.ScopeProvider),
+		Kind:       string(apimeta.ScopeCloudProvider),
 		Name:       "prov-a",
 	}
 	if issues := scopeC.ValidateRef(badScope, "/metadata/scopeRef"); !hasRefIssueCode(issues, apiref.CodeScopeNotAllowed) {

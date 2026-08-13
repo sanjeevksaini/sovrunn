@@ -5,7 +5,7 @@
     "name": "f13-compat-08",
     "scopeRef": {
       "apiVersion": "provider.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "aws-provider",
       "uid": "provider-uid-compat-08"
     },
@@ -43,7 +43,7 @@
     },
     "semanticIdentity": {
       "basis": "fixture-local-v1",
-      "canonicalScope": "Provider:provider-uid-compat-08",
+      "canonicalScope": "CloudProvider:provider-uid-compat-08",
       "inputRefs": [
         "input-1"
       ]

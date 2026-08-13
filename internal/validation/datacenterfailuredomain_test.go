@@ -36,7 +36,7 @@ func TestValidateDatacenterFailureDomain_NegativeMissingReference(t *testing.T) 
 			"name": "fd-missing-ref",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -58,7 +58,7 @@ func TestValidateDatacenterFailureDomain_NegativeTwoReferences(t *testing.T) {
 			"name": "fd-two-refs",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -109,7 +109,7 @@ func TestValidateDatacenterFailureDomain_NegativeWrongKindReference(t *testing.T
 					"name": "fd-wrong-kind",
 					"scopeRef": map[string]any{
 						"apiVersion": resources.FabricAPIVersion,
-						"kind":       string(apimeta.ScopeProvider),
+						"kind":       string(apimeta.ScopeCloudProvider),
 						"name":       "sovereign-provider-a",
 					},
 				},
@@ -186,7 +186,7 @@ func TestValidateDatacenterFailureDomain_BoundaryReferenceCardinalityExactlyOne(
 				"name": "fd-card-zero",
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -205,7 +205,7 @@ func TestValidateDatacenterFailureDomain_BoundaryReferenceCardinalityExactlyOne(
 				"name": "fd-card-multi",
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -260,7 +260,7 @@ func TestValidateDatacenterFailureDomain_BoundaryNoConnectivityFieldAccepted(t *
 			"name": "fd-connectivity",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -307,7 +307,7 @@ func validDatacenterFailureDomainDoc(name, datacenterName string) map[string]any
 			"name": name,
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},

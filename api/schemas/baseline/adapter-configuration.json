@@ -6,16 +6,25 @@
   "type": "object",
   "x-sovrunn-profile": "ManagedResource",
   "x-sovrunn-boundary": "adapter-facing",
-  "x-sovrunn-allowed-scopes": ["Provider"],
+  "x-sovrunn-allowed-scopes": [
+    "CloudProvider"
+  ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
       "type": "string",
-      "enum": ["adapter.sovrunn.io/v1alpha1"],
+      "enum": [
+        "adapter.sovrunn.io/v1alpha1"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -25,11 +34,18 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["AdapterConfiguration"],
+      "enum": [
+        "AdapterConfiguration"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -43,7 +59,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "none",
@@ -64,7 +85,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "spec-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -78,7 +104,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Secret-reference-only",
             "authorizedWriter": "spec-owner",
-            "authorizedReaders": ["adapter", "operator", "internal"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal"
+            ],
             "mutability": "mutable",
             "retention": "standard",
             "redaction": "omit",
@@ -92,7 +122,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Sensitive",
             "authorizedWriter": "spec-owner",
-            "authorizedReaders": ["adapter", "operator", "internal"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal"
+            ],
             "mutability": "mutable",
             "retention": "standard",
             "redaction": "omit",
@@ -101,12 +135,20 @@
           }
         }
       },
-      "required": ["adapterClass", "credentialsSecretRef"],
+      "required": [
+        "adapterClass",
+        "credentialsSecretRef"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "spec-owner",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "omit",
@@ -120,11 +162,22 @@
       "properties": {
         "phase": {
           "type": "string",
-          "enum": ["Pending", "Ready", "Degraded", "Failed", "Deleting"],
+          "enum": [
+            "Pending",
+            "Ready",
+            "Degraded",
+            "Failed",
+            "Deleting"
+          ],
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -138,7 +191,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -154,7 +211,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "redact",
@@ -167,7 +229,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -176,6 +243,11 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
   "additionalProperties": false
 }

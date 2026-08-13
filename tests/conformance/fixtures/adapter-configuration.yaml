@@ -8,7 +8,7 @@ metadata:
     resourceVersion: rv-adapter-1
     scopeRef:
         apiVersion: fabric.sovrunn.io/v1alpha1
-        kind: Provider
+        kind: CloudProvider
         name: sovereign-provider
         uid: d4e5f60718293a4b5c6d7e8f901a2b3c
     uid: f60718293a4b5c6d7e8f901a2b3c4d5e

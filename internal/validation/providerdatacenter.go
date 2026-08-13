@@ -17,7 +17,7 @@ const providerDatacenterSchemaID = "api/schemas/provider-datacenter.json"
 // providerDatacenterScopeConstraint constrains metadata.scopeRef to Provider
 // (F14-REQ-06). Offline only: no existence lookup.
 var providerDatacenterScopeConstraint = apiref.Constraint{
-	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeProvider},
+	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 }
 
 // providerDatacenterParentConstraint constrains the single immediate parent

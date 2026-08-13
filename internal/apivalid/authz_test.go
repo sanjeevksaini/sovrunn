@@ -250,17 +250,18 @@ func TestScopeAuthorizerStubDecisions(t *testing.T) {
 func TestCheckOperationTargetScopeMatchMatchingScopes(t *testing.T) {
 	t.Parallel()
 
-	// All six Matrix B / D-17 scope kinds, including platform via PlatformScopeUID.
+	// All seven canonical scope kinds, including platform via PlatformScopeUID.
 	cases := []apimeta.ScopeIdentity{
 		{Kind: apimeta.ScopePlatform, UID: apimeta.PlatformScopeUID},
 		{Kind: apimeta.ScopeOrganization, UID: "org-1"},
 		{Kind: apimeta.ScopeOrganizationUnit, UID: "ou-1"},
 		{Kind: apimeta.ScopeTenant, UID: "tenant-1"},
 		{Kind: apimeta.ScopeProject, UID: "project-1"},
-		{Kind: apimeta.ScopeProvider, UID: "provider-1"},
+		{Kind: apimeta.ScopeCloudPlatform, UID: "cloud-platform-1"},
+		{Kind: apimeta.ScopeCloudProvider, UID: "cloud-provider-1"},
 	}
 	if len(cases) != len(apimeta.AllScopeKinds()) {
-		t.Fatalf("test must cover all six scope kinds; got %d cases for %d kinds",
+		t.Fatalf("test must cover all seven scope kinds; got %d cases for %d kinds",
 			len(cases), len(apimeta.AllScopeKinds()))
 	}
 

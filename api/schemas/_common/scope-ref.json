@@ -12,7 +12,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -28,13 +33,19 @@
         "OrganizationUnit",
         "Tenant",
         "Project",
-        "Provider"
+        "CloudPlatform",
+        "CloudProvider"
       ],
-      "description": "Matrix B scope kind (F12-SCOPE-002).",
+      "description": "Canonical scope kind (VS0-SCHEMA-001; DEC-0037).",
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -50,7 +61,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Customer-visible",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -65,7 +81,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "system",
-        "authorizedReaders": ["customer", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "customer",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -74,6 +95,10 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "name"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "name"
+  ],
   "additionalProperties": false
 }

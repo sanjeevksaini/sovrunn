@@ -191,7 +191,7 @@ func TestFeature0014NegativeFixturesRejectedWithStableCodeAndPointer(t *testing.
 				if loc.Metadata.ScopeRef == nil {
 					t.Fatal("fixture must carry scopeRef")
 				}
-				c := apiref.Constraint{AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeProvider}}
+				c := apiref.Constraint{AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeCloudProvider}}
 				issues := c.ValidateRef(loc.Metadata.ScopeRef.TypedRef, "/metadata/scopeRef")
 				return feature0014RefIssueCodeField(t, issues, apiref.CodeScopeNotAllowed, "/metadata/scopeRef/kind")
 			},

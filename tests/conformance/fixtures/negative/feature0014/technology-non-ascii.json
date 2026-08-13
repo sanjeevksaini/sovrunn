@@ -5,7 +5,7 @@
     "name": "stack-tech-non-ascii",
     "scopeRef": {
       "apiVersion": "fabric.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "provider-operator-a"
     }
   },
@@ -15,6 +15,6 @@
       "kind": "DatacenterFailureDomain",
       "name": "datacenter-failure-domain-1"
     },
-    "technology": "Apache Café"
+    "technology": "Apache Caf\u00e9"
   }
 }

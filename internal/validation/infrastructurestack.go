@@ -27,7 +27,7 @@ var technologyRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,99}$`)
 // infrastructureStackScopeConstraint constrains metadata.scopeRef to Provider
 // (F14-REQ-06). Offline only: no existence lookup.
 var infrastructureStackScopeConstraint = apiref.Constraint{
-	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeProvider},
+	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 }
 
 // infrastructureStackParentConstraint constrains the single immediate parent

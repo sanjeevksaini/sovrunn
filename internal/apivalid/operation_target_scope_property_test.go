@@ -21,14 +21,15 @@ const property11Seed int64 = 20260723
 
 const property11Iterations = 100
 
-// property11ScopeKinds covers all six Matrix B / D-17 governance scopes.
+// property11ScopeKinds covers all seven canonical governance scopes.
 var property11ScopeKinds = []apimeta.ScopeKind{
 	apimeta.ScopePlatform,
 	apimeta.ScopeOrganization,
 	apimeta.ScopeOrganizationUnit,
 	apimeta.ScopeTenant,
 	apimeta.ScopeProject,
-	apimeta.ScopeProvider,
+	apimeta.ScopeCloudPlatform,
+	apimeta.ScopeCloudProvider,
 }
 
 // property11CaseClass selects the oracle bucket for one generated iteration.
@@ -100,7 +101,7 @@ func generateProperty11Case(rng *rand.Rand, iteration int) property11Case {
 
 	switch class {
 	case property11PathAMatch, property11PathBMatch:
-		// Cycle all six scopes across iterations so each matching kind
+		// Cycle all seven scopes across iterations so each matching kind
 		// appears often in the positive Path A / Path B buckets.
 		op := property11ScopeByIndex(iteration / property11CaseClassCount)
 		return property11Case{

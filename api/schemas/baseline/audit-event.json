@@ -12,17 +12,24 @@
     "OrganizationUnit",
     "Tenant",
     "Project",
-    "Provider"
+    "CloudPlatform",
+    "CloudProvider"
   ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
       "type": "string",
-      "enum": ["governance.sovrunn.io/v1alpha1"],
+      "enum": [
+        "governance.sovrunn.io/v1alpha1"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["governance", "internal", "operator"],
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
         "mutability": "immutable",
         "retention": "archival",
         "redaction": "none",
@@ -32,11 +39,17 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["AuditEvent"],
+      "enum": [
+        "AuditEvent"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["governance", "internal", "operator"],
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
         "mutability": "immutable",
         "retention": "archival",
         "redaction": "none",
@@ -50,7 +63,11 @@
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "system",
-        "authorizedReaders": ["governance", "internal", "operator"],
+        "authorizedReaders": [
+          "governance",
+          "internal",
+          "operator"
+        ],
         "mutability": "immutable",
         "retention": "archival",
         "redaction": "none",
@@ -68,7 +85,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Tenant-confidential",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -84,7 +104,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -98,7 +121,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -112,7 +138,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Tenant-confidential",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -127,7 +156,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -144,7 +176,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal", "operator"],
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -154,12 +190,20 @@
         },
         "outcome": {
           "type": "string",
-          "enum": ["Succeeded", "Denied", "Failed"],
+          "enum": [
+            "Succeeded",
+            "Denied",
+            "Failed"
+          ],
           "description": "Closed audit outcome vocabulary.",
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal", "operator"],
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -175,7 +219,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal", "operator"],
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -189,7 +237,10 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal"],
+            "authorizedReaders": [
+              "governance",
+              "internal"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -199,11 +250,15 @@
         },
         "decisionLinkage": {
           "$ref": "_common/decision-linkage.json",
-          "description": "Optional FEATURE-0013 AuditEvent decision-linkage extension (F13-AUDIT-003; design §6.2/§7.4). Absent keeps FEATURE-0012 Organization-scoped alpha fixtures valid (F13-COMPAT-07). When present, decisionRef and correlation are required by the referenced sub-schema.",
+          "description": "Optional FEATURE-0013 AuditEvent decision-linkage extension (F13-AUDIT-003; design \u00a76.2/\u00a77.4). Absent keeps FEATURE-0012 Organization-scoped alpha fixtures valid (F13-COMPAT-07). When present, decisionRef and correlation are required by the referenced sub-schema.",
           "x-sovrunn-field-policy": {
             "classification": "Tenant-confidential",
             "authorizedWriter": "system",
-            "authorizedReaders": ["governance", "internal", "operator"],
+            "authorizedReaders": [
+              "governance",
+              "internal",
+              "operator"
+            ],
             "mutability": "append-only",
             "retention": "archival",
             "redaction": "none",
@@ -212,12 +267,22 @@
           }
         }
       },
-      "required": ["actorRef", "requestId", "subjectRef", "action", "outcome", "reasonCode"],
+      "required": [
+        "actorRef",
+        "requestId",
+        "subjectRef",
+        "action",
+        "outcome",
+        "reasonCode"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "system",
-        "authorizedReaders": ["governance", "internal"],
+        "authorizedReaders": [
+          "governance",
+          "internal"
+        ],
         "mutability": "append-only",
         "retention": "archival",
         "redaction": "redact",
@@ -226,6 +291,11 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "metadata", "record"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "record"
+  ],
   "additionalProperties": false
 }

@@ -5,7 +5,7 @@
     "name": "stack-multiple-failure-domains",
     "scopeRef": {
       "apiVersion": "fabric.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "provider-operator-a"
     }
   },

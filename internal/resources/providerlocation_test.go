@@ -33,7 +33,7 @@ func TestProviderLocationJSONRoundTripWithGeo(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -116,8 +116,8 @@ func TestProviderLocationJSONRoundTripWithGeo(t *testing.T) {
 	if out.Metadata.ScopeRef == nil {
 		t.Fatal("metadata.scopeRef is nil")
 	}
-	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeProvider) {
-		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeProvider)
+	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeCloudProvider) {
+		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeCloudProvider)
 	}
 	if out.Spec.Geo == nil {
 		t.Fatal("spec.geo is nil after round-trip with geo")
@@ -147,7 +147,7 @@ func TestProviderLocationJSONRoundTripWithoutGeo(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},

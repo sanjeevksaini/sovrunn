@@ -31,7 +31,7 @@ const (
 // providerLocationScopeConstraint constrains metadata.scopeRef to Provider
 // (F14-REQ-06). Offline only: no existence lookup.
 var providerLocationScopeConstraint = apiref.Constraint{
-	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeProvider},
+	AllowedScopes: []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 }
 
 // providerLocationSemanticCarrier adapts a decoded ProviderLocation to

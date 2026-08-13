@@ -62,7 +62,7 @@ func TestValidateInfrastructureStack_NegativeMissingReference(t *testing.T) {
 			"name": "stack-missing-ref",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -84,7 +84,7 @@ func TestValidateInfrastructureStack_NegativeTwoReferences(t *testing.T) {
 			"name": "stack-two-refs",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -135,7 +135,7 @@ func TestValidateInfrastructureStack_NegativeWrongKindReference(t *testing.T) {
 					"name": "stack-wrong-kind",
 					"scopeRef": map[string]any{
 						"apiVersion": resources.FabricAPIVersion,
-						"kind":       string(apimeta.ScopeProvider),
+						"kind":       string(apimeta.ScopeCloudProvider),
 						"name":       "sovereign-provider-a",
 					},
 				},
@@ -353,7 +353,7 @@ func validInfrastructureStackDoc(name, failureDomainName, technology string) map
 			"name": name,
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},

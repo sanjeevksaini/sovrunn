@@ -6,16 +6,25 @@
   "type": "object",
   "x-sovrunn-profile": "ObservedExternalResource",
   "x-sovrunn-boundary": "adapter-facing",
-  "x-sovrunn-allowed-scopes": ["Provider"],
+  "x-sovrunn-allowed-scopes": [
+    "CloudProvider"
+  ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
       "type": "string",
-      "enum": ["adapter.sovrunn.io/v1alpha1"],
+      "enum": [
+        "adapter.sovrunn.io/v1alpha1"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -25,11 +34,18 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["DiscoveredDatabase"],
+      "enum": [
+        "DiscoveredDatabase"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -43,7 +59,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "system",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "none",
@@ -57,12 +78,22 @@
       "properties": {
         "observationState": {
           "type": "string",
-          "enum": ["Current", "Stale", "Unknown", "Absent"],
+          "enum": [
+            "Current",
+            "Stale",
+            "Unknown",
+            "Absent"
+          ],
           "description": "Distinct freshness/existence semantics for external observations.",
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -78,7 +109,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -94,7 +129,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "redact",
@@ -103,12 +143,19 @@
           }
         }
       },
-      "required": ["observationState"],
+      "required": [
+        "observationState"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -126,7 +173,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -141,7 +193,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -150,12 +207,20 @@
           }
         }
       },
-      "required": ["sourceRef", "observedAt"],
+      "required": [
+        "sourceRef",
+        "observedAt"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Internal",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -174,7 +239,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -184,12 +253,21 @@
         },
         "freshnessState": {
           "type": "string",
-          "enum": ["Fresh", "Stale", "Unknown"],
+          "enum": [
+            "Fresh",
+            "Stale",
+            "Unknown"
+          ],
           "description": "Computed freshness classification at evaluation time.",
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "adapter",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -198,12 +276,19 @@
           }
         }
       },
-      "required": ["freshnessState"],
+      "required": [
+        "freshnessState"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Internal",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["adapter", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "adapter",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -212,6 +297,13 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "metadata", "status", "provenance", "freshness"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "status",
+    "provenance",
+    "freshness"
+  ],
   "additionalProperties": false
 }

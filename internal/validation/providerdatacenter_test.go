@@ -33,7 +33,7 @@ func TestValidateProviderDatacenter_NegativeMissingReference(t *testing.T) {
 			"name": "dc-missing-ref",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -55,7 +55,7 @@ func TestValidateProviderDatacenter_NegativeTwoReferences(t *testing.T) {
 			"name": "dc-two-refs",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -105,7 +105,7 @@ func TestValidateProviderDatacenter_NegativeWrongKindReference(t *testing.T) {
 					"name": "dc-wrong-kind",
 					"scopeRef": map[string]any{
 						"apiVersion": resources.FabricAPIVersion,
-						"kind":       string(apimeta.ScopeProvider),
+						"kind":       string(apimeta.ScopeCloudProvider),
 						"name":       "sovereign-provider-a",
 					},
 				},
@@ -182,7 +182,7 @@ func TestValidateProviderDatacenter_BoundaryReferenceCardinalityExactlyOne(t *te
 				"name": "dc-card-zero",
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -201,7 +201,7 @@ func TestValidateProviderDatacenter_BoundaryReferenceCardinalityExactlyOne(t *te
 				"name": "dc-card-multi",
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -236,7 +236,7 @@ func validProviderDatacenterDoc(name, locationName string) map[string]any {
 			"name": name,
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},

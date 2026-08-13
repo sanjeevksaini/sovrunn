@@ -83,7 +83,7 @@ func TestValidateProvider_NegativeWrongScopeKind(t *testing.T) {
 	}{
 		{name: "tenant", kind: string(apimeta.ScopeTenant)},
 		{name: "project", kind: string(apimeta.ScopeProject)},
-		{name: "provider", kind: string(apimeta.ScopeProvider)},
+		{name: "provider", kind: string(apimeta.ScopeCloudProvider)},
 		{name: "organization-unit", kind: string(apimeta.ScopeOrganizationUnit)},
 	}
 

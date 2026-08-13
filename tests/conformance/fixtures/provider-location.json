@@ -7,7 +7,7 @@
     "displayName": "Mumbai Location",
     "scopeRef": {
       "apiVersion": "fabric.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "provider-operator-a",
       "uid": "a2000000000000000000000000000001"
     },

@@ -12,17 +12,26 @@
     "OrganizationUnit",
     "Tenant",
     "Project",
-    "Provider"
+    "CloudPlatform",
+    "CloudProvider"
   ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
       "type": "string",
-      "enum": ["ops.sovrunn.io/v1alpha1"],
+      "enum": [
+        "ops.sovrunn.io/v1alpha1"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "customer",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -32,11 +41,19 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["Operation"],
+      "enum": [
+        "Operation"
+      ],
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "customer",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -50,7 +67,13 @@
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "customer",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "none",
@@ -64,7 +87,12 @@
       "x-sovrunn-field-policy": {
         "classification": "Internal",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -82,7 +110,13 @@
           "x-sovrunn-field-policy": {
             "classification": "Tenant-confidential",
             "authorizedWriter": "creator",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -99,7 +133,13 @@
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "creator",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -113,7 +153,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Tenant-confidential",
             "authorizedWriter": "creator",
-            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -129,7 +174,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "creator",
-            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -145,7 +195,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "creator",
-            "authorizedReaders": ["plugin", "operator", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "immutable",
             "retention": "standard",
             "redaction": "none",
@@ -154,12 +209,21 @@
           }
         }
       },
-      "required": ["targetRef", "action"],
+      "required": [
+        "targetRef",
+        "action"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Tenant-confidential",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "customer",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -173,11 +237,23 @@
       "properties": {
         "phase": {
           "type": "string",
-          "enum": ["Pending", "Running", "Succeeded", "Failed", "Cancelled"],
+          "enum": [
+            "Pending",
+            "Running",
+            "Succeeded",
+            "Failed",
+            "Cancelled"
+          ],
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -193,7 +269,12 @@
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -203,12 +284,22 @@
         },
         "retryable": {
           "type": "string",
-          "enum": ["True", "False", "Unknown"],
+          "enum": [
+            "True",
+            "False",
+            "Unknown"
+          ],
           "description": "Whether a failed operation may be safely retried.",
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -218,12 +309,20 @@
         },
         "cancelRequested": {
           "type": "string",
-          "enum": ["True", "False"],
+          "enum": [
+            "True",
+            "False"
+          ],
           "description": "Whether cancellation has been requested.",
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -238,7 +337,13 @@
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -252,7 +357,13 @@
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "redact",
@@ -266,7 +377,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "internal"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "internal"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -282,7 +397,13 @@
           "x-sovrunn-field-policy": {
             "classification": "Customer-visible",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+            "authorizedReaders": [
+              "plugin",
+              "operator",
+              "customer",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "redact",
@@ -295,7 +416,13 @@
       "x-sovrunn-field-policy": {
         "classification": "Customer-visible",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["plugin", "operator", "customer", "internal", "governance"],
+        "authorizedReaders": [
+          "plugin",
+          "operator",
+          "customer",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -304,6 +431,11 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
   "additionalProperties": false
 }
