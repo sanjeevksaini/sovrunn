@@ -126,7 +126,7 @@
     },
     "budgets": {
       "requirements": 400000,
-      "design": 700000,
+      "design": 750000,
       "tasks": 420000,
       "implementation": 420000,
       "review": 500000
