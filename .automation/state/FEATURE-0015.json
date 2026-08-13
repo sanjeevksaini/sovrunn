@@ -6,7 +6,7 @@
   "control_approved_sha256": "be523d398147e33528f70b8c0fd126749c751ecb33f5b134a7a38d0a18b66a61",
   "created_at": "2026-08-04T13:16:41.681695+00:00",
   "current_stage": "cursor",
-  "current_task": "4",
+  "current_task": "6",
   "design_approval_source": "openai_machine_review",
   "design_approval_token": "APPROVED_FOR_TASKS",
   "design_approved_at": "2026-08-13T16:18:22Z",
@@ -19,7 +19,7 @@
   "feature_id": "FEATURE-0015",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0015",
   "human_gate_required": "false",
-  "last_committed_task": "4",
+  "last_committed_task": "6",
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "requirements_approval_source": "openai_machine_review",
   "requirements_approval_token": "APPROVED_FOR_DESIGN",
@@ -27,11 +27,11 @@
   "requirements_approved_sha256": "c21b597f7ee6e28b27e725bd82cbca87f523c8eae24f92cd6a63b2961501baf2",
   "slug": "canonical-cloud-model-and-alpha-migration",
   "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration",
-  "status": "cursor_task_4_committed",
+  "status": "cursor_task_6_committed",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
   "tasks_approved_at": "2026-08-13T16:18:22Z",
   "tasks_approved_sha256": "cf5f091b9b87af135209bc3599b19831b55211797a5dff71d62163b433be180b",
   "title": "Canonical Cloud Model Foundation",
-  "updated_at": "2026-08-13T16:29:04.605629+00:00"
+  "updated_at": "2026-08-13T16:33:47.987867+00:00"
 }
