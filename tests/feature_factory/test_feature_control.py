@@ -456,6 +456,12 @@ class ReceiptCheckTests(unittest.TestCase):
             ["TASK_STATUS: COMPLETE", "TASK_STATUS: COMPLETE"],
         )
 
+    def test_markdown_wrapped_cursor_task_receipt_is_accepted(self):
+        self.assertEqual(
+            receipt.find_receipts("`TASK_STATUS: COMPLETE`\n", "task"),
+            ["TASK_STATUS: COMPLETE"],
+        )
+
     def test_blocked_receipt_is_parsed_but_not_completion(self):
         self.assertEqual(
             receipt.find_receipts("STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED\n", "stage"),

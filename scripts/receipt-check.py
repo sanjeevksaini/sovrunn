@@ -19,7 +19,16 @@ EXPECTED = {
 
 
 def normalized_lines(raw: str) -> list[str]:
-    return [ANSI_ESCAPE.sub("", line).removesuffix("\r") for line in raw.splitlines()]
+    normalized: list[str] = []
+    for line in raw.splitlines():
+        line = ANSI_ESCAPE.sub("", line).removesuffix("\r")
+        # The guarded Cursor prompt renders its required terminal receipt as
+        # inline Markdown code. Accept only that exact one-pair wrapper; other
+        # surrounding prose still cannot satisfy the terminal receipt grammar.
+        if len(line) >= 2 and line.startswith("`") and line.endswith("`"):
+            line = line[1:-1]
+        normalized.append(line)
+    return normalized
 
 
 def find_receipts(raw: str, kind: str) -> list[str]:
