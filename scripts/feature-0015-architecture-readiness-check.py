@@ -46,6 +46,7 @@ ADH_045 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-045-canon
 ADH_046 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-046-feature-0015-executable-contract-closure.md"
 ADH_047 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-047-feature-0015-request-construction-and-scope-derivation-closure.md"
 ADH_048 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-048-feature-0015-input-contract-clarification.md"
+ADH_051 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-051-feature-0015-contract-closure-and-pre-generation-gate.md"
 SPEC_DIR = ROOT / ".kiro/specs/canonical-cloud-model-and-alpha-migration"
 
 # F0015-owned resources whose status must resolve solely to api-server (ADH-2026-046 decision 1).
@@ -57,15 +58,26 @@ NON_API_SERVER_CONTROLLER_TERMS = (
     "topology-controller", "stack-controller", "provider-controller",
     "participation-controller", "delegated-participation-contract-authority",
 )
-# Required F0015-local conformance IDs after ADH-2026-048 decision 4 (extends ADH-2026-046 decision 3 / ADH-2026-047 decision 5).
-F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 31)]
+# Required F0015-local conformance IDs after ADH-2026-051 (extends ADH-2026-046 decision 3 /
+# ADH-2026-047 decision 5 / ADH-2026-048 decision 4), including VS0-CF-F15-31 (AUTH_REQUIRED local proof).
+F15_REQUIRED_CF_IDS = [f"VS0-CF-F15-{i:02d}" for i in range(1, 32)]
+
+# ADH-2026-051: exact durable-audit boundary. These local cases are covered denial categories
+# and must each carry an AuditEvent side effect; the remaining denial categories (missing/invalid
+# authentication, malformed input, stale If-Match, replay/mismatch, invalid source state) must not.
+F15_AUDITED_DENIAL_CF_IDS = ("VS0-CF-F15-05", "VS0-CF-F15-06", "VS0-CF-F15-21", "VS0-CF-F15-22", "VS0-CF-F15-23", "VS0-CF-X03")
 
 # F0015-owned resource kinds whose ISO-3166-1 alpha-2 fields must state assigned-code semantics (ADH-2026-048 decision 1).
 F15_ISO_ALPHA2_KINDS = ("CloudPlatform", "CloudProvider", "HostingLocation")
 
-# The exact 22-route count required by ADH-2026-048 decision 3/4: 7 collection + 7 item + 8 action registrations.
+# The exact 22-logical-path count (7 collection + 7 item + 8 action) required by
+# ADH-2026-048 decision 3/4 and corrected/closed by ADH-2026-051. ADH-2026-051 additionally
+# requires exactly 35 explicit Go 1.22 http.ServeMux method/path registrations: 14 collection
+# (GET LIST + POST create each) + 12 PATCHable-item (GET + PATCH each, six kinds) + 1
+# CloudProviderParticipation item (GET only, no PATCH) + 8 participation action (POST each).
 F15_EXPECTED_ROUTE_COUNTS = {"collection": 7, "item": 7, "action": 8}
 F15_EXPECTED_TOTAL_ROUTES = 22
+F15_EXPECTED_METHOD_PATTERNS = 35
 F15_REQUIRED_CF_FIELDS = ("id", "owner", "inputs", "expectedState", "expectedError", "expectedSideEffects", "gate")
 
 # F0015 participation existing-item action names whose idempotency conformance must be covered
@@ -1048,11 +1060,12 @@ def check_f15_29_30_conformance_and_mapping(reg: dict, f15_arch: str, f15_feat: 
 
 
 def check_per_route_design_readiness_simulation(f15_arch: str, f15_feat: str) -> None:
-    """Fail-closed (ADH-2026-048 decision 4): the F0015 authorities must jointly state the
-    complete per-route pipeline and the explicit 22-route registration count (7 collection +
-    7 item + 8 action), failing closed on an unspecified observable input outcome, missing
+    """Fail-closed (ADH-2026-048 decision 4, corrected/closed by ADH-2026-051): the F0015
+    authorities must jointly state the complete per-route pipeline, the exact 22-logical-path
+    count (7 collection + 7 item + 8 action), and the exact 35-explicit-Go-1.22-method/path-
+    registration count, failing closed on an unspecified observable input outcome, missing
     per-route mapping, unassigned ISO code accepted, non-empty action body accepted, or a
-    route-count/pattern mismatch."""
+    route-count/pattern mismatch against the corrected arithmetic."""
     pipeline_stage_markers = (
         ("body/header shape", ("empty json body", "client-required")),
         ("authn/authz", ("authoriz", "authenticat")),
@@ -1064,7 +1077,8 @@ def check_per_route_design_readiness_simulation(f15_arch: str, f15_feat: str) ->
         ("idempotency/race outcome", ("idempotency",)),
         ("local conformance test", ("vs0-cf-f15",)),
     )
-    route_count_markers = ("seven collection", "seven item", "eight", "22 total", "22 route", "22-route")
+    route_count_markers = ("seven collection", "seven item", "eight", "22 total", "22 route", "22-route", "22 logical")
+    method_pattern_markers = ("35 explicit", "35 method", "35 registration", "35 total")
     for label, text in (("architecture", f15_arch), ("feature", f15_feat)):
         lower = text.lower()
         for stage_name, markers in pipeline_stage_markers:
@@ -1072,8 +1086,42 @@ def check_per_route_design_readiness_simulation(f15_arch: str, f15_feat: str) ->
                 e(f"ROUTESIM048: F0015 {label} does not jointly state the per-route pipeline stage "
                   f"'{stage_name}' required by ADH-2026-048 decision 4")
         if not any(marker in lower for marker in route_count_markers):
-            e(f"ROUTESIM048: F0015 {label} does not state the explicit 22-route registration count "
+            e(f"ROUTESIM048: F0015 {label} does not state the exact 22-logical-path count "
               f"(7 collection + 7 item + 8 action) required by ADH-2026-048 decision 3/4")
+        if not any(marker in lower for marker in method_pattern_markers):
+            e(f"ROUTEARITH051: F0015 {label} does not state the exact 35 explicit Go 1.22 "
+              f"method/path registration count required by ADH-2026-051")
+        if "path-only" not in lower and "internal method" not in lower and "internal http-method dispatch" not in lower:
+            e(f"ROUTEARITH051: F0015 {label} must prohibit path-only handler registration, wildcard "
+              f"registration, reflection, or internal HTTP-method dispatch (ADH-2026-051)")
+
+
+def check_exact_durable_audit_boundary(reg: dict) -> None:
+    """Fail-closed (ADH-2026-051): the exact durable-audit boundary requires an AuditEvent
+    side effect for every authenticated authorization/safe-denial category it names
+    (VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-21, VS0-CF-F15-22, VS0-CF-F15-23, VS0-CF-X03),
+    and VS0-CF-F15-31 must prove the new AUTH_REQUIRED local case without altering VS0-CF-F01."""
+    confs = {c.get("id"): c for c in reg.get("conformance", [])}
+    for cf_id in F15_AUDITED_DENIAL_CF_IDS:
+        entry = confs.get(cf_id)
+        if not entry:
+            e(f"AUDITBOUNDARY051: required audited-denial conformance case missing: {cf_id}")
+            continue
+        if "auditevent" not in str(entry.get("expectedSideEffects", "")).lower():
+            e(f"AUDITBOUNDARY051: {cf_id} expectedSideEffects must state exactly one redacted "
+              f"FEATURE-0013 AuditEvent (ADH-2026-051)")
+    f15_31 = confs.get("VS0-CF-F15-31")
+    if not f15_31:
+        e("AUTHPROOF051: VS0-CF-F15-31 conformance entry missing (ADH-2026-051)")
+    else:
+        if f15_31.get("owner") != "FEATURE-0015":
+            e("AUTHPROOF051: VS0-CF-F15-31 owner must be FEATURE-0015")
+        if f15_31.get("expectedError") != "AUTH_REQUIRED":
+            e("AUTHPROOF051: VS0-CF-F15-31 expectedError must be AUTH_REQUIRED")
+        side_effects = str(f15_31.get("expectedSideEffects", "")).lower()
+        for required in ("no mutation", "no idempotency", "no auditevent"):
+            if required not in side_effects:
+                e(f"AUTHPROOF051: VS0-CF-F15-31 expectedSideEffects must state '{required}'")
 
 
 def check_input_contract_clarification_audit(reg: dict, f15_arch: str, f15_feat: str, trace: str, spec: str) -> None:
@@ -1160,6 +1208,11 @@ def main() -> None:
     # malformed-input outcomes, F15-29..30 proof matrix, per-route design-readiness simulation).
     check_input_contract_clarification_audit(reg, f15_arch, f15_feat, trace, spec)
 
+    # ADH-2026-051: exact durable-audit boundary (VS0-CF-F15-05/06/21/22/23/X03 audited;
+    # VS0-CF-F15-31 AUTH_REQUIRED local proof) and corrected 22-logical/35-registration
+    # route arithmetic (composed inside check_per_route_design_readiness_simulation above).
+    check_exact_durable_audit_boundary(reg)
+
     if errs:
         print(f"FAIL: FEATURE-0015 architecture-readiness — {len(errs)} error(s)")
         for err in errs:
@@ -1192,6 +1245,8 @@ def main() -> None:
         print("  ✓ ISO-3166-1 alpha-2 assigned-code semantics; four malformed-input outcomes; F15-29..30 proof matrix; per-route design-readiness simulation (ADH-2026-048)")
         print("  ✓ Required-AuditEvent-append failure maps to INTERNAL_ERROR/500, not DEPENDENCY_UNAVAILABLE; non-publication rule preserved (ADH-2026-049)")
         print("  ✓ All-route idempotency conformance coverage: F15-18/19 cover all seven collection creates and eight participation actions (ADH-2026-050)")
+        print("  ✓ Exact durable-audit boundary: covered denials carry AuditEvent side effects; VS0-CF-F15-31 proves AUTH_REQUIRED without altering VS0-CF-F01 (ADH-2026-051)")
+        print("  ✓ Corrected route model: 22 logical endpoint paths, 35 explicit Go 1.22 method/path registrations, no path-only/wildcard/reflection dispatch (ADH-2026-051)")
         sys.exit(0)
 
 

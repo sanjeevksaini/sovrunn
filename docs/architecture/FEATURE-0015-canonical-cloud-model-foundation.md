@@ -5,7 +5,7 @@
 | Status | Approved boundary (replacement under ADH-2026-045; corrected/clarified under ADH-2026-046; closed under ADH-2026-047; renamed/re-scoped, no alpha migration) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0037, DEC-0041, DEC-0042, DEC-0054, DEC-0059 |
-| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049, ADH-2026-050 |
+| Controlling Handoffs | ADH-2026-020, ADH-2026-024, ADH-2026-025, ADH-2026-037, consolidated ADH-2026-042, ADH-2026-043 (non-migration portions), ADH-2026-045, ADH-2026-046, ADH-2026-047, ADH-2026-048, ADH-2026-049, ADH-2026-050, ADH-2026-051 |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0014 (alpha model — retained repository asset only) |
 
@@ -191,22 +191,28 @@ The API server derives `metadata.scopeRef` from `spec.cloudPlatformRef`, assigns
 
 The item action routes (`:accept`, `:reject`, `:withdraw`, `:suspend`, `:resume`, `:request-release`, `:accept-release`, `:decline-release`) have an empty JSON body. Each existing-item action requires `If-Match` and `Idempotency-Key` under ADH-2026-046. The scheduler expiry is an internal API-server transition and has no public request body.
 
-### 7.11 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6, preserved)
+### 7.11 Audit, Correlation, and Redaction Requirements (ADH-2026-043 decision 6, preserved; exact boundary closed by ADH-2026-051)
 
-FEATURE-0015 reuses FEATURE-0013 AuditEvent. The following lifecycle and security events produce audit evidence:
+FEATURE-0015 reuses FEATURE-0013 AuditEvent. After authentication and current authorization are evaluated, exactly one redacted AuditEvent is produced, with request correlation and no secret or inaccessible-resource disclosure, for each of the following categories:
 
-| Event | Audit Evidence | Correlation |
-|-------|----------------|-------------|
-| CloudProviderParticipation lifecycle change (create/accept/reject/withdraw/expire/suspend/resume/request-release/accept-release/decline-release) | AuditEvent with subjectRef, actor, action, resulting effective state, timestamp | participationRef UID, requestId |
-| Resource create/PATCH (CloudPlatform, CloudProvider, topology) | AuditEvent with resource UID, actor, result | resource UID, requestId |
-| Cross-provider safe-denial (security) | AuditEvent with denied actor, denied action; no target existence disclosed | requestId |
+| F0015 outcome category | Audit Evidence | Correlation |
+|---|---|---|
+| Successful resource collection create or PATCH | AuditEvent with resource UID, actor, result | resource UID, requestId |
+| Successful participation create/action or deterministic scheduler expiry | AuditEvent with subjectRef, actor, action, resulting effective state, timestamp | participationRef UID, requestId |
+| Authenticated client attempt to write api-server-owned status or identity/metadata | AuditEvent with denied actor, denied field write | requestId |
+| CloudPlatform-root creation denial | AuditEvent with denied actor, denied creation attempt | requestId |
+| Authenticated collection LIST without a read grant | AuditEvent with denied actor, denied action | requestId |
+| Authenticated header/body forged-grant attempt | AuditEvent with denied actor, denied action; forged claim not disclosed | requestId |
+| Authenticated inaccessible cross-provider/safe-denial reference | AuditEvent with denied actor, denied action; no target existence disclosed | requestId |
+
+The following do **not** produce a durable AuditEvent: missing or invalid authentication; malformed/prohibited body/header/field input; unsupported method/media type; stale `If-Match`; same-key replay; changed-digest idempotency conflict; pair-uniqueness conflict; or an invalid participation source state. They may produce redacted logs/metrics under the existing observability baseline, but logs/metrics are not AuditEvents.
 
 Rules:
 - Safe projection/redaction: audit events use the same safe-denial principle — no existence disclosure for cross-provider references.
 - No secrets: no credential values, protected handles, or secret material in any audit record.
 - Intentional correlation: each audit record links to its subject, actor, and governing participation through UID-pinned references.
 - The mutation and its required AuditEvent are one atomic outcome; audit failure leaves the resource/lifecycle unchanged.
-- A failure to append the required FEATURE-0013 AuditEvent for a FEATURE-0015 mutation returns the inherited FEATURE-0012 `INTERNAL_ERROR` Problem Details response (HTTP 500); the resource mutation and its idempotency completion are not published. `DEPENDENCY_UNAVAILABLE` (503) is not used for this outcome because FEATURE-0015 introduces no durable or external persistence dependency (ADH-2026-049).
+- A failure to append a required FEATURE-0013 AuditEvent for a FEATURE-0015 outcome returns the inherited FEATURE-0012 `INTERNAL_ERROR` Problem Details response (HTTP 500), retains safe non-disclosure, and publishes no resource mutation, lifecycle/status transition, or idempotency completion. This extends the existing ADH-2026-049 non-publication rule to audited denials without changing its code or persistence boundary. `DEPENDENCY_UNAVAILABLE` (503) is not used for this outcome because FEATURE-0015 introduces no durable or external persistence dependency (ADH-2026-049, extended by ADH-2026-051). An already-appended AuditEvent may remain after a later in-process publication failure, as constrained by ADH-2026-048 decision 3.
 - FEATURE-0015 does not import FEATURE-0026's integration-only trace conformance (VS0-CF-T01).
 
 ### 7.12 ISO-3166 Assigned-Code Semantics and Malformed-Input Outcomes (ADH-2026-048)
@@ -224,7 +230,27 @@ Four exact header/body outcomes reuse only existing FEATURE-0012 top-level Probl
 
 A malformed/prohibited input under this rule produces no mutation, no idempotency record, and no AuditEvent unless an already-approved audited-denial rule independently applies; this clarification does not broaden the ADH-2026-046/047 audit-denial list.
 
-The following are deterministic design mechanics that the F0015 design must define exactly, without seeking new architecture authority: idempotency reservation states `InFlight`/`Completed`/`Aborted` with waiter wake-up on both terminal states and abort/release of an in-flight reservation on validation failure, stale version, audit failure, or recovered panic; idempotency records written only for completed replayable outcomes consistent with the approved audit policy; precise in-memory audit/mutation coordination wording stating that a resource/idempotency change is not published until its required audit append succeeds, with no durable cross-store transaction claim; and Go 1.22 `http.ServeMux` registration using explicit method/path patterns and `Request.PathValue` with seven collection, seven item, and eight participation-action registrations (22 total), using no wildcard, reflection, or auto-registration.
+The following are deterministic design mechanics that the F0015 design must define exactly, without seeking new architecture authority: idempotency reservation states `InFlight`/`Completed`/`Aborted` with waiter wake-up on both terminal states and abort/release of an in-flight reservation on validation failure, stale version, audit failure, or recovered panic; idempotency records written only for completed replayable outcomes consistent with the approved audit policy; precise in-memory audit/mutation coordination wording stating that a resource/idempotency change is not published until its required audit append succeeds, with no durable cross-store transaction claim; and Go 1.22 `http.ServeMux` registration for the exact route model in §7.13, using no wildcard, reflection, or auto-registration.
+
+### 7.13 Exact Route Model and Registration Arithmetic (ADH-2026-051)
+
+FEATURE-0015 owns exactly 22 logical endpoint paths:
+
+- seven collection paths: one per owned kind;
+- seven item paths: one per owned kind;
+- eight `CloudProviderParticipation` action paths.
+
+It registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns:
+
+| Path category | Patterns | Count |
+|---|---|---:|
+| Seven collections | `GET` LIST and `POST` create each | 14 |
+| Six PATCHable resource items | `GET` and `PATCH` each | 12 |
+| `CloudProviderParticipation` item | `GET` only; no PATCH | 1 |
+| Eight participation actions | `POST` each | 8 |
+| **Total** | | **35** |
+
+No path-only handler registration, wildcard registration, reflection, or internal HTTP-method dispatch is used. Unsupported methods return the established method-not-allowed behavior and do not create a new endpoint path.
 
 ---
 
@@ -280,7 +306,9 @@ Downstream-owned conformance (`VS0-CF-HP01`, `VS0-CF-F09`) is never used as FEAT
 | Status writer resolution (api-server sole writer) | ADH-2026-046 decision 1 | VS0-SCHEMA-008..010 | VS0-WRITER-005 | — | VS0-CF-F15-12, VS0-CF-F15-15, VS0-CF-F15-16 |
 | Participation create-versus-existing preconditions; all-route idempotency replay and mismatch coverage | ADH-2026-046 decision 2; ADH-2026-050 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | VS0-STATE-001 | VS0-CF-F15-15, VS0-CF-F15-17, VS0-CF-F15-18, VS0-CF-F15-19 |
 | Bootstrap-grant boundary | ADH-2026-045; ADH-2026-046 decision 3 | — | VS0-WRITER-002,003,004 | — | VS0-CF-F15-22 |
-| Audit atomicity; required-AuditEvent-append failure mapping | DEC-0059; ADH-2026-043 (preserved),046,049 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-24 |
+| Audit atomicity; required-AuditEvent-append failure mapping; exact durable-audit boundary | DEC-0059; ADH-2026-043 (preserved),046,049,051 | VS0-SCHEMA-007 | VS0-WRITER-011 (F0013) | — | VS0-CF-F15-05, VS0-CF-F15-06, VS0-CF-F15-12, VS0-CF-F15-16, VS0-CF-F15-21, VS0-CF-F15-22, VS0-CF-F15-23, VS0-CF-F15-24, VS0-CF-X03 |
+| Authentication local proof for every owned method/path pattern | ADH-2026-051 | VS0-SCHEMA-008..014 | — | — | VS0-CF-F15-31 |
+| Exact route model and registration arithmetic (22 logical paths; 35 Go 1.22 method/path registrations) | ADH-2026-051 | VS0-SCHEMA-008..014 | — | — | VS0-CF-F15-25 |
 | Closed collection-create request contract | ADH-2026-047 decision 1 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-26 |
 | Scope derivation single-source proof | ADH-2026-047 decision 2 | VS0-SCHEMA-008..014 | VS0-WRITER-002,003,004 | — | VS0-CF-F15-27 |
 | Topology immutability correction (name immutable; description PATCHable) | ADH-2026-047 decision 3 | VS0-SCHEMA-011..014 | VS0-WRITER-003 | — | VS0-CF-F15-13, VS0-CF-F15-14 |
@@ -292,7 +320,7 @@ Downstream integration references (non-owning, FEATURE-0015 does not claim this 
 
 ### 10.1 REQ-F15 and AC-F15 to F0015-local-proof mapping (ADH-2026-046 decision 3; extended by ADH-2026-047 decision 5)
 
-Every `REQ-F15-01` through `REQ-F15-23` and every `AC-F15-01` through `AC-F15-19` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
+Every `REQ-F15-01` through `REQ-F15-24` and every `AC-F15-01` through `AC-F15-20` maps to at least one F0015-local conformance case, except the explicit anti-drift/non-runtime verification items labelled below. No row cites a FEATURE-0016+ conformance case as required local evidence.
 
 | REQ ID | F0015-local proof case(s) |
 |--------|----------------------------|
@@ -319,6 +347,7 @@ Every `REQ-F15-01` through `REQ-F15-23` and every `AC-F15-01` through `AC-F15-19
 | REQ-F15-21 | VS0-CF-F15-28 |
 | REQ-F15-22 | VS0-CF-F15-29 |
 | REQ-F15-23 | VS0-CF-F15-30 |
+| REQ-F15-24 | VS0-CF-F15-31 |
 
 | AC ID | F0015-local proof case(s) |
 |-------|----------------------------|
@@ -341,6 +370,7 @@ Every `REQ-F15-01` through `REQ-F15-23` and every `AC-F15-01` through `AC-F15-19
 | AC-F15-17 | VS0-CF-F15-28 |
 | AC-F15-18 | VS0-CF-F15-29 |
 | AC-F15-19 | VS0-CF-F15-30 |
+| AC-F15-20 | VS0-CF-F15-31 |
 
 ---
 
@@ -357,6 +387,7 @@ Every `REQ-F15-01` through `REQ-F15-23` and every `AC-F15-01` through `AC-F15-19
 9. FEATURE-0015 must not describe topology `metadata.name` as PATCHable; only `spec.description` is PATCHable for topology resources (ADH-2026-047 decision 3).
 10. FEATURE-0015 must not accept, store, default, validate, or expose `spec.providerSelectionModes` or `spec.permittedHostingLocationRefs` on a `CloudProviderParticipation` create request; both are FEATURE-0021-introduced and FEATURE-0021-activated (ADH-2026-047 decision 4).
 11. FEATURE-0015 must treat an ISO-3166-1 alpha-2 value as valid only if it is an assigned code from the fixed, repository-owned, version-pinned dataset; a syntactically valid but unassigned code must be rejected with VALIDATION_FAILED, and `administrativeAreaCode` must never require an ISO-3166-2 membership dataset (ADH-2026-048 decision 1). FEATURE-0015 must not introduce a new top-level Problem code or violation code for the four malformed-input outcomes in §7.12 (ADH-2026-048 decision 2).
+12. FEATURE-0015 must not produce a durable AuditEvent for missing/invalid authentication, malformed/prohibited body/header/field input, unsupported method/media type, stale If-Match, same-key replay, changed-digest idempotency conflict, pair-uniqueness conflict, or an invalid participation source state; it must produce exactly one redacted AuditEvent for each category listed in §7.11 (ADH-2026-051). FEATURE-0015 must not describe its route model as 22 explicit Go 1.22 method/path registrations; it owns exactly 22 logical endpoint paths and registers exactly 35 explicit method/path patterns (§7.13; ADH-2026-051). FEATURE-0015 must not treat inherited `VS0-CF-F01` as local proof for `AUTH_REQUIRED`/401; `VS0-CF-F15-31` is the exact F0015-local proof (ADH-2026-051).
 
 ---
 

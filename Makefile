@@ -209,9 +209,16 @@ feature-0014-architecture-readiness:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0014-boundary-check.py \
 		--feature FEATURE-0014 --stage requirements --mode readiness
 
-.PHONY: feature-0015-architecture-readiness
+.PHONY: feature-0015-architecture-readiness feature-contract-check feature-0015-formal-check
 feature-0015-architecture-readiness:
 	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-0015-architecture-readiness-check.py
+
+feature-contract-check:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-contract-check.py --feature "$(FEATURE)"
+
+feature-0015-formal-check:
+	bash ./scripts/run-feature-0015-formal-checks.sh
 
 .PHONY: structurizr-lite
 structurizr-lite:

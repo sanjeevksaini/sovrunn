@@ -33,7 +33,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
     "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
-F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,31)]
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,32)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -232,6 +232,25 @@ def run():
             e(f"VS0-CF-F15-19 expectedError must remain CONFLICT (ADH-2026-050), found {f15_19.get('expectedError')!r}")
         if f15_19.get("expectedViolation") != "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH":
             e(f"VS0-CF-F15-19 expectedViolation must remain VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH (ADH-2026-050), found {f15_19.get('expectedViolation')!r}")
+    # ADH-2026-051: the exact durable-audit boundary requires an AuditEvent side effect
+    # for every authenticated authorization/safe-denial category it names, and VS0-CF-F15-31
+    # must prove the new AUTH_REQUIRED local case without altering the inherited F01 case.
+    audited_denial_ids = ("VS0-CF-F15-05", "VS0-CF-F15-06", "VS0-CF-F15-21", "VS0-CF-F15-22", "VS0-CF-F15-23", "VS0-CF-X03")
+    for cid in audited_denial_ids:
+        entry = next((c for c in confs if c.get("id") == cid), None)
+        if not entry:
+            e(f"{cid} conformance entry missing (ADH-2026-051)")
+            continue
+        if "auditevent" not in str(entry.get("expectedSideEffects", "")).lower():
+            e(f"{cid} expectedSideEffects must state exactly one redacted FEATURE-0013 AuditEvent (ADH-2026-051)")
+    f15_31 = next((c for c in confs if c.get("id") == "VS0-CF-F15-31"), None)
+    if not f15_31:
+        e("VS0-CF-F15-31 conformance entry missing (ADH-2026-051)")
+    else:
+        if f15_31.get("owner") != "FEATURE-0015": e("VS0-CF-F15-31 owner must be FEATURE-0015 (ADH-2026-051)")
+        if f15_31.get("expectedError") != "AUTH_REQUIRED": e("VS0-CF-F15-31 expectedError must be AUTH_REQUIRED (ADH-2026-051)")
+        if "no mutation" not in str(f15_31.get("expectedSideEffects", "")).lower():
+            e("VS0-CF-F15-31 expectedSideEffects must state no mutation (ADH-2026-051)")
     for x in found_cf-exp_cf: e(f"Unexpected conformance: {x}")
     retired_confs = reg.get("retiredConformance", [])
     ids_retired_cf = [x.get("id") for x in retired_confs]

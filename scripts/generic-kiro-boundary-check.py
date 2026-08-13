@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +72,17 @@ def main() -> None:
         requirements, design = spec / "requirements.md", spec / "design.md"
         if state.get("executable_plan_approval_token") != "APPROVED_EXECUTABLE_PLAN" or state.get("executable_plan_approved_sha256") != combined_digest([requirements, design]):
             raise SystemExit("FAIL: current requirements/design package lacks explicit human executable-plan approval")
+    if args.feature == "FEATURE-0015" and args.mode == "pre":
+        subprocess.run(
+            [sys.executable, str(ROOT / "scripts/feature-contract-check.py"), "--feature", args.feature],
+            cwd=ROOT,
+            check=True,
+        )
+        subprocess.run(
+            ["bash", str(ROOT / "scripts/run-feature-0015-formal-checks.sh")],
+            cwd=ROOT,
+            check=True,
+        )
     writable = set(control["guardrails"]["kiro"]["writable_by_stage"].get(args.stage, []))
     if len(writable) != 1:
         raise SystemExit(f"FAIL: {args.stage} must have exactly one writable output")

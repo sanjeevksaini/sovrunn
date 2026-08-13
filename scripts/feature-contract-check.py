@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Fail-closed feature contract coverage checker.
+
+This checker is intentionally independent of generated Kiro artifacts.  It
+checks whether a feature's approved registry contract contains enough exact,
+local evidence to generate requirements, design, and tasks without choosing
+observable behavior in a later stage.
+
+The framework accepts a feature argument so future features can add their own
+route catalog.  FEATURE-0015 is the first enforced catalog.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print("FAIL: PyYAML required. Install: pip install pyyaml", file=sys.stderr)
+    sys.exit(1)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+REGISTRY = ROOT / "docs/architecture/vertical-slices/VS-000-contract-registry.yaml"
+F15_ARCH = ROOT / "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md"
+F15_FEATURE = ROOT / "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"
+
+F15_KINDS = (
+    "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
+    "Datacenter", "FaultDomain", "InfrastructureStack",
+)
+F15_ACTIONS = (
+    "accept", "reject", "withdraw", "suspend", "resume",
+    "request-release", "accept-release", "decline-release",
+)
+# Seven collection paths + seven item paths + eight action paths.  Participation
+# has no PATCH surface, hence Go 1.22 needs 14 + 13 + 8 = 35 method patterns.
+F15_LOGICAL_PATHS = 22
+F15_METHOD_PATTERNS = 35
+
+
+def load_registry() -> dict:
+    try:
+        return yaml.safe_load(REGISTRY.read_text())
+    except FileNotFoundError:
+        raise SystemExit(f"FAIL: missing registry: {REGISTRY.relative_to(ROOT)}")
+
+
+def by_id(registry: dict) -> dict[str, dict]:
+    return {str(case.get("id")): case for case in registry.get("conformance", [])}
+
+
+def has_audit_effect(case: dict) -> bool:
+    return "auditevent" in str(case.get("expectedSideEffects", "")).lower()
+
+
+def require(errors: list[str], condition: bool, message: str) -> None:
+    if not condition:
+        errors.append(message)
+
+
+def check_f0015(registry: dict, errors: list[str]) -> None:
+    cases = by_id(registry)
+
+    # Every collection create/action is covered by the already-approved
+    # idempotency replay and changed-digest rules.
+    for case_id in ("VS0-CF-F15-18", "VS0-CF-F15-19"):
+        case = cases.get(case_id)
+        require(errors, case is not None, f"IDEMPOTENCY: missing {case_id}")
+        if not case:
+            continue
+        inputs = str(case.get("inputs", "")).lower()
+        for kind in F15_KINDS:
+            require(errors, kind.lower() in inputs,
+                    f"IDEMPOTENCY: {case_id} must cover {kind} collection POST")
+        for action in F15_ACTIONS:
+            require(errors, action in inputs,
+                    f"IDEMPOTENCY: {case_id} must cover participation action {action}")
+    if cases.get("VS0-CF-F15-18"):
+        require(errors, cases["VS0-CF-F15-18"].get("expectedError") is None,
+                "IDEMPOTENCY: F15-18 replay must preserve null expectedError")
+    if cases.get("VS0-CF-F15-19"):
+        require(errors, cases["VS0-CF-F15-19"].get("expectedError") == "CONFLICT",
+                "IDEMPOTENCY: F15-19 changed-digest replay must return CONFLICT")
+        require(errors,
+                cases["VS0-CF-F15-19"].get("expectedViolation") == "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH",
+                "IDEMPOTENCY: F15-19 must use VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH")
+
+    # The active F0015 audit rule says authorization and safe denials produce
+    # evidence.  Every local case expressing one of those outcomes must carry
+    # the same side effect; otherwise no downstream stage can know the rule.
+    audit_rule = cases.get("VS0-CF-F15-24")
+    require(errors, audit_rule is not None, "AUDIT: missing VS0-CF-F15-24")
+    if audit_rule:
+        inputs = str(audit_rule.get("inputs", "")).lower()
+        requires_denial_audit = "authorization denial" in inputs and "safe denial" in inputs
+        if requires_denial_audit:
+            audited_denials = (
+                "VS0-CF-F15-05", "VS0-CF-F15-06", "VS0-CF-F15-21",
+                "VS0-CF-F15-22", "VS0-CF-F15-23", "VS0-CF-X03",
+            )
+            for case_id in audited_denials:
+                case = cases.get(case_id)
+                require(errors, case is not None, f"AUDIT: missing {case_id}")
+                if case:
+                    require(errors, has_audit_effect(case),
+                            f"AUDIT: {case_id} is an authorization/safe denial but lacks required AuditEvent side effect")
+
+    # Authentication is an explicitly required F0015 route outcome and must
+    # have local conformance; inherited FEATURE-0018 evidence cannot prove it.
+    auth_case = cases.get("VS0-CF-F15-31")
+    require(errors, auth_case is not None,
+            "AUTHN: missing F0015-local VS0-CF-F15-31 for AUTH_REQUIRED on every owned route")
+    if auth_case:
+        require(errors, auth_case.get("owner") == "FEATURE-0015",
+                "AUTHN: F15-31 must be owned by FEATURE-0015")
+        require(errors, auth_case.get("expectedError") == "AUTH_REQUIRED",
+                "AUTHN: F15-31 must map missing/invalid authentication to AUTH_REQUIRED")
+        require(errors, "no mutation" in str(auth_case.get("expectedSideEffects", "")).lower(),
+                "AUTHN: F15-31 must state no mutation side effect")
+
+    # Route terminology must distinguish externally visible endpoint paths from
+    # Go 1.22 method-qualified ServeMux registrations.  This catches impossible
+    # registration arithmetic before requirements/design generation.
+    authority_text = F15_ARCH.read_text() + "\n" + F15_FEATURE.read_text()
+    logical = f"{F15_LOGICAL_PATHS} logical"
+    method_patterns = f"{F15_METHOD_PATTERNS} explicit"
+    require(errors, logical in authority_text.lower(),
+            f"ROUTING: authority must state {F15_LOGICAL_PATHS} logical endpoint paths")
+    require(errors, method_patterns in authority_text.lower(),
+            f"ROUTING: authority must state {F15_METHOD_PATTERNS} explicit Go 1.22 method/path registrations")
+    require(errors, "no path-only" in authority_text.lower() or "no internal method" in authority_text.lower(),
+            "ROUTING: authority must prohibit path-only internal method dispatch")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--feature", required=True)
+    args = parser.parse_args()
+    if args.feature != "FEATURE-0015":
+        raise SystemExit(f"FAIL: no route catalog is configured for {args.feature}")
+
+    errors: list[str] = []
+    check_f0015(load_registry(), errors)
+    if errors:
+        print(f"FAIL: {args.feature} feature-contract-check — {len(errors)} error(s)")
+        for error in errors:
+            print(f"  ✗ {error}")
+        print("Kiro requirements/design/tasks generation is BLOCKED until the feature contract closes.")
+        raise SystemExit(1)
+    print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, and registration evidence")
+
+
+if __name__ == "__main__":
+    main()
