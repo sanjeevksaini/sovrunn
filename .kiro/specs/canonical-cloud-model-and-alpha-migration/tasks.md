@@ -140,6 +140,18 @@ Refs: FEATURE-0015 Task 1, REQ-F15-01..04, DEC-0037/0041/0054/0059
 **Included writable paths:**
 - `internal/apimeta/scope.go` (add `CloudPlatform`, `CloudProvider` constants; update validation)
 - `internal/apimeta/scope_test.go`
+- `internal/apiconform/canonical_schemas_test.go`
+- `internal/apiconform/feature0014_bindings.go`
+- `internal/apiconform/feature0014_negative_test.go`
+- `internal/apiconform/fitness_ref.go`
+- `internal/apiconform/fixtures.go`
+- `internal/apiconform/fixtures_valid_test.go`
+- `internal/apivalid/authz_test.go`
+- `internal/apivalid/operation_target_scope_property_test.go`
+- `internal/apivalid/platform_scope_property_test.go`
+- `internal/apivalid/safe_denial_property_test.go`
+- `internal/decision/validate/scope_test.go`
+- `internal/decision/validate/validate.go`
 - `internal/resources/provider.go`
 - `internal/resources/provider_test.go`
 - `internal/resources/providerlocation.go`
@@ -150,6 +162,18 @@ Refs: FEATURE-0015 Task 1, REQ-F15-01..04, DEC-0037/0041/0054/0059
 - `internal/resources/datacenterfailuredomain_test.go`
 - `internal/resources/infrastructurestack.go`
 - `internal/resources/infrastructurestack_test.go`
+- `internal/validation/completeness_test.go`
+- `internal/validation/datacenterfailuredomain.go`
+- `internal/validation/datacenterfailuredomain_test.go`
+- `internal/validation/infrastructurestack.go`
+- `internal/validation/infrastructurestack_test.go`
+- `internal/validation/provider_test.go`
+- `internal/validation/providerdatacenter.go`
+- `internal/validation/providerdatacenter_test.go`
+- `internal/validation/providerlocation.go`
+- `internal/validation/providerlocation_test.go`
+- `internal/validation/topology.go`
+- `internal/validation/topology_test.go`
 
 **Included tests:**
 - `internal/apimeta/scope_test.go`: verify seven canonical values; verify rejected legacy values; verify CloudPlatform/CloudProvider acceptance.
