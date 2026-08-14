@@ -970,7 +970,7 @@ go test -v ./internal/api/...
 
 ### Task 13: HTTP handlers for topology resources (HostingLocation, Datacenter, FaultDomain, InfrastructureStack)
 
-**Purpose:** Implement collection (LIST/create) and item (GET/PATCH) handlers for the four topology resources with per-route pipeline, closed create contract, HostingLocation scope derived from topology.write with no parent reference, immutable Datacenter/FaultDomain/InfrastructureStack parent references, assigned-ISO validation (HostingLocation), PATCH-only update (description only), writer enforcement, idempotency, and audit.
+**Purpose:** Implement collection (LIST/create) and item (GET/PATCH) handlers for the four topology resources with per-route pipeline, closed create contract, HostingLocation scope derived from topology.write with no parent reference, immutable Datacenter/FaultDomain/InfrastructureStack parent references, assigned-ISO validation (HostingLocation), PATCH-only update (description only), writer enforcement, idempotency, and audit. Add the topology-specific under-lock Store lookup helpers required for PATCH's live `If-Match` re-read and published response.
 
 **Dependencies:** Task 1 (types and ISO dataset), Task 4 (validation/store primitives), Task 8 (idempotency/audit coordination), Task 9 (grants), Task 11 (CloudPlatform root gate and shared Store read-query surface).
 
@@ -987,11 +987,13 @@ go test -v ./internal/api/...
 - `internal/api/datacenter_collection.go`, `internal/api/datacenter_item.go`
 - `internal/api/faultdomain_collection.go`, `internal/api/faultdomain_item.go`
 - `internal/api/infrastructurestack_collection.go`, `internal/api/infrastructurestack_item.go`
+- `internal/cloudmodel/store.go` (topology under-lock live lookup helpers)
 
 **Tests:**
 - `internal/api/hostinglocation_collection_test.go`, `internal/api/datacenter_collection_test.go`, `internal/api/faultdomain_collection_test.go`, `internal/api/infrastructurestack_collection_test.go`: authenticated LIST with topology.read returns ascending metadata.uid; LIST without read grant returns 403 with exactly one AuditEvent; authorized create with closed contract returns 201 + exact initial status and one AuditEvent; HostingLocation: server-derived CloudProvider scope from topology.write grant, assigned countryCode (US accepted, ZZ rejected), optional administrativeAreaCode (syntax-plus-prefix only); Datacenter/FaultDomain/InfrastructureStack: server-derived CloudProvider scope from resolved immutable parent reference; root gate and inaccessible reference produce exactly one required redacted AuditEvent, with append failure substituting INTERNAL_ERROR/no publication; duplicate name, malformed/unknown/scope input, unassigned ISO, visible mismatch, idempotency replay/mismatch, and missing authentication produce no AuditEvent; client-supplied status/system-owned metadata is audited; successful create appends AuditEvent.
 - `internal/api/hostinglocation_item_test.go`, `internal/api/datacenter_item_test.go`, `internal/api/faultdomain_item_test.go`, `internal/api/infrastructurestack_item_test.go`: authorized GET returns resource; authorized PATCH spec.description returns 200 + updated with exactly one AuditEvent; stale/missing/malformed If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; immutable name and, for Datacenter/FaultDomain/InfrastructureStack only, immutable parent-reference PATCH return `VALIDATION_FAILED` / 422 with `VS0_PATCH_IMMUTABLE_FIELD` and no AuditEvent; client status write returns audited `AUTHORIZATION_DENIED` / 403 with `VS0_STATUS_FIELD_WRITE`; wrong-administrator PATCH returns `AUTHORIZATION_DENIED` / 403 before semantic processing with no AuditEvent; forged bootstrap header is denied/audited `AUTHORIZATION_DENIED` / 403 before unsupported PATCH media is evaluated; PUT/DELETE 405 and PATCH idempotency absence create no AuditEvent.
 - Topology collection-create and PATCH tests prove use of the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
+- `internal/cloudmodel/store_test.go`: `LookupHostingLocation`, `LookupDatacenter`, `LookupFaultDomain`, and `LookupInfrastructureStack` return the current stored copy while the caller holds the publication lock, matching the CloudPlatform/CloudProvider under-lock lookup contract; they do not acquire the lock again.
 
 **Verification commands:**
 ```bash
@@ -1005,6 +1007,7 @@ go test -v ./internal/api/...
 - Four topology kinds: HostingLocation, Datacenter, FaultDomain, InfrastructureStack.
 - Collection paths: GET /apis/infrastructure.sovrunn.io/v1alpha1/{kind} (LIST); POST (create).
 - Item paths: GET /apis/infrastructure.sovrunn.io/v1alpha1/{kind}/{uid}; PATCH (spec.description only).
+- Topology PATCH uses `LookupHostingLocation`, `LookupDatacenter`, `LookupFaultDomain`, or `LookupInfrastructureStack` only while the publication lock is held, for the live `If-Match` comparison and published response. These helpers return a copy and do not re-acquire the Store lock; public `Get…` methods remain for unlocked reads.
 - Topology collection-create and PATCH use the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - HostingLocation closed create: metadata.name, spec.countryCode (assigned), spec.locality, optional spec.administrativeAreaCode (syntax-plus-prefix), optional spec.description.
 - Datacenter/FaultDomain/InfrastructureStack closed create: metadata.name, immutable parent ref, optional spec.description.
