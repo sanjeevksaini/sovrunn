@@ -25,7 +25,8 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ "$MODE" == "auto" ]] || fail "unattended spec flow requires reviewer mode auto"
 [[ "$KIRO_MODE" == "auto" ]] || fail "unattended spec flow requires Kiro mode auto"
-[[ -n "${OPENAI_API_KEY:-}" ]] || fail "OPENAI_API_KEY is required for unattended OpenAI review"
+configure_reviewer_adapter
+info "Specification reviewer adapter: $FEATURE_FACTORY_REVIEWER_CMD"
 command -v kiro-cli >/dev/null 2>&1 || command -v kiro >/dev/null 2>&1 || fail "Kiro CLI is not available"
 cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
@@ -109,13 +110,67 @@ run_kiro_prompt_file() {
   fi
 
   info "Running Kiro CLI headlessly for $FEATURE $stage revision"
+  if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
+    PYTHONDONTWRITEBYTECODE=1 python3 \
+      ./scripts/generic-kiro-boundary-check.py \
+      --feature "$FEATURE" --stage "$stage" --mode pre
+  fi
   KIRO_INVOCATIONS=$((KIRO_INVOCATIONS + 1))
   set +e
   "$KIRO_BIN" "${args[@]}" "$prompt_text" 2>&1 | tee "$log_file"
   local status=${PIPESTATUS[0]}
   set -e
   [[ $status -eq 0 ]] || fail "Kiro CLI revision failed for $stage. See $log_file"
+  if [[ -f ".automation/features/${FEATURE}.control.json" ]]; then
+    ./scripts/receipt-check.py --log "$log_file" --document "$expected_doc" --kind stage || \
+      fail "Kiro revision did not produce exactly one COMPLETE receipt. See $log_file"
+    PYTHONDONTWRITEBYTECODE=1 python3 \
+      ./scripts/generic-kiro-boundary-check.py \
+      --feature "$FEATURE" --stage "$stage" --mode post
+  fi
   [[ -f "$expected_doc" ]] || fail "missing expected Kiro output after revision: $expected_doc"
+  ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_generated" >/dev/null
+}
+
+run_semantic_guardrails() {
+  local stage="$1" file_target="$2"
+  local revision_prompt=".automation/generated-prompts/$FEATURE/${stage}.semantic-revision.prompt.md"
+  local review_dir=".automation/reviews/$FEATURE"
+  local count_file="$review_dir/${stage}.revision-count"
+  local output rc old_count new_count
+
+  set +e
+  output="$(./scripts/kiro-semantic-check.py \
+    --feature "$FEATURE" \
+    --stage "$stage" \
+    --write-revision-prompt "$revision_prompt" 2>&1)"
+  rc=$?
+  set -e
+  printf '%s\n' "$output"
+  if [[ $rc -eq 0 ]]; then
+    return 0
+  fi
+
+  mkdir -p "$review_dir"
+  old_count=0
+  if [[ -f "$count_file" ]]; then
+    old_count="$(tr -d '[:space:]' < "$count_file")"
+  fi
+  [[ "$old_count" =~ ^[0-9]+$ ]] || fail "invalid revision count in $count_file"
+  new_count=$((old_count + 1))
+  printf '%s\n' "$new_count" > "$count_file"
+  if (( new_count > MAX_REVISIONS )); then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_blocked" >/dev/null || true
+    ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value true >/dev/null || true
+    fail "max combined semantic/reviewer revisions exceeded for $stage: $new_count>$MAX_REVISIONS"
+  fi
+
+  [[ -f "$revision_prompt" ]] || fail "semantic guardrail did not produce revision prompt: $revision_prompt"
+  info "Deterministic semantic guardrails rejected $stage; running bounded Kiro correction $new_count/$MAX_REVISIONS"
+  ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${stage}_revision_required" >/dev/null
+  ./scripts/feature-state.py set --feature "$FEATURE" --key human_gate_required --value false >/dev/null
+  run_kiro_prompt_file "$stage" "$revision_prompt" "$file_target"
+  return 1
 }
 
 run_stage() {
@@ -125,11 +180,29 @@ run_stage() {
   else
     info "Generating $stage with Kiro CLI headless mode: $KIRO_MODE"
     KIRO_INVOCATIONS=$((KIRO_INVOCATIONS + 1))
-    ./scripts/kiro-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$KIRO_MODE"
+    FEATURE_FACTORY_DEFER_SEMANTIC_CHECK=1 \
+      ./scripts/kiro-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$KIRO_MODE"
   fi
   [[ -f "$file_target" ]] || fail "missing expected Kiro output: $file_target"
 
+  local pending_status
+  pending_status="$(python3 - "$FEATURE" <<'PY'
+import json, sys
+from pathlib import Path
+print(json.loads(Path(f'.automation/state/{sys.argv[1]}.json').read_text()).get('status', ''))
+PY
+)"
+  if [[ "$pending_status" == "${stage}_revision_required" ]]; then
+    local pending_prompt=".automation/generated-prompts/$FEATURE/${stage}.revision.prompt.md"
+    [[ -f "$pending_prompt" ]] || fail "missing pending revision prompt: $pending_prompt"
+    info "Resume mode: applying pending $stage revision before re-review"
+    run_kiro_prompt_file "$stage" "$pending_prompt" "$file_target"
+  fi
+
   while true; do
+    if ! run_semantic_guardrails "$stage" "$file_target"; then
+      continue
+    fi
     set +e
     ./scripts/review-and-route-stage.sh --feature "$FEATURE" --stage "$stage" --mode "$MODE" --max-revisions "$MAX_REVISIONS"
     rc=$?

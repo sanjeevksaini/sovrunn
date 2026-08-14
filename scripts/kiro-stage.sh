@@ -157,8 +157,7 @@ if [[ $STATUS -ne 0 ]]; then
 fi
 
 if [[ -f "$CONTROL_FILE" ]]; then
-  mapfile -t STAGE_RECEIPTS < <(grep -E '^STAGE_STATUS: (COMPLETE|BLOCKED)( [A-Z_]+)?$' "$LOG_FILE" || true)
-  if [[ "${#STAGE_RECEIPTS[@]}" != "1" || "${STAGE_RECEIPTS[0]:-}" != "STAGE_STATUS: COMPLETE" ]]; then
+  if ! ./scripts/receipt-check.py --log "$LOG_FILE" --document "$EXPECTED_DOC" --kind stage; then
     ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "kiro_${STAGE}_blocked" >/dev/null || true
     fail "Kiro stage did not produce exactly one COMPLETE receipt; refusing stage acceptance. See $LOG_FILE"
   fi
@@ -187,6 +186,17 @@ if [[ -f "$CONTROL_FILE" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
     ./scripts/generic-kiro-boundary-check.py \
     --feature "$FEATURE" --stage "$STAGE" --mode post
+fi
+
+if [[ -f "$CONTROL_FILE" && "${FEATURE_FACTORY_DEFER_SEMANTIC_CHECK:-0}" != "1" ]]; then
+  SEMANTIC_REVISION_PROMPT=".automation/generated-prompts/$FEATURE/${STAGE}.semantic-revision.prompt.md"
+  if ! ./scripts/kiro-semantic-check.py \
+    --feature "$FEATURE" \
+    --stage "$STAGE" \
+    --write-revision-prompt "$SEMANTIC_REVISION_PROMPT"; then
+    ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_revision_required" >/dev/null || true
+    fail "Kiro semantic guardrails rejected $STAGE. Apply $SEMANTIC_REVISION_PROMPT, then rerun the stage."
+  fi
 fi
 
 ./scripts/feature-state.py set --feature "$FEATURE" --key status --value "${STAGE}_generated" >/dev/null

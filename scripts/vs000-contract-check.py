@@ -14,8 +14,8 @@ STEER_PATH = REPO/".kiro/steering/slice0-contract.md"
 CHARTER_PATH = REPO/"docs/architecture/vertical-slices/VS-000-core-skeleton.md"
 SPEC_PATH = REPO/"docs/architecture/vertical-slices/VS-000-contract-specification.md"
 SEQUENCE_PATH = REPO/"docs/phase2/PHASE2_FEATURE_SEQUENCE.md"
-F15_ARCH_PATH = REPO/"docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md"
-F15_FEATURE_PATH = REPO/"docs/features/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md"
+F15_ARCH_PATH = REPO/"docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md"
+F15_FEATURE_PATH = REPO/"docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"
 F15_CONTROL_PATH = REPO/".automation/features/FEATURE-0015.control.json"
 KIRO_AGENT_PATH = REPO/".kiro/agents/sovrunn-spec.md"
 SCOPES = {"Platform","Organization","OrganizationUnit","Tenant","Project","CloudPlatform","CloudProvider"}
@@ -29,22 +29,21 @@ F12_CODES = {"MALFORMED_REQUEST":(400,"malformed-request"),"UNKNOWN_FIELD":(400,
     "DEPENDENCY_UNAVAILABLE":(503,"dependency-unavailable")}
 INVENTED = {"NOT_FOUND","FORBIDDEN","UNAUTHORIZED","QUOTA_EXCEEDED","INTERNAL","UNAVAILABLE"}
 PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined owner/operator",
-    "ServiceClass as canonical catalog","EffectivePolicyContext","provider-neutral","six-scope authority"]
+    "ServiceClass as canonical catalog","EffectivePolicyContext","provider-neutral","six-scope authority",
+    "CanonicalMigrationPlan","CanonicalMigrationRecord","migration-controller","approved-migration-plan-publisher"]
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
-    +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"]
-    +["MIG01","MIG02","MIGF01","MIGF02","MIGF03"])
+    +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
+F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
-    "Datacenter", "FaultDomain", "InfrastructureStack", "ExecutionTarget",
-    "CanonicalMigrationPlan", "CanonicalMigrationRecord",
+    "Datacenter", "FaultDomain", "InfrastructureStack",
 }
-MIGRATION_MAPPINGS = {
-    "VS0-MIG-F01": ("VS0-CF-MIGF01", "CONFLICT", 409, "VS0_MIGRATION_STATE_INVALID"),
-    "VS0-MIG-F02": ("VS0-CF-MIGF02", "CONFLICT", 409, "VS0_MIGRATION_DUAL_AUTHORITY"),
-    "VS0-MIG-F03": ("VS0-CF-MIGF03", "VALIDATION_FAILED", 422, "VS0_MIGRATION_UNRESOLVED_REF"),
-}
-MIGRATION_MILESTONES = ["InventoryValidated", "DryRunPassed", "WriteFrozen", "BackupVerified",
-    "Transformed", "ReferencesVerified", "CutoverActivated", "ConformancePassed", "Completed"]
+F15_CONTROL_EXPECTED_OWNED = F15_OWNED
+RETIRED_SCHEMA_IDS = ["VS0-SCHEMA-057", "VS0-SCHEMA-060", "VS0-SCHEMA-061"]
+RETIRED_WRITER_IDS = ["VS0-WRITER-020", "VS0-WRITER-021"]
+RETIRED_STATE_IDS = ["VS0-STATE-011"]
+RETIRED_CONFORMANCE_IDS = ["VS0-CF-MIG01", "VS0-CF-MIG02", "VS0-CF-MIGF01", "VS0-CF-MIGF02", "VS0-CF-MIGF03"]
+RETIRED_MIGRATION_FAILURE_IDS = ["VS0-MIG-F01", "VS0-MIG-F02", "VS0-MIG-F03"]
 errs = []
 def e(m): errs.append(m)
 
@@ -62,21 +61,20 @@ def run():
     if set(m.get("scopeKinds",[]))!=SCOPES: e("metadata.scopeKinds != seven canonical scopes")
     # Schemas
     schemas = reg.get("schemas",[])
-    exp_s = [f"VS0-SCHEMA-{i:03d}" for i in list(range(1,57))+list(range(58,62))]
+    exp_s = [f"VS0-SCHEMA-{i:03d}" for i in range(1,62) if f"VS0-SCHEMA-{i:03d}" not in RETIRED_SCHEMA_IDS]
     ids_s = [s["id"] for s in schemas]
-    if ids_s!=exp_s: e(f"Active schema IDs must be 001..056,058..061 in order (got {len(ids_s)})")
+    if ids_s!=exp_s: e(f"Active schema IDs must be 001..061 minus retired IDs, in order (got {len(ids_s)})")
     retired = reg.get("retiredSchemas", [])
-    exp_retired = ["VS0-SCHEMA-057"]
+    exp_retired = RETIRED_SCHEMA_IDS
     ids_retired = [s.get("id") for s in retired]
-    if ids_retired != exp_retired: e(f"retiredSchemas must contain only the permanent VS0-SCHEMA-057 tombstone")
+    if ids_retired != exp_retired: e(f"retiredSchemas must contain exactly {exp_retired} tombstones in order")
     if sorted(ids_s+ids_retired) != [f"VS0-SCHEMA-{i:03d}" for i in range(1,62)]:
         e("Active plus retired schema IDs must consume exactly 001..061")
-    if retired:
-        tomb = retired[0]
-        if tomb.get("status") != "tombstone": e("VS0-SCHEMA-057: retired status must be tombstone")
-        if kind(tomb) != "SovrunnInstallation": e("VS0-SCHEMA-057: tombstone identity must be SovrunnInstallation")
-        if tomb.get("owner"): e("VS0-SCHEMA-057: retired tombstone must not have an active owner")
-        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e("VS0-SCHEMA-057: retirement traceability incomplete")
+    for tomb in retired:
+        tid = tomb.get("id", "?")
+        if tomb.get("status") != "tombstone": e(f"{tid}: retired status must be tombstone")
+        if tomb.get("owner"): e(f"{tid}: retired tombstone must not have an active owner")
+        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e(f"{tid}: retirement traceability incomplete")
     seen=set()
     for s in schemas:
         sid=s.get("id","?")
@@ -91,9 +89,9 @@ def run():
                 if v not in SCOPES: e(f"{sid}: bad scope '{v}'")
     # Writers
     writers = reg.get("writers",[])
-    exp_w = [f"VS0-WRITER-{i:03d}" for i in range(1,22)]
+    exp_w = [f"VS0-WRITER-{i:03d}" for i in range(1,20)]
     ids_w = [w["id"] for w in writers]
-    if ids_w!=exp_w: e(f"Writer IDs not contiguous 001..021")
+    if ids_w!=exp_w: e(f"Writer IDs not contiguous 001..019")
     pmap={}
     for w in writers:
         wid=w.get("id","?")
@@ -104,30 +102,23 @@ def run():
         for p in w.get("paths",[]):
             if p in pmap: e(f"Path '{p}' in both {pmap[p]} and {wid}")
             pmap[p]=wid
-    writer_by_id={w.get("id"):w for w in writers}
-    if writer_by_id.get("VS0-WRITER-020",{}).get("paths") != ["CanonicalMigrationRecord.record"] or writer_by_id.get("VS0-WRITER-020",{}).get("writer") != "migration-controller":
-        e("VS0-WRITER-020 must exclusively assign CanonicalMigrationRecord.record to migration-controller")
-    if writer_by_id.get("VS0-WRITER-021",{}).get("paths") != ["CanonicalMigrationPlan.record"] or writer_by_id.get("VS0-WRITER-021",{}).get("writer") != "approved-migration-plan-publisher":
-        e("VS0-WRITER-021 must exclusively assign CanonicalMigrationPlan.record to approved-migration-plan-publisher")
-    if "migration-controller" not in writer_by_id.get("VS0-WRITER-021",{}).get("forbidden",[]): e("VS0-WRITER-021 must forbid migration-controller self-approval")
+    retired_writers = reg.get("retiredWriters", [])
+    ids_retired_w = [w.get("id") for w in retired_writers]
+    if ids_retired_w != RETIRED_WRITER_IDS: e(f"retiredWriters must contain exactly {RETIRED_WRITER_IDS} in order")
+    for tomb in retired_writers:
+        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e(f"{tomb.get('id','?')}: retirement traceability incomplete")
     # State machines
     sms = reg.get("stateMachines",[])
-    exp_sm = [f"VS0-STATE-{i:03d}" for i in range(1,12)]
+    exp_sm = [f"VS0-STATE-{i:03d}" for i in range(1,11)]
     ids_sm = [x["id"] for x in sms]
-    if ids_sm!=exp_sm: e("StateMachine IDs not contiguous 001..011")
+    if ids_sm!=exp_sm: e("StateMachine IDs not contiguous 001..010")
+    retired_sms = reg.get("retiredStateMachines", [])
+    ids_retired_sm = [x.get("id") for x in retired_sms]
+    if ids_retired_sm != RETIRED_STATE_IDS: e(f"retiredStateMachines must contain exactly {RETIRED_STATE_IDS} in order")
+    for tomb in retired_sms:
+        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e(f"{tomb.get('id','?')}: retirement traceability incomplete")
     for sm in sms:
         mid=sm.get("id","?")
-        if mid == "VS0-STATE-011":
-            if sm.get("kind") != "CanonicalMigrationRecord": e(f"{mid}: kind must be CanonicalMigrationRecord")
-            if sm.get("owner") != "FEATURE-0015": e(f"{mid}: owner must be FEATURE-0015")
-            if sm.get("milestones") != MIGRATION_MILESTONES: e(f"{mid}: milestone sequence differs from DEC-0058")
-            if "states" in sm or "initial" in sm or "terminal" in sm: e(f"{mid}: append-only records must not masquerade as a mutable lifecycle")
-            invalid=sm.get("invalid", {})
-            if invalid != {"code":"CONFLICT", "violation":"VS0_MIGRATION_STATE_INVALID"}: e(f"{mid}: invalid transition contract mismatch")
-            details=" ".join(str(sm.get(x,"")) for x in ("description","ordering","immutabilityRule")).lower()
-            for required in ("append-only", "final", "predecessor"):
-                if required not in details: e(f"{mid}: missing {required} invariant")
-            continue
         sts=sm.get("states",[]); ini=sm.get("initial"); terms=sm.get("terminal",[])
         if not sts: e(f"{mid}: no states")
         if ini and ini not in sts: e(f"{mid}: initial not in states")
@@ -144,9 +135,10 @@ def run():
         if mid=="VS0-STATE-010":
             if not sm.get("appendOnly"): e("VS0-STATE-010: appendOnly must be true")
             if sts!=["FINAL"]: e("VS0-STATE-010: states must be [FINAL]")
-            immutable_kinds=set(sm.get("kinds", []))
-            for k in ("CanonicalMigrationPlan", "CanonicalMigrationRecord"):
-                if k not in immutable_kinds: e(f"VS0-STATE-010: missing immutable kind {k}")
+        if mid=="VS0-STATE-001":
+            hold_rule = str(sm.get("holdRule","")).lower()
+            for required in ("platformsuspended", "providersuspended", "clearing one hold"):
+                if required not in hold_rule: e(f"VS0-STATE-001: holdRule missing '{required}'")
     # Problem codes
     pcs = reg.get("problemCodes",[])
     if len(pcs)!=15: e(f"problemCodes count {len(pcs)} != 15")
@@ -184,21 +176,16 @@ def run():
             if fm.get("http")!=eh: e(f"{fid}: http mismatch")
             if fm.get("type")!=f"urn:sovrunn:problem:{slug}": e(f"{fid}: type mismatch")
         if viol and viol not in vc_set: e(f"{fid}: violation '{viol}' not in slice0 codes")
-    # FEATURE-0015 migration failures are closed and independently traceable.
-    mig_fms=reg.get("migrationFailureMappings", [])
-    if [x.get("id") for x in mig_fms] != list(MIGRATION_MAPPINGS):
-        e("migrationFailureMappings IDs != VS0-MIG-F01..F03")
-    for fm in mig_fms:
-        fid=fm.get("id", "?")
-        if fid not in MIGRATION_MAPPINGS: continue
-        exp_conf, exp_code, exp_http, exp_viol=MIGRATION_MAPPINGS[fid]
-        if (fm.get("conformance"), fm.get("code"), fm.get("http"), fm.get("violation")) != (exp_conf, exp_code, exp_http, exp_viol):
-            e(f"{fid}: migration failure mapping mismatch")
-        if fm.get("type") != f"urn:sovrunn:problem:{F12_CODES[exp_code][1]}": e(f"{fid}: type mismatch")
-        if exp_viol not in vc_set: e(f"{fid}: violation '{exp_viol}' not registered")
+    # Migration failure mappings are retired: canonical bootstrap replaces alpha runtime migration (DEC-0059).
+    retired_mig_fms = reg.get("retiredMigrationFailureMappings", [])
+    ids_retired_mig_fms = [x.get("id") for x in retired_mig_fms]
+    if ids_retired_mig_fms != RETIRED_MIGRATION_FAILURE_IDS: e(f"retiredMigrationFailureMappings must contain exactly {RETIRED_MIGRATION_FAILURE_IDS} in order")
+    for tomb in retired_mig_fms:
+        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e(f"{tomb.get('id','?')}: retirement traceability incomplete")
+    if reg.get("migrationFailureMappings"): e("migrationFailureMappings must not exist as an active section (DEC-0059)")
     # Conformance
     confs = reg.get("conformance",[])
-    exp_cf={f"VS0-CF-{c}" for c in CF_IDS}; found_cf=set(); seen_cf=set()
+    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS}; found_cf=set(); seen_cf=set()
     for c in confs:
         cid=c.get("id","?")
         if cid in seen_cf: e(f"Dup conformance: {cid}")
@@ -206,11 +193,129 @@ def run():
         for f in ("owner","inputs","expectedState","expectedError","expectedSideEffects","gate"):
             if f not in c: e(f"{cid}: missing {f}")
     for x in exp_cf-found_cf: e(f"Missing conformance: {x}")
+    # ADH-2026-049: FEATURE-0015 required-AuditEvent-append failure must map to the
+    # inherited INTERNAL_ERROR/500 outcome, never DEPENDENCY_UNAVAILABLE/503.
+    f15_24 = next((c for c in confs if c.get("id") == "VS0-CF-F15-24"), None)
+    if not f15_24:
+        e("VS0-CF-F15-24 conformance entry missing (ADH-2026-049)")
+    else:
+        if f15_24.get("expectedError") != "INTERNAL_ERROR":
+            e(f"VS0-CF-F15-24 expectedError must be INTERNAL_ERROR (ADH-2026-049), found {f15_24.get('expectedError')!r}")
+        side_effects_049 = str(f15_24.get("expectedSideEffects", "")).lower()
+        if "dependency_unavailable" in side_effects_049 and "not used" not in side_effects_049:
+            e("VS0-CF-F15-24 expectedSideEffects must not assign DEPENDENCY_UNAVAILABLE (ADH-2026-049)")
+    # ADH-2026-050: VS0-CF-F15-18/19 must each explicitly cover all seven FEATURE-0015
+    # collection creates and all eight existing-participation create/action routes,
+    # while preserving their existing IDs, expected states, and violation/code semantics.
+    f15_18 = next((c for c in confs if c.get("id") == "VS0-CF-F15-18"), None)
+    f15_19 = next((c for c in confs if c.get("id") == "VS0-CF-F15-19"), None)
+    if not f15_18:
+        e("VS0-CF-F15-18 conformance entry missing (ADH-2026-050)")
+    if not f15_19:
+        e("VS0-CF-F15-19 conformance entry missing (ADH-2026-050)")
+    if f15_18 and f15_19:
+        f15_all_route_kinds = ("CloudPlatform", "CloudProvider", "CloudProviderParticipation",
+                                "HostingLocation", "Datacenter", "FaultDomain", "InfrastructureStack")
+        f15_all_route_actions = ("accept", "reject", "withdraw", "suspend", "resume",
+                                  "request-release", "accept-release", "decline-release")
+        for case_id, entry in (("VS0-CF-F15-18", f15_18), ("VS0-CF-F15-19", f15_19)):
+            inputs_lower = str(entry.get("inputs", "")).lower()
+            for kind_name in f15_all_route_kinds:
+                if kind_name.lower() not in inputs_lower:
+                    e(f"{case_id} inputs must name {kind_name} in the all-route scope (ADH-2026-050)")
+            for action in f15_all_route_actions:
+                if action not in inputs_lower:
+                    e(f"{case_id} inputs must name the '{action}' participation action in the all-route scope (ADH-2026-050)")
+        if f15_18.get("expectedError") is not None:
+            e("VS0-CF-F15-18 expectedError must remain null (ADH-2026-050)")
+        if f15_19.get("expectedError") != "CONFLICT":
+            e(f"VS0-CF-F15-19 expectedError must remain CONFLICT (ADH-2026-050), found {f15_19.get('expectedError')!r}")
+        if f15_19.get("expectedViolation") != "VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH":
+            e(f"VS0-CF-F15-19 expectedViolation must remain VS0_IDEMPOTENCY_KEY_REUSE_MISMATCH (ADH-2026-050), found {f15_19.get('expectedViolation')!r}")
+    # ADH-2026-054: replay is bound to the concrete item target and is allowed
+    # only after current authorization and safe target/reference access.
+    for case_id, entry in (("VS0-CF-F15-18", f15_18), ("VS0-CF-F15-19", f15_19)):
+        if not entry:
+            continue
+        inputs_lower = str(entry.get("inputs", "")).lower()
+        for marker in ("concrete cloudproviderparticipation uid", "current server-resolved authorization", "safe target/reference access"):
+            if marker not in inputs_lower:
+                e(f"{case_id} inputs must state {marker!r} (ADH-2026-054)")
+    f15_22 = next((c for c in confs if c.get("id") == "VS0-CF-F15-22"), None)
+    f15_30 = next((c for c in confs if c.get("id") == "VS0-CF-F15-30"), None)
+    if not f15_22:
+        e("VS0-CF-F15-22 conformance entry missing (ADH-2026-054)")
+    else:
+        inputs_054 = str(f15_22.get("inputs", "")).lower()
+        effects_054 = str(f15_22.get("expectedSideEffects", "")).lower()
+        for marker in ("x-sovrunn-bootstrap-grant", "bootstrapgrant", "syntactically valid duplicate-free"):
+            if marker not in inputs_054:
+                e(f"VS0-CF-F15-22 inputs must state {marker!r} (ADH-2026-054)")
+        for marker in ("header detection follows authentication", "body-member detection precedes current authorization"):
+            if marker not in effects_054:
+                e(f"VS0-CF-F15-22 expectedSideEffects must state {marker!r} (ADH-2026-054)")
+    if not f15_30:
+        e("VS0-CF-F15-30 conformance entry missing (ADH-2026-054)")
+    else:
+        inputs_054 = str(f15_30.get("inputs", "")).lower()
+        effects_054 = str(f15_30.get("expectedSideEffects", "")).lower()
+        if "does not contain the reserved top-level bootstrapgrant" not in inputs_054:
+            e("VS0-CF-F15-30 inputs must exclude the reserved bootstrapGrant carrier (ADH-2026-054)")
+        if "governed instead by vs0-cf-f15-22" not in effects_054:
+            e("VS0-CF-F15-30 expectedSideEffects must delegate reserved bootstrapGrant to F15-22 (ADH-2026-054)")
+    # ADH-2026-051: the exact durable-audit boundary requires an AuditEvent side effect
+    # for every authenticated authorization/safe-denial category it names, and VS0-CF-F15-31
+    # must prove the new AUTH_REQUIRED local case without altering the inherited F01 case.
+    audited_denial_ids = ("VS0-CF-F15-05", "VS0-CF-F15-06", "VS0-CF-F15-21", "VS0-CF-F15-22", "VS0-CF-F15-23", "VS0-CF-X03")
+    for cid in audited_denial_ids:
+        entry = next((c for c in confs if c.get("id") == cid), None)
+        if not entry:
+            e(f"{cid} conformance entry missing (ADH-2026-051)")
+            continue
+        if "auditevent" not in str(entry.get("expectedSideEffects", "")).lower():
+            e(f"{cid} expectedSideEffects must state exactly one redacted FEATURE-0013 AuditEvent (ADH-2026-051)")
+    f15_31 = next((c for c in confs if c.get("id") == "VS0-CF-F15-31"), None)
+    if not f15_31:
+        e("VS0-CF-F15-31 conformance entry missing (ADH-2026-051)")
+    else:
+        if f15_31.get("owner") != "FEATURE-0015": e("VS0-CF-F15-31 owner must be FEATURE-0015 (ADH-2026-051)")
+        if f15_31.get("expectedError") != "AUTH_REQUIRED": e("VS0-CF-F15-31 expectedError must be AUTH_REQUIRED (ADH-2026-051)")
+        if "no mutation" not in str(f15_31.get("expectedSideEffects", "")).lower():
+            e("VS0-CF-F15-31 expectedSideEffects must state no mutation (ADH-2026-051)")
+    # ADH-2026-052: FEATURE-0015 must have exact local proof cases for CloudPlatform/CloudProvider
+    # name-uniqueness rejection (F15-32) and general registry-declared schema-constraint validation
+    # (F15-33), and F15-33 must explicitly exclude duplicate name, unassigned ISO code, and
+    # malformed/prohibited header/body outcomes already covered by other cases.
+    f15_32 = next((c for c in confs if c.get("id") == "VS0-CF-F15-32"), None)
+    if not f15_32:
+        e("VS0-CF-F15-32 conformance entry missing (ADH-2026-052)")
+    else:
+        if f15_32.get("owner") != "FEATURE-0015": e("VS0-CF-F15-32 owner must be FEATURE-0015 (ADH-2026-052)")
+        if f15_32.get("expectedError") != "ALREADY_EXISTS": e("VS0-CF-F15-32 expectedError must be ALREADY_EXISTS (ADH-2026-052)")
+        inputs_32 = str(f15_32.get("inputs", "")).lower()
+        for required in ("cloudplatform", "cloudprovider", "metadata.name", "duplicate"):
+            if required not in inputs_32:
+                e(f"VS0-CF-F15-32 inputs must name '{required}' (ADH-2026-052)")
+    f15_33 = next((c for c in confs if c.get("id") == "VS0-CF-F15-33"), None)
+    if not f15_33:
+        e("VS0-CF-F15-33 conformance entry missing (ADH-2026-052)")
+    else:
+        if f15_33.get("owner") != "FEATURE-0015": e("VS0-CF-F15-33 owner must be FEATURE-0015 (ADH-2026-052)")
+        if f15_33.get("expectedError") != "VALIDATION_FAILED": e("VS0-CF-F15-33 expectedError must be VALIDATION_FAILED (ADH-2026-052)")
+        inputs_33 = str(f15_33.get("inputs", "")).lower()
+        for required in ("duplicate name", "unassigned", "malformed"):
+            if required not in inputs_33:
+                e(f"VS0-CF-F15-33 inputs must explicitly exclude '{required}' outcomes covered by other cases (ADH-2026-052)")
     for x in found_cf-exp_cf: e(f"Unexpected conformance: {x}")
+    retired_confs = reg.get("retiredConformance", [])
+    ids_retired_cf = [x.get("id") for x in retired_confs]
+    if ids_retired_cf != RETIRED_CONFORMANCE_IDS: e(f"retiredConformance must contain exactly {RETIRED_CONFORMANCE_IDS} in order")
+    for tomb in retired_confs:
+        if not tomb.get("removalReason") or not tomb.get("retiredBy"): e(f"{tomb.get('id','?')}: retirement traceability incomplete")
     # Traceability
     if TRACE_PATH.exists():
         txt=TRACE_PATH.read_text()
-        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+list(MIGRATION_MAPPINGS)+[f"VS0-CF-{c}" for c in CF_IDS])
+        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS])
         for a in all_ids:
             if a not in txt: e(f"Traceability missing: {a}")
         for p in ("VS-000-contract-registry.yaml","VS-000-contract-specification.md","VS-000_CONTRACT_TRACEABILITY_MATRIX.md"):
@@ -227,11 +332,9 @@ def run():
         for term in PROHIBITED:
             if term not in st: e(f"Steering missing prohibited: {term}")
     else: e("Steering not found")
-    # Prohibited in active registry
-    dumped=yaml.dump(reg,default_flow_style=False)
-    prohibited_sec=yaml.dump(reg.get("prohibitedTerms",[]),default_flow_style=False)
-    retired_sec=yaml.dump(reg.get("retiredSchemas",[]),default_flow_style=False)
-    active=dumped.replace(prohibited_sec,"").replace(retired_sec,"")
+    # Prohibited in active registry (retired/tombstone sections are historical record, not active)
+    active_reg = {k: v for k, v in reg.items() if not k.startswith("retired") and k != "prohibitedTerms"}
+    active = yaml.dump(active_reg, default_flow_style=False)
     for term in PROHIBITED:
         if term.lower() in active.lower(): e(f"Registry active data has prohibited: '{term}'")
     # Spec checks
@@ -266,25 +369,20 @@ def run():
     pso=participation.get("fieldOwnership",{}).get("spec.providerSelectionModes",{})
     if pso != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("providerSelectionModes must be introduced and activated by FEATURE-0021")
     if any(str(x).startswith("spec.providerSelectionModes:") for x in participation.get("required",[])): e("providerSelectionModes must remain optional before FEATURE-0021")
+    phlr=participation.get("fieldOwnership",{}).get("spec.permittedHostingLocationRefs",{})
+    if phlr != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("permittedHostingLocationRefs must be introduced and activated by FEATURE-0021 (ADH-2026-047 decision 4)")
+    if any(str(x).startswith("spec.permittedHostingLocationRefs:") for x in participation.get("required",[])): e("permittedHostingLocationRefs must remain optional before FEATURE-0021")
     execution=schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{})
-    for field in ("spec.infrastructureStackRef","spec.participationRef","spec.targetClass"):
-        if execution.get(field) != {"introducedBy":"FEATURE-0015","activatedBy":"FEATURE-0015"}: e(f"ExecutionTarget.{field} must be FEATURE-0015-owned")
-    for field in ("status.qualification","status.availability","status.maintenanceEpoch","status.factSetRef","status.observedGeneration","status.conditions"):
+    for field in ("spec.infrastructureStackRef","spec.participationRef","spec.targetClass","status.qualification","status.availability","status.maintenanceEpoch","status.factSetRef","status.observedGeneration","status.conditions"):
         if execution.get(field) != {"introducedBy":"FEATURE-0016","activatedBy":"FEATURE-0016"}: e(f"ExecutionTarget.{field} must be FEATURE-0016-owned")
+    if schema_by_kind.get("ExecutionTarget",{}).get("owner") != "FEATURE-0016": e("ExecutionTarget must be owned by FEATURE-0016 in its entirety (DEC-0059/ADH-2026-045)")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")
     for field in ("spec.executionTargetRefs","status.availability"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022","dependsOn":"FEATURE-0016"}: e(f"ServiceRegion.{field} ownership/dependency mismatch")
     for k in ("CanonicalMigrationPlan","CanonicalMigrationRecord"):
-        if schema_by_kind.get(k,{}).get("profile") != "ImmutableRecord": e(f"{k} must use ImmutableRecord profile")
-    if schema_by_kind.get("CanonicalMigrationPlan",{}).get("fieldOwnership",{}).get("writer") != "approved-migration-plan-publisher": e("CanonicalMigrationPlan field writer must be approved-migration-plan-publisher")
-    if schema_by_kind.get("CanonicalMigrationRecord",{}).get("fieldOwnership",{}).get("writer") != "migration-controller": e("CanonicalMigrationRecord field writer must be migration-controller")
-    record=schema_by_kind.get("CanonicalMigrationRecord", {})
-    required=" ".join(record.get("required",[])); optional=" ".join(record.get("optional",[]))
-    for field in ("record.milestone:", "record.stage:", "record.planRef:"):
-        if field not in required: e(f"CanonicalMigrationRecord missing required {field[:-1]}")
-    if "record.predecessorRef:" not in optional: e("CanonicalMigrationRecord predecessorRef must be optional for the first milestone")
+        if k in schema_by_kind: e(f"{k} must not be an active Slice 0 schema (DEC-0059)")
     if SEQUENCE_PATH.exists():
         seq=SEQUENCE_PATH.read_text()
         f15_line=next((ln for ln in seq.splitlines() if re.match(r"^\|\s*5\s*\|\s*FEATURE-0015\b",ln)), "")
@@ -300,7 +398,7 @@ def run():
         try: control=json.loads(F15_CONTROL_PATH.read_text())
         except Exception as ex: control={}; e(f"FEATURE-0015 control manifest invalid JSON: {ex}")
         owned=set(control.get("ownership",{}).get("owned_resources",[]))
-        exp_control=(F15_OWNED-{"ExecutionTarget"})|{"ExecutionTarget-identity"}
+        exp_control=F15_CONTROL_EXPECTED_OWNED
         if owned != exp_control: e(f"FEATURE-0015 control owned_resources mismatch: {sorted(owned ^ exp_control)}")
         excluded={x.get("id") for x in control.get("ownership",{}).get("excluded_features",[])}
         if excluded != {f"FEATURE-{i:04d}" for i in range(16,27)}: e("FEATURE-0015 control must exclude exactly FEATURE-0016..0026")
@@ -353,7 +451,7 @@ else:
         f"writers={len(reg.get('writers', []))}, "
         f"state-machines={len(reg.get('stateMachines', []))}, "
         f"problem-codes={len(reg.get('problemCodes', []))}, "
-        f"failure-mappings={len(reg.get('failureMappings', [])) + len(reg.get('migrationFailureMappings', []))}, "
+        f"failure-mappings={len(reg.get('failureMappings', []))}, "
         f"conformance={len(reg.get('conformance', []))}"
     )
 for x in errs: print(f"  ✗ {x}")

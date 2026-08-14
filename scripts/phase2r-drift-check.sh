@@ -200,7 +200,7 @@ is_allowed_context() {
 # ---------------------------------------------------------------------------
 echo "1. Checking all twelve FEATURE-0015–0026 titles across five files..."
 EXPECTED_TITLES=(
-  "Canonical Cloud Model and Alpha Migration Foundation"
+  "Canonical Cloud Model Foundation"
   "Adapter Boundary and ExecutionTarget Qualification"
   "Policy Evaluation Abstraction"
   "Governance, IAM, Approval and Exception Foundation"

@@ -290,7 +290,7 @@ func TestTopologyValueFromResources_Projection(t *testing.T) {
 			UID:  "loc-uid-a",
 			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
 				APIVersion: resources.FabricAPIVersion,
-				Kind:       string(apimeta.ScopeProvider),
+				Kind:       string(apimeta.ScopeCloudProvider),
 				Name:       "provider-operator-a",
 				UID:        providerUID,
 			}},
@@ -326,7 +326,7 @@ func TestTopologyValueFromResources_MissingKindFailsClosed(t *testing.T) {
 
 	providerUID := "provider-uid-missing-kind"
 	providerScope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
-		Kind: string(apimeta.ScopeProvider),
+		Kind: string(apimeta.ScopeCloudProvider),
 		UID:  providerUID,
 	}}
 

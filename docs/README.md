@@ -24,8 +24,8 @@ For Phase 2R and Phase 3 development, AI agents must load these before generatin
 - `docs/architecture/vertical-slices/VS-000-contract-specification.md` — exact Slice 0 integration rules
 - `docs/architecture/vertical-slices/VS-000-contract-registry.yaml` — machine-readable Slice 0 schemas, writers, states, errors and conformance
 - `docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md` — Slice 0 repository traceability
-- `docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md` — closed FEATURE-0015 architecture boundary
-- `docs/features/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md` — executable FEATURE-0015 scope before Kiro stage generation
+- `docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md` — closed FEATURE-0015 architecture boundary
+- `docs/features/FEATURE-0015-canonical-cloud-model-foundation.md` — executable FEATURE-0015 scope before Kiro stage generation
 - `docs/phase2/PHASE2_SCOPE.md`
 - `docs/phase2/PHASE2_FEATURE_SEQUENCE.md`
 - `docs/phase2/PHASE2_ACCEPTANCE_GATES.md`

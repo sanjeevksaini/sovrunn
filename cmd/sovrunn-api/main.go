@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/sanjeevksaini/sovrunn/internal/api"
+	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/registry"
@@ -80,6 +81,13 @@ func main() {
 	readiness := &health.ReadinessState{}
 	bootstrapHandler := api.NewBootstrapHandler(cfg, readiness)
 	srv := server.New(cfg, orgHandler, ouHandler, tenantHandler, projectHandler, operationHandler, serviceClassHandler, servicePlanHandler, pluginHandler, capabilityHandler, serviceInstanceHandler, serviceBindingHandler, bootstrapHandler, readiness)
+
+	// FEATURE-0015 Task 8: compose audit-aware scheduler and idempotency
+	// abort into the API-server process lifecycle. Start() runs the scheduler;
+	// signal-driven Shutdown() stops the scheduler, aborts in-flight
+	// idempotency reservations (waking waiters), then completes process exit.
+	auditLog := &cloudmodel.MemoryAuditAppender{}
+	srv.AttachCloudModel(server.NewCloudModelRuntime(auditLog))
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)

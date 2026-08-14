@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMatrixBScopeKinds(t *testing.T) {
+func TestCanonicalSevenScopeKinds(t *testing.T) {
 	t.Parallel()
 
 	want := []ScopeKind{
@@ -14,7 +14,8 @@ func TestMatrixBScopeKinds(t *testing.T) {
 		"OrganizationUnit",
 		"Tenant",
 		"Project",
-		"Provider",
+		"CloudPlatform",
+		"CloudProvider",
 	}
 	got := AllScopeKinds()
 	if len(got) != len(want) {
@@ -30,6 +31,12 @@ func TestMatrixBScopeKinds(t *testing.T) {
 	}
 	if ScopeKind("Cluster").Valid() {
 		t.Fatal("unknown scope kind must not be Valid")
+	}
+	if ScopeKind("Provider").Valid() {
+		t.Fatal("retired Provider scope kind must not be Valid")
+	}
+	if !ScopeCloudPlatform.Valid() || !ScopeCloudProvider.Valid() {
+		t.Fatal("CloudPlatform and CloudProvider must be Valid")
 	}
 }
 
@@ -94,6 +101,16 @@ func TestCanonicalScopeIdentity(t *testing.T) {
 	got = CanonicalScopeIdentity(tenant)
 	if got.Kind != ScopeTenant || got.UID != tenantUID {
 		t.Fatalf("CanonicalScopeIdentity(Tenant)=%+v, want Tenant/%q", got, tenantUID)
+	}
+
+	const cloudProviderUID = "cccccccccccccccccccccccccccccccc"
+	provider := &ScopeRef{TypedRef: TypedRef{
+		Kind: string(ScopeCloudProvider),
+		UID:  cloudProviderUID,
+	}}
+	got = CanonicalScopeIdentity(provider)
+	if got.Kind != ScopeCloudProvider || got.UID != cloudProviderUID {
+		t.Fatalf("CanonicalScopeIdentity(CloudProvider)=%+v, want CloudProvider/%q", got, cloudProviderUID)
 	}
 }
 

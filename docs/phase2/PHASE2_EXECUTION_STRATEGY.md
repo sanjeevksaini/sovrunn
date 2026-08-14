@@ -101,7 +101,7 @@ These features define the standards used by all later Phase 2 work.
 
 ```text
 FEATURE-0014: Provider-Neutral Resource Model
-FEATURE-0015: Canonical Cloud Model and Alpha Migration Foundation
+FEATURE-0015: Canonical Cloud Model Foundation
 FEATURE-0016: Adapter Boundary Foundation
 ```
 

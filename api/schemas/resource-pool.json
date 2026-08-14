@@ -6,17 +6,25 @@
   "type": "object",
   "x-sovrunn-profile": "ManagedResource",
   "x-sovrunn-boundary": "operator-facing",
-  "x-sovrunn-allowed-scopes": ["Provider"],
+  "x-sovrunn-allowed-scopes": [
+    "CloudProvider"
+  ],
   "x-sovrunn-stability": "alpha",
   "properties": {
     "apiVersion": {
       "type": "string",
-      "enum": ["fabric.sovrunn.io/v1alpha1"],
+      "enum": [
+        "fabric.sovrunn.io/v1alpha1"
+      ],
       "description": "Contract group and maturity version for ResourcePool.",
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["operator", "internal", "governance"],
+        "authorizedReaders": [
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -26,12 +34,18 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["ResourcePool"],
+      "enum": [
+        "ResourcePool"
+      ],
       "description": "Singular PascalCase resource kind.",
       "x-sovrunn-field-policy": {
         "classification": "Public",
         "authorizedWriter": "system",
-        "authorizedReaders": ["operator", "internal", "governance"],
+        "authorizedReaders": [
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "immutable",
         "retention": "standard",
         "redaction": "none",
@@ -45,7 +59,11 @@
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "creator",
-        "authorizedReaders": ["operator", "internal", "governance"],
+        "authorizedReaders": [
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "none",
@@ -66,7 +84,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "spec-owner",
-            "authorizedReaders": ["operator", "internal", "governance"],
+            "authorizedReaders": [
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "mutable",
             "retention": "standard",
             "redaction": "none",
@@ -83,7 +105,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "spec-owner",
-            "authorizedReaders": ["operator", "internal", "governance"],
+            "authorizedReaders": [
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "mutable",
             "retention": "standard",
             "redaction": "none",
@@ -92,12 +118,18 @@
           }
         }
       },
-      "required": ["capabilityClass"],
+      "required": [
+        "capabilityClass"
+      ],
       "additionalProperties": false,
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "spec-owner",
-        "authorizedReaders": ["operator", "internal", "governance"],
+        "authorizedReaders": [
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "mutable",
         "retention": "standard",
         "redaction": "none",
@@ -111,11 +143,22 @@
       "properties": {
         "phase": {
           "type": "string",
-          "enum": ["Pending", "Ready", "Degraded", "Unavailable", "Deleting", "Failed"],
+          "enum": [
+            "Pending",
+            "Ready",
+            "Degraded",
+            "Unavailable",
+            "Deleting",
+            "Failed"
+          ],
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["operator", "internal", "governance"],
+            "authorizedReaders": [
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -129,7 +172,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Internal",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["operator", "internal", "governance"],
+            "authorizedReaders": [
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "none",
@@ -145,7 +192,11 @@
           "x-sovrunn-field-policy": {
             "classification": "Operator-confidential",
             "authorizedWriter": "status-owner",
-            "authorizedReaders": ["operator", "internal", "governance"],
+            "authorizedReaders": [
+              "operator",
+              "internal",
+              "governance"
+            ],
             "mutability": "system-only",
             "retention": "standard",
             "redaction": "redact",
@@ -158,7 +209,11 @@
       "x-sovrunn-field-policy": {
         "classification": "Operator-confidential",
         "authorizedWriter": "status-owner",
-        "authorizedReaders": ["operator", "internal", "governance"],
+        "authorizedReaders": [
+          "operator",
+          "internal",
+          "governance"
+        ],
         "mutability": "system-only",
         "retention": "standard",
         "redaction": "none",
@@ -167,6 +222,11 @@
       }
     }
   },
-  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
   "additionalProperties": false
 }

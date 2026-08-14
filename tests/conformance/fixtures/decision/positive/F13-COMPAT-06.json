@@ -9,7 +9,7 @@
     "resourceVersion": "rv-audit-f13-compat-06",
     "scopeRef": {
       "apiVersion": "provider.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "aws-provider",
       "uid": "provider-uid-compat-06"
     },

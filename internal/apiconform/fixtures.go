@@ -392,7 +392,7 @@ func proveOperatorRegistersResourcePool(l *FixtureLoader) error {
 	if err := rejectVendorNativeTokens(string(raw)); err != nil {
 		return fmt.Errorf("resource-pool fixture: %w", err)
 	}
-	if pool.Metadata.ScopeRef == nil || apimeta.ScopeKind(pool.Metadata.ScopeRef.Kind) != apimeta.ScopeProvider {
+	if pool.Metadata.ScopeRef == nil || apimeta.ScopeKind(pool.Metadata.ScopeRef.Kind) != apimeta.ScopeCloudProvider {
 		return fmt.Errorf("provider scopeRef required, got %+v", pool.Metadata.ScopeRef)
 	}
 	return nil
@@ -530,7 +530,7 @@ func proveFutureProvisioningExecutes(l *FixtureLoader) error {
 		{"operation-organizationunit.json", apimeta.ScopeOrganizationUnit},
 		{"operation-tenant.json", apimeta.ScopeTenant},
 		{"operation-project.json", apimeta.ScopeProject},
-		{"operation-provider.json", apimeta.ScopeProvider},
+		{"operation-provider.json", apimeta.ScopeCloudProvider},
 	}
 	if len(variants) != 6 {
 		return fmt.Errorf("expected six Operation scope variants, got %d", len(variants))
@@ -907,7 +907,7 @@ func resolveOperationTargetGovernanceScope(op *Operation) apimeta.ScopeIdentity 
 		apimeta.ScopeOrganizationUnit,
 		apimeta.ScopeTenant,
 		apimeta.ScopeProject,
-		apimeta.ScopeProvider:
+		apimeta.ScopeCloudProvider:
 		return apimeta.ScopeIdentity{Kind: kind, UID: op.Spec.TargetRef.UID}
 	case apimeta.ScopePlatform:
 		return apimeta.ScopeIdentity{Kind: apimeta.ScopePlatform, UID: apimeta.PlatformScopeUID}

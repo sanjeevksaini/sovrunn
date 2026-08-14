@@ -34,7 +34,7 @@ func TestInfrastructureStackJSONRoundTripWithTechnology(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -142,8 +142,8 @@ func TestInfrastructureStackJSONRoundTripWithTechnology(t *testing.T) {
 	if out.Metadata.ScopeRef == nil {
 		t.Fatal("metadata.scopeRef is nil")
 	}
-	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeProvider) {
-		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeProvider)
+	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeCloudProvider) {
+		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeCloudProvider)
 	}
 	if out.Spec.DatacenterFailureDomainRef.Kind != KindDatacenterFailureDomain {
 		t.Fatalf("spec.datacenterFailureDomainRef.kind = %q, want %q", out.Spec.DatacenterFailureDomainRef.Kind, KindDatacenterFailureDomain)
@@ -176,7 +176,7 @@ func TestInfrastructureStackJSONRoundTripWithoutTechnology(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -250,7 +250,7 @@ func TestInfrastructureStackDatacenterFailureDomainRefOptionalUID(t *testing.T) 
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -470,7 +470,7 @@ func TestInfrastructureStackIdenticalTechnologyRetainsDistinctIdentity(t *testin
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -499,7 +499,7 @@ func TestInfrastructureStackIdenticalTechnologyRetainsDistinctIdentity(t *testin
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},

@@ -14,16 +14,16 @@ Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`
 
 Active phase: Phase 2R
 
-Next feature: FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation
+Next feature: FEATURE-0015 Canonical Cloud Model Foundation
 
-Controlling adoption: ADH-2026-042, ACR-2026-001, ARCH-APPROVAL-2026-004
+Controlling adoption: ADH-2026-042, ACR-2026-001, ARCH-APPROVAL-2026-004, ADH-2026-045
 
 ## Source-of-Truth Priority
 
 1. `docs/context/CURRENT_ARCHITECTURE_BASELINE.md`
 2. `docs/architecture/canonical/sovrunn-finalized-data-model.md` (canonical semantic model)
 3. `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` (contract catalog)
-4. Accepted DEC files (DEC-0037–0058) and `docs/decisions/DECISION_INDEX.md`
+4. Accepted DEC files (DEC-0037–0059) and `docs/decisions/DECISION_INDEX.md`
 5. Approved RFC files
 6. `docs/architecture/*.md`
 7. `docs/phase2/*.md` including `PHASE2R_REBASELINE.md`
@@ -44,7 +44,7 @@ Roadmap placeholders are directional only and do not override accepted architect
 - Published definitions are immutable by version.
 - ServiceBinding is SecretRef-only, per-consumer, separately revocable.
 - Customer APIs contain no provider-native objects, raw secrets, or protected handles.
-- Alpha migration is atomic, no dual authority.
+- Canonical bootstrap, not runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets, not live state requiring conversion (DEC-0059).
 
 ## Rules
 

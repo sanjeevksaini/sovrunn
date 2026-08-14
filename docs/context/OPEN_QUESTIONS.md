@@ -20,8 +20,8 @@ The following questions are resolved by DEC-0037 through DEC-0058:
 - Whether governance and sovereignty should be composed or separate → DEC-0050: composed governance, separate sovereignty.
 - Whether ServiceClass is the canonical catalog concept → DEC-0049: ServiceTypeDefinition + ServiceOffering replaces it.
 - Whether Provider is one boundary or multiple → DEC-0037, DEC-0054: CloudPlatform, CloudProvider, and installation are distinct.
-- Exact ServiceClass to ServiceTypeDefinition/ServiceOffering mapping → DEC-0049 and FEATURE-0015 CanonicalMigrationPlan control this deterministically.
-- Alpha migration backup/dry-run procedure → DEC-0058 and CanonicalMigrationPlan define verified backup, write freeze, deterministic mapping, no dual authority.
+- Exact ServiceClass to ServiceTypeDefinition/ServiceOffering mapping → DEC-0049 controls this; FEATURE-0022 creates the canonical resources directly (no migration plan; DEC-0059).
+- Whether alpha runtime migration machinery is needed before a control plane exists → DEC-0059 (ADH-2026-045): no. FEATURE-0001–0014 are retained repository assets/reuse input, not live state requiring conversion; the first control-plane release exposes canonical contracts only.
 
 ## Rule
 

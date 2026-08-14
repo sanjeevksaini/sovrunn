@@ -34,7 +34,7 @@ func TestProviderDatacenterJSONRoundTripWithProviderLocationRef(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},
@@ -130,8 +130,8 @@ func TestProviderDatacenterJSONRoundTripWithProviderLocationRef(t *testing.T) {
 	if out.Metadata.ScopeRef == nil {
 		t.Fatal("metadata.scopeRef is nil")
 	}
-	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeProvider) {
-		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeProvider)
+	if out.Metadata.ScopeRef.Kind != string(apimeta.ScopeCloudProvider) {
+		t.Fatalf("metadata.scopeRef.kind = %q, want %q", out.Metadata.ScopeRef.Kind, apimeta.ScopeCloudProvider)
 	}
 	if out.Spec.ProviderLocationRef.Kind != KindProviderLocation {
 		t.Fatalf("spec.providerLocationRef.kind = %q, want %q", out.Spec.ProviderLocationRef.Kind, KindProviderLocation)
@@ -161,7 +161,7 @@ func TestProviderDatacenterProviderLocationRefOptionalUID(t *testing.T) {
 			ScopeRef: &apimeta.ScopeRef{
 				TypedRef: apimeta.TypedRef{
 					APIVersion: FabricAPIVersion,
-					Kind:       string(apimeta.ScopeProvider),
+					Kind:       string(apimeta.ScopeCloudProvider),
 					Name:       "sovereign-provider-a",
 					UID:        "uid-provider-a",
 				},

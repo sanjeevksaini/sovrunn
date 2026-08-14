@@ -118,7 +118,7 @@ func providerScopeUIDFromScopeRef(scope *apimeta.ScopeRef) string {
 	if scope == nil {
 		return ""
 	}
-	if apimeta.ScopeKind(scope.Kind) != apimeta.ScopeProvider {
+	if apimeta.ScopeKind(scope.Kind) != apimeta.ScopeCloudProvider {
 		return ""
 	}
 	return scope.UID

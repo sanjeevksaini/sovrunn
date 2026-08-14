@@ -78,7 +78,8 @@ var property1Scopes = []string{
 	"OrganizationUnit",
 	"Tenant",
 	"Project",
-	"Provider",
+	"CloudPlatform",
+	"CloudProvider",
 }
 
 // property1Case is a generated schema with an oracle of unsupported

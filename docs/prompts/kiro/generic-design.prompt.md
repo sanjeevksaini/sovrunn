@@ -16,6 +16,10 @@ Rules:
 
 - Map every requirement to a design disposition or an explicit contract-only
   disposition. Do not silently drop requirements.
+- Preserve the approved REQ and AC meanings exactly. Add a section titled
+  exactly `Canonical coverage ledger` in which every approved REQ and every
+  approved AC appears exactly once with its design disposition. Do not create,
+  renumber, merge, split, reinterpret, or omit an ID.
 - Reuse previous-feature types, grammar, errors, limits, and test helpers from
   their canonical owners; do not fork them.
 - Follow the repository's Go package direction, minimal-dependency policy,
@@ -31,6 +35,9 @@ Rules:
 - Prefer references to inherited standards over copying their contents.
 - Resolve all design questions. If a semantic choice remains, stop rather than
   delegating it to tasks or Cursor.
+- Do not import downstream fields, metrics, side effects, controllers,
+  adapter/plugin execution, or runtime proofs. A referenced `VS0-CF-*` case
+  retains its exact registry owner and semantics.
 
 Required sections:
 
@@ -46,7 +53,9 @@ Required sections:
 10. Non-goals, absence ledger, and unresolved report
 
 Before completion, read the entire file and verify that it contains no
-unapproved semantic choice and no mechanism owned by an excluded feature.
+unapproved semantic choice and no mechanism owned by an excluded feature. The
+automation will run a deterministic semantic check before review; preemptively
+satisfy every rule above before returning COMPLETE.
 
 Finish with exactly one receipt:
 

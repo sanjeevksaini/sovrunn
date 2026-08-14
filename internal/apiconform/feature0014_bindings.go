@@ -58,22 +58,22 @@ var expectedFeature0014Annotations = map[string]struct {
 	},
 	"api/schemas/provider-location.json": {
 		kind:      resources.KindProviderLocation,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"api/schemas/provider-datacenter.json": {
 		kind:      resources.KindProviderDatacenter,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"api/schemas/datacenter-failure-domain.json": {
 		kind:      resources.KindDatacenterFailureDomain,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"api/schemas/infrastructure-stack.json": {
 		kind:      resources.KindInfrastructureStack,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 }

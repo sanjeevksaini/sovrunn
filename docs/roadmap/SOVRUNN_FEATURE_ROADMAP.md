@@ -60,7 +60,7 @@ Phase 2R features are executable scope under the canonical model (ADH-2026-042).
 | FEATURE-0012 | API, Resource Naming, Status, and Validation Standard | Completed | Establish API/resource conventions, status, conditions, references, validation, and API boundary classification. |
 | FEATURE-0013 | Decision Record and AuditEvent Standard | Completed | Define common decision and audit event structure with DecisionRecord profiles. |
 | FEATURE-0014 | Provider-Neutral Resource Model | Completed (alpha model) | Define Provider, ProviderLocation, ProviderDatacenter, DatacenterFailureDomain, and InfrastructureStack. Migration input for canonical model. |
-| FEATURE-0015 | Canonical Cloud Model and Alpha Migration Foundation | Executable | Seven-scope migration; CloudPlatform; CloudProvider; ExecutionTarget; CanonicalMigrationPlan. |
+| FEATURE-0015 | Canonical Cloud Model Foundation | Executable | Seven-scope canonical bootstrap; CloudPlatform; CloudProvider; CloudProviderParticipation; topology through InfrastructureStack. No alpha runtime migration (DEC-0059); ExecutionTarget owned by FEATURE-0016. |
 | FEATURE-0016 | Adapter Boundary and ExecutionTarget Qualification | Executable | Core adapter interfaces; target qualification; fake adapter. |
 | FEATURE-0017 | Policy Evaluation Abstraction | Executable | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage. |
 | FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | Executable | GovernanceProfile; Membership; Roles; Approval; ExceptionGrant. |

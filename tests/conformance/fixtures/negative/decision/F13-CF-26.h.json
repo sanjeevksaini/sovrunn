@@ -167,7 +167,8 @@
                 "OrganizationUnit",
                 "Tenant",
                 "Project",
-                "Provider"
+                "CloudPlatform",
+                "CloudProvider"
               ],
               "platformAllowed": true
             },

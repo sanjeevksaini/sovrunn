@@ -98,7 +98,7 @@ Phase 2R must not perform real provider provisioning, real PostgreSQL runtime pr
 - reuse assessment standard,
 - API/resource standard,
 - decision and audit standard (DecisionRecord with registered profiles),
-- canonical cloud model and alpha migration (seven scope kinds, CloudPlatform, CloudProvider, ExecutionTarget),
+- canonical cloud model foundation via direct bootstrap (seven scope kinds, CloudPlatform, CloudProvider; no alpha runtime migration),
 - adapter boundary and ExecutionTarget qualification,
 - policy evaluation abstraction with DecisionRecord linkage,
 - governance, IAM, approval, and exception foundation,
@@ -125,7 +125,7 @@ Phase 2R must not perform real provider provisioning, real PostgreSQL runtime pr
 - production-grade plugin sandbox,
 - mandatory capacity scheduling or provider-wide capability truth,
 - native provider objects in customer or core schemas,
-- dual authority between alpha and canonical models.
+- runtime alpha data migration, a migration controller, or a cutover state machine (DEC-0059).
 
 ### Phase 2R Feature Sequence
 
@@ -142,7 +142,7 @@ Phase 2R must not perform real provider provisioning, real PostgreSQL runtime pr
 
 | Feature | Name | Purpose |
 |---|---|---|
-| FEATURE-0015 | Canonical Cloud Model and Alpha Migration Foundation | Seven-scope migration; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; InfrastructureStack; ExecutionTarget identity; CanonicalMigrationPlan/Record. |
+| FEATURE-0015 | Canonical Cloud Model Foundation | Seven-scope canonical bootstrap; CloudPlatform; CloudProvider; CloudProviderParticipation; HostingLocation; Datacenter; FaultDomain; InfrastructureStack (ends here; ExecutionTarget owned by FEATURE-0016); no alpha runtime migration (DEC-0059). |
 | FEATURE-0016 | Adapter Boundary and ExecutionTarget Qualification | Core adapter interfaces; normalized target facts; target qualification and availability axes; target-scoped SecretRefs; fake adapter. |
 | FEATURE-0017 | Policy Evaluation Abstraction | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage; deterministic bootstrap fake. |
 | FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | GovernanceProfile; Membership; RoleDefinition; RoleAssignment; PrivilegedAccessRequest; AccessReview; ApprovalPolicy; ApprovalRequest; ExceptionGrant. |

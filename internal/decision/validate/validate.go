@@ -181,7 +181,7 @@ func ValidateDecisionRecordWith(rec decision.DecisionRecord, view bundle.BundleV
 	idExists := view.ProfileIDExists(ref.Name)
 
 	// Pass 2 — Scope. Profile scope membership is applied when the profile is
-	// resolvable; otherwise the six-value vocabulary and sole-authority checks
+	// resolvable; otherwise the seven-value vocabulary and sole-authority checks
 	// still run (profile unknown is owned by pass 3).
 	allowed, platformAllowed := governanceScopesForRecord(profile, found)
 	if prob := ValidateScope(ScopeInput{
@@ -478,7 +478,7 @@ func structuralProblem(code apiproblem.ErrorCode, field, message string) *apipro
 
 func governanceScopesForRecord(profile decision.DecisionProfile, found bool) ([]apimeta.ScopeKind, bool) {
 	if !found {
-		// Profile not yet resolved: allow the six-value vocabulary so pass 2
+		// Profile not yet resolved: allow the seven-value vocabulary so pass 2
 		// can still reject invalid kinds; widening against profile is deferred
 		// to pass 3 unknown/version failures.
 		return allGovernanceScopes(), true
@@ -499,7 +499,8 @@ func allGovernanceScopes() []apimeta.ScopeKind {
 		apimeta.ScopeOrganizationUnit,
 		apimeta.ScopeTenant,
 		apimeta.ScopeProject,
-		apimeta.ScopeProvider,
+		apimeta.ScopeCloudPlatform,
+		apimeta.ScopeCloudProvider,
 	}
 }
 

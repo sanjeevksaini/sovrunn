@@ -21,14 +21,15 @@ const property5Seed int64 = 20260723
 
 const property5Iterations = 100
 
-// property5ScopeKinds covers all six Matrix B / D-17 governance scopes.
+// property5ScopeKinds covers all seven canonical governance scopes.
 var property5ScopeKinds = []apimeta.ScopeKind{
 	apimeta.ScopePlatform,
 	apimeta.ScopeOrganization,
 	apimeta.ScopeOrganizationUnit,
 	apimeta.ScopeTenant,
 	apimeta.ScopeProject,
-	apimeta.ScopeProvider,
+	apimeta.ScopeCloudPlatform,
+	apimeta.ScopeCloudProvider,
 }
 
 // property5Case models a denied cross-scope access under one of the three

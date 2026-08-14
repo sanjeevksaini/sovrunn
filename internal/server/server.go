@@ -12,17 +12,33 @@ import (
 	"time"
 
 	"github.com/sanjeevksaini/sovrunn/internal/api"
+	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/resources"
 )
 
-// Server owns HTTP server lifecycle.
+// CloudModelRuntime is the FEATURE-0015 composition attached to the API server:
+// store, idempotency coordinator, audit-publication coordinator, and the
+// audit-aware participation expiry scheduler (Task 8).
+type CloudModelRuntime struct {
+	Store       *cloudmodel.Store
+	Idempotency *cloudmodel.IdempotencyCoordinator
+	Publication *cloudmodel.PublicationCoordinator
+	Scheduler   *cloudmodel.ParticipationExpiryScheduler
+	Guard       *cloudmodel.ParticipationActionGuard
+}
+
+// Server owns HTTP server lifecycle and optional FEATURE-0015 cloud-model
+// coordination (scheduler + idempotency abort on shutdown).
 type Server struct {
 	cfg        config.Config
 	httpServer *http.Server
 	readiness  *health.ReadinessState
 	logger     *log.Logger
+
+	cloud          *CloudModelRuntime
+	schedCtxCancel context.CancelFunc
 }
 
 // New constructs the Server with routes and middleware registered.
@@ -120,13 +136,55 @@ func New(
 	}
 }
 
-// Start binds the listener, marks readiness true, and blocks until signal.
+// AttachCloudModel attaches FEATURE-0015 runtime coordination. The scheduler
+// must already be constructed with PublicationCoordinator.ExpireParticipation
+// as its injected expiry operation.
+func (s *Server) AttachCloudModel(rt *CloudModelRuntime) {
+	s.cloud = rt
+}
+
+// CloudModel returns the attached FEATURE-0015 runtime, if any.
+func (s *Server) CloudModel() *CloudModelRuntime {
+	return s.cloud
+}
+
+// NewCloudModelRuntime builds the composed store, idempotency coordinator,
+// audit-publication coordinator, and audit-aware expiry scheduler.
+func NewCloudModelRuntime(audit cloudmodel.AuditAppender) *CloudModelRuntime {
+	store := cloudmodel.NewStore()
+	guard := &cloudmodel.ParticipationActionGuard{}
+	idemp := cloudmodel.NewIdempotencyCoordinator(cloudmodel.IdempotencyCoordinatorConfig{})
+	if audit == nil {
+		audit = &cloudmodel.MemoryAuditAppender{}
+	}
+	pub := cloudmodel.NewPublicationCoordinator(cloudmodel.PublicationCoordinatorConfig{
+		Store:       store,
+		Audit:       audit,
+		Idempotency: idemp,
+	})
+	sched := cloudmodel.NewParticipationExpiryScheduler(cloudmodel.ParticipationExpirySchedulerConfig{
+		Store:  store,
+		Guard:  guard,
+		Expire: pub.ExpireParticipation,
+	})
+	return &CloudModelRuntime{
+		Store:       store,
+		Idempotency: idemp,
+		Publication: pub,
+		Scheduler:   sched,
+		Guard:       guard,
+	}
+}
+
+// Start binds the listener, starts the FEATURE-0015 scheduler when attached,
+// marks readiness true, and blocks until signal.
 func (s *Server) Start() error {
 	listener, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
 		return err
 	}
 
+	s.startCloudModel()
 	s.readiness.SetReady(true)
 
 	errCh := make(chan error, 1)
@@ -150,16 +208,49 @@ func (s *Server) Start() error {
 		return nil
 	case err := <-errCh:
 		s.readiness.SetReady(false)
+		_ = s.stopCloudModel()
 		return err
 	}
 }
 
-// Shutdown stops accepting new connections and drains in-flight requests.
+// Shutdown stops the FEATURE-0015 scheduler, aborts in-flight idempotency
+// reservations (waking waiters), then drains HTTP connections and completes.
 func (s *Server) Shutdown(timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	s.readiness.SetShuttingDown()
+	_ = s.stopCloudModel()
 	return s.httpServer.Shutdown(ctx)
+}
+
+func (s *Server) startCloudModel() {
+	if s == nil || s.cloud == nil || s.cloud.Scheduler == nil {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	s.schedCtxCancel = cancel
+	s.cloud.Scheduler.Start(ctx)
+	s.logger.Println("cloudmodel participation expiry scheduler started")
+}
+
+func (s *Server) stopCloudModel() error {
+	if s == nil || s.cloud == nil {
+		return nil
+	}
+	// Ordered shutdown: scheduler stop, then idempotency abort/waiter wake-up.
+	if s.schedCtxCancel != nil {
+		s.schedCtxCancel()
+		s.schedCtxCancel = nil
+	}
+	if s.cloud.Scheduler != nil {
+		s.cloud.Scheduler.Stop()
+		s.logger.Println("cloudmodel participation expiry scheduler stopped")
+	}
+	if s.cloud.Idempotency != nil {
+		s.cloud.Idempotency.AbortAll()
+		s.logger.Println("cloudmodel in-flight idempotency reservations aborted")
+	}
+	return nil
 }
 
 func writeErrorBody(w http.ResponseWriter, code resources.ErrorCode, message, field, details string) error {

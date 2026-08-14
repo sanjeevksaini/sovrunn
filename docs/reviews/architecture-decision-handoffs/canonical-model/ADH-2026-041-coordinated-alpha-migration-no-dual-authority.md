@@ -1,6 +1,8 @@
+> **SUPERSESSION NOTICE (2026-08-11):** This handoff's migration runtime semantics are superseded in their entirety by **ADH-2026-045** ("Replace alpha runtime migration with a canonical bootstrap") and **DEC-0059** (supersedes DEC-0058). Sovrunn has no live control plane, customer data, or persisted alpha state to convert; FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion. There is no `CanonicalMigrationPlan`, `CanonicalMigrationRecord`, migration controller, or cutover state machine in active Phase 2R authorities. This document is preserved below as an unmodified historical record — it is not rewritten or deleted.
+
 # ADH-2026-041: Coordinated Alpha Migration and No-Dual-Authority Cutover
 
-- **Status:** Architecture-owner approved; repository integration pending
+- **Status:** Architecture-owner approved; repository integration pending; **superseded in its entirety by ADH-2026-045 (2026-08-11)**
 - **Handoff ID:** ADH-2026-041
 - **Date:** 4 August 2026
 - **Classification:** Breaking alpha migration policy

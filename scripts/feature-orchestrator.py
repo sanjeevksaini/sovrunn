@@ -27,19 +27,64 @@ def run(args: list[str], *, capture: bool = False) -> str:
 
 def blocks(text: str) -> dict[int, str]:
     found: dict[int, str] = {}
-    for match in re.finditer(r"(?ms)^## Task (\d+)\b.*?(?=^## Task \d+\b|^## [^#]|\Z)", text):
+    for match in re.finditer(
+        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)", text
+    ):
         found[int(match.group(1))] = match.group(0).rstrip()
     return found
 
 
-def commit_message(block: str) -> str:
-    lines = [line for line in block.splitlines() if line.startswith("Commit message:")]
-    if len(lines) != 1:
-        raise SystemExit("ERROR: task must contain exactly one Commit message: line")
-    match = re.fullmatch(r"Commit message:\s*`([^`]+)`\s*", lines[0])
-    if not match:
-        raise SystemExit("ERROR: task commit message must be one backtick-delimited value")
-    return match.group(1)
+def commit_message(block: str) -> str | None:
+    if re.search(r"(?m)^\*\*Commit message:\*\*\s+None\b", block):
+        return None
+    matches = list(
+        re.finditer(r"(?ms)^\*\*Commit message:\*\*\s*\n```[^\n]*\n(.*?)^```\s*$", block)
+    )
+    if not matches:
+        raise SystemExit("ERROR: task must contain one fenced Commit message: section")
+    lines = [line.strip() for line in matches[0].group(1).splitlines() if line.strip()]
+    if not lines:
+        raise SystemExit("ERROR: task commit message must have a non-empty subject")
+    return lines[0]
+
+
+def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
+    labels = "|".join(re.escape(heading) for heading in headings)
+    matches = list(
+        re.finditer(
+            rf"(?ms)^\*\*(?:{labels}):\*\*\s*\n(.*?)(?=^\*\*[^\n]+:\*\*|^---\s*$|^#{{1,6}}\s|\Z)",
+            block,
+        )
+    )
+    if not matches:
+        rendered = "/".join(headings)
+        raise SystemExit(f"ERROR: task must contain a {rendered}: section")
+    paths = []
+    for match in matches:
+        for line in match.group(1).splitlines():
+            if not re.match(r"^\s*-\s+", line):
+                continue
+            for path in re.findall(r"`([^`]+)`", line):
+                if (
+                    path.startswith(("internal/", "cmd/", "api/", "tests/", "scripts/", "docs/", ".automation/"))
+                    and Path(path).suffix
+                ):
+                    paths.append(path)
+    return paths
+
+
+def task_writable_paths(block: str) -> list[str]:
+    paths = section_paths(block, ("Writable paths", "Included writable paths"))
+    paths.extend(section_paths(block, ("Tests", "Included tests")))
+    return list(dict.fromkeys(paths))
+
+
+def commit_task_ids(plan: dict[int, str]) -> list[int]:
+    return [task for task in sorted(plan) if commit_message(plan[task]) is not None]
+
+
+def verification_checkpoint_ids(plan: dict[int, str]) -> list[int]:
+    return [task for task in sorted(plan) if commit_message(plan[task]) is None]
 
 
 def verify_command(raw: str, feature: str) -> list[str]:
@@ -53,8 +98,16 @@ def verify_command(raw: str, feature: str) -> list[str]:
 
 
 def changed_paths() -> list[str]:
-    output = run(["git", "status", "--porcelain"], capture=True)
+    output = run(["git", "status", "--porcelain=v1", "--untracked-files=all"], capture=True)
     return [line[3:] for line in output.splitlines() if len(line) > 3]
+
+
+def allowed_resume_paths(state_path: Path, plan: dict[int, str], batches: list[list[int]]) -> set[str]:
+    """Allow an interrupted first task to resume only inside its declared scope."""
+    if not batches or not batches[0]:
+        raise ValueError("no selected task for resume scope")
+    task = batches[0][0]
+    return {str(state_path.relative_to(ROOT)), *task_writable_paths(plan[task])}
 
 
 def task_batches(
@@ -89,6 +142,32 @@ def task_batches(
     return [selected[index : index + batch_limit] for index in range(0, len(selected), batch_limit)]
 
 
+def run_verification_checkpoint(feature: str, control: dict[str, object], task: int) -> None:
+    """Run only manifest-controlled verification for a non-commit checkpoint.
+
+    Checkpoints do not invoke Cursor, so they deliberately have no generated
+    ``cursor-task-<n>.context.json``.  The generic Cursor boundary checker is
+    therefore inapplicable here; the feature gate below supplies the
+    checkpoint's clean-tree and approved-package verification.
+    """
+    print(f"\n=== {feature} verification checkpoint Task {task} ===", flush=True)
+    guardrails = control["guardrails"]
+    if not isinstance(guardrails, dict):
+        raise SystemExit("ERROR: control guardrails must be an object")
+    cursor = guardrails["cursor"]
+    if not isinstance(cursor, dict):
+        raise SystemExit("ERROR: control cursor guardrails must be an object")
+    commands = cursor["verify_commands"]
+    if not isinstance(commands, list):
+        raise SystemExit("ERROR: control verify_commands must be a list")
+    for command in commands:
+        if not isinstance(command, str):
+            raise SystemExit("ERROR: control verification command must be text")
+        run(verify_command(command, feature))
+    run(["make", "ff-guardrails", f"FEATURE={feature}"])
+    run(["make", "ff-feature-gate", f"FEATURE={feature}"])
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature", required=True)
@@ -108,7 +187,12 @@ def main() -> None:
         raise SystemExit("ERROR: feature is not approved for Cursor execution")
     tasks_path = ROOT / state["spec_path"] / "tasks.md"
     plan = blocks(tasks_path.read_text())
-    ordered = sorted(plan)
+    ordered = commit_task_ids(plan)
+    checkpoints = verification_checkpoint_ids(plan)
+    for task, block in plan.items():
+        paths = task_writable_paths(block)
+        if commit_message(block) is not None and not paths:
+            raise SystemExit(f"ERROR: Task {task} must declare writable paths and tests")
     last_raw = state.get("last_committed_task")
     batch_limit = control["execution"]["tasks_per_run"]
     try:
@@ -123,11 +207,21 @@ def main() -> None:
     except (TypeError, ValueError) as exc:
         raise SystemExit(f"ERROR: {exc}") from exc
     if not batches:
+        if checkpoints:
+            rendered = ", ".join(str(task) for task in checkpoints)
+            print(
+                f"{args.feature} has all approved commit tasks completed; "
+                f"running verification-only Task {rendered}"
+            )
+            for checkpoint in checkpoints:
+                run_verification_checkpoint(args.feature, control, checkpoint)
+            print(f"{args.feature} controlled task run complete")
+            return
         if args.all_tasks:
             print(f"{args.feature} already has all approved tasks committed")
             return
         raise SystemExit(f"ERROR: no approved successor after committed task {last_raw}")
-    allowed_dirty = {str(state_path.relative_to(ROOT))}
+    allowed_dirty = allowed_resume_paths(state_path, plan, batches)
     unexpected = [path for path in changed_paths() if path not in allowed_dirty]
     if unexpected:
         raise SystemExit("ERROR: working tree is not ready: " + ", ".join(unexpected))
@@ -154,17 +248,31 @@ def main() -> None:
             for command in control["guardrails"]["cursor"]["verify_commands"]:
                 run(verify_command(command, args.feature))
             run(["make", "ff-guardrails", f"FEATURE={args.feature}"])
+            message = commit_message(plan[task])
+            if message is None:
+                raise SystemExit(f"ERROR: Task {task} is a verification checkpoint, not a commit task")
             run(
                 [
                     "make",
                     "ff-commit-task",
                     f"FEATURE={args.feature}",
                     f"TASK={task}",
-                    f"MESSAGE={commit_message(plan[task])}",
+                    f"MESSAGE={message}",
                 ]
             )
         print(f"{args.feature} task batch complete: {selected}")
-    print(f"{args.feature} controlled task run complete")
+    completed_final_commit = batches[-1][-1] == ordered[-1]
+    if completed_final_commit:
+        for task in checkpoints:
+            run_verification_checkpoint(args.feature, control, task)
+    if checkpoints:
+        rendered = ", ".join(str(task) for task in checkpoints)
+        print(
+            f"{args.feature} controlled task run complete; Task {rendered} is verification-only "
+            "and must not be sent to Cursor or committed"
+        )
+    else:
+        print(f"{args.feature} controlled task run complete")
 
 
 if __name__ == "__main__":

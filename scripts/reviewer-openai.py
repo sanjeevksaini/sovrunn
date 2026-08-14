@@ -13,31 +13,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": [
-        "status",
-        "approval_token",
-        "next_stage",
-        "summary",
-        "blocking_issues",
-        "required_changes",
-        "revision_prompt",
-    ],
-    "properties": {
-        "status": {"type": "string", "enum": ["APPROVED", "NEEDS_REVISION", "BLOCKED"]},
-        "approval_token": {
-            "type": "string",
-            "enum": ["APPROVED_FOR_DESIGN", "APPROVED_FOR_TASKS", "APPROVED_FOR_CURSOR", "NONE"],
-        },
-        "next_stage": {"type": "string", "enum": ["design", "tasks", "cursor", "none"]},
-        "summary": {"type": "string"},
-        "blocking_issues": {"type": "array", "items": {"type": "string"}},
-        "required_changes": {"type": "array", "items": {"type": "string"}},
-        "revision_prompt": {"type": "string"},
-    },
-}
+ROOT = Path(__file__).resolve().parents[1]
+SCHEMA_PATH = ROOT / ".automation/schemas/reviewer-response.schema.json"
+SCHEMA = json.loads(SCHEMA_PATH.read_text())
 
 EXPECTED_BY_STAGE = {
     "requirements": ("APPROVED_FOR_DESIGN", "design"),

@@ -1,7 +1,8 @@
 package apimeta
 
-// ScopeKind is the Matrix B vocabulary — the only valid scopeRef.kind values
-// (F12-SCOPE-002, D-17). Exactly six values are permitted.
+// ScopeKind is the canonical seven-value scopeRef.kind vocabulary
+// (VS0-SCHEMA-001; DEC-0037; ADH-2026-020; FEATURE-0015 DD-03).
+// The retired ambiguous "Provider" value is not a member of this set.
 type ScopeKind string
 
 const (
@@ -10,10 +11,11 @@ const (
 	ScopeOrganizationUnit ScopeKind = "OrganizationUnit"
 	ScopeTenant           ScopeKind = "Tenant"
 	ScopeProject          ScopeKind = "Project"
-	ScopeProvider         ScopeKind = "Provider"
+	ScopeCloudPlatform    ScopeKind = "CloudPlatform"
+	ScopeCloudProvider    ScopeKind = "CloudProvider"
 )
 
-// AllScopeKinds returns the closed Matrix B scope-kind set in stable order.
+// AllScopeKinds returns the closed canonical scope-kind set in stable order.
 func AllScopeKinds() []ScopeKind {
 	return []ScopeKind{
 		ScopePlatform,
@@ -21,11 +23,12 @@ func AllScopeKinds() []ScopeKind {
 		ScopeOrganizationUnit,
 		ScopeTenant,
 		ScopeProject,
-		ScopeProvider,
+		ScopeCloudPlatform,
+		ScopeCloudProvider,
 	}
 }
 
-// Valid reports whether k is one of the six Matrix B scope kinds.
+// Valid reports whether k is one of the seven canonical scope kinds.
 func (k ScopeKind) Valid() bool {
 	switch k {
 	case ScopePlatform,
@@ -33,7 +36,8 @@ func (k ScopeKind) Valid() bool {
 		ScopeOrganizationUnit,
 		ScopeTenant,
 		ScopeProject,
-		ScopeProvider:
+		ScopeCloudPlatform,
+		ScopeCloudProvider:
 		return true
 	default:
 		return false
@@ -46,7 +50,7 @@ func (k ScopeKind) Valid() bool {
 //
 // ScopeRef conforms to the common typed-reference contract by carrying
 // apiVersion, kind, name, and optional immutable uid through the shared
-// TypedRef base. Kind is additionally constrained to Matrix B ScopeKind
+// TypedRef base. Kind is additionally constrained to canonical ScopeKind
 // values by validation; authorization resolves by uid, not name.
 //
 // Canonical platform scope (F12-SCOPE-002, D-16): the single canonical

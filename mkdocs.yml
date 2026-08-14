@@ -58,7 +58,7 @@ nav:
       - PostgreSQL Reference Flow: architecture/reference-flows/postgresql-end-to-end.md
       - VS-000 Core Skeleton: architecture/vertical-slices/VS-000-core-skeleton.md
       - VS-000 Exact Contract: architecture/vertical-slices/VS-000-contract-specification.md
-      - FEATURE-0015 Canonical Cloud Model and Alpha Migration: architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md
+      - FEATURE-0015 Canonical Cloud Model Foundation: architecture/FEATURE-0015-canonical-cloud-model-foundation.md
       - Integrated Delivery Plan: architecture/vertical-slices/INTEGRATED_DELIVERY_PLAN.md
       - API Resource Standard: architecture/api-resource-standard.md
       - Decision Record and AuditEvent Standard: architecture/FEATURE-0013-decision-record-and-auditevent-standard.md

@@ -32,7 +32,7 @@ func TestValidateProviderLocation_PositiveWithAndWithoutGeo(t *testing.T) {
 			"name": "loc-no-geo",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -49,7 +49,7 @@ func TestValidateProviderLocation_PositiveWithAndWithoutGeo(t *testing.T) {
 			"name": "loc-with-geo",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -95,7 +95,7 @@ func TestValidateProviderLocation_NegativeUserAuthoredStatus(t *testing.T) {
 			"name": "loc-with-status",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -116,7 +116,7 @@ func TestValidateProviderLocation_NegativeUnknownField(t *testing.T) {
 			"name": "loc-unknown",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -138,7 +138,7 @@ func TestValidateProviderLocation_NegativeMissingSpec(t *testing.T) {
 			"name": "loc-missing-spec",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -156,7 +156,7 @@ func TestValidateProviderLocation_NegativeMissingScopeRefAPIVersion(t *testing.T
 		"metadata": map[string]any{
 			"name": "loc-missing-scope-apiversion",
 			"scopeRef": map[string]any{
-				"kind": string(apimeta.ScopeProvider),
+				"kind": string(apimeta.ScopeCloudProvider),
 				"name": "sovereign-provider-a",
 			},
 		},
@@ -178,7 +178,7 @@ func TestValidateProviderLocation_NegativeMissingScopeRefName(t *testing.T) {
 			"name": "loc-missing-scope-name",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 			},
 		},
 		"spec": map[string]any{},
@@ -197,7 +197,7 @@ func TestValidateProviderLocation_NegativeNilStructuralFailsClosed(t *testing.T)
 			"name": "loc-nil-structural",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -222,7 +222,7 @@ func TestValidateProviderLocation_NegativeUnavailableStructuralFailsClosed(t *te
 			"name": "loc-unavailable-structural",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -296,7 +296,7 @@ func TestValidateProviderLocation_NegativeMalformedGeo(t *testing.T) {
 					"name": "loc-bad-geo",
 					"scopeRef": map[string]any{
 						"apiVersion": resources.FabricAPIVersion,
-						"kind":       string(apimeta.ScopeProvider),
+						"kind":       string(apimeta.ScopeCloudProvider),
 						"name":       "sovereign-provider-a",
 					},
 				},
@@ -318,7 +318,7 @@ func TestValidateProviderLocation_NegativePrefixInconsistentGeo(t *testing.T) {
 			"name": "loc-prefix-mismatch",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -347,7 +347,7 @@ func TestValidateProviderLocation_BoundaryUnassignedGeoAcceptedWithoutInference(
 			"name": "loc-unassigned-geo",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -445,7 +445,7 @@ func TestValidateProviderLocation_BoundaryNameLabelAnnotationLimits(t *testing.T
 				"name": name63,
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -465,7 +465,7 @@ func TestValidateProviderLocation_BoundaryNameLabelAnnotationLimits(t *testing.T
 				"name": strings.Repeat("a", 64),
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -489,7 +489,7 @@ func TestValidateProviderLocation_BoundaryNameLabelAnnotationLimits(t *testing.T
 				"labels": labels,
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -514,7 +514,7 @@ func TestValidateProviderLocation_BoundaryNameLabelAnnotationLimits(t *testing.T
 				"labels": labels,
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -538,7 +538,7 @@ func TestValidateProviderLocation_BoundaryNameLabelAnnotationLimits(t *testing.T
 				},
 				"scopeRef": map[string]any{
 					"apiVersion": resources.FabricAPIVersion,
-					"kind":       string(apimeta.ScopeProvider),
+					"kind":       string(apimeta.ScopeCloudProvider),
 					"name":       "sovereign-provider-a",
 				},
 			},
@@ -560,7 +560,7 @@ func TestValidateProviderLocation_NegativeSystemOwnedMetadata(t *testing.T) {
 			"resourceVersion": "3",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},
@@ -610,7 +610,7 @@ func baseLocDoc(spec map[string]any) map[string]any {
 			"name": "loc-boundary",
 			"scopeRef": map[string]any{
 				"apiVersion": resources.FabricAPIVersion,
-				"kind":       string(apimeta.ScopeProvider),
+				"kind":       string(apimeta.ScopeCloudProvider),
 				"name":       "sovereign-provider-a",
 			},
 		},

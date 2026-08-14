@@ -99,7 +99,8 @@ Chat discussions and generated prompts do not create accepted decisions. Accepte
 | DEC-0055 | Platform sovereignty evaluates one SovrunnInstallation and every dependency able to control, observe, change, decrypt, or recover it. | Sovereignty | Accepted | ADH-2026-038 |
 | DEC-0056 | Release compatibility is directed; recovery actions and lifecycle-reference contracts are explicit and pinned. | Lifecycle | Accepted | ADH-2026-039 |
 | DEC-0057 | External maintenance has explicit notice authority, target lifecycle ownership, epochs, fences, and mandatory requalification. | Infrastructure | Accepted | ADH-2026-040 |
-| DEC-0058 | Alpha migration is one signed cutover with no dual write/authority and immutable history preservation. | Migration | Accepted | ADH-2026-041 |
+| DEC-0058 | Alpha migration is one signed cutover with no dual write/authority and immutable history preservation. | Migration | Superseded by DEC-0059 | ADH-2026-041 |
+| DEC-0059 | Canonical bootstrap replaces alpha runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets, not live state requiring conversion; no CanonicalMigrationPlan/Record, migration controller, or cutover state machine. Supersedes DEC-0058. | Migration | Accepted | ADH-2026-045 |
 
 ## 4. AI Usage Notes
 

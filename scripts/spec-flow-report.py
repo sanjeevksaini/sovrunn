@@ -21,6 +21,7 @@ def main() -> None:
     args = parser.parse_args()
 
     review_epoch = os.environ.get("FEATURE_FACTORY_REVIEW_EPOCH", "")
+    reviewer_adapter = os.environ.get("FEATURE_FACTORY_REVIEWER_CMD", "unspecified")
     if review_epoch and not re.fullmatch(
         r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", review_epoch
     ):
@@ -74,6 +75,7 @@ def main() -> None:
     report = {
         "feature": args.feature,
         "review_epoch": review_epoch or None,
+        "reviewer_adapter": reviewer_adapter,
         "status": args.status,
         "started_at": dt.datetime.fromtimestamp(args.started_epoch, dt.timezone.utc).isoformat(),
         "finished_at": now.isoformat(),
@@ -107,6 +109,7 @@ def main() -> None:
         f"- Review epoch: {review_epoch or 'legacy/default'}",
         f"- Elapsed: {elapsed} seconds",
         f"- Kiro routing: Auto",
+        f"- Reviewer adapter: `{reviewer_adapter}`",
         f"- Kiro invocations: {args.kiro_invocations}",
         "- Kiro credits: unavailable from the headless CLI",
         f"- OpenAI review calls: {api_calls}",

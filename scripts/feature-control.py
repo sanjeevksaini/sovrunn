@@ -272,9 +272,13 @@ def validate_stage_paths(value: Any, *, field: str, must_exist: bool = True) -> 
             repo_path(path, field=f"{field}.{stage}[{index}]", must_exist=must_exist)
 
 
-def resolve_context(data: dict[str, Any], stage: str) -> list[Path]:
+def resolve_context(data: dict[str, Any], stage: str, *, review_stage: str | None = None) -> list[Path]:
     if stage not in STAGES:
         raise ControlError(f"unsupported stage: {stage}")
+    if stage == "review" and review_stage not in {"requirements", "design", "tasks"}:
+        raise ControlError("review context requires review_stage=requirements, design, or tasks")
+    if stage != "review" and review_stage is not None:
+        raise ControlError("review_stage is valid only for review context")
     feature = data["feature"]
     raw_paths: list[str] = list(data["context"]["always"])
     raw_paths.extend([feature["feature_file"], feature["architecture"], *feature["handoffs"]])
@@ -284,11 +288,12 @@ def resolve_context(data: dict[str, Any], stage: str) -> list[Path]:
     if stage == "implementation":
         raw_paths.extend(data["guardrails"]["cursor"]["go_context"])
     spec = feature["spec_path"]
-    if stage in {"design", "tasks", "implementation", "review"}:
+    spec_stage = review_stage if stage == "review" else stage
+    if spec_stage in {"design", "tasks", "implementation"}:
         raw_paths.append(f"{spec}/requirements.md")
-    if stage in {"tasks", "implementation", "review"}:
+    if spec_stage in {"tasks", "implementation"}:
         raw_paths.append(f"{spec}/design.md")
-    if stage in {"implementation", "review"}:
+    if spec_stage == "implementation":
         raw_paths.append(f"{spec}/tasks.md")
     seen: set[str] = set()
     paths: list[Path] = []
@@ -300,8 +305,10 @@ def resolve_context(data: dict[str, Any], stage: str) -> list[Path]:
     return paths
 
 
-def context_manifest(data: dict[str, Any], stage: str) -> dict[str, Any]:
-    paths = resolve_context(data, stage)
+def context_manifest(
+    data: dict[str, Any], stage: str, *, review_stage: str | None = None
+) -> dict[str, Any]:
+    paths = resolve_context(data, stage, review_stage=review_stage)
     files = []
     total_bytes = 0
     for path in paths:
@@ -393,6 +400,7 @@ def main() -> None:
     parser.add_argument("--feature", required=True)
     parser.add_argument("--manifest", help="explicit manifest path for tests or migration validation")
     parser.add_argument("--stage", choices=STAGES)
+    parser.add_argument("--review-stage", choices=("requirements", "design", "tasks"))
     parser.add_argument("--output")
     args = parser.parse_args()
     path = repo_path(args.manifest, field="manifest") if args.manifest else control_path(args.feature)
@@ -409,7 +417,7 @@ def main() -> None:
             return
         if not args.stage:
             fail("--stage is required")
-        manifest = context_manifest(data, args.stage)
+        manifest = context_manifest(data, args.stage, review_stage=args.review_stage)
         if args.command == "context":
             rendered = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
         else:

@@ -17,14 +17,15 @@ const property4Seed int64 = 20260723
 
 const property4Iterations = 100
 
-// property4NonPlatformKinds are the five Matrix B kinds that are never
+// property4NonPlatformKinds are the non-platform canonical kinds that are never
 // canonicalized to nil by NormalizeScope.
 var property4NonPlatformKinds = []apimeta.ScopeKind{
 	apimeta.ScopeOrganization,
 	apimeta.ScopeOrganizationUnit,
 	apimeta.ScopeTenant,
 	apimeta.ScopeProject,
-	apimeta.ScopeProvider,
+	apimeta.ScopeCloudPlatform,
+	apimeta.ScopeCloudProvider,
 }
 
 // property4Case pairs a ScopeRef form with a test-local allowed-scope

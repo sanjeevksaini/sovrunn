@@ -3,20 +3,24 @@
   "feature": {
     "id": "FEATURE-0015",
     "slug": "canonical-cloud-model-and-alpha-migration",
-    "title": "Canonical Cloud Model and Alpha Migration Foundation",
+    "title": "Canonical Cloud Model Foundation",
     "tier": "A",
     "phase": 2,
     "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
     "feature_branch": "feature-0015-canonical-cloud-model-and-alpha-migration",
-    "feature_file": "docs/features/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md",
-    "architecture": "docs/architecture/FEATURE-0015-canonical-cloud-model-and-alpha-migration-foundation.md",
+    "feature_file": "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md",
+    "architecture": "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md",
     "handoffs": [
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-020-cloudprovider-identity-and-scope.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-024-geography-and-sovereignty.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-025-executiontarget-no-resourcepool.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-037-cloudplatform-provider-participation-installation-isolation.md",
-      "docs/reviews/architecture-decision-handoffs/canonical-model/ADH-2026-041-coordinated-alpha-migration-no-dual-authority.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-042-final-canonical-model-adoption.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-048-feature-0015-input-contract-clarification.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-049-feature-0015-audit-append-failure-outcome.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-050-feature-0015-all-route-idempotency-conformance-coverage.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-051-feature-0015-contract-closure-and-pre-generation-gate.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-052-feature-0015-validation-proof-and-requirements-consistency.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-053-feature-0015-servemux-participation-action-routes.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-054-feature-0015-forged-grant-and-idempotency-closure.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-055-feature-0015-executable-route-and-retention-closure.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-056-feature-0015-patch-read-and-idempotency-replay-closure.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-057-feature-0015-mutable-spec-writer-enforcement-and-acceptance-proof-closure.md"
     ],
     "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration"
   },
@@ -28,17 +32,14 @@
       "HostingLocation",
       "Datacenter",
       "FaultDomain",
-      "InfrastructureStack",
-      "ExecutionTarget-identity",
-      "CanonicalMigrationPlan",
-      "CanonicalMigrationRecord"
+      "InfrastructureStack"
     ],
     "previous_features": [
       {
         "id": "FEATURE-0011",
         "relationship": "reuses Reuse Assessment Standard governance contract",
         "context": {
-          "requirements": ["docs/features/FEATURE-0011-reuse-assessment-standard.md"],
+          "requirements": [],
           "design": ["docs/features/FEATURE-0011-reuse-assessment-standard.md"]
         }
       },
@@ -60,15 +61,15 @@
       },
       {
         "id": "FEATURE-0014",
-        "relationship": "legacy migration input; alpha Provider model superseded by current canonical baseline; do NOT adopt ResourcePool/ProviderCapability",
+        "relationship": "retained repository asset and reuse input under FEATURE-0011 (DEC-0059); alpha Provider model is not runtime-migrated; do NOT adopt ResourcePool/ProviderCapability",
         "context": {
-          "requirements": ["docs/features/FEATURE-0014-provider-neutral-resource-model.md"],
+          "requirements": [],
           "design": ["docs/architecture/provider-neutral-resource-model.md"]
         }
       }
     ],
     "excluded_features": [
-      {"id": "FEATURE-0016", "concepts": ["ExecutionTarget qualification", "ExecutionTarget availability", "NormalizedTargetFactSet", "TargetQualificationResult", "maintenanceEpoch writes"]},
+      {"id": "FEATURE-0016", "concepts": ["ExecutionTarget identity", "ExecutionTarget schema", "ExecutionTarget routes", "ExecutionTarget qualification", "ExecutionTarget availability", "NormalizedTargetFactSet", "TargetQualificationResult", "maintenanceEpoch writes", "complete target lifecycle"]},
       {"id": "FEATURE-0017", "concepts": ["PolicyEvaluationRequest", "PolicyEvaluationResult", "PolicyEngineAdapter"]},
       {"id": "FEATURE-0018", "concepts": ["GovernanceProfile", "Membership", "RoleDefinition", "RoleAssignment"]},
       {"id": "FEATURE-0019", "concepts": ["SovereigntyProfile", "SovereigntyFactSet", "EvidenceRecord"]},
@@ -88,7 +89,11 @@
       "EffectivePolicyContext",
       "provider-neutral (as adjective)",
       "six-scope authority",
-      "SovrunnInstallation"
+      "SovrunnInstallation",
+      "CanonicalMigrationPlan",
+      "CanonicalMigrationRecord",
+      "migration controller",
+      "ExecutionTarget in F0015 scope"
     ]
   },
   "context": {
@@ -100,17 +105,12 @@
       "docs/engineering/ai-context-loading-standard.md",
       "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
       "docs/phase2/PHASE2R_REBASELINE.md",
-      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md",
       "docs/architecture/vertical-slices/VS-000-contract-specification.md",
       "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
-      "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
       ".kiro/steering/slice0-contract.md"
     ],
     "stages": {
-      "requirements": [
-        "docs/resource-specs/RESOURCE_MODEL_PHASE1.md",
-        "docs/api/API_CONTRACT_PHASE1.md"
-      ],
+      "requirements": [],
       "design": [
         "docs/engineering/go-coding-guardrails.md",
         "docs/architecture/controller-reconciliation-model.md",
@@ -130,11 +130,11 @@
       ]
     },
     "budgets": {
-      "requirements": 325000,
-      "design": 360000,
-      "tasks": 420000,
-      "implementation": 420000,
-      "review": 500000
+      "requirements": 400000,
+      "design": 750000,
+      "tasks": 650000,
+      "implementation": 800000,
+      "review": 700000
     }
   },
   "guardrails": {

@@ -31,13 +31,13 @@ var expectedCanonicalAnnotations = map[string]struct {
 	"resource-pool.json": {
 		profile:   apimeta.ProfileManagedResource,
 		boundary:  apimeta.BoundaryOperatorFacing,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"discovered-database.json": {
 		profile:   apimeta.ProfileObservedExternalResource,
 		boundary:  apimeta.BoundaryAdapterFacing,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"plugin-definition.json": {
@@ -49,7 +49,7 @@ var expectedCanonicalAnnotations = map[string]struct {
 	"adapter-configuration.json": {
 		profile:   apimeta.ProfileManagedResource,
 		boundary:  apimeta.BoundaryAdapterFacing,
-		scopes:    []apimeta.ScopeKind{apimeta.ScopeProvider},
+		scopes:    []apimeta.ScopeKind{apimeta.ScopeCloudProvider},
 		stability: apimeta.StabilityAlpha,
 	},
 	"placement-evaluation-request.json": {
@@ -67,7 +67,8 @@ var expectedCanonicalAnnotations = map[string]struct {
 			apimeta.ScopeOrganizationUnit,
 			apimeta.ScopeTenant,
 			apimeta.ScopeProject,
-			apimeta.ScopeProvider,
+			apimeta.ScopeCloudPlatform,
+			apimeta.ScopeCloudProvider,
 		},
 		stability: apimeta.StabilityAlpha,
 	},
@@ -80,7 +81,8 @@ var expectedCanonicalAnnotations = map[string]struct {
 			apimeta.ScopeOrganizationUnit,
 			apimeta.ScopeTenant,
 			apimeta.ScopeProject,
-			apimeta.ScopeProvider,
+			apimeta.ScopeCloudPlatform,
+			apimeta.ScopeCloudProvider,
 		},
 		stability: apimeta.StabilityAlpha,
 	},
@@ -176,7 +178,7 @@ func TestCanonicalSchemasFieldPolicyCompleteness(t *testing.T) {
 	}
 }
 
-func TestOperationSchemaExactlySixAllowedScopes(t *testing.T) {
+func TestOperationSchemaExactlySevenAllowedScopes(t *testing.T) {
 	t.Parallel()
 
 	meta, issues := apischema.ReadAnnotations(loadCanonicalSchema(t, "operation.json"))
@@ -189,10 +191,11 @@ func TestOperationSchemaExactlySixAllowedScopes(t *testing.T) {
 		apimeta.ScopeOrganizationUnit,
 		apimeta.ScopeTenant,
 		apimeta.ScopeProject,
-		apimeta.ScopeProvider,
+		apimeta.ScopeCloudPlatform,
+		apimeta.ScopeCloudProvider,
 	}
-	if len(meta.AllowedScopes) != 6 {
-		t.Fatalf("Operation allowed-scopes must be exactly six, got %d: %v", len(meta.AllowedScopes), meta.AllowedScopes)
+	if len(meta.AllowedScopes) != 7 {
+		t.Fatalf("Operation allowed-scopes must be exactly seven, got %d: %v", len(meta.AllowedScopes), meta.AllowedScopes)
 	}
 	for i := range want {
 		if meta.AllowedScopes[i] != want[i] {

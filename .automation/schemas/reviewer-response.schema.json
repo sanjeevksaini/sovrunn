@@ -1,0 +1,59 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approval_token": {
+      "enum": [
+        "APPROVED_FOR_DESIGN",
+        "APPROVED_FOR_TASKS",
+        "APPROVED_FOR_CURSOR",
+        "NONE"
+      ],
+      "type": "string"
+    },
+    "blocking_issues": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "next_stage": {
+      "enum": [
+        "design",
+        "tasks",
+        "cursor",
+        "none"
+      ],
+      "type": "string"
+    },
+    "required_changes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "revision_prompt": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "APPROVED",
+        "NEEDS_REVISION",
+        "BLOCKED"
+      ],
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "approval_token",
+    "next_stage",
+    "summary",
+    "blocking_issues",
+    "required_changes",
+    "revision_prompt"
+  ],
+  "type": "object"
+}

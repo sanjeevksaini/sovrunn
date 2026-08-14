@@ -120,7 +120,7 @@ func TestValidJSONFixturesDecodeAndValidate(t *testing.T) {
 			file:       "operation-provider.json",
 			schemaID:   CanonicalSchemasDir + "/operation.json",
 			newDst:     func() any { return &Operation{} },
-			checkScope: assertOperationScopeKind(apimeta.ScopeProvider),
+			checkScope: assertOperationScopeKind(apimeta.ScopeCloudProvider),
 		},
 	}
 
@@ -198,12 +198,12 @@ func assertOperationScopeKind(want apimeta.ScopeKind) func(t *testing.T, dst any
 		// scopeRef uid when the target is the scope object itself, or for
 		// Provider the scopeRef identifies the target's Provider governance
 		// scope (target may be a different kind under that Provider).
-		if want != apimeta.ScopeProvider && op.Spec.TargetRef.UID != "" &&
+		if want != apimeta.ScopeCloudProvider && op.Spec.TargetRef.UID != "" &&
 			op.Spec.TargetRef.UID != op.Metadata.ScopeRef.UID {
 			t.Fatalf("D-17: targetRef.uid %q must match scopeRef.uid %q for %s fixture",
 				op.Spec.TargetRef.UID, op.Metadata.ScopeRef.UID, want)
 		}
-		if want == apimeta.ScopeProvider && op.Metadata.ScopeRef.UID == "" {
+		if want == apimeta.ScopeCloudProvider && op.Metadata.ScopeRef.UID == "" {
 			t.Fatalf("Provider Operation scopeRef.uid must identify Provider governance scope")
 		}
 	}

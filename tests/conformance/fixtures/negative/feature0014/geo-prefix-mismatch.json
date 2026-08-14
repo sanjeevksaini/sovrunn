@@ -5,7 +5,7 @@
     "name": "loc-geo-prefix-mismatch",
     "scopeRef": {
       "apiVersion": "fabric.sovrunn.io/v1alpha1",
-      "kind": "Provider",
+      "kind": "CloudProvider",
       "name": "provider-operator-a"
     }
   },

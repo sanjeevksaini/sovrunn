@@ -19,24 +19,80 @@ def sha256(path: Path) -> str:
 
 def task_blocks(text: str) -> dict[int, str]:
     blocks: dict[int, str] = {}
-    pattern = re.compile(r"(?ms)^## Task (\d+)\b.*?(?=^## Task \d+\b|^## [^#]|\Z)")
+    pattern = re.compile(
+        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)"
+    )
     for match in pattern.finditer(text):
         blocks[int(match.group(1))] = match.group(0).rstrip()
     return blocks
 
 
+def section_paths(
+    block: str, headings: tuple[str, ...], *, require_paths: bool = True
+) -> list[str]:
+    labels = "|".join(re.escape(heading) for heading in headings)
+    matches = list(
+        re.finditer(
+            rf"(?ms)^\*\*(?:{labels}):\*\*\s*\n(.*?)(?=^\*\*[^\n]+:\*\*|^---\s*$|^#{{1,6}}\s|\Z)",
+            block,
+        )
+    )
+    if not matches:
+        rendered = "/".join(headings)
+        raise SystemExit(f"ERROR: task must contain a {rendered}: section")
+    paths = []
+    for match in matches:
+        for line in match.group(1).splitlines():
+            if not re.match(r"^\s*-\s+", line):
+                continue
+            # A task may group several exact paths in one bullet. Extract all
+            # repository-path tokens, while ignoring prose and identifiers in
+            # the same test-description bullet.
+            for path in re.findall(r"`([^`]+)`", line):
+                if (
+                    path.startswith(("internal/", "cmd/", "api/", "tests/", "scripts/", "docs/", ".automation/"))
+                    and Path(path).suffix
+                ):
+                    paths.append(path)
+    if require_paths and not paths:
+        rendered = "/".join(headings)
+        raise SystemExit(f"ERROR: task {rendered}: section must list repository paths")
+    return paths
+
+
 def writable_paths(block: str) -> list[str]:
-    lines = [line for line in block.splitlines() if line.startswith("Files:")]
-    if len(lines) != 1:
-        raise SystemExit("ERROR: task must contain exactly one Files: line")
-    paths = re.findall(r"`([^`]+)`", lines[0])
-    if not paths or len(paths) != len(set(paths)):
-        raise SystemExit("ERROR: task Files: line must contain unique repository paths")
+    paths = section_paths(block, ("Writable paths", "Included writable paths"))
+    # A test file may already be one of the declared writable paths. The
+    # Tests section then describes its scenarios and need not repeat that
+    # path; it must still be present as a heading in the task contract.
+    paths.extend(
+        section_paths(block, ("Tests", "Included tests"), require_paths=False)
+    )
+    paths = list(dict.fromkeys(paths))
     for path in paths:
         parsed = Path(path)
-        if parsed.is_absolute() or ".." in parsed.parts or parsed.parts[0] == ".git":
+        if (
+            parsed.is_absolute()
+            or ".." in parsed.parts
+            or parsed.parts[0] == ".git"
+            or any(character in path for character in "*?[")
+        ):
             raise SystemExit(f"ERROR: unsafe writable path: {path}")
     return paths
+
+
+def commit_message(block: str) -> str | None:
+    if re.search(r"(?m)^\*\*Commit message:\*\*\s+None\b", block):
+        return None
+    matches = list(
+        re.finditer(r"(?ms)^\*\*Commit message:\*\*\s*\n```[^\n]*\n(.*?)^```\s*$", block)
+    )
+    if len(matches) != 1:
+        raise SystemExit("ERROR: task must contain one fenced Commit message: section")
+    lines = [line.strip() for line in matches[0].group(1).splitlines() if line.strip()]
+    if not lines:
+        raise SystemExit("ERROR: task commit message must have a non-empty subject")
+    return lines[0]
 
 
 def main() -> None:
@@ -61,6 +117,8 @@ def main() -> None:
     if args.task not in blocks:
         raise SystemExit(f"ERROR: Task {args.task} not found")
     block = blocks[args.task]
+    if commit_message(block) is None:
+        raise SystemExit(f"ERROR: Task {args.task} is a verification checkpoint, not a Cursor task")
     writable = writable_paths(block)
 
     manifest_path = ROOT / args.manifest

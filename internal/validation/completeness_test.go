@@ -314,7 +314,7 @@ func TestCompletenessValueFromResources_Projection(t *testing.T) {
 			UID:  "loc-uid",
 			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
 				APIVersion: resources.FabricAPIVersion,
-				Kind:       string(apimeta.ScopeProvider),
+				Kind:       string(apimeta.ScopeCloudProvider),
 				Name:       "prov",
 				UID:        providerUID,
 			}},
@@ -334,7 +334,7 @@ func TestCompletenessValueFromResources_Projection(t *testing.T) {
 			Name: "dc",
 			UID:  "dc-uid",
 			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
-				Kind: string(apimeta.ScopeProvider),
+				Kind: string(apimeta.ScopeCloudProvider),
 				UID:  providerUID,
 			}},
 		},
@@ -358,7 +358,7 @@ func TestCompletenessValueFromResources_Projection(t *testing.T) {
 			Name: "fd",
 			UID:  "fd-uid",
 			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
-				Kind: string(apimeta.ScopeProvider),
+				Kind: string(apimeta.ScopeCloudProvider),
 				UID:  providerUID,
 			}},
 		},
@@ -382,7 +382,7 @@ func TestCompletenessValueFromResources_Projection(t *testing.T) {
 			Name: "stack",
 			UID:  "stack-uid",
 			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
-				Kind: string(apimeta.ScopeProvider),
+				Kind: string(apimeta.ScopeCloudProvider),
 				UID:  providerUID,
 			}},
 		},

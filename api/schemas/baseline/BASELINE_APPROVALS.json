@@ -86,10 +86,10 @@
     {
       "path": "audit-event.json",
       "oldDigest": "c60dd8e0f9b5e5388ba1982ae316d619ea3ea23fb560b0b933d6b998f94a5ef0",
-      "newDigest": "8283db7e5bef6e3bb8995d6af336a3faf5fc9382d8ef694e715b8c787bfaf987",
-      "adh": "ADH-2026-017",
+      "newDigest": "3d22aefc72a147c2a39dd1cb619c9632bab71f181ac4ce08f85f90e3e53bbb6a",
+      "adh": "ADH-2026-020",
       "reviewer": "Sanjeev Kumar",
-      "date": "2026-07-27"
+      "date": "2026-08-13"
     },
     {
       "path": "decision-profile-bundle.json",
@@ -102,26 +102,66 @@
     {
       "path": "decision-profile.json",
       "oldDigest": "",
-      "newDigest": "c8a529fdc80f61a84c4fc5a41a43eff6bb3842497a63764dcf52dd0c4f1be7b9",
-      "adh": "ADH-2026-017",
+      "newDigest": "142e9c66aa0bc1f752c2192ad5647e2bc357700324ec9c1f3ccb26095c07c29d",
+      "adh": "ADH-2026-020",
       "reviewer": "Sanjeev Kumar",
-      "date": "2026-07-27"
+      "date": "2026-08-13"
     },
     {
       "path": "decision-record.json",
       "oldDigest": "",
-      "newDigest": "f850fad1a5064f87504de114765ea1b0286b75b6ffbfad75187df177d58424c8",
-      "adh": "ADH-2026-017",
+      "newDigest": "a53f2d9d78d59610b1fc9031ea98d459df59a0d0fa1a2b2193eb36ff8c68cab7",
+      "adh": "ADH-2026-020",
       "reviewer": "Sanjeev Kumar",
-      "date": "2026-07-27"
+      "date": "2026-08-13"
     },
     {
       "path": "evaluation-result.json",
       "oldDigest": "",
-      "newDigest": "6f2c134eb37e0783cdf7c2a979a8887ba31005de79a26d3ae781a9a1d436a0fe",
-      "adh": "ADH-2026-017",
+      "newDigest": "d9cc7a11d8cfcd6c8ea3e71a55c4e757863874753b5957897945a39dc0b734c1",
+      "adh": "ADH-2026-020",
       "reviewer": "Sanjeev Kumar",
-      "date": "2026-07-27"
+      "date": "2026-08-13"
+    },
+    {
+      "path": "_common/scope-ref.json",
+      "oldDigest": "53abad345e304970afb8bddb157106fe54c107849b31135fd53def50b1177f7f",
+      "newDigest": "3d29054a3fa129ab5190d9d36cd3b33a5233f719862f649a12f7b2018491b146",
+      "adh": "ADH-2026-020",
+      "reviewer": "Sanjeev Kumar",
+      "date": "2026-08-13"
+    },
+    {
+      "path": "adapter-configuration.json",
+      "oldDigest": "7ef25827e0dee745d83edb8aa64159369dc47685b182319e3bafecdee963e2f9",
+      "newDigest": "95d4789ba9fdb773bf7e971c77210fcac86a233bd6902d2e1eaac41b60255dc0",
+      "adh": "ADH-2026-020",
+      "reviewer": "Sanjeev Kumar",
+      "date": "2026-08-13"
+    },
+    {
+      "path": "discovered-database.json",
+      "oldDigest": "c9c4ef06b2bfe0256a634c0f08a52071301fc1af64df3ecea2813f1ea3b5114a",
+      "newDigest": "95c680b5b6fed6eda52c6d94bd5537d79969243bd99d00d28704cf280ee96d1e",
+      "adh": "ADH-2026-020",
+      "reviewer": "Sanjeev Kumar",
+      "date": "2026-08-13"
+    },
+    {
+      "path": "operation.json",
+      "oldDigest": "7392c375313e29345a837c01505109e5e279d5b374cfd08c647667a4bc51aa1a",
+      "newDigest": "86eef56bd0d2d2b6ef0d4970cbfd9225b11793e1e071132324452678ae489b5b",
+      "adh": "ADH-2026-020",
+      "reviewer": "Sanjeev Kumar",
+      "date": "2026-08-13"
+    },
+    {
+      "path": "resource-pool.json",
+      "oldDigest": "2906ffbcb8cc27b6a21d051147613560c4d68ec378f692788d71bc0af8a9714c",
+      "newDigest": "f3e006206f3b9d37a03c5b72e2ea140dc79eab39e10c8cc5b5b1c1d2d5ba9563",
+      "adh": "ADH-2026-020",
+      "reviewer": "Sanjeev Kumar",
+      "date": "2026-08-13"
     }
   ]
 }

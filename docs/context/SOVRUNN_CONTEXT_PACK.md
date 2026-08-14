@@ -57,7 +57,7 @@ Current active phase: Phase 2R.
 
 Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`.
 
-Next feature: FEATURE-0015 Canonical Cloud Model and Alpha Migration Foundation.
+Next feature: FEATURE-0015 Canonical Cloud Model Foundation.
 
 ## Canonical Model Authority
 

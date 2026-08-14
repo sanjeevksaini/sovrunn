@@ -25,7 +25,7 @@ python3 - "$OUT" "$FEATURE" "$TOOL" "$STAGE" "$TASK" "$SELECTED_MODEL" "$EFFORT"
 import json, sys, datetime
 out, feature, tool, stage, task, selected_model, effort, fallback_used, fallback_reason = sys.argv[1:]
 row = {
-  'ts': datetime.datetime.utcnow().isoformat(timespec='seconds') + 'Z',
+  'ts': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z'),
   'feature': feature,
   'tool': tool,
   'stage': stage,
