@@ -237,6 +237,25 @@ feat(example): grouped paths
         self.assertEqual(cursor_prompt.writable_paths(block), expected)
         self.assertEqual(orchestrator.task_writable_paths(block), expected)
 
+    def test_tests_narrative_may_reuse_a_writable_test_path(self):
+        block = """### Task 17: Conformance
+
+**Writable paths:**
+- `internal/apiconform/feature_0015_test.go`
+
+**Tests:**
+- Every local conformance scenario is asserted by the writable test file.
+
+**Commit message:**
+```
+test(conformance): add local cases
+```
+"""
+        self.assertEqual(
+            cursor_prompt.writable_paths(block),
+            ["internal/apiconform/feature_0015_test.go"],
+        )
+
     def test_verification_checkpoint_is_not_a_cursor_or_commit_task(self):
         source = (ROOT / "scripts/feature-orchestrator.py").read_text()
         checkpoint = source.index("def run_verification_checkpoint")

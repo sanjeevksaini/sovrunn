@@ -27,7 +27,9 @@ def task_blocks(text: str) -> dict[int, str]:
     return blocks
 
 
-def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
+def section_paths(
+    block: str, headings: tuple[str, ...], *, require_paths: bool = True
+) -> list[str]:
     labels = "|".join(re.escape(heading) for heading in headings)
     matches = list(
         re.finditer(
@@ -52,7 +54,7 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
                     and Path(path).suffix
                 ):
                     paths.append(path)
-    if not paths:
+    if require_paths and not paths:
         rendered = "/".join(headings)
         raise SystemExit(f"ERROR: task {rendered}: section must list repository paths")
     return paths
@@ -60,7 +62,12 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
 
 def writable_paths(block: str) -> list[str]:
     paths = section_paths(block, ("Writable paths", "Included writable paths"))
-    paths.extend(section_paths(block, ("Tests", "Included tests")))
+    # A test file may already be one of the declared writable paths. The
+    # Tests section then describes its scenarios and need not repeat that
+    # path; it must still be present as a heading in the task contract.
+    paths.extend(
+        section_paths(block, ("Tests", "Included tests"), require_paths=False)
+    )
     paths = list(dict.fromkeys(paths))
     for path in paths:
         parsed = Path(path)
