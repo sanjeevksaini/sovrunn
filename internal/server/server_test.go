@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +11,10 @@ import (
 	"time"
 
 	"github.com/sanjeevksaini/sovrunn/internal/api"
+	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
+	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
+	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
+	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel/model"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/registry"
@@ -660,4 +666,151 @@ func TestServer_CapabilityRoutes_Registered(t *testing.T) {
 			t.Fatalf("DELETE /v1/capabilities status = %d, want 405", rec.Code)
 		}
 	})
+}
+
+func TestServer_CloudModelSchedulerStartStop(t *testing.T) {
+	srv := newTestServer()
+	audit := &cloudmodel.MemoryAuditAppender{}
+	rt := NewCloudModelRuntime(audit)
+	srv.AttachCloudModel(rt)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	rt.Scheduler.Start(ctx)
+	if err := srv.Shutdown(2 * time.Second); err != nil {
+		t.Fatalf("Shutdown: %v", err)
+	}
+	// A second Stop after Shutdown must be safe and prove the scheduler halted.
+	rt.Scheduler.Stop()
+}
+
+func TestServer_AuditBeforeExpiryPublication(t *testing.T) {
+	audit := &cloudmodel.MemoryAuditAppender{}
+	rt := NewCloudModelRuntime(audit)
+	seedPendingParticipation(t, rt.Store)
+
+	if err := rt.Publication.ExpireParticipation(context.Background(), "cccccccccccccccccccccccccccccccc", "1", "sched-1"); err != nil {
+		t.Fatalf("ExpireParticipation: %v", err)
+	}
+	got, ok := rt.Store.GetParticipation("cccccccccccccccccccccccccccccccc")
+	if !ok || got.Status.Phase != model.ParticipationPhaseExpired {
+		t.Fatalf("want Expired, got %#v ok=%v", got.Status, ok)
+	}
+	if audit.Len() != 1 {
+		t.Fatalf("audit len = %d, want 1", audit.Len())
+	}
+	if audit.Events()[0].Record.Action != cloudmodel.AuditActionParticipationExpiry {
+		t.Fatalf("action = %s", audit.Events()[0].Record.Action)
+	}
+}
+
+func TestServer_ExpiryAppendFailurePreventsPublication(t *testing.T) {
+	audit := &cloudmodel.MemoryAuditAppender{}
+	audit.SetFail(errors.New("append boom"))
+	rt := NewCloudModelRuntime(audit)
+	seedPendingParticipation(t, rt.Store)
+
+	err := rt.Publication.ExpireParticipation(context.Background(), "cccccccccccccccccccccccccccccccc", "1", "sched-fail")
+	if err == nil || err.Error() != string(apiproblem.CodeInternalError) {
+		t.Fatalf("want INTERNAL_ERROR, got %v", err)
+	}
+	got, _ := rt.Store.GetParticipation("cccccccccccccccccccccccccccccccc")
+	if got.Status.Phase != model.ParticipationPhasePending {
+		t.Fatalf("phase = %s, want Pending", got.Status.Phase)
+	}
+	if audit.Len() != 0 {
+		t.Fatal("append failure must not publish AuditEvent or expiry")
+	}
+}
+
+func TestServer_GracefulShutdownOrdering(t *testing.T) {
+	srv := newTestServer()
+	audit := &cloudmodel.MemoryAuditAppender{}
+	rt := NewCloudModelRuntime(audit)
+	srv.AttachCloudModel(rt)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	rt.Scheduler.Start(ctx)
+
+	ns := cloudmodel.IdempotencyNamespace{
+		PrincipalID: "p1",
+		Pattern:     "POST /v1/cloud-platforms",
+		Key:         "shutdown-key",
+	}
+	digest, err := cloudmodel.CanonicalDigest(cloudmodel.CanonicalDigestInput{
+		Body:    json.RawMessage(`{"metadata":{"name":"x"}}`),
+		Pattern: ns.Pattern,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res := rt.Idempotency.Reserve(context.Background(), ns, digest, nil); res.Outcome != cloudmodel.ReserveOutcomeReserved {
+		t.Fatalf("owner reserve: %#v", res)
+	}
+
+	waiterDone := make(chan cloudmodel.ReserveResult, 1)
+	go func() {
+		waiterDone <- rt.Idempotency.Reserve(context.Background(), ns, digest, nil)
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	// Ordered shutdown: scheduler stops, then in-flight reservations abort and
+	// waiters wake; no completed replay record is published.
+	if err := srv.Shutdown(2 * time.Second); err != nil {
+		t.Fatalf("Shutdown: %v", err)
+	}
+
+	res := <-waiterDone
+	if res.Outcome != cloudmodel.ReserveOutcomeReserved {
+		t.Fatalf("waiter after shutdown abort: %#v", res)
+	}
+	if st, ok := rt.Idempotency.StateForTest(ns); !ok || st != cloudmodel.ReservationInFlight {
+		t.Fatalf("post-shutdown state = %s ok=%v", st, ok)
+	}
+	if rt.Idempotency.CompletedCountForTest() != 0 {
+		t.Fatal("shutdown must not complete idempotency replay records")
+	}
+	// Scheduler Stop is idempotent after Shutdown; no further transitions occur.
+	rt.Scheduler.Stop()
+}
+
+func seedPendingParticipation(t *testing.T, store *cloudmodel.Store) {
+	t.Helper()
+	cp := model.CloudPlatform{
+		Metadata: apimeta.ObjectMeta{Name: "plat", UID: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+		Spec: model.CloudPlatformSpec{OwnerRegistration: model.OwnerRegistration{
+			LegalName: "Acme", RegistrationIdentifier: "R1", JurisdictionCode: "US",
+		}},
+		Status: model.CloudPlatformStatus{Phase: model.CloudPlatformPhaseActive},
+	}
+	prov := model.CloudProvider{
+		Metadata: apimeta.ObjectMeta{Name: "prov", UID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		Spec:     model.CloudProviderSpec{OperatingMarkets: []string{"US"}},
+		Status:   model.CloudProviderStatus{Phase: model.CloudProviderPhaseActive},
+	}
+	if _, prob := store.CreateCloudPlatform(cp); prob != nil {
+		t.Fatalf("platform: %#v", prob)
+	}
+	if _, prob := store.CreateCloudProvider(prov); prob != nil {
+		t.Fatalf("provider: %#v", prob)
+	}
+	part := model.CloudProviderParticipation{
+		Metadata: apimeta.ObjectMeta{
+			Name: "part", UID: "cccccccccccccccccccccccccccccccc", ResourceVersion: "1",
+			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+				APIVersion: model.APIVersionCloudPlatform, Kind: model.KindCloudPlatform,
+				Name: "plat", UID: cp.Metadata.UID,
+			}},
+		},
+		Spec: model.CloudProviderParticipationSpec{
+			CloudPlatformRef: apimeta.TypedRef{APIVersion: model.APIVersionCloudPlatform, Kind: model.KindCloudPlatform, Name: "plat", UID: cp.Metadata.UID},
+			CloudProviderRef: apimeta.TypedRef{APIVersion: model.APIVersionCloudProvider, Kind: model.KindCloudProvider, Name: "prov", UID: prov.Metadata.UID},
+			Environment:      model.ParticipationEnvironmentDevelopment,
+		},
+		Status: cloudmodel.InitialParticipationStatus(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)),
+	}
+	if _, prob := store.CreateParticipation(part); prob != nil {
+		t.Fatalf("participation: %#v", prob)
+	}
 }
