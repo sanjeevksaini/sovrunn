@@ -1302,7 +1302,7 @@ ADH-2026-053, ADH-2026-055
 
 ### Task 17: Conformance tests for FEATURE-0015-local scenarios (VS0-CF-X03, VS0-CF-F15-01..41)
 
-**Purpose:** Implement conformance tests for every FEATURE-0015-local scenario: VS0-CF-X03 (cross-provider safe denial) and VS0-CF-F15-01 through VS0-CF-F15-41 (FEATURE-0015 local proof cases).
+**Purpose:** Implement end-to-end conformance tests in the external `tests/conformance` package for every FEATURE-0015-local scenario: VS0-CF-X03 (cross-provider safe denial) and VS0-CF-F15-01 through VS0-CF-F15-41 (FEATURE-0015 local proof cases). This package may exercise the canonical API server; `internal/apiconform` remains the lower-level grammar and binding package.
 
 **Dependencies:** Task 11 (CloudPlatform and CloudProvider handlers), Task 13 (topology handlers), Task 14 (participation collection/item), Task 15 (participation actions), and Task 16 (route registration).
 
@@ -1315,7 +1315,7 @@ ADH-2026-053, ADH-2026-055
 **Risks addressed:** Approved architecture boundary, anti-drift, and execution controls applicable to this task.
 
 **Writable paths:**
-- `internal/apiconform/feature_0015_test.go` (one scenario per local conformance ID)
+- `tests/conformance/feature_0015_test.go` (one scenario per local conformance ID)
 
 **Tests:**
 - VS0-CF-X03: cross-provider target reference denied with safe RESOURCE_NOT_FOUND/VS0_AUTHORIZATION_SAFE_DENIAL; exactly one redacted AuditEvent with request correlation and no target-existence disclosure; audit-append failure INTERNAL_ERROR/500 with no publication.
@@ -1329,8 +1329,8 @@ Each test asserts exact Problem code, HTTP status, violation code (when register
 make fmt
 make test
 make vet
-go test -v ./internal/apiconform/...
-go test -race ./internal/apiconform/... # concurrency-sensitive cases
+go test -v ./tests/conformance/...
+go test -race ./tests/conformance/... # concurrency-sensitive cases
 ```
 
 **Acceptance criteria:**
