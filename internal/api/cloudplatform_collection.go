@@ -22,6 +22,7 @@ const (
 	PatternCloudPlatformCreate = "POST /apis/core.sovrunn.io/v1alpha1/cloud-platforms"
 	PatternCloudProviderCreate = "POST /apis/core.sovrunn.io/v1alpha1/cloud-providers"
 
+	mediaJSON           = "application/json"
 	mediaMergePatchJSON = "application/merge-patch+json"
 )
 
@@ -377,15 +378,20 @@ func writeProblem(w http.ResponseWriter, r *http.Request, prob *apiproblem.Probl
 }
 
 func writeJSONSuccess(w http.ResponseWriter, r *http.Request, status int, v any) {
-	writeRawJSON(w, r, status, "application/json", mustJSON(v))
+	writeRawJSON(w, r, status, mediaJSON, mustJSON(v))
 }
 
 func writeRawJSON(w http.ResponseWriter, r *http.Request, status int, contentType string, body []byte) {
+	if contentType != mediaJSON && contentType != apiproblem.MediaTypeProblemJSON {
+		contentType = mediaJSON
+	}
 	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	if id := requestID(r); id != "" {
 		w.Header().Set("X-Sovrunn-Request-ID", id)
 	}
 	w.WriteHeader(status)
+	// #nosec G705 -- body is JSON serialized by mustJSON or a previously stored successful JSON response; Content-Type is allowlisted above.
 	_, _ = w.Write(body)
 	if len(body) > 0 && body[len(body)-1] != '\n' {
 		_, _ = w.Write([]byte("\n"))
@@ -397,11 +403,7 @@ func writeReplay(w http.ResponseWriter, r *http.Request, replay *cloudmodel.Repl
 		writeProblem(w, r, apiproblem.New(apiproblem.CodeInternalError).WithDetail("missing replay payload"))
 		return
 	}
-	ct := replay.ContentType
-	if ct == "" {
-		ct = "application/json"
-	}
-	writeRawJSON(w, r, replay.StatusCode, ct, replay.Body)
+	writeRawJSON(w, r, replay.StatusCode, mediaJSON, replay.Body)
 }
 
 func writeAuditedDenial(w http.ResponseWriter, r *http.Request, pub *cloudmodel.PublicationCoordinator, denial cloudmodel.AuditedDenial) {

@@ -357,6 +357,36 @@ func TestCloudPlatformCollection_StageSetInvoked(t *testing.T) {
 	}
 }
 
+func TestWriteRawJSON_AllowsOnlyJSONMediaAndReplayForcesJSON(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "/apis/core.sovrunn.io/v1alpha1/cloud-platforms", nil)
+
+	t.Run("unrecognized media type falls back to JSON", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writeRawJSON(recorder, request, http.StatusOK, "text/html", []byte(`{"ok":true}`))
+		if got := recorder.Header().Get("Content-Type"); got != mediaJSON {
+			t.Fatalf("Content-Type=%q, want %q", got, mediaJSON)
+		}
+		if got := recorder.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Fatalf("X-Content-Type-Options=%q, want nosniff", got)
+		}
+	})
+
+	t.Run("stored replay media type cannot override JSON", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writeReplay(recorder, request, &cloudmodel.ReplayResponse{
+			StatusCode:  http.StatusCreated,
+			ContentType: "text/html",
+			Body:        []byte(`{"replayed":true}`),
+		})
+		if got := recorder.Header().Get("Content-Type"); got != mediaJSON {
+			t.Fatalf("replay Content-Type=%q, want %q", got, mediaJSON)
+		}
+		if got := recorder.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Fatalf("replay X-Content-Type-Options=%q, want nosniff", got)
+		}
+	})
+}
+
 func doMux(t *testing.T, mux http.Handler, method, path string, body []byte, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
 	var r *http.Request
