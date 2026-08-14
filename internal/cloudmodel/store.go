@@ -513,10 +513,22 @@ func (s *Store) GetHostingLocation(uid string) (model.HostingLocation, bool) {
 	return hl, ok
 }
 
+// LookupHostingLocation returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupHostingLocation(uid string) (model.HostingLocation, bool) {
+	hl, ok := s.locations[uid]
+	return hl, ok
+}
+
 // GetDatacenter returns a copy by UID.
 func (s *Store) GetDatacenter(uid string) (model.Datacenter, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	dc, ok := s.datacenters[uid]
+	return dc, ok
+}
+
+// LookupDatacenter returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupDatacenter(uid string) (model.Datacenter, bool) {
 	dc, ok := s.datacenters[uid]
 	return dc, ok
 }
@@ -529,10 +541,22 @@ func (s *Store) GetFaultDomain(uid string) (model.FaultDomain, bool) {
 	return fd, ok
 }
 
+// LookupFaultDomain returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupFaultDomain(uid string) (model.FaultDomain, bool) {
+	fd, ok := s.faultDomains[uid]
+	return fd, ok
+}
+
 // GetInfrastructureStack returns a copy by UID.
 func (s *Store) GetInfrastructureStack(uid string) (model.InfrastructureStack, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	st, ok := s.stacks[uid]
+	return st, ok
+}
+
+// LookupInfrastructureStack returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupInfrastructureStack(uid string) (model.InfrastructureStack, bool) {
 	st, ok := s.stacks[uid]
 	return st, ok
 }

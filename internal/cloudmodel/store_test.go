@@ -415,3 +415,82 @@ func assertEmptyLists(t *testing.T, s *cloudmodel.Store) {
 		t.Fatalf("ListInfrastructureStacks empty-safe = %#v", got)
 	}
 }
+
+func TestStore_TopologyLookupUnderPublicationLock(t *testing.T) {
+	t.Parallel()
+	s := cloudmodel.NewStore()
+	providerUID := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	scope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+		APIVersion: model.APIVersionCloudProvider, Kind: string(apimeta.ScopeCloudProvider),
+		Name: "prov", UID: providerUID,
+	}}
+	hlUID := "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	dcUID := "cccccccccccccccccccccccccccccccc"
+	fdUID := "dddddddddddddddddddddddddddddddd"
+	stUID := "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+
+	if _, prob := s.CreateHostingLocation(model.HostingLocation{
+		Metadata: apimeta.ObjectMeta{Name: "loc", UID: hlUID, ScopeRef: scope, ResourceVersion: "1"},
+		Spec:     model.HostingLocationSpec{CountryCode: "US", Locality: "Austin"},
+	}); prob != nil {
+		t.Fatalf("create HL: %#v", prob)
+	}
+	if _, prob := s.CreateDatacenter(model.Datacenter{
+		Metadata: apimeta.ObjectMeta{Name: "dc", UID: dcUID, ScopeRef: scope, ResourceVersion: "1"},
+		Spec: model.DatacenterSpec{HostingLocationRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionHostingLocation, Kind: model.KindHostingLocation, Name: "loc", UID: hlUID,
+		}},
+	}); prob != nil {
+		t.Fatalf("create DC: %#v", prob)
+	}
+	if _, prob := s.CreateFaultDomain(model.FaultDomain{
+		Metadata: apimeta.ObjectMeta{Name: "fd", UID: fdUID, ScopeRef: scope, ResourceVersion: "1"},
+		Spec: model.FaultDomainSpec{DatacenterRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionDatacenter, Kind: model.KindDatacenter, Name: "dc", UID: dcUID,
+		}},
+	}); prob != nil {
+		t.Fatalf("create FD: %#v", prob)
+	}
+	if _, prob := s.CreateInfrastructureStack(model.InfrastructureStack{
+		Metadata: apimeta.ObjectMeta{Name: "stack", UID: stUID, ScopeRef: scope, ResourceVersion: "1"},
+		Spec: model.InfrastructureStackSpec{FaultDomainRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionFaultDomain, Kind: model.KindFaultDomain, Name: "fd", UID: fdUID,
+		}},
+	}); prob != nil {
+		t.Fatalf("create stack: %#v", prob)
+	}
+
+	s.BeginPublication()
+	hl, ok := s.LookupHostingLocation(hlUID)
+	if !ok || hl.Metadata.UID != hlUID || hl.Metadata.Name != "loc" {
+		s.EndPublication()
+		t.Fatalf("LookupHostingLocation=%#v ok=%v", hl, ok)
+	}
+	hl.Metadata.Name = "mutated"
+	if got, _ := s.LookupHostingLocation(hlUID); got.Metadata.Name != "loc" {
+		s.EndPublication()
+		t.Fatal("LookupHostingLocation must return a copy")
+	}
+
+	dc, ok := s.LookupDatacenter(dcUID)
+	if !ok || dc.Metadata.UID != dcUID {
+		s.EndPublication()
+		t.Fatalf("LookupDatacenter=%#v ok=%v", dc, ok)
+	}
+	fd, ok := s.LookupFaultDomain(fdUID)
+	if !ok || fd.Metadata.UID != fdUID {
+		s.EndPublication()
+		t.Fatalf("LookupFaultDomain=%#v ok=%v", fd, ok)
+	}
+	st, ok := s.LookupInfrastructureStack(stUID)
+	if !ok || st.Metadata.UID != stUID {
+		s.EndPublication()
+		t.Fatalf("LookupInfrastructureStack=%#v ok=%v", st, ok)
+	}
+	s.EndPublication()
+
+	// Public Get… methods remain for unlocked reads and acquire the Store lock.
+	if got, ok := s.GetHostingLocation(hlUID); !ok || got.Metadata.UID != hlUID {
+		t.Fatalf("GetHostingLocation unlocked read failed: %#v ok=%v", got, ok)
+	}
+}
