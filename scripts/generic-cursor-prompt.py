@@ -38,11 +38,20 @@ def section_paths(block: str, headings: tuple[str, ...]) -> list[str]:
     if not matches:
         rendered = "/".join(headings)
         raise SystemExit(f"ERROR: task must contain a {rendered}: section")
-    paths = [
-        path
-        for match in matches
-        for path in re.findall(r"(?m)^\s*-\s+`([^`]+)`", match.group(1))
-    ]
+    paths = []
+    for match in matches:
+        for line in match.group(1).splitlines():
+            if not re.match(r"^\s*-\s+", line):
+                continue
+            # A task may group several exact paths in one bullet. Extract all
+            # repository-path tokens, while ignoring prose and identifiers in
+            # the same test-description bullet.
+            for path in re.findall(r"`([^`]+)`", line):
+                if (
+                    path.startswith(("internal/", "cmd/", "api/", "tests/", "scripts/", "docs/", ".automation/"))
+                    and Path(path).suffix
+                ):
+                    paths.append(path)
     if not paths:
         rendered = "/".join(headings)
         raise SystemExit(f"ERROR: task {rendered}: section must list repository paths")

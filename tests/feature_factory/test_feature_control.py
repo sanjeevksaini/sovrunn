@@ -214,6 +214,29 @@ Long-form commit detail is allowed in the plan.
         self.assertEqual(orchestrator.commit_message(plan[1]), "feat(example): add service")
         self.assertIsNone(orchestrator.commit_message(plan[18]))
 
+    def test_grouped_path_bullets_expand_to_every_exact_path(self):
+        block = """### Task 13: Grouped paths
+
+**Writable paths:**
+- `internal/api/one.go`, `internal/api/two.go`
+
+**Tests:**
+- `internal/api/one_test.go`, `internal/api/two_test.go`: the inherited `internal/apivalid` pipeline returns `VALIDATION_FAILED` as expected.
+
+**Commit message:**
+```
+feat(example): grouped paths
+```
+"""
+        expected = [
+            "internal/api/one.go",
+            "internal/api/two.go",
+            "internal/api/one_test.go",
+            "internal/api/two_test.go",
+        ]
+        self.assertEqual(cursor_prompt.writable_paths(block), expected)
+        self.assertEqual(orchestrator.task_writable_paths(block), expected)
+
     def test_verification_checkpoint_is_not_a_cursor_or_commit_task(self):
         source = (ROOT / "scripts/feature-orchestrator.py").read_text()
         checkpoint = source.index("def run_verification_checkpoint")
