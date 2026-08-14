@@ -263,6 +263,7 @@ test(conformance): add local cases
         self.assertIn('"make", "ff-feature-gate"', checkpoint_source)
         self.assertNotIn("generic-feature-boundary-check.py", checkpoint_source)
         self.assertIn("if completed_final_commit:", source)
+        self.assertIn("running verification-only Task", source)
 
     def test_interrupted_task_can_resume_only_within_declared_scope(self):
         plan = orchestrator.blocks(self.task_plan_fixture)

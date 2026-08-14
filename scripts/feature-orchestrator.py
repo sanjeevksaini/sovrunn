@@ -207,15 +207,18 @@ def main() -> None:
     except (TypeError, ValueError) as exc:
         raise SystemExit(f"ERROR: {exc}") from exc
     if not batches:
+        if checkpoints:
+            rendered = ", ".join(str(task) for task in checkpoints)
+            print(
+                f"{args.feature} has all approved commit tasks completed; "
+                f"running verification-only Task {rendered}"
+            )
+            for checkpoint in checkpoints:
+                run_verification_checkpoint(args.feature, control, checkpoint)
+            print(f"{args.feature} controlled task run complete")
+            return
         if args.all_tasks:
-            if checkpoints:
-                rendered = ", ".join(str(task) for task in checkpoints)
-                print(
-                    f"{args.feature} already has all approved commit tasks completed; "
-                    f"Task {rendered} is verification-only and is not sent to Cursor or committed"
-                )
-            else:
-                print(f"{args.feature} already has all approved tasks committed")
+            print(f"{args.feature} already has all approved tasks committed")
             return
         raise SystemExit(f"ERROR: no approved successor after committed task {last_raw}")
     allowed_dirty = allowed_resume_paths(state_path, plan, batches)
