@@ -834,7 +834,7 @@ Refs: FEATURE-0015 Task 9, REQ-F15-17, ADH-2026-045, ADH-2026-054
 
 ### Task 11: CloudPlatform and CloudProvider collection/item handlers
 
-**Purpose:** Implement CloudPlatform collection (LIST/create) and item (GET/PATCH) handlers with per-route pipeline order, closed create contract, PATCH-only update, scope derivation, validation, writer enforcement, idempotency, and audit.
+**Purpose:** Implement CloudPlatform collection (LIST/create) and item (GET/PATCH) handlers with per-route pipeline order, closed create contract, PATCH-only update, scope derivation, validation, writer enforcement, idempotency, and audit. Complete the shared, read-only Store query surface required by all FEATURE-0015 collection handlers: CloudPlatform-existence lookup for the root gate and typed, ascending-UID list snapshots for all seven owned kinds.
 
 **Dependencies:** Task 1 (types), Task 4 (validation/store primitives), Task 8 (idempotency/audit coordination), Task 9 (grants).
 
@@ -849,11 +849,13 @@ Refs: FEATURE-0015 Task 9, REQ-F15-17, ADH-2026-045, ADH-2026-054
 **Writable paths:**
 - `internal/api/cloudplatform_collection.go` (LIST, create handlers)
 - `internal/api/cloudplatform_item.go` (GET, PATCH handlers)
+- `internal/cloudmodel/store.go` (read-only root-gate and typed LIST query surface)
 
 **Tests:**
 - `internal/api/cloudplatform_collection_test.go`: authenticated LIST with cloudplatform.read returns ascending metadata.uid; LIST without read grant returns 403 with exactly one AuditEvent; inaccessible GET returns safe 404 with exactly one redacted AuditEvent; authorized create with closed contract returns 201 + exact initial status; server-derived Platform-root scope; Idempotency-Key required; same-key/same-digest replay and same-key/different-digest CONFLICT create no additional AuditEvent; duplicate name ALREADY_EXISTS and malformed input create no AuditEvent; missing auth AUTH_REQUIRED creates no AuditEvent; client-supplied status/system-owned metadata is audited, while client-supplied scopeRef/unknown/deferred field is unaudited; successful create appends exactly one AuditEvent; audit-append failure returns INTERNAL_ERROR with no publication.
 - `internal/api/cloudplatform_item_test.go`: authorized GET returns resource; authorized PATCH spec.description returns 200 + updated resource and exactly one AuditEvent; stale/missing/malformed If-Match returns `STALE_RESOURCE_VERSION` / 412 with no AuditEvent; immutable ownerRegistration/name PATCH returns `VALIDATION_FAILED` / 422 with `VS0_PATCH_IMMUTABLE_FIELD` and no AuditEvent; client status write returns audited `AUTHORIZATION_DENIED` / 403 with `VS0_STATUS_FIELD_WRITE`; wrong-administrator PATCH returns `AUTHORIZATION_DENIED` / 403 before semantic processing with no AuditEvent; forged bootstrap header is denied/audited `AUTHORIZATION_DENIED` / 403 before an otherwise unsupported PATCH media type could return 415; PUT/DELETE return 405 with no AuditEvent; PATCH never requires idempotency state.
 - `internal/api/cloudplatform_collection_test.go` and `internal/api/cloudplatform_item_test.go`: collection-create and PATCH invoke the inherited FEATURE-0012 `internal/apivalid` `StageSet` with FEATURE-0015 validators plugged in; no parallel or bypassed layer 5–7 pipeline.
+- `internal/cloudmodel/store_test.go`: `HasCloudPlatform` reports whether any CloudPlatform is published; each typed `List…` query returns an independent snapshot in ascending `metadata.uid`; all seven lists are empty-safe and do not expose Store maps for mutation.
 
 **Verification commands:**
 ```bash
@@ -866,6 +868,7 @@ go test -v ./internal/api/...
 **Acceptance criteria:**
 - CloudPlatform collection: GET /apis/core.sovrunn.io/v1alpha1/cloud-platforms (LIST); POST (create).
 - CloudPlatform item: GET /apis/core.sovrunn.io/v1alpha1/cloud-platforms/{uid}; PATCH (spec.description only).
+- Shared Store query surface: `HasCloudPlatform` supports the CloudProvider, topology, and participation root gate; typed `List…` queries for CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, and InfrastructureStack return independent snapshots ordered by ascending `metadata.uid`. Handlers apply current read authorization and scope filtering; the Store does not make authorization decisions.
 - Per-route pipeline order: auth → route/method gate → headers → media/decode → coarse action-grant → root gate → safe resolution/scope derivation/exact authz → strict decode/classify → idempotency (create only) → scope derivation (create) → validation → version comparison (PATCH) → publication coordinator.
 - Collection-create and PATCH use the inherited FEATURE-0012 `internal/apivalid` `StageSet`; FEATURE-0015 contributes validators without modifying or forking its contract.
 - Closed create contract: only metadata.name, spec.ownerRegistration.{legalName, registrationIdentifier, jurisdictionCode}, optional metadata.displayName, optional spec.description accepted.
@@ -969,7 +972,7 @@ go test -v ./internal/api/...
 
 **Purpose:** Implement collection (LIST/create) and item (GET/PATCH) handlers for the four topology resources with per-route pipeline, closed create contract, HostingLocation scope derived from topology.write with no parent reference, immutable Datacenter/FaultDomain/InfrastructureStack parent references, assigned-ISO validation (HostingLocation), PATCH-only update (description only), writer enforcement, idempotency, and audit.
 
-**Dependencies:** Task 1 (types and ISO dataset), Task 4 (validation/store primitives), Task 8 (idempotency/audit coordination), Task 9 (grants), Task 11 (CloudPlatform and CloudProvider handlers ensure root exists).
+**Dependencies:** Task 1 (types and ISO dataset), Task 4 (validation/store primitives), Task 8 (idempotency/audit coordination), Task 9 (grants), Task 11 (CloudPlatform root gate and shared Store read-query surface).
 
 **Requirements traceability:** REQ-F15-04 (topology validation), REQ-F15-08 (PATCH-only), REQ-F15-09 (safe cross-provider denial), REQ-F15-11 (writer enforcement), REQ-F15-15 (audit atomicity), REQ-F15-16 (root gate), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-22 (assigned ISO for HostingLocation), REQ-F15-23 (malformed/prohibited inputs), REQ-F15-24 (AUTH_REQUIRED).
 
@@ -1059,7 +1062,7 @@ DEC-0041, ADH-2026-045, ADH-2026-047, ADH-2026-048, ADH-2026-056
 
 **Purpose:** Implement CloudProviderParticipation collection (LIST/create) and item (GET-only; no PATCH) handlers with per-route pipeline, closed create contract (exactly four decision-4 fields), pair uniqueness, server-derived CloudPlatform scope, initial Pending status with false holds and seven-day expiry, root gate, Idempotency-Key-only precondition (no If-Match on create), idempotency, and audit.
 
-**Dependencies:** Task 1 (types), Task 4 (validation/store primitives), Task 6 (lifecycle), Task 8 (idempotency/audit coordination), Task 9 (grants), Task 11 (CloudPlatform exists for scope derivation).
+**Dependencies:** Task 1 (types), Task 4 (validation/store primitives), Task 6 (lifecycle), Task 8 (idempotency/audit coordination), Task 9 (grants), Task 11 (CloudPlatform root gate and shared Store read-query surface).
 
 **Requirements traceability:** REQ-F15-03 (participation registration), REQ-F15-07 (create preconditions), REQ-F15-14 (scope-reference UID invariant), REQ-F15-15 (audit atomicity), REQ-F15-16 (root gate), REQ-F15-17 (server-resolved grants), REQ-F15-18 (create idempotency), REQ-F15-19 (closed create), REQ-F15-20 (scope derivation), REQ-F15-21 (participation create body), REQ-F15-23 (If-Match on create rejected), REQ-F15-24 (AUTH_REQUIRED).
 
