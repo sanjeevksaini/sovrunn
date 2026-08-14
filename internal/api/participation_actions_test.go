@@ -234,7 +234,7 @@ func TestParticipationActions_IdempotencyReplayAndMismatch(t *testing.T) {
 
 	// Same-key/same-digest replay — no second AuditEvent.
 	rec = doMux(t, mux, http.MethodPost, actionPath(part.Metadata.UID, cloudmodel.ParticipationActionAccept), nil, headers)
-	if rec.Code != http.StatusOK || string(rec.Body.Bytes()) != string(firstBody) {
+	if rec.Code != http.StatusOK || rec.Body.String() != string(firstBody) {
 		t.Fatalf("replay status=%d body mismatch", rec.Code)
 	}
 	if rt.audit.Len() != before {
@@ -337,7 +337,7 @@ func TestParticipationActions_ReplayRecheckRevokedGrant(t *testing.T) {
 	}
 	mux = muxParticipationWithActions(rt)
 	rec = doMux(t, mux, http.MethodPost, actionPath(part.Metadata.UID, cloudmodel.ParticipationActionAccept), nil, headers)
-	if rec.Code == http.StatusOK || string(rec.Body.Bytes()) == string(stored) {
+	if rec.Code == http.StatusOK || rec.Body.String() == string(stored) {
 		t.Fatalf("revoked grant must not disclose stored result: %d %s", rec.Code, rec.Body.String())
 	}
 	if decodeProblem(t, rec).Code != apiproblem.CodeAuthorizationDenied {

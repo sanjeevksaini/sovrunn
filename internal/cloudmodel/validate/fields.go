@@ -6,11 +6,9 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel/model"
 )
 
-// ValidateImmutableCreateFields rejects create-time presence of immutable
-// identity/reference/ownerRegistration fields that must not change after
-// create when comparing a proposed PATCH against the stored resource.
-// For create, use ClassifyCreateContract. This function compares before/after
-// for PATCH immutability (ADH-2026-047 decision 3).
+// ValidateImmutablePatch compares before/after resource values and rejects
+// immutable identity, reference, and owner-registration changes. For create,
+// use ClassifyCreateContract (ADH-2026-047 decision 3).
 func ValidateImmutablePatch(kind Kind, before, after any) *apiproblem.Problem {
 	switch kind {
 	case KindCloudPlatform:

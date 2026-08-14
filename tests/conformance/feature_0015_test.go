@@ -971,11 +971,6 @@ func TestVS0_CF_F15_16(t *testing.T) {
 	assertNoAuditDelta(t, h, before)
 }
 
-func mustJSON(v any) []byte {
-	b, _ := json.Marshal(v)
-	return b
-}
-
 // ---------------------------------------------------------------------------
 // VS0-CF-F15-17 — missing/malformed/stale If-Match on action
 // ---------------------------------------------------------------------------
@@ -1176,7 +1171,6 @@ func TestVS0_CF_F15_21(t *testing.T) {
 	}
 
 	// Unauthorized direct GET → safe 404
-	before = h.audit.Len()
 	rec = doF15(t, h, http.MethodGet, "/apis/core.sovrunn.io/v1alpha1/cloud-platforms/"+plat.Metadata.UID, nil, nil)
 	assertProblem(t, rec, apiproblem.CodeResourceNotFound, http.StatusNotFound, f15ViolationSafeDeny)
 }
@@ -1760,9 +1754,7 @@ func TestVS0_CF_F15_40(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("create: %d", rec.Code)
 	}
-	etag := rec.Header().Get("ETag")
 	loc := rec.Header().Get("Location")
-	req1 := rec.Header().Get("X-Sovrunn-Request-ID")
 
 	rec = doF15(t, h, http.MethodPost, "/apis/core.sovrunn.io/v1alpha1/cloud-platforms", platformBody("f15-40"), headers)
 	if rec.Code != http.StatusCreated {
@@ -1771,14 +1763,10 @@ func TestVS0_CF_F15_40(t *testing.T) {
 	if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
 		t.Fatalf("replay Content-Type=%q", ct)
 	}
-	// Entity/transport headers from original must not be replayed as stored values.
-	if etag != "" && rec.Header().Get("ETag") == etag && etag != "" {
-		// ETag must not be copied from stored completion (handlers may omit entirely).
-	}
+	// Location must not be replayed as a stored transport header.
 	if loc != "" && rec.Header().Get("Location") == loc {
 		t.Fatal("Location must not be replayed from stored completion")
 	}
-	_ = req1
 
 	// Aborted namespace re-reserves as new
 	ns := cloudmodel.IdempotencyNamespace{PrincipalID: f15Principal, Pattern: apiPatternCloudPlatformCreate(), Key: "abort-key"}

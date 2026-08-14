@@ -181,10 +181,7 @@ func TestCloudPlatformItem_GetPatchWriterMethods(t *testing.T) {
 		t.Fatal("405 must not audit")
 	}
 
-	// PATCH never requires idempotency state.
-	if rt.idemp.InFlightCountForTest() != 0 || rt.idemp.CompletedCountForTest() == 0 {
-		// create completed records may exist; PATCH must not add InFlight.
-	}
+	// PATCH never requires idempotency state; completed create records may exist.
 	if rt.idemp.InFlightCountForTest() != 0 {
 		t.Fatal("PATCH must not leave InFlight idempotency state")
 	}
