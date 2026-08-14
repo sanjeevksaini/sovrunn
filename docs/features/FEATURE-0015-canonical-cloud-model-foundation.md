@@ -1,3 +1,14 @@
+---
+doc_type: feature
+id: FEATURE-0015
+title: Canonical Cloud Model Foundation
+status: approved
+phase: 2R
+reuse_assessment_format_version: 1.0.0
+canonical_architecture: docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md
+kiro_slug: canonical-cloud-model-and-alpha-migration
+---
+
 # FEATURE-0015: Canonical Cloud Model Foundation
 
 | Field | Value |
@@ -290,3 +301,120 @@ FEATURE-0016 owns ExecutionTarget registration and its complete target lifecycle
 ---
 
 *Executable scope only. No requirements.md, design.md, or tasks.md generation from this file. Those are produced by Kiro spec stages under .kiro/specs/.*
+
+---
+
+## Feature-level reuse summary
+
+This approved assessment uses the canonical format in
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md`. It records existing
+authority and does not change the approved FEATURE-0015 architecture.
+
+| Capability / decision unit | Disposition | Rationale | Decision status | Controlling reference |
+|---|---|---|---|---|
+| FEATURE-0012 API/resource grammar and FEATURE-0013 AuditEvent contract | Reuse | The feature consumes the established metadata, Problem Details, validation-stage, and durable-audit contracts without redefining them. | Approved | DEC-0026; ADH-2026-045 |
+| Canonical seven-resource cloud model and participation lifecycle | Build | No existing internal or external model supplies the approved scope, lifecycle, safe-denial, writer, and idempotency semantics as one contract. | Approved | DEC-0037; DEC-0054; DEC-0059; ADH-2026-045 |
+| Provider-native execution and adapters | Wrap | Any provider-native translation remains behind a future adapter boundary and is not activated by FEATURE-0015. | Deferred | DEC-0036; ADH-2026-045 |
+
+## Identity
+
+| Field | Value |
+|---|---|
+| Feature identity | FEATURE-0015 |
+| Capability or decision-unit identity | Canonical seven-resource cloud model and participation lifecycle |
+| Assessment owner | Sanjeev Kumar, Sovrunn Architecture Owner |
+
+## Classification
+
+| Field | Value |
+|---|---|
+| Disposition | Build |
+| Decision status | Approved |
+
+## Analysis
+
+| Field | Value |
+|---|---|
+| Assessment scope | Canonical CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, and InfrastructureStack contracts, their bounded HTTP surface, validation, lifecycle, and audit/idempotency behavior. |
+| Candidate category | Existing Sovrunn contracts, cloud inventory domain models, and provider SDK/API models. |
+| Mature candidates / applicable standards | FEATURE-0011 reuse governance; FEATURE-0012 API/resource grammar and RFC 9457 Problem Details; FEATURE-0013 AuditEvent; JSON Schema; RFC 7396 merge patch; ISO-3166 code standards. |
+| Relevant candidate strengths | Inherited contracts provide stable metadata, validation, Problem Details, concurrency, audit, and conformance conventions. |
+| Material candidate constraints | Existing alpha and provider-native models do not satisfy the approved seven-scope, safe-denial, participation-lifecycle, or no-runtime-migration boundary. |
+| Rationale | Build only the F0015-owned canonical semantics and reuse inherited cross-cutting contracts exactly. |
+| Selected foundation or approach | Seven typed canonical resources with FEATURE-0012 StageSet validation, FEATURE-0013 AuditEvent publication, and no external provider integration. |
+| Why Reuse is insufficient | No reusable model provides the complete approved canonical resource ownership and lifecycle semantics. |
+| Why Wrap is insufficient | Wrapping a provider-native model would introduce the deferred adapter/execution boundary. |
+| Why Extend is insufficient | Extending retained alpha assets would violate DEC-0059's no-alpha-runtime-migration rule. |
+| Protected Sovrunn differentiation and long-term ownership | Sovrunn owns canonical scope, resource, lifecycle, safe-denial, validation, and audit/idempotency semantics; prior features retain ownership of their common contracts. |
+
+## Boundary
+
+| Field | Value |
+|---|---|
+| Sovrunn-owned responsibility | The seven F0015 resource contracts, lifecycle transitions, request validation, authorization enforcement, and local conformance behavior. |
+| Reused or extended responsibility | FEATURE-0011 reuse governance; FEATURE-0012 metadata, Problem Details, API validation pipeline, and resource conventions; FEATURE-0013 AuditEvent contract. |
+| Responsibility/control boundary | F0015 composes inherited contracts but does not redefine them; later adapter, execution, IAM, eligibility, persistence, and provisioning responsibilities remain outside the feature. |
+| Data crossing the boundary | Typed references, ObjectMeta, request context/grants, Problem Details, and redacted AuditEvent evidence. |
+| Control crossing the boundary | Server-resolved authorization and local api-server transitions only; no provider calls, external persistence, or controller ownership. |
+| Adapter required | No |
+| Adapter rationale | The current feature creates no external integration; future provider translation is separately owned and must satisfy DEC-0036. |
+| Adapter or contract identifier | none |
+| Vendor-native types allowed | No |
+
+## Suitability
+
+| Field | Value |
+|---|---|
+| Sovereignty and deployment fit | Local canonical contracts and in-process phase boundary support disconnected and sovereign deployments without a cloud-vendor dependency. |
+| Security and trust | Server-resolved grants, exact scope derivation, safe denial, writer enforcement, redacted audit evidence, and closed request contracts are mandatory. |
+| Operational and supportability | Deterministic validation, registered Problem outcomes, conformance tests, and bounded idempotency retention make behavior diagnosable. |
+| Licensing and supply-chain | Standard-library and repository-owned implementation; no new vendor SDK or external service dependency. |
+| Portability and provider-neutrality impact | Canonical resources avoid provider-native runtime types and preserve a later replaceable adapter boundary. |
+
+## Phase and scope
+
+| Field | Value |
+|---|---|
+| Allowed in current phase | Yes |
+| Current-phase work | Implement and verify the approved seven-resource canonical model, bounded API routes, validation, participation lifecycle, idempotency, and audit behavior. |
+| Deferred work | Provider adapters, ExecutionTarget, external/durable persistence, real provisioning, customer eligibility, governance IAM, policy, and plugin execution. |
+| Explicit non-goals | No alpha runtime migration, provider-native runtime objects, external provider calls, real provisioning, customer-facing selection, or future-feature semantics. |
+| Exit or migration boundary | A change to canonical resource ownership, inherited contract ownership, or the no-migration boundary requires an approved ADH and compatibility review. |
+| Phase 2 non-goal acknowledgement | Phase 2R authorizes no durable external persistence, real infrastructure provisioning, plugin execution, or future-feature activation. |
+
+## Risk mitigation
+
+| Field | Value |
+|---|---|
+| Applicable architecture risks | Contract drift, scope/authorization leakage, unsafe reference disclosure, idempotency replay errors, audit publication failure, and future-feature leakage. |
+| Residual risk | Medium; residual risk is bounded by deterministic checks, formal models, conformance coverage, and final feature-gate evidence. |
+| Replacement risk | Medium |
+| Reassessment triggers | Any approved change to FEATURE-0012/0013 contracts, canonical resource ownership, route/lifecycle semantics, provider integration boundary, or a failing conformance/formal invariant. |
+
+### Risk-control matrix
+
+| Risk | Preventive control | Detection control | Corrective path |
+|---|---|---|---|
+| Contract drift | Registry/spec/traceability single-source checks | `make feature-contract-check FEATURE=FEATURE-0015` | Stop progression; correct the controlling authority through approved governance. |
+| Scope or authorization leakage | Server-resolved grants, exact scope derivation, writer rules | Local conformance and authorization tests | Deny safely, repair the owning handler/validator, and rerun contract tests. |
+| Reference disclosure | Safe-denial ordering and target-scope checks | F0015 safe-denial conformance cases | Correct ordering before release; do not expose existence. |
+| Idempotency or audit publication failure | Target-bound idempotency and append-before-publication | TLC models, race tests, and F0015 conformance tests | Abort staged work, return the approved outcome, and investigate before retrying. |
+| Future-feature leakage | Explicit exclusions and Phase 2R drift guardrails | `make phase2r-drift-check` | Remove the leaked behavior or raise an approved architecture change. |
+
+## Traceability
+
+| Field | Value |
+|---|---|
+| Related DEC / RFC / ADH references | DEC-0026; DEC-0036; DEC-0037; DEC-0041; DEC-0042; DEC-0054; DEC-0059; ADH-2026-045 through ADH-2026-057. |
+| Linked acceptance criteria | AC-F15-01 through AC-F15-20 and the exact local VS0-CF-F15-01 through VS0-CF-F15-41 conformance cases. |
+| Validation and review evidence | FEATURE-0015 architecture readiness, feature-contract check, TLC lifecycle/idempotency-audit models, VS-000 contract check, Phase 2R drift check, requirements/design/tasks approvals, and final feature gate. |
+
+## Human-approval evidence
+
+| Field | Value |
+|---|---|
+| Approving person or role | Sanjeev Kumar, Sovrunn Architecture Owner |
+| Approval date | 2026-08-14 |
+| Approved ADH or assessment-review reference | ADH-2026-045 |
+| Structured approval-evidence record | docs/reviews/reuse-assessments/FEATURE-0015-approval-evidence.md |
+| Approval applies to | FEATURE-0015 reuse-assessment governance and final feature-gate readiness; it does not alter architecture, Kiro stage, Cursor, or release approvals. |

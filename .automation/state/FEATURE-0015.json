@@ -1,8 +1,8 @@
 {
   "architecture_approval_token": "APPROVED_ARCHITECTURE",
-  "architecture_approved_at": "2026-08-14T04:47:01.516738+00:00",
+  "architecture_approved_at": "2026-08-14T05:09:44.876824+00:00",
   "architecture_approved_by": "Sanjeev Kumar",
-  "architecture_approved_sha256": "f39bb2d110171f0ecc36c4a30a7d0dff452bb1a163b4ead4344eb4216206e41c",
+  "architecture_approved_sha256": "3f2d26765a244e6ca9f36b72d8cb55a5a6b24e32e40c269eba8f6b56c5bbffe2",
   "control_approved_sha256": "be523d398147e33528f70b8c0fd126749c751ecb33f5b134a7a38d0a18b66a61",
   "created_at": "2026-08-04T13:16:41.681695+00:00",
   "current_stage": "cursor",
@@ -18,7 +18,7 @@
   "feature_branch": "feature-0015-canonical-cloud-model-and-alpha-migration",
   "feature_id": "FEATURE-0015",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0015",
-  "human_gate_required": "false",
+  "human_gate_required": false,
   "last_committed_task": "17",
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "requirements_approval_source": "openai_machine_review",
@@ -33,5 +33,5 @@
   "tasks_approved_at": "2026-08-14T04:49:51Z",
   "tasks_approved_sha256": "d548425def552540963416a04ddf92aa75033d47260a8dbed5814ea45488648d",
   "title": "Canonical Cloud Model Foundation",
-  "updated_at": "2026-08-14T04:56:58.505090+00:00"
+  "updated_at": "2026-08-14T05:09:44.877775+00:00"
 }

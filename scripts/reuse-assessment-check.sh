@@ -749,7 +749,7 @@ for ref in sorted(ref_ids):
         candidates = list((REPO_ROOT / "docs/rfc").glob(f"{ref}*.md"))
         found = any(candidates)
     elif ref.startswith("ADH-"):
-        candidates = list((REPO_ROOT / "docs/reviews/architecture-decision-handoffs").glob(f"{ref}*.md"))
+        candidates = list((REPO_ROOT / "docs/reviews/architecture-decision-handoffs").rglob(f"{ref}*.md"))
         found = any(candidates)
     if not found:
         emit(
