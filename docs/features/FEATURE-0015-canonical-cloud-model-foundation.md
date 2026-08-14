@@ -252,7 +252,7 @@ ADH-2026-057 adds VS0-CF-F15-41 as the sole exact local proof of wrong-administr
 | Duplicate name in scope | ALREADY_EXISTS | 409 | — |
 | Invalid participation transition | CONFLICT | 409 | VS0_PARTICIPATION_STATE_INVALID |
 | Duplicate CloudProviderParticipation pair | ALREADY_EXISTS | 409 | VS0_PARTICIPATION_DUPLICATE |
-| Missing delegated acceptance for Pending → Active | CONFLICT | 409 | VS0_PARTICIPATION_ACCEPTANCE_MISSING |
+| Caller without `participation.accept.platform` posts accept for Pending participation | AUTHORIZATION_DENIED | 403 | — |
 | Client writes status | AUTHORIZATION_DENIED | 403 | VS0_STATUS_FIELD_WRITE |
 | Client writes system-owned metadata | AUTHORIZATION_DENIED | 403 | VS0_SYSTEM_OWNED_FIELD_WRITE |
 | Resource uses a scope outside its declared subset | VALIDATION_FAILED | 422 | VS0_SCOPE_KIND_INVALID |

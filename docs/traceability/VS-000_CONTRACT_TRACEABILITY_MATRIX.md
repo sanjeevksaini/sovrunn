@@ -192,7 +192,7 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-06 | System-owned metadata-write denial | FEATURE-0015 | security | FEATURE-0012 grammar | VS0-WRITER-001 |
 | VS0-CF-F15-07 | PATCH-only update surface (no PUT/DELETE) | FEATURE-0015 | feature | DEC-0059; ADH-2026-045 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-08 | Independent suspension hold isolation | FEATURE-0015 | feature | DEC-0054; ADH-2026-045 | VS0-STATE-001, VS0-SCHEMA-010 |
-| VS0-CF-F15-09 | Participation activation denial without both delegations | FEATURE-0015 | feature | DEC-0054; ADH-2026-037/042 | VS0-STATE-001, VS0-WRITER-004 |
+| VS0-CF-F15-09 | Unauthorized CloudPlatform accept action leaves Pending participation unchanged | FEATURE-0015 | feature | DEC-0054; ADH-2026-045 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-10 | Suspend/resume denial in terminal/Pending/Terminating phases | FEATURE-0015 | feature | DEC-0054; ADH-2026-045 | VS0-STATE-001, VS0-WRITER-004 |
 | VS0-CF-F15-11 | Scope reference UID mismatch | FEATURE-0015 | feature | DEC-0037/0054; ADH-2026-042/043 | VS0-SCHEMA-008,010 |
 | VS0-CF-F15-12 | CloudPlatform-root creation prerequisite | FEATURE-0015 | feature | ADH-2026-045/046 | VS0-SCHEMA-008..010 |
