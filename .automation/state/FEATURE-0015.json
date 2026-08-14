@@ -5,7 +5,7 @@
   "architecture_approved_sha256": "3f2d26765a244e6ca9f36b72d8cb55a5a6b24e32e40c269eba8f6b56c5bbffe2",
   "control_approved_sha256": "be523d398147e33528f70b8c0fd126749c751ecb33f5b134a7a38d0a18b66a61",
   "created_at": "2026-08-04T13:16:41.681695+00:00",
-  "current_stage": "cursor",
+  "current_stage": "final",
   "current_task": "17",
   "design_approval_source": "openai_machine_review",
   "design_approval_token": "APPROVED_FOR_TASKS",
@@ -17,6 +17,10 @@
   "executable_plan_approved_sha256": "6c31aa848671e742b4a5582e499e0c7dda6252d8f2a24f2e69eaeccb41988602",
   "feature_branch": "feature-0015-canonical-cloud-model-and-alpha-migration",
   "feature_id": "FEATURE-0015",
+  "final_approval_token": "APPROVED_FOR_MERGE",
+  "final_approved_at": "2026-08-14T05:22:27.501140+00:00",
+  "final_approved_by": "Sanjeev Kumar",
+  "final_approved_commit": "0b976c98a3d7808b567b215bd2e67c4b769d021f",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0015",
   "human_gate_required": false,
   "last_committed_task": "17",
@@ -27,11 +31,11 @@
   "requirements_approved_sha256": "1ed9f391051600151ab96edd66c091576ea36c4f4505801f345170ec530ef5b0",
   "slug": "canonical-cloud-model-and-alpha-migration",
   "spec_path": ".kiro/specs/canonical-cloud-model-and-alpha-migration",
-  "status": "cursor_task_17_committed",
+  "status": "approved_for_merge",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
   "tasks_approved_at": "2026-08-14T04:49:51Z",
   "tasks_approved_sha256": "d548425def552540963416a04ddf92aa75033d47260a8dbed5814ea45488648d",
   "title": "Canonical Cloud Model Foundation",
-  "updated_at": "2026-08-14T05:09:44.877775+00:00"
+  "updated_at": "2026-08-14T05:23:32.828689+00:00"
 }
