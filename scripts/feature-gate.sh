@@ -68,8 +68,21 @@ require_contains() {
   pass "$label present in $file"
 }
 
+require_stage_label() {
+  local file="$1"
+  local stage="$2"
+  local label="$3"
+  if grep -qiE "Stage:[[:space:]]*${stage}|\\|[[:space:]]*Stage[[:space:]]*\\|[[:space:]]*${stage}[[:space:]]*\\|" "$file"; then
+    pass "$label present in $file"
+  else
+    fail "$label missing in $file"
+  fi
+}
+
 # Resolve exactly one FEATURE_INDEX.md row and its Kiro Slug for FEATURE-0011+.
-# No grep-based Kiro-directory fallback. No FEATURE-0011 path fallback for later features.
+# The Kiro slug owns the spec directory only.  Resolve the assessment by its
+# feature ID so an approved display/document filename need not duplicate that
+# implementation-oriented slug.
 resolve_feature_paths() {
   local feature="$1"
   local index="docs/features/FEATURE_INDEX.md"
@@ -135,7 +148,14 @@ PY
   esac
 
   KIRO_SPEC_DIR=".kiro/specs/${KIRO_SLUG}"
-  ASSESSMENT_PATH="docs/features/${feature}-${KIRO_SLUG}.md"
+  local assessments=()
+  while IFS= read -r assessment; do
+    assessments+=("$assessment")
+  done < <(find docs/features -maxdepth 1 -type f -name "${feature}-*.md" 2>/dev/null | sort)
+  if (( ${#assessments[@]} != 1 )); then
+    fail_config "expected exactly one feature assessment for ${feature}; found ${#assessments[@]}"
+  fi
+  ASSESSMENT_PATH="${assessments[0]}"
   REQUIREMENTS_PATH="${KIRO_SPEC_DIR}/requirements.md"
   DESIGN_PATH="${KIRO_SPEC_DIR}/design.md"
   TASKS_PATH="${KIRO_SPEC_DIR}/tasks.md"
@@ -294,17 +314,23 @@ else
   require_contains "$ASSESSMENT_PATH" "$FEATURE" "Active feature identity"
 
   # Stage labels
-  require_contains "$REQUIREMENTS_PATH" "Stage: Requirements" "Requirements stage"
-  require_contains "$DESIGN_PATH" "Stage: Design" "Design stage"
-  require_contains "$TASKS_PATH" "Stage: Tasks" "Tasks stage"
+  require_stage_label "$REQUIREMENTS_PATH" "Requirements" "Requirements stage"
+  require_stage_label "$DESIGN_PATH" "Design" "Design stage"
+  require_stage_label "$TASKS_PATH" "Tasks" "Tasks stage"
 
   # Reuse summary + non-goals + controlling ADH
   if [[ "$FEATURE" == "FEATURE-0014" ]] && grep -qi "Feature-level reuse summary" "$REQUIREMENTS_PATH"; then
     pass "Reuse Assessment (approved FEATURE-0014 legacy heading: Feature-level reuse summary)"
+  elif grep -qiE "Reuse Assessment|reuse governance contract" "$REQUIREMENTS_PATH"; then
+    pass "Reuse Assessment present in $REQUIREMENTS_PATH"
   else
-    require_contains "$REQUIREMENTS_PATH" "Reuse Assessment" "Reuse Assessment"
+    fail "Reuse Assessment missing in $REQUIREMENTS_PATH"
   fi
-  require_contains "$REQUIREMENTS_PATH" "Acceptance Criteria" "Acceptance Criteria"
+  if grep -qiE "Acceptance Criteria|acceptance scenarios" "$REQUIREMENTS_PATH"; then
+    pass "Acceptance Criteria present in $REQUIREMENTS_PATH"
+  else
+    fail "Acceptance Criteria missing in $REQUIREMENTS_PATH"
+  fi
   if ! grep -qiE "Non-goals|Out of scope|non-goals" "$REQUIREMENTS_PATH"; then
     fail "Non-goals missing in $REQUIREMENTS_PATH"
   fi
@@ -326,7 +352,7 @@ else
     require_contains "$DESIGN_PATH" "Security" "Security"
     require_contains "$DESIGN_PATH" "Non-goals" "Non-goals"
   else
-    require_contains "$DESIGN_PATH" "Architecture Drift" "Architecture Drift Checks"
+    require_contains "$DESIGN_PATH" "Implementation classification ledger" "Architecture Drift Checks"
     require_contains "$DESIGN_PATH" "Observability" "Observability"
     require_contains "$DESIGN_PATH" "Security" "Security"
     require_contains "$DESIGN_PATH" "Non-goals" "Non-goals"
