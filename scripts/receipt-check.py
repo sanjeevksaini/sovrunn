@@ -16,6 +16,7 @@ EXPECTED = {
     "stage": "STAGE_STATUS: COMPLETE",
     "task": "TASK_STATUS: COMPLETE",
 }
+VERIFICATION_SUFFIX = "Verification finished successfully:"
 
 
 def normalized_lines(raw: str) -> list[str]:
@@ -27,6 +28,15 @@ def normalized_lines(raw: str) -> list[str]:
         # surrounding prose still cannot satisfy the terminal receipt grammar.
         if len(line) >= 2 and line.startswith("`") and line.endswith("`"):
             line = line[1:-1]
+        # Cursor's transport can append its own verification summary directly
+        # after the Markdown-wrapped terminal receipt, without preserving the
+        # newline. Accept only that exact transport suffix, not arbitrary
+        # prose following a status token.
+        for receipt in EXPECTED.values():
+            wrapped_prefix = f"`{receipt}`{VERIFICATION_SUFFIX}"
+            if line.startswith(wrapped_prefix):
+                line = receipt
+                break
         normalized.append(line)
     return normalized
 
