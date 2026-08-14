@@ -259,7 +259,9 @@ test(conformance): add local cases
     def test_verification_checkpoint_is_not_a_cursor_or_commit_task(self):
         source = (ROOT / "scripts/feature-orchestrator.py").read_text()
         checkpoint = source.index("def run_verification_checkpoint")
-        self.assertIn('"make", "ff-feature-gate"', source[checkpoint:])
+        checkpoint_source = source[checkpoint : source.index("\ndef main()", checkpoint)]
+        self.assertIn('"make", "ff-feature-gate"', checkpoint_source)
+        self.assertNotIn("generic-feature-boundary-check.py", checkpoint_source)
         self.assertIn("if completed_final_commit:", source)
 
     def test_interrupted_task_can_resume_only_within_declared_scope(self):

@@ -143,19 +143,14 @@ def task_batches(
 
 
 def run_verification_checkpoint(feature: str, control: dict[str, object], task: int) -> None:
-    """Run only manifest-controlled verification for a non-commit checkpoint."""
+    """Run only manifest-controlled verification for a non-commit checkpoint.
+
+    Checkpoints do not invoke Cursor, so they deliberately have no generated
+    ``cursor-task-<n>.context.json``.  The generic Cursor boundary checker is
+    therefore inapplicable here; the feature gate below supplies the
+    checkpoint's clean-tree and approved-package verification.
+    """
     print(f"\n=== {feature} verification checkpoint Task {task} ===", flush=True)
-    run(
-        [
-            str(ROOT / "scripts/generic-feature-boundary-check.py"),
-            "--feature",
-            feature,
-            "--task",
-            str(task),
-            "--mode",
-            "all",
-        ]
-    )
     guardrails = control["guardrails"]
     if not isinstance(guardrails, dict):
         raise SystemExit("ERROR: control guardrails must be an object")
