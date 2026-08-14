@@ -1,6 +1,7 @@
 package cloudmodel
 
 import (
+	"sort"
 	"strconv"
 	"sync"
 
@@ -354,11 +355,137 @@ func (s *Store) StageUpdateInfrastructureStack(st model.InfrastructureStack) (*S
 	return s.stage(func() { s.stacks[staged.Metadata.UID] = staged }), nil
 }
 
+// HasCloudPlatform reports whether any CloudPlatform is published.
+// Handlers use this for the CloudProvider/topology/participation root gate;
+// the Store does not make authorization decisions.
+func (s *Store) HasCloudPlatform() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.platforms) > 0
+}
+
+// ListCloudPlatforms returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListCloudPlatforms() []model.CloudPlatform {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.CloudPlatform, 0, len(s.platforms))
+	for _, cp := range s.platforms {
+		out = append(out, cp)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListCloudProviders returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListCloudProviders() []model.CloudProvider {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.CloudProvider, 0, len(s.providers))
+	for _, cp := range s.providers {
+		out = append(out, cp)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListParticipations returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListParticipations() []model.CloudProviderParticipation {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.CloudProviderParticipation, 0, len(s.participations))
+	for _, p := range s.participations {
+		out = append(out, p)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListHostingLocations returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListHostingLocations() []model.HostingLocation {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.HostingLocation, 0, len(s.locations))
+	for _, hl := range s.locations {
+		out = append(out, hl)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListDatacenters returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListDatacenters() []model.Datacenter {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.Datacenter, 0, len(s.datacenters))
+	for _, dc := range s.datacenters {
+		out = append(out, dc)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListFaultDomains returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListFaultDomains() []model.FaultDomain {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.FaultDomain, 0, len(s.faultDomains))
+	for _, fd := range s.faultDomains {
+		out = append(out, fd)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
+// ListInfrastructureStacks returns an independent snapshot ordered by ascending
+// metadata.uid. Empty stores return a non-nil empty slice.
+func (s *Store) ListInfrastructureStacks() []model.InfrastructureStack {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]model.InfrastructureStack, 0, len(s.stacks))
+	for _, st := range s.stacks {
+		out = append(out, st)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Metadata.UID < out[j].Metadata.UID
+	})
+	return out
+}
+
 // GetCloudPlatform returns a copy by UID.
 func (s *Store) GetCloudPlatform(uid string) (model.CloudPlatform, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	cp, ok := s.platforms[uid]
+	return cp, ok
+}
+
+// LookupCloudPlatform returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupCloudPlatform(uid string) (model.CloudPlatform, bool) {
+	cp, ok := s.platforms[uid]
+	return cp, ok
+}
+
+// LookupCloudProvider returns a copy by UID. The publication lock must be held.
+func (s *Store) LookupCloudProvider(uid string) (model.CloudProvider, bool) {
+	cp, ok := s.providers[uid]
 	return cp, ok
 }
 

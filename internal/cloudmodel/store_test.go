@@ -238,3 +238,180 @@ func TestStore_StagingAbortDoesNotPublish(t *testing.T) {
 		t.Fatal("aborted stage must not publish")
 	}
 }
+
+func TestStore_HasCloudPlatformAndTypedLists(t *testing.T) {
+	t.Parallel()
+	s := cloudmodel.NewStore()
+	if s.HasCloudPlatform() {
+		t.Fatal("empty store must report no CloudPlatform")
+	}
+	assertEmptyLists(t, s)
+
+	uida := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	uidb := "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	uidc := "cccccccccccccccccccccccccccccccc"
+	if _, prob := s.CreateCloudPlatform(platformScoped("plat-b", uidb)); prob != nil {
+		t.Fatalf("create platform b: %#v", prob)
+	}
+	if _, prob := s.CreateCloudPlatform(platformScoped("plat-a", uida)); prob != nil {
+		t.Fatalf("create platform a: %#v", prob)
+	}
+	if !s.HasCloudPlatform() {
+		t.Fatal("published CloudPlatform must be visible to HasCloudPlatform")
+	}
+
+	platforms := s.ListCloudPlatforms()
+	if len(platforms) != 2 || platforms[0].Metadata.UID != uida || platforms[1].Metadata.UID != uidb {
+		t.Fatalf("ListCloudPlatforms ascending uid = %#v", platforms)
+	}
+	platforms[0].Metadata.Name = "mutated"
+	if got, _ := s.GetCloudPlatform(uida); got.Metadata.Name != "plat-a" {
+		t.Fatal("ListCloudPlatforms must return an independent snapshot")
+	}
+
+	if _, prob := s.CreateCloudProvider(providerScoped("prov-c", uidc)); prob != nil {
+		t.Fatalf("create provider: %#v", prob)
+	}
+	if _, prob := s.CreateCloudProvider(providerScoped("prov-a", uida)); prob != nil {
+		t.Fatalf("create provider a: %#v", prob)
+	}
+	providers := s.ListCloudProviders()
+	if len(providers) != 2 || providers[0].Metadata.UID != uida || providers[1].Metadata.UID != uidc {
+		t.Fatalf("ListCloudProviders ascending uid = %#v", providers)
+	}
+
+	scope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+		APIVersion: model.APIVersionCloudPlatform, Kind: model.KindCloudPlatform,
+		Name: "plat-a", UID: uida,
+	}}
+	partB := model.CloudProviderParticipation{
+		Metadata: apimeta.ObjectMeta{Name: "part-b", UID: uidb, ScopeRef: scope},
+		Spec: model.CloudProviderParticipationSpec{
+			CloudPlatformRef: apimeta.TypedRef{APIVersion: model.APIVersionCloudPlatform, Kind: model.KindCloudPlatform, Name: "plat-a", UID: uida},
+			CloudProviderRef: apimeta.TypedRef{APIVersion: model.APIVersionCloudProvider, Kind: model.KindCloudProvider, Name: "prov-c", UID: uidc},
+			Environment:      model.ParticipationEnvironmentDevelopment,
+		},
+		Status: model.CloudProviderParticipationStatus{Phase: model.ParticipationPhasePending},
+	}
+	partA := partB
+	partA.Metadata.Name = "part-a"
+	partA.Metadata.UID = uida
+	partA.Spec.CloudProviderRef.UID = uida
+	if _, prob := s.CreateParticipation(partB); prob != nil {
+		t.Fatalf("create part b: %#v", prob)
+	}
+	if _, prob := s.CreateParticipation(partA); prob != nil {
+		t.Fatalf("create part a: %#v", prob)
+	}
+	parts := s.ListParticipations()
+	if len(parts) != 2 || parts[0].Metadata.UID != uida || parts[1].Metadata.UID != uidb {
+		t.Fatalf("ListParticipations ascending uid = %#v", parts)
+	}
+
+	providerScope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+		APIVersion: model.APIVersionCloudProvider, Kind: string(apimeta.ScopeCloudProvider),
+		Name: "prov-a", UID: uida,
+	}}
+	hlB := model.HostingLocation{
+		Metadata: apimeta.ObjectMeta{Name: "loc-b", UID: uidb, ScopeRef: providerScope},
+		Spec:     model.HostingLocationSpec{CountryCode: "US", Locality: "Austin"},
+	}
+	hlA := hlB
+	hlA.Metadata.Name = "loc-a"
+	hlA.Metadata.UID = uida
+	if _, prob := s.CreateHostingLocation(hlB); prob != nil {
+		t.Fatalf("create location b: %#v", prob)
+	}
+	if _, prob := s.CreateHostingLocation(hlA); prob != nil {
+		t.Fatalf("create location a: %#v", prob)
+	}
+	locations := s.ListHostingLocations()
+	if len(locations) != 2 || locations[0].Metadata.UID != uida || locations[1].Metadata.UID != uidb {
+		t.Fatalf("ListHostingLocations ascending uid = %#v", locations)
+	}
+
+	dcB := model.Datacenter{
+		Metadata: apimeta.ObjectMeta{Name: "dc-b", UID: uidb, ScopeRef: providerScope},
+		Spec: model.DatacenterSpec{HostingLocationRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionHostingLocation, Kind: model.KindHostingLocation, Name: "loc-a", UID: uida,
+		}},
+	}
+	dcA := dcB
+	dcA.Metadata.Name = "dc-a"
+	dcA.Metadata.UID = uida
+	if _, prob := s.CreateDatacenter(dcB); prob != nil {
+		t.Fatalf("create datacenter b: %#v", prob)
+	}
+	if _, prob := s.CreateDatacenter(dcA); prob != nil {
+		t.Fatalf("create datacenter a: %#v", prob)
+	}
+	datacenters := s.ListDatacenters()
+	if len(datacenters) != 2 || datacenters[0].Metadata.UID != uida || datacenters[1].Metadata.UID != uidb {
+		t.Fatalf("ListDatacenters ascending uid = %#v", datacenters)
+	}
+
+	fdB := model.FaultDomain{
+		Metadata: apimeta.ObjectMeta{Name: "fd-b", UID: uidb, ScopeRef: providerScope},
+		Spec: model.FaultDomainSpec{DatacenterRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionDatacenter, Kind: model.KindDatacenter, Name: "dc-a", UID: uida,
+		}},
+	}
+	fdA := fdB
+	fdA.Metadata.Name = "fd-a"
+	fdA.Metadata.UID = uida
+	if _, prob := s.CreateFaultDomain(fdB); prob != nil {
+		t.Fatalf("create fault domain b: %#v", prob)
+	}
+	if _, prob := s.CreateFaultDomain(fdA); prob != nil {
+		t.Fatalf("create fault domain a: %#v", prob)
+	}
+	faultDomains := s.ListFaultDomains()
+	if len(faultDomains) != 2 || faultDomains[0].Metadata.UID != uida || faultDomains[1].Metadata.UID != uidb {
+		t.Fatalf("ListFaultDomains ascending uid = %#v", faultDomains)
+	}
+
+	stB := model.InfrastructureStack{
+		Metadata: apimeta.ObjectMeta{Name: "stack-b", UID: uidb, ScopeRef: providerScope},
+		Spec: model.InfrastructureStackSpec{FaultDomainRef: apimeta.TypedRef{
+			APIVersion: model.APIVersionFaultDomain, Kind: model.KindFaultDomain, Name: "fd-a", UID: uida,
+		}},
+	}
+	stA := stB
+	stA.Metadata.Name = "stack-a"
+	stA.Metadata.UID = uida
+	if _, prob := s.CreateInfrastructureStack(stB); prob != nil {
+		t.Fatalf("create stack b: %#v", prob)
+	}
+	if _, prob := s.CreateInfrastructureStack(stA); prob != nil {
+		t.Fatalf("create stack a: %#v", prob)
+	}
+	stacks := s.ListInfrastructureStacks()
+	if len(stacks) != 2 || stacks[0].Metadata.UID != uida || stacks[1].Metadata.UID != uidb {
+		t.Fatalf("ListInfrastructureStacks ascending uid = %#v", stacks)
+	}
+}
+
+func assertEmptyLists(t *testing.T, s *cloudmodel.Store) {
+	t.Helper()
+	if got := s.ListCloudPlatforms(); got == nil || len(got) != 0 {
+		t.Fatalf("ListCloudPlatforms empty-safe = %#v", got)
+	}
+	if got := s.ListCloudProviders(); got == nil || len(got) != 0 {
+		t.Fatalf("ListCloudProviders empty-safe = %#v", got)
+	}
+	if got := s.ListParticipations(); got == nil || len(got) != 0 {
+		t.Fatalf("ListParticipations empty-safe = %#v", got)
+	}
+	if got := s.ListHostingLocations(); got == nil || len(got) != 0 {
+		t.Fatalf("ListHostingLocations empty-safe = %#v", got)
+	}
+	if got := s.ListDatacenters(); got == nil || len(got) != 0 {
+		t.Fatalf("ListDatacenters empty-safe = %#v", got)
+	}
+	if got := s.ListFaultDomains(); got == nil || len(got) != 0 {
+		t.Fatalf("ListFaultDomains empty-safe = %#v", got)
+	}
+	if got := s.ListInfrastructureStacks(); got == nil || len(got) != 0 {
+		t.Fatalf("ListInfrastructureStacks empty-safe = %#v", got)
+	}
+}
