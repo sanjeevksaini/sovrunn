@@ -39,7 +39,7 @@ def _mention_at_position_allowed(text: str, position: int) -> bool:
     allow_markers = (
         "must not", "no longer", "superseded", "retired", "removed", "does not",
         "not implement", "excluded", "non-goal", "tombstone", "never",
-        "must never", "reject",
+        "must never", "reject", "not counted", "no shared", "no downstream",
     )
     return any(marker in window for marker in allow_markers)
 
@@ -195,7 +195,17 @@ def owned_conformance_ids(
     registry cases whose registered owner is this feature are included;
     downstream, unowned, or unknown IDs mentioned in either authority are
     never authorized by this function."""
-    mentioned = expand_cf_ranges(feature_text) | expand_cf_ranges(authority_text)
+    feature_mentions = {
+        cf_id
+        for cf_id, position in expand_cf_ranges_with_positions(feature_text).items()
+        if not _mention_at_position_allowed(feature_text, position)
+    }
+    authority_mentions = {
+        cf_id
+        for cf_id, position in expand_cf_ranges_with_positions(authority_text).items()
+        if not _mention_at_position_allowed(authority_text, position)
+    }
+    mentioned = feature_mentions | authority_mentions
     # A range such as F16-01..122 has heterogeneous numeric widths.  Preserve
     # historical zero-padded IDs where they exist, but canonicalize only a
     # source reference whose unpadded form is an actual registry ID.  The
