@@ -306,7 +306,7 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-72 | Action with wildcard If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-73 | Action with multiple If-Match headers | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-74 | Action with a syntactically valid stale If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-75 | Maintenance epoch changes because Maintenance entry wins during qualification | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-75 | Captured maintenance epoch differs at qualification commit and no active current-Maintenance marker exists | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-060 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-76 | Completed record is selected for deterministic capacity eviction | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-77 | Server shutdown after reservation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-78 | Owner cancellation after reservation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
@@ -320,7 +320,7 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-86 | Qualify with malformed If-Match and non-zero body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-87 | Same-key completed qualify after target ETag changes | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-88 | Retire wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-89 | Maintenance entry wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-89 | Maintenance entry wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-060 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-90 | Qualify with fixture-declared logical timeout | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-91 | Authorized create with client metadata.resourceVersion | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-92 | Authorized create with client metadata.generation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |

@@ -327,6 +327,13 @@ qualification reservation aborts without a qualification result, completion,
 or qualification AuditEvent; the winning Retirement or Maintenance transition
 is audited under F16-AD-21.
 
+At qualification commit these outcomes are mutually exclusive and ordered
+(ADH-2026-060): an active current-Maintenance marker always selects
+`CONFLICT`/409 + `VS0_TARGET_MAINTENANCE` first; only when no active marker
+exists does a changed captured maintenance epoch select
+`STALE_RESOURCE_VERSION`/412 + `VS0_TARGET_EPOCH_STALE`. A changed referenced
+InfrastructureStack generation remains the independent epoch-stale case.
+
 #### F16-AD-16.1 — qualification abort and stale-fence disposition
 
 If malformed observer output, owner cancellation, required qualification

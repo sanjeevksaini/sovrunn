@@ -5,7 +5,7 @@
 | Status | Approved boundary (closed under ADH-2026-058) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure) |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification) |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0015 (CloudProviderParticipation, InfrastructureStack — read-only prior-feature authority) |
 
@@ -273,6 +273,18 @@ receives `CONFLICT`/409 + `VS0_TARGET_RETIRED`. If Maintenance entry wins,
 the qualifying caller receives `CONFLICT`/409 + `VS0_TARGET_MAINTENANCE`.
 Both abort qualification without result, completion, or qualification
 AuditEvent; the winning transition itself is audited.
+
+At qualification commit, these outcomes are mutually exclusive and evaluated
+in this order (ADH-2026-060): (1) if an active current-Maintenance marker
+exists, the qualifying caller receives `CONFLICT`/409 +
+`VS0_TARGET_MAINTENANCE`, regardless of whether the captured maintenance
+epoch also changed; (2) otherwise, if the captured maintenance epoch differs
+from the current maintenance epoch, the caller receives
+`STALE_RESOURCE_VERSION`/412 + `VS0_TARGET_EPOCH_STALE`; (3) a changed
+referenced InfrastructureStack generation remains the independent
+`STALE_RESOURCE_VERSION`/412 + `VS0_TARGET_EPOCH_STALE` case. The
+active-marker predicate is always checked first; the epoch-stale case never
+applies when an active current-Maintenance marker is present.
 
 ### 4.10 Expiry, maintenance trigger, retirement, shutdown, and formal proof
 

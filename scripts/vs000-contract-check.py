@@ -378,6 +378,19 @@ def run():
         if execution.get(field) != {"introducedBy":"FEATURE-0016","activatedBy":"FEATURE-0016"}: e(f"ExecutionTarget.{field} must be FEATURE-0016-owned")
     if "status.availability" in schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{}): e("ExecutionTarget must not have an active persisted status.availability field (ADH-2026-058)")
     if schema_by_kind.get("ExecutionTarget",{}).get("owner") != "FEATURE-0016": e("ExecutionTarget must be owned by FEATURE-0016 in its entirety (DEC-0059/ADH-2026-045)")
+    # ADH-2026-060: F16-75 (inactive-marker epoch-stale) and F16-89 (active-marker
+    # Maintenance-wins) must be mutually exclusive and never reversed.
+    f16_by_id={str(c.get("id")):c for c in reg.get("conformance",[]) if str(c.get("id","")).startswith("VS0-CF-F16-")}
+    f16_75=f16_by_id.get("VS0-CF-F16-75"); f16_89=f16_by_id.get("VS0-CF-F16-89")
+    if not f16_75: e("VS0-CF-F16-75 not found in registry (ADH-2026-060)")
+    if not f16_89: e("VS0-CF-F16-89 not found in registry (ADH-2026-060)")
+    if f16_75 and f16_89:
+        f75_in=str(f16_75.get("inputs","")).lower(); f89_in=str(f16_89.get("inputs","")).lower()
+        if "maintenance entry wins" in f75_in: e("VS0-CF-F16-75 must not say Maintenance entry wins; reversed predicate (ADH-2026-060)")
+        if "no active current-maintenance marker" not in f75_in: e("VS0-CF-F16-75 input must state no active current-Maintenance marker exists (ADH-2026-060)")
+        if "maintenance entry wins" not in f89_in: e("VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
+        if f16_75.get("expectedError")!="STALE_RESOURCE_VERSION" or f16_75.get("expectedViolation")!="VS0_TARGET_EPOCH_STALE": e("VS0-CF-F16-75 must be 412 STALE_RESOURCE_VERSION/VS0_TARGET_EPOCH_STALE (ADH-2026-060)")
+        if f16_89.get("expectedError")!="CONFLICT" or f16_89.get("expectedViolation")!="VS0_TARGET_MAINTENANCE": e("VS0-CF-F16-89 must be 409 CONFLICT/VS0_TARGET_MAINTENANCE (ADH-2026-060)")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")

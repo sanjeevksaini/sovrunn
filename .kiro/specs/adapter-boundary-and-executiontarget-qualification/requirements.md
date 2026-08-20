@@ -44,7 +44,7 @@ the exact conformance semantics ledger covering the FEATURE-0016 local conforman
 | Owned state machine | `VS0-STATE-004` |
 | Owned writer | `VS0-WRITER-006` (`ExecutionTargetLifecycleService`) |
 | Controlling decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058 |
+| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060 |
 | Local conformance | VS0-CF-F16-01..99, VS0-CF-F16-100..122 |
 
 This document translates the approved FEATURE-0016 feature authority
@@ -455,7 +455,7 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 | VS0-CF-F16-72 | FEATURE-0016 | Action with wildcard If-Match | unchanged | STALE_RESOURCE_VERSION | — | 412 STALE_RESOURCE_VERSION; no publication; header-form failure precedes body classification. | feature |
 | VS0-CF-F16-73 | FEATURE-0016 | Action with multiple If-Match headers | unchanged | STALE_RESOURCE_VERSION | — | 412 STALE_RESOURCE_VERSION; no publication; header-form failure precedes body classification. | feature |
 | VS0-CF-F16-74 | FEATURE-0016 | Action with a syntactically valid stale If-Match | unchanged | STALE_RESOURCE_VERSION | — | 412 STALE_RESOURCE_VERSION; no publication; current-version comparison follows replay/reservation and precedes lifecycle evaluation. | feature |
-| VS0-CF-F16-75 | FEATURE-0016 | Maintenance epoch changes because Maintenance entry wins during qualification | unchanged | STALE_RESOURCE_VERSION | VS0_TARGET_EPOCH_STALE | 412 STALE_RESOURCE_VERSION plus VS0_TARGET_EPOCH_STALE; no qualification conclusion, AuditEvent, or completion; the independently winning Maintenance transition is audited and supplies its own target mutation and ETag. | feature |
+| VS0-CF-F16-75 | FEATURE-0016 | Captured maintenance epoch differs at qualification commit and no active current-Maintenance marker exists | unchanged | STALE_RESOURCE_VERSION | VS0_TARGET_EPOCH_STALE | 412 STALE_RESOURCE_VERSION plus VS0_TARGET_EPOCH_STALE; no qualification conclusion, AuditEvent, or completion. | feature |
 | VS0-CF-F16-76 | FEATURE-0016 | Completed record is selected for deterministic capacity eviction | Record unavailable | null | — | Record unavailable; next valid request is processed as new; no InFlight eviction. | feature |
 | VS0-CF-F16-77 | FEATURE-0016 | Server shutdown after reservation | Stop expiry/Maintenance trigger acceptance, abort qualification and idempotency reservations, wake waiters, then stop HTTP serving | null | — | Stop expiry/Maintenance trigger acceptance, abort qualification and idempotency reservations, wake waiters, then stop HTTP serving; no completion or post-stop trigger AuditEvent; last committed target projection, ETag, and links remain unchanged. | feature |
 | VS0-CF-F16-78 | FEATURE-0016 | Owner cancellation after reservation | Reservation aborted and waiters woken without completion | null | — | Reservation aborted and waiters woken without completion; cancelled waiter only detaches. | feature |
@@ -603,7 +603,7 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 | Malformed/weak/wildcard/multiple/stale If-Match on actions | 412 STALE_RESOURCE_VERSION; header-form before body classification | VS0-CF-F16-70..74 |
 | Qualify from Qualified with malformed/duplicate/missing fact while fences current | 500 INTERNAL_ERROR; reservation aborted; no publication | VS0-CF-F16-23,67,68,69,122 |
 | Stale InfrastructureStack generation or viability fingerprint at commit | 412 STALE_RESOURCE_VERSION + VS0_TARGET_EPOCH_STALE / VS0_EXECUTION_TARGET_VIABILITY_STALE | VS0-CF-F16-29,30 |
-| Maintenance epoch changes because Maintenance wins during qualification | 412 STALE_RESOURCE_VERSION + VS0_TARGET_EPOCH_STALE; winning transition audited | VS0-CF-F16-75 |
+| Captured maintenance epoch differs at qualification commit with no active current-Maintenance marker | 412 STALE_RESOURCE_VERSION + VS0_TARGET_EPOCH_STALE; no qualification conclusion, AuditEvent, or completion | VS0-CF-F16-75 |
 | Retire or Maintenance wins while qualify in flight | 409 CONFLICT + VS0_TARGET_RETIRED / VS0_TARGET_MAINTENANCE; winning transition audited | VS0-CF-F16-88,89 |
 | Different-key qualify while Qualifying reservation in flight | 409 CONFLICT + VS0_TARGET_QUALIFICATION_IN_PROGRESS | VS0-CF-F16-28 |
 | Owner panic or cancellation after reservation | Reservation aborted; waiters woken; cancelled waiter detaches | VS0-CF-F16-35,78 |
@@ -678,6 +678,7 @@ target projection are out of scope.
 | DEC-0057 | ExecutionTarget qualification/availability semantics |
 | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045 | Prior controlling handoffs and delegation of the ExecutionTarget contract to FEATURE-0016 |
 | ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004 (the sole current semantic authority) |
+| ADH-2026-060 | Maintenance-race outcome correction; makes `VS0-CF-F16-75` (inactive-marker epoch-stale) and `VS0-CF-F16-89` (active-marker Maintenance-wins) mutually exclusive |
 
 ### 8.2 Registry IDs consumed
 

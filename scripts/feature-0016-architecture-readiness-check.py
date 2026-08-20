@@ -209,6 +209,35 @@ def check_sole_writer_and_observer(reg: dict, f16_arch: str) -> None:
         e("OBSERVER: F0016 architecture must name the sole observer sovrunn.synthetic-iaas-observer/v1 (ADH-2026-058 clause 6)")
 
 
+def check_maintenance_race_mutual_exclusivity(reg: dict, f16_arch: str) -> None:
+    """ADH-2026-060: F16-75 (inactive-marker epoch-stale) and F16-89
+    (active-marker Maintenance-wins) must be mutually exclusive and never
+    reversed. F16-75 must not say Maintenance entry wins; F16-89 must."""
+    confs = reg.get("conformance", [])
+    by_id = {c.get("id"): c for c in confs}
+    f16_75 = by_id.get("VS0-CF-F16-75")
+    f16_89 = by_id.get("VS0-CF-F16-89")
+    if not f16_75:
+        e("MAINTENANCE-RACE: VS0-CF-F16-75 not found in registry (ADH-2026-060)")
+    if not f16_89:
+        e("MAINTENANCE-RACE: VS0-CF-F16-89 not found in registry (ADH-2026-060)")
+    if f16_75 and f16_89:
+        f75_inputs = str(f16_75.get("inputs", "")).lower()
+        f89_inputs = str(f16_89.get("inputs", "")).lower()
+        if "maintenance entry wins" in f75_inputs or "maintenance-entry wins" in f75_inputs:
+            e("MAINTENANCE-RACE: VS0-CF-F16-75 must not say Maintenance entry wins (ADH-2026-060); reversed predicate")
+        if "no active current-maintenance marker" not in f75_inputs:
+            e("MAINTENANCE-RACE: VS0-CF-F16-75 input must state no active current-Maintenance marker exists (ADH-2026-060)")
+        if "maintenance entry wins" not in f89_inputs:
+            e("MAINTENANCE-RACE: VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
+        if f16_75.get("expectedError") != "STALE_RESOURCE_VERSION" or f16_75.get("expectedViolation") != "VS0_TARGET_EPOCH_STALE":
+            e("MAINTENANCE-RACE: VS0-CF-F16-75 must be 412 STALE_RESOURCE_VERSION/VS0_TARGET_EPOCH_STALE (ADH-2026-060)")
+        if f16_89.get("expectedError") != "CONFLICT" or f16_89.get("expectedViolation") != "VS0_TARGET_MAINTENANCE":
+            e("MAINTENANCE-RACE: VS0-CF-F16-89 must be 409 CONFLICT/VS0_TARGET_MAINTENANCE (ADH-2026-060)")
+    if f16_arch and "adh-2026-060" not in f16_arch.lower():
+        e("MAINTENANCE-RACE: F0016 architecture must reference ADH-2026-060's mutually exclusive ordering")
+
+
 def check_conformance_completeness(reg: dict) -> None:
     confs = reg.get("conformance", [])
     found = {c.get("id") for c in confs}
@@ -311,6 +340,7 @@ def main() -> None:
     check_five_route_surface(f16_arch, f16_feat)
     check_closed_violation_set(reg, f16_arch)
     check_sole_writer_and_observer(reg, f16_arch)
+    check_maintenance_race_mutual_exclusivity(reg, f16_arch)
     check_conformance_completeness(reg)
     check_traceability(trace)
     check_closure_matrix(closure)

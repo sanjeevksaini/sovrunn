@@ -276,6 +276,30 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
         require(errors, "exactly five" in feat_lower or "five routes" in feat_lower or "five explicit" in feat_lower,
                 "ROUTES: F0016 feature must state the exact five-route closure (ADH-2026-058 clause 3)")
 
+    # ADH-2026-060: F16-75 (inactive-marker epoch-stale) and F16-89 (active-marker
+    # Maintenance-wins) must be mutually exclusive and must not be reversed.
+    f16_75 = cases.get("VS0-CF-F16-75")
+    f16_89 = cases.get("VS0-CF-F16-89")
+    require(errors, f16_75 is not None, "MAINTENANCE-RACE: VS0-CF-F16-75 not found in registry (ADH-2026-060)")
+    require(errors, f16_89 is not None, "MAINTENANCE-RACE: VS0-CF-F16-89 not found in registry (ADH-2026-060)")
+    if f16_75 is not None and f16_89 is not None:
+        f75_inputs = str(f16_75.get("inputs", "")).lower()
+        f89_inputs = str(f16_89.get("inputs", "")).lower()
+        require(errors, "maintenance entry wins" not in f75_inputs and "maintenance-entry wins" not in f75_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-75 must not say Maintenance entry wins (ADH-2026-060); that is the F16-89 case")
+        require(errors, "no active current-maintenance marker" in f75_inputs or "no active current-maintenance marker exists" in f75_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-75 input must state no active current-Maintenance marker exists (ADH-2026-060)")
+        require(errors, "maintenance entry wins" in f89_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
+        require(errors, f16_75.get("expectedError") == "STALE_RESOURCE_VERSION",
+                f"MAINTENANCE-RACE: VS0-CF-F16-75 expectedError must be STALE_RESOURCE_VERSION, found {f16_75.get('expectedError')!r} (ADH-2026-060)")
+        require(errors, f16_75.get("expectedViolation") == "VS0_TARGET_EPOCH_STALE",
+                f"MAINTENANCE-RACE: VS0-CF-F16-75 expectedViolation must be VS0_TARGET_EPOCH_STALE, found {f16_75.get('expectedViolation')!r} (ADH-2026-060)")
+        require(errors, f16_89.get("expectedError") == "CONFLICT",
+                f"MAINTENANCE-RACE: VS0-CF-F16-89 expectedError must be CONFLICT, found {f16_89.get('expectedError')!r} (ADH-2026-060)")
+        require(errors, f16_89.get("expectedViolation") == "VS0_TARGET_MAINTENANCE",
+                f"MAINTENANCE-RACE: VS0-CF-F16-89 expectedViolation must be VS0_TARGET_MAINTENANCE, found {f16_89.get('expectedViolation')!r} (ADH-2026-060)")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
