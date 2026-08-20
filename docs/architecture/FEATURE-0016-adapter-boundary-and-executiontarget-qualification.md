@@ -205,13 +205,16 @@ Indeterminate; otherwise Qualified. A missing fixture and a fixture-declared
 logical timeout are separate deterministic outcomes, each yielding four
 Unknown facts at `now` through `now+60s`; neither waits on a network call.
 A FactSet carries target ref, referenced InfrastructureStack generation,
-maintenance epoch, viability fingerprint, observer ID/revision, fact
-version, `observedAt`/`expiresAt`, and the four named truth values. A Result
-carries target/fact-set refs, the same fences, profile version, outcome,
-reason codes, and evaluation time. Duplicate/missing facts or malformed
-provenance are `INTERNAL_ERROR`/500 observer faults and publish no result.
-Fixed provenance: `observerID=sovrunn.synthetic-iaas-observer/v1`,
-`profileVersion=synthetic-iaas/v1`, `factSchemaVersion=v1`.
+maintenance epoch, viability fingerprint, observer ID/revision, `factVersion`
+(the sole persisted FactSet version field), `observedAt`/`expiresAt`, and the
+four named truth values. A Result carries target/fact-set refs, only the
+registered InfrastructureStack generation and maintenance epoch fences
+(`viabilityFingerprint` is FactSet-only and is not duplicated on Result),
+profile version, outcome, reason codes, and evaluation time. Duplicate/missing
+facts or malformed provenance are `INTERNAL_ERROR`/500 observer faults and
+publish no result. Fixed observer provenance: `observerID=sovrunn.synthetic-iaas-observer/v1`,
+`profileVersion=synthetic-iaas/v1`, `factSchemaVersion=v1` (observer provenance
+only, not a second persisted FactSet field).
 
 ### 4.9 Lifecycle, qualification, and effective availability
 
