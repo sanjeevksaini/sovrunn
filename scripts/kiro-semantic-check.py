@@ -196,9 +196,21 @@ def owned_conformance_ids(
     downstream, unowned, or unknown IDs mentioned in either authority are
     never authorized by this function."""
     mentioned = expand_cf_ranges(feature_text) | expand_cf_ranges(authority_text)
+    # A range such as F16-01..122 has heterogeneous numeric widths.  Preserve
+    # historical zero-padded IDs where they exist, but canonicalize only a
+    # source reference whose unpadded form is an actual registry ID.  The
+    # requirements ledger itself remains exact and must use that registry ID.
+    canonical_mentioned: set[str] = set()
+    for cf_id in mentioned:
+        canonical_mentioned.add(cf_id)
+        match = re.fullmatch(r"(VS0-CF-[A-Z]+\d+)-(\d+)", cf_id)
+        if match:
+            unpadded = f"{match.group(1)}-{int(match.group(2))}"
+            if unpadded in conformance:
+                canonical_mentioned.add(unpadded)
     return {
         cf_id
-        for cf_id in mentioned
+        for cf_id in canonical_mentioned
         if cf_id in conformance and conformance[cf_id].get("owner") == feature
     }
 
