@@ -29,7 +29,11 @@ def combined_digest(paths: list[Path]) -> str:
 
 def changed_paths() -> list[str]:
     result = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True, check=True
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
     )
     return [line[3:] for line in result.stdout.splitlines() if len(line) > 3]
 
