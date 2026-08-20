@@ -27,6 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "docs/architecture/vertical-slices/VS-000-contract-registry.yaml"
 F15_ARCH = ROOT / "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md"
 F15_FEATURE = ROOT / "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"
+F16_ARCH = ROOT / "docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
+F16_FEATURE = ROOT / "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
 
 F15_KINDS = (
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
@@ -40,6 +42,21 @@ F15_ACTIONS = (
 # has no PATCH surface, hence Go 1.22 needs 14 + 13 + 8 = 35 method patterns.
 F15_LOGICAL_PATHS = 22
 F15_METHOD_PATTERNS = 35
+
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 123)]
+F16_ROUTES = (
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
+    ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
+    ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}"),
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/qualify"),
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/retire"),
+)
+F16_CLOSED_VIOLATIONS = (
+    "VS0_TARGET_RETIRED", "VS0_TARGET_MAINTENANCE", "VS0_TARGET_QUALIFICATION_IN_PROGRESS",
+    "VS0_TARGET_EPOCH_STALE", "VS0_EXECUTION_TARGET_PARTICIPATION_UNAVAILABLE",
+    "VS0_EXECUTION_TARGET_STACK_UNAVAILABLE", "VS0_EXECUTION_TARGET_SCOPE_MISMATCH",
+    "VS0_EXECUTION_TARGET_VIABILITY_STALE",
+)
 
 
 def load_registry() -> dict:
@@ -218,22 +235,71 @@ def check_f0015(registry: dict, errors: list[str]) -> None:
             "ROUTING: authority must prohibit path-only internal method dispatch")
 
 
+def check_f0016(registry: dict, errors: list[str]) -> None:
+    """FEATURE-0016 route catalog per ADH-2026-058.
+
+    This checker validates only the route/conformance/violation closure that
+    is this checker's concern; the full architecture-readiness surface
+    (placeholder removal, sole writer/observer, closure matrix, control
+    manifest, reuse assessment, steering) is separately and more completely
+    validated by scripts/feature-0016-architecture-readiness-check.py.
+    """
+    cases = by_id(registry)
+
+    missing_cf = [cid for cid in F16_REQUIRED_CF_IDS if cid not in cases]
+    require(errors, not missing_cf,
+            f"CONFORMANCE: missing {len(missing_cf)} required VS0-CF-F16 case(s): {missing_cf[:10]}")
+    for case in cases.values():
+        if not str(case.get("id", "")).startswith("VS0-CF-F16-"):
+            continue
+        require(errors, case.get("owner") == "FEATURE-0016",
+                f"CONFORMANCE: {case.get('id')} owner must be FEATURE-0016, found {case.get('owner')!r}")
+
+    if not F16_ARCH.exists():
+        require(errors, False, f"ROUTES: missing architecture authority {F16_ARCH.relative_to(ROOT)}")
+        return
+    arch_lower = F16_ARCH.read_text().lower()
+    for method, path in F16_ROUTES:
+        require(errors, path.lower() in arch_lower,
+                f"ROUTES: F0016 architecture must state route {method} {path} (ADH-2026-058 clause 3)")
+    require(errors, "no patch" in arch_lower,
+            "ROUTES: F0016 architecture must state no PATCH/PUT/DELETE/HEAD public route exists (ADH-2026-058 clause 3)")
+    require(errors, "pre-servemux" in arch_lower,
+            "ROUTES: F0016 architecture must describe the pre-ServeMux transport-only method/path guard (ADH-2026-058 clause 3)")
+
+    vcs = {vc.get("code") for vc in registry.get("violationCodes", {}).get("slice0", [])}
+    for code in F16_CLOSED_VIOLATIONS:
+        require(errors, code in vcs, f"VIOLATIONS: {code} must be a registered violation code (ADH-2026-058 clause 9)")
+
+    if F16_FEATURE.exists():
+        feat_lower = F16_FEATURE.read_text().lower()
+        require(errors, "exactly five" in feat_lower or "five routes" in feat_lower or "five explicit" in feat_lower,
+                "ROUTES: F0016 feature must state the exact five-route closure (ADH-2026-058 clause 3)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature", required=True)
     args = parser.parse_args()
-    if args.feature != "FEATURE-0015":
+    if args.feature not in ("FEATURE-0015", "FEATURE-0016"):
         raise SystemExit(f"FAIL: no route catalog is configured for {args.feature}")
 
     errors: list[str] = []
-    check_f0015(load_registry(), errors)
+    registry = load_registry()
+    if args.feature == "FEATURE-0015":
+        check_f0015(registry, errors)
+    else:
+        check_f0016(registry, errors)
     if errors:
         print(f"FAIL: {args.feature} feature-contract-check — {len(errors)} error(s)")
         for error in errors:
             print(f"  ✗ {error}")
         print("Kiro requirements/design/tasks generation is BLOCKED until the feature contract closes.")
         raise SystemExit(1)
-    print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
+    if args.feature == "FEATURE-0015":
+        print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
+    else:
+        print("PASS: FEATURE-0016 feature contract closes route, violation-code, and conformance-catalog evidence")
 
 
 if __name__ == "__main__":

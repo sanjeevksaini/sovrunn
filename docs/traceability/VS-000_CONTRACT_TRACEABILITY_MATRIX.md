@@ -41,9 +41,9 @@
 | VS0-SCHEMA-012 | Datacenter | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
 | VS0-SCHEMA-013 | FaultDomain | FEATURE-0015 | DEC-0041; ADH-2026-024/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
 | VS0-SCHEMA-014 | InfrastructureStack | FEATURE-0015 | DEC-0041/0042; ADH-2026-025/042/045/046/047/050/051/052 | canonical data model | VS0-CF-F15-01,02,07,12,13,14,18,19,25,26,27,30,31,33 |
-| VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045 | canonical data model | VS0-CF-F10,X03 |
-| VS0-SCHEMA-016 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
-| VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042 | canonical data model | VS0-CF-F10 |
+| VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045/058 | canonical data model | VS0-CF-F10,X03,F16-01..122 |
+| VS0-SCHEMA-016 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
+| VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
 | VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042 | canonical data model | VS0-CF-F07..F09 |
 | VS0-SCHEMA-019 | PolicyEvaluationResult | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042 | canonical data model | VS0-CF-F07..F09 |
 | VS0-SCHEMA-020 | PrincipalRef | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
@@ -100,7 +100,7 @@
 | VS0-WRITER-003 | cloud-provider-admin | FEATURE-0015 | DEC-0037 | VS0-CF-F15-01,05,06,07,X03 |
 | VS0-WRITER-004 | api-server (participation create/actions; scheduler invokes api-server expiry transition, not a separate writer) | FEATURE-0015 | DEC-0037, ADH-2026-045/046/047 | VS0-CF-F15-03,04,08,09,10,15,16,17,18,19,20,28 |
 | VS0-WRITER-005 | kind-registered-controller (F0015 resolves explicitly to api-server; ADH-2026-046 decision 1) | FEATURE-0012 | canonical contract catalog | VS0-CF-HP01,F15,F16 |
-| VS0-WRITER-006 | fake-adapter-and-qualification-controller | FEATURE-0016 | DEC-0036/0042/0057 | VS0-CF-F10,Z01 |
+| VS0-WRITER-006 | ExecutionTargetLifecycleService (sole committer of ExecutionTarget status and internal FactSet/Result records) | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-058 | VS0-CF-F10,Z01,F16-01..122 |
 | VS0-WRITER-007 | authorized-governance-publisher | FEATURE-0018+FEATURE-0019 | DEC-0041/0043/0050/0055 | VS0-CF-HP01,F07 |
 | VS0-WRITER-008 | delegated-identity-governance-admin | FEATURE-0018 | DEC-0050 | VS0-CF-F01,F02,X01..X03 |
 | VS0-WRITER-009 | evidence-collector | FEATURE-0019 | DEC-0041/0043/0055 | VS0-CF-F08,L01 |
@@ -126,7 +126,7 @@
 | VS0-STATE-001 | CloudProviderParticipation (Pending/Active/Rejected/Withdrawn/Expired/Suspended/Terminating/Terminated; independent platformSuspended/providerSuspended holds) | FEATURE-0015 | DEC-0037,0054; ADH-2026-042/045/046/047 | VS0-CF-F15-03,04,08,09,10,15,16,17,18,19,20,28 |
 | VS0-STATE-002 | CloudEnrollment | FEATURE-0021 | DEC-0038; ADH-2026-021/037/042 | VS0-CF-F03 |
 | VS0-STATE-003 | VersionedDefinition | FEATURE-0022 | DEC-0044; ADH-2026-027/042 | VS0-CF-F06 |
-| VS0-STATE-004 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045 | VS0-CF-F10 |
+| VS0-STATE-004 | ExecutionTarget (Active/Retired lifecycle x Unqualified/Qualified/Rejected/Indeterminate qualification; Qualifying is a lifecycle-service-only in-flight reservation, never persisted or projected) | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045/058 | VS0-CF-F10,F16-01..122 |
 | VS0-STATE-005 | QuotaReservation | FEATURE-0021 | DEC-0039; ADH-2026-022/042 | VS0-CF-F05,I01,I02 |
 | VS0-STATE-006 | ServiceInstance | FEATURE-0007 | ADH-2026-042 Slice 0 adoption | VS0-CF-HP01,F15,F16,D01 |
 | VS0-STATE-007 | ServiceBinding | FEATURE-0008+FEATURE-0024 | DEC-0051; ADH-2026-034/042 | VS0-CF-HP01,F17,F20,D01 |
@@ -150,7 +150,7 @@
 | VS0-F07 | VS0-CF-F07 | CONFLICT | 409 | VS0_GOVERNANCE_CONFLICT | FEATURE-0020 | DEC-0050 |
 | VS0-F08 | VS0-CF-F08 | VALIDATION_FAILED | 422 | VS0_EVIDENCE_MISSING_OR_STALE | FEATURE-0019 | DEC-0041/0043/0055 |
 | VS0-F09 | VS0-CF-F09 | VALIDATION_FAILED | 422 | VS0_PARTICIPATION_UNAVAILABLE | FEATURE-0023 | DEC-0043/0045 |
-| VS0-F10 | VS0-CF-F10 | STALE_RESOURCE_VERSION | 412 | VS0_TARGET_EPOCH_STALE | FEATURE-0016 | DEC-0042/0057 |
+| VS0-F10 | VS0-CF-F10 | STALE_RESOURCE_VERSION | 412 | VS0_TARGET_EPOCH_STALE | FEATURE-0016 | DEC-0042/0057; ADH-2026-058 (exact local proof: VS0-CF-F16-29) |
 | VS0-F11 | VS0-CF-F11 | VALIDATION_FAILED | 422 | VS0_PLACEMENT_NO_CANDIDATE | FEATURE-0023 | DEC-0043/0045 |
 | VS0-F12 | VS0-CF-F12 | (none/202) | 202 | (none) | FEATURE-0024 | DEC-0029 |
 | VS0-F13 | VS0-CF-F13 | CONFLICT | 409 | VS0_IDEMPOTENCY_PAYLOAD_MISMATCH | FEATURE-0024 | DEC-0029 |
@@ -226,7 +226,136 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-40 | Completed replay response allowlist and Aborted re-reservation | FEATURE-0015 | idempotency | ADH-2026-056 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-41 | Mutable-spec writer-boundary denial | FEATURE-0015 | security | DEC-0037; ADH-2026-057 | VS0-WRITER-002,003 |
 
-## FEATURE-0015 Migration Conformance — Retired (Canonical Bootstrap)
+## FEATURE-0016 Conformance (VS0-CF-F16-01..122)
+
+FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` definitions with the approved ADH-2026-058 ExecutionTarget executable contract: closed create fields and derived CloudProvider scope, five exact routes, a synthetic-only observer, a lifecycle-service-only Qualifying reservation that is never persisted or projected, a response-only `effectiveAvailability` projection, and the complete fail-closed proof annex below. `VS0-CF-F10` and `VS0-CF-X03` remain the cross-feature/shared references; every row below is the exact F0016-local proof case per ADH-2026-058 §2/§3.
+
+| Conformance ID | Class | Owner | Gate | Controlling Decision | Registry Evidence |
+|----------------|-------|-------|------|---------------------|-------------------|
+| VS0-CF-F16-01 | Valid create | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-02 | Authorized create with one unknown field | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-03 | Authorized create with client status | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-04 | Authorized create with client metadata.uid | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-05 | Create/action with a missing Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-06 | POST with non-application/json media | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-07 | Create with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-08 | Authenticated create without executiontarget.write | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-09 | Inaccessible create backing reference | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-10 | Authorized ineffective participation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-11 | Authorized non-Active InfrastructureStack | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-12 | Authorized cross-CloudProvider participation/stack graph | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-13 | Create with a duplicate derived name | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-14 | Authorized LIST with an arbitrary Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-15 | LIST without applicable executiontarget.read | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-16 | Authorized item GET with an arbitrary Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-17 | Inaccessible direct item GET | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-18 | Qualify without executiontarget.qualify | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-19 | Inaccessible direct qualify action | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-20 | Qualify, four Supported facts | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-21 | Qualify, any Unsupported fact | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-22 | Qualify with a missing target-bound fixture | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-23 | Qualify from Qualified receives one malformed fact while all captured fences remain current | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-24 | Action with a missing If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-25 | Action valid If-Match with non-zero body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-26 | Qualify Retired target | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-27 | Qualify Maintenance target | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-28 | Different-key qualify while Qualifying | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-29 | Referenced InfrastructureStack generation changes at qualification commit | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-30 | Viability fingerprint changes at qualification commit | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-31 | Same-key completed replay after current authorization and safe access | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-32 | Same-key replay requester loses its grant while target remains safe-accessible | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-33 | Same namespace with changed digest | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-34 | Completed record expires after 24 hours | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-35 | Owner panic after reservation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-36 | Valid retire from any Active combination | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-37 | Authenticated retire without executiontarget.write | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-38 | New-key retire after retirement | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-39 | Valid create required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-40 | Create authorization-denial AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-41 | Fact expiry with successful required AuditEvent append | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-42 | Current fenced maintenance-entry trigger | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-43 | Fenced maintenance clear | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-44 | HEAD on the item GET path | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-45 | Successful GET with any Accept value | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-46 | Process restart | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-47 | Same-key replay target is no longer safe-accessible | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-48 | Problem response with any Accept value | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-49 | Same principal/key/digest action on another target UID | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-50 | Same principal/key/digest create in another derived CloudProvider scope | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-51 | Malformed JSON request body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-52 | Duplicate top-level JSON member | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-53 | Oversized request body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-54 | Missing required create field | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-55 | Invalid typed reference shape | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-56 | targetClass other than synthetic-iaas | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-57 | Authorized create with adapterAuthorityRef | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-58 | Create/action with an empty Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-59 | Create/action with a malformed Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-60 | Create/action with an overlong Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-61 | LIST with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-62 | Item GET with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-63 | Qualify with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-64 | Retire with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-65 | Create with a live duplicate backing tuple | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-66 | Inaccessible direct retire action | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-67 | Qualify receives a duplicate named fact while all captured fences remain current | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-68 | Qualify receives a missing named fact while all captured fences remain current | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-69 | Qualify receives malformed fact provenance while all captured fences remain current | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-70 | Action with a malformed If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-71 | Action with a weak If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-72 | Action with wildcard If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-73 | Action with multiple If-Match headers | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-74 | Action with a syntactically valid stale If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-75 | Maintenance epoch changes because Maintenance entry wins during qualification | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-76 | Completed record is selected for deterministic capacity eviction | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-77 | Server shutdown after reservation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-78 | Owner cancellation after reservation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-79 | Fact expiry with required AuditEvent append failure | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-80 | Stale fenced maintenance-entry trigger | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-81 | Same-key waiter wakes after its owner aborts on a stale InfrastructureStack-generation qualification | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-82 | Required qualification AuditEvent append failure after reservation while all captured fences remain current | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-83 | Stale fenced maintenance-clear trigger | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-84 | Authorized create with a SecretRef extension field | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-85 | Qualify Maintenance target with syntactically valid stale If-Match | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-86 | Qualify with malformed If-Match and non-zero body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-87 | Same-key completed qualify after target ETag changes | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-88 | Retire wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-89 | Maintenance entry wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-90 | Qualify with fixture-declared logical timeout | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-91 | Authorized create with client metadata.resourceVersion | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-92 | Authorized create with client metadata.generation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-93 | Create with invalid authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-94 | LIST with invalid authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-95 | Item GET with invalid authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-96 | Qualify with invalid authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-97 | Retire with invalid authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-98 | Create with a name reserved by a Retired target | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-99 | Valid retirement required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-100 | Current maintenance-entry required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-101 | Current maintenance-clear required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-102 | Inaccessible direct item GET required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-103 | Same-key replay authorization denial AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-104 | Same-key replay safe-denial AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-105 | Collection create with an If-Match header | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-106 | Authenticated URI-query equivalence family: POST collection, GET collection, GET item, POST qualify, and POST retire, each with `?x=1` | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-107 | Authenticated item GET with a malformed canonical UID segment | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-108 | Item GET with trailing slash | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-109 | Authenticated qualify action with a malformed canonical UID segment | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-110 | Authenticated retire action with a malformed canonical UID segment | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-111 | Direct item GET of a safe-accessible target without executiontarget.read | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-112 | Denial AuditEvent append-failure equivalence family: LIST without read; direct GET without read; qualify without qualify grant; retire without write grant; inaccessible direct qualify; inaccessible direct retire | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-113 | HEAD on collection path | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-114 | HEAD equivalence family: qualify action and retire action paths | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-115 | Trailing-slash equivalence family: POST collection, GET collection, POST qualify action, and POST retire action | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-116 | PUT on collection path | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-117 | PUT on item path | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-118 | PUT equivalence family: qualify action and retire action paths | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-119 | Fresh Qualified target backing becomes non-viable | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-120 | Fresh Qualified target backing returns viable before fact expiry | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-121 | Qualify starts from Active/Qualified with current fences | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-122 | Current-fence observer fault after qualification starts from Active/Qualified | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+
+
 
 Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG02`, `VS0-CF-MIGF01`, `VS0-CF-MIGF02`, and `VS0-CF-MIGF03` are permanently retired; their IDs must never be reused. FEATURE-0015 has no migration proof because there is no live alpha state to convert.
 
@@ -259,7 +388,7 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..40) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 owns its local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051).
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..41, VS0-CF-F16-01..122) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 and FEATURE-0016 each own their local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051). FEATURE-0016 owns exactly five explicit Go 1.22 `http.ServeMux` registrations plus a pre-ServeMux transport-only method/path guard (ADH-2026-058 clause 3).
 
 ---
 

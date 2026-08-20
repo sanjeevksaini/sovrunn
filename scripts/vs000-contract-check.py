@@ -34,6 +34,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
 F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
+F16_CF_IDS = [f"F16-{i:02d}" for i in range(1,123)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -185,7 +186,7 @@ def run():
     if reg.get("migrationFailureMappings"): e("migrationFailureMappings must not exist as an active section (DEC-0059)")
     # Conformance
     confs = reg.get("conformance",[])
-    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS}; found_cf=set(); seen_cf=set()
+    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS}; found_cf=set(); seen_cf=set()
     for c in confs:
         cid=c.get("id","?")
         if cid in seen_cf: e(f"Dup conformance: {cid}")
@@ -315,7 +316,7 @@ def run():
     # Traceability
     if TRACE_PATH.exists():
         txt=TRACE_PATH.read_text()
-        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS])
+        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS])
         for a in all_ids:
             if a not in txt: e(f"Traceability missing: {a}")
         for p in ("VS-000-contract-registry.yaml","VS-000-contract-specification.md","VS-000_CONTRACT_TRACEABILITY_MATRIX.md"):
@@ -373,8 +374,9 @@ def run():
     if phlr != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("permittedHostingLocationRefs must be introduced and activated by FEATURE-0021 (ADH-2026-047 decision 4)")
     if any(str(x).startswith("spec.permittedHostingLocationRefs:") for x in participation.get("required",[])): e("permittedHostingLocationRefs must remain optional before FEATURE-0021")
     execution=schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{})
-    for field in ("spec.infrastructureStackRef","spec.participationRef","spec.targetClass","status.qualification","status.availability","status.maintenanceEpoch","status.factSetRef","status.observedGeneration","status.conditions"):
+    for field in ("spec.cloudProviderParticipationRef","spec.infrastructureStackRef","spec.targetClass","status.lifecycle","status.qualification","status.maintenanceEpoch","status.observedGeneration","status.factSetRef","status.qualificationResultRef"):
         if execution.get(field) != {"introducedBy":"FEATURE-0016","activatedBy":"FEATURE-0016"}: e(f"ExecutionTarget.{field} must be FEATURE-0016-owned")
+    if "status.availability" in schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{}): e("ExecutionTarget must not have an active persisted status.availability field (ADH-2026-058)")
     if schema_by_kind.get("ExecutionTarget",{}).get("owner") != "FEATURE-0016": e("ExecutionTarget must be owned by FEATURE-0016 in its entirety (DEC-0059/ADH-2026-045)")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
