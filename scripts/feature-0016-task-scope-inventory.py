@@ -13,7 +13,11 @@ FEATURE-0016 control manifest declares a well-formed, acyclic dependency set
 started. This is a mechanical inventory check; it does not choose task
 content, Go data structures, or implementation scope.
 
-Exit 0 = PASS. Exit 1 = FAIL (missing path or cyclic dependency graph).
+Declared future Cursor paths in a task's `Writable paths` inventory are not
+Kiro outputs. They are validated as repository-relative plan inventory; actual
+Kiro output enforcement remains the manifest's stage-boundary responsibility.
+
+Exit 0 = PASS. Exit 1 = FAIL (invalid inventory, missing path, or cyclic graph).
 """
 
 from __future__ import annotations
@@ -28,10 +32,44 @@ CONTROL = ROOT / ".automation/features/FEATURE-0016.control.json"
 TASKS = ROOT / ".kiro/specs/adapter-boundary-and-executiontarget-qualification/tasks.md"
 
 errs: list[str] = []
+TASK_HEADING = re.compile(r"^###\s+TASK-F16-\d+\b.*$", re.MULTILINE)
+WRITABLE_HEADING = "**Writable paths:**"
+INVENTORY_PATH = re.compile(r"^\s*-\s+`([^`]+)`", re.MULTILINE)
 
 
 def e(msg: str) -> None:
     errs.append(msg)
+
+
+def valid_inventory_path(value: str) -> bool:
+    """Return whether a documented future Cursor path stays in the repository."""
+    candidate = value.strip()
+    if not candidate or candidate.startswith(("/", "\\")):
+        return False
+    if not re.fullmatch(r"[A-Za-z0-9._/-]+", candidate):
+        return False
+    parts = Path(candidate).parts
+    return candidate != "." and ".." not in parts and not any(part == "" for part in parts)
+
+
+def task_blocks(text: str) -> list[tuple[str, str]]:
+    """Return each numbered implementation task heading and its body."""
+    headings = list(TASK_HEADING.finditer(text))
+    return [
+        (match.group(0), text[match.end() : headings[index + 1].start() if index + 1 < len(headings) else len(text)])
+        for index, match in enumerate(headings)
+    ]
+
+
+def inventory_paths(block: str) -> list[str] | None:
+    """Extract exact paths only from a task's Writable paths inventory."""
+    start = block.find(WRITABLE_HEADING)
+    if start < 0:
+        return None
+    remainder = block[start + len(WRITABLE_HEADING) :]
+    end = re.search(r"\n\*\*[^*]+:\*\*|\n###\s+|\Z", remainder)
+    inventory = remainder[: end.start() if end else len(remainder)]
+    return INVENTORY_PATH.findall(inventory)
 
 
 def check_control_dependency_graph() -> dict:
@@ -104,10 +142,17 @@ def check_tasks_stage(control: dict) -> None:
         )
         return
     text = TASKS.read_text()
-    forbidden_outputs = control.get("guardrails", {}).get("kiro", {}).get("forbidden_outputs", [])
-    for forbidden in forbidden_outputs:
-        if forbidden in text:
-            e(f"tasks.md references a forbidden output path: {forbidden}")
+    for heading, block in task_blocks(text):
+        paths = inventory_paths(block)
+        if paths is None:
+            e(f"{heading}: missing {WRITABLE_HEADING} inventory")
+            continue
+        if not paths:
+            e(f"{heading}: writable-path inventory must declare at least one repository path")
+            continue
+        for path in paths:
+            if not valid_inventory_path(path):
+                e(f"{heading}: invalid repository-relative inventory path: {path!r}")
     owned_resources = control.get("ownership", {}).get("owned_resources", [])
     for resource in owned_resources:
         if resource not in text:
@@ -115,6 +160,14 @@ def check_tasks_stage(control: dict) -> None:
 
 
 def main() -> None:
+    if sys.argv[1:] == ["--self-test"]:
+        assert valid_inventory_path("internal/executiontarget/lifecycle.go")
+        assert valid_inventory_path("cmd/sovrunn-api/main.go")
+        assert valid_inventory_path("tests/conformance/feature_0016_test.go")
+        for bad in ("", "/tmp/x", "../escape.go", "internal/../escape.go", "a path.go"):
+            assert not valid_inventory_path(bad), bad
+        print("PASS: FEATURE-0016 task-scope inventory self-test")
+        return
     control = check_control_dependency_graph()
     check_tasks_stage(control)
     if errs:
