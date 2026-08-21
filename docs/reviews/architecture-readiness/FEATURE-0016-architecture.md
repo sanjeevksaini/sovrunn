@@ -309,11 +309,14 @@ changes persisted target status nor emits an AuditEvent or idempotency
 completion. Supported
 facts conclude persisted Active/Qualified and project Available; an Unsupported
 fact concludes Active/Rejected and projects Unavailable; Unknown concludes
-Active/Indeterminate and projects Unavailable. Maintenance entered during
-Qualifying aborts that qualification reservation, clears current record links,
-and persists Unqualified before projecting Maintenance; otherwise it preserves
-the last completed qualification while projecting Maintenance. Clear persists
-Active/Unqualified and projects Unavailable. Retire is allowed from every
+Active/Indeterminate and projects Unavailable. Every successful Maintenance
+entry clears both current FactSet/Result links and persists Active/Unqualified
+before projecting Maintenance, whether or not a qualification is in flight
+(ADH-2026-061). If a qualification is in flight, Maintenance entry
+additionally aborts only that qualification and its linked idempotency
+reservation, waking only its waiters. If no qualification is in flight, no
+idempotency reservation is cancelled. Clear persists Active/Unqualified and
+projects Unavailable, with both links cleared. Retire is allowed from every
 Active combination, including Maintenance and Qualifying, and persists
 Retired/Unqualified while projecting Unavailable. Retired targets remain
 visible to authorized GET/LIST callers.
@@ -322,10 +325,13 @@ visible to authorized GET/LIST callers.
 
 If Retire wins while a qualification is in flight, the qualifying caller gets
 `CONFLICT`/409 with `VS0_TARGET_RETIRED`. If Maintenance entry wins, that
-caller gets `CONFLICT`/409 with `VS0_TARGET_MAINTENANCE`. In either case the
-qualification reservation aborts without a qualification result, completion,
-or qualification AuditEvent; the winning Retirement or Maintenance transition
-is audited under F16-AD-21.
+caller gets `CONFLICT`/409 with `VS0_TARGET_MAINTENANCE`. In either case only
+that qualification's reservation and its linked idempotency reservation
+abort — no unrelated target's reservation is affected — without a
+qualification result, completion, or qualification AuditEvent; the winning
+Retirement or Maintenance transition is audited under F16-AD-21 (ADH-2026-061
+narrows the Maintenance-entry abort scope to the target-specific in-flight
+qualification and its linked reservation only).
 
 At qualification commit these outcomes are mutually exclusive and ordered
 (ADH-2026-060): an active current-Maintenance marker always selects

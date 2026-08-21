@@ -300,6 +300,28 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
         require(errors, f16_89.get("expectedViolation") == "VS0_TARGET_MAINTENANCE",
                 f"MAINTENANCE-RACE: VS0-CF-F16-89 expectedViolation must be VS0_TARGET_MAINTENANCE, found {f16_89.get('expectedViolation')!r} (ADH-2026-060)")
 
+    # ADH-2026-061: F16-42 (Maintenance entry clears links), F16-43 (Maintenance
+    # clear), and F16-89 (Maintenance-wins during in-flight qualification) must
+    # keep their exact pre-existing observable semantics; the registry itself is
+    # not the source of the fixed contradiction, so this checker only verifies
+    # it remains unaltered by this correction.
+    f16_42 = cases.get("VS0-CF-F16-42")
+    f16_43 = cases.get("VS0-CF-F16-43")
+    require(errors, f16_42 is not None, "MAINTENANCE-LINKS: VS0-CF-F16-42 not found in registry (ADH-2026-061)")
+    require(errors, f16_43 is not None, "MAINTENANCE-LINKS: VS0-CF-F16-43 not found in registry (ADH-2026-061)")
+    if f16_42 is not None:
+        f42_effects = str(f16_42.get("expectedSideEffects", "")).lower()
+        require(errors, "current factset/result links clear" in f42_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-42 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_43 is not None:
+        f43_effects = str(f16_43.get("expectedSideEffects", "")).lower()
+        require(errors, "current factset/result links clear" in f43_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-43 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_89 is not None:
+        f89_effects = str(f16_89.get("expectedSideEffects", "")).lower()
+        require(errors, "no qualification result, completion, or qualification auditevent" in f89_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-89 must keep its no-result/no-completion/no-AuditEvent outcome unchanged (ADH-2026-061)")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)

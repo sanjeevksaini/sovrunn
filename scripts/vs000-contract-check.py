@@ -391,6 +391,20 @@ def run():
         if "maintenance entry wins" not in f89_in: e("VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
         if f16_75.get("expectedError")!="STALE_RESOURCE_VERSION" or f16_75.get("expectedViolation")!="VS0_TARGET_EPOCH_STALE": e("VS0-CF-F16-75 must be 412 STALE_RESOURCE_VERSION/VS0_TARGET_EPOCH_STALE (ADH-2026-060)")
         if f16_89.get("expectedError")!="CONFLICT" or f16_89.get("expectedViolation")!="VS0_TARGET_MAINTENANCE": e("VS0-CF-F16-89 must be 409 CONFLICT/VS0_TARGET_MAINTENANCE (ADH-2026-060)")
+    # ADH-2026-061: F16-42/43/89 registry evidence (link-clearing and abort
+    # scope) must remain intact and unaltered by this correction; this
+    # checker is not the source of the fixed contradiction, only a guard that
+    # the reconciled feature authority did not drift from already-correct
+    # registry semantics.
+    f16_42=f16_by_id.get("VS0-CF-F16-42"); f16_43=f16_by_id.get("VS0-CF-F16-43")
+    if not f16_42: e("VS0-CF-F16-42 not found in registry (ADH-2026-061)")
+    if not f16_43: e("VS0-CF-F16-43 not found in registry (ADH-2026-061)")
+    if f16_42 and "current factset/result links clear" not in str(f16_42.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-42 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_43 and "current factset/result links clear" not in str(f16_43.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-43 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_89 and "no qualification result, completion, or qualification auditevent" not in str(f16_89.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-89 must keep its no-result/no-completion/no-AuditEvent outcome unchanged (ADH-2026-061)")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")

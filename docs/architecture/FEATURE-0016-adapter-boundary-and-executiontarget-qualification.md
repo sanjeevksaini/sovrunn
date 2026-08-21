@@ -5,7 +5,7 @@
 | Status | Approved boundary (closed under ADH-2026-058) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification) |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction) |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0015 (CloudProviderParticipation, InfrastructureStack — read-only prior-feature authority) |
 
@@ -246,13 +246,18 @@ reservation without target mutation, AuditEvent, or completion. A stale
 qualification proposal never suppresses an independently committed winning
 Maintenance or Retirement transition.
 
-Maintenance entered during an in-flight Qualifying reservation aborts that
-reservation, clears current links, and persists Unqualified before
-projecting Maintenance; otherwise it preserves the last completed
-conclusion while projecting Maintenance. Clear persists Active/Unqualified
-and projects Unavailable. Retire is allowed from every Active combination,
-including while Qualifying is in flight, and persists Retired/Unqualified
-while projecting Unavailable.
+Every successful Maintenance entry clears both current FactSet/Result links
+and persists Active/Unqualified before projecting Maintenance, whether or not
+a qualification is in flight (ADH-2026-061). If a qualification is in flight,
+Maintenance entry additionally aborts only that qualification and its linked
+idempotency reservation, waking only its waiters; the qualifying caller
+receives the existing `CONFLICT`/409 + `VS0_TARGET_MAINTENANCE` outcome with
+no qualification result, completion, or qualification AuditEvent. If no
+qualification is in flight, no idempotency reservation is cancelled. Clear
+persists Active/Unqualified and projects Unavailable, with both links
+cleared. Retire is allowed from every Active combination, including while
+Qualifying is in flight, and persists Retired/Unqualified while projecting
+Unavailable.
 
 Every successful maintenance enter or clear increments maintenance epoch and
 resourceVersion/ETag, clears both record links, and leaves no pre-fence

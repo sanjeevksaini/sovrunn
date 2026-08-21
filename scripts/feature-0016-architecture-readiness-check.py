@@ -238,6 +238,46 @@ def check_maintenance_race_mutual_exclusivity(reg: dict, f16_arch: str) -> None:
         e("MAINTENANCE-RACE: F0016 architecture must reference ADH-2026-060's mutually exclusive ordering")
 
 
+def check_maintenance_entry_link_clearing(f16_arch: str, f16_feat: str) -> None:
+    """ADH-2026-061: every successful Maintenance entry must clear both
+    current FactSet/Result links and persist Active/Unqualified, whether or
+    not a qualification is in flight. Reject wording that preserves a
+    completed conclusion or current links on Maintenance entry, and reject
+    an over-broad claim that all reservations for a target are aborted."""
+    retained_conclusion_markers = (
+        "preserves the last completed",
+        "preserve the last completed",
+        "retains the last completed",
+        "retain the last completed",
+        "preserves the last committed conclusion",
+        "otherwise it preserves",
+    )
+    over_broad_abort_markers = (
+        "aborts all reservations",
+        "abort all reservations",
+        "aborts every reservation",
+        "abort every reservation",
+        "all reservations for the target",
+        "all reservations for that target",
+        "all target reservations",
+    )
+    for label, text in (("architecture", f16_arch), ("feature", f16_feat)):
+        if not text:
+            continue
+        lower = text.lower()
+        for marker in retained_conclusion_markers:
+            if marker in lower:
+                e(f"MAINTENANCE-LINKS: F0016 {label} retains prohibited retained-conclusion wording {marker!r} (ADH-2026-061)")
+        for marker in over_broad_abort_markers:
+            if marker in lower:
+                e(f"MAINTENANCE-LINKS: F0016 {label} contains an over-broad abort-scope claim {marker!r} (ADH-2026-061)")
+    # The unconditional link-clearing rule is normative only in the architecture
+    # authority (ADH-2026-061's write allowlist does not include the tabular
+    # docs/features/FEATURE-0016 ID-summary file).
+    if f16_arch and "clears both current" not in f16_arch.lower() and "clear both current" not in f16_arch.lower():
+        e("MAINTENANCE-LINKS: F0016 architecture must state every successful Maintenance entry clears both current FactSet/Result links (ADH-2026-061)")
+
+
 def check_conformance_completeness(reg: dict) -> None:
     confs = reg.get("conformance", [])
     found = {c.get("id") for c in confs}
@@ -341,6 +381,7 @@ def main() -> None:
     check_closed_violation_set(reg, f16_arch)
     check_sole_writer_and_observer(reg, f16_arch)
     check_maintenance_race_mutual_exclusivity(reg, f16_arch)
+    check_maintenance_entry_link_clearing(f16_arch, f16_feat)
     check_conformance_completeness(reg)
     check_traceability(trace)
     check_closure_matrix(closure)

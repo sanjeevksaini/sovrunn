@@ -273,8 +273,8 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-39 | Valid create required AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-40 | Create authorization-denial AuditEvent append fails | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-41 | Fact expiry with successful required AuditEvent append | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-42 | Current fenced maintenance-entry trigger | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-43 | Fenced maintenance clear | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-42 | Current fenced maintenance-entry trigger | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-061 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-43 | Fenced maintenance clear | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-061 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-44 | HEAD on the item GET path | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-45 | Successful GET with any Accept value | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-46 | Process restart | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
@@ -320,7 +320,7 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-86 | Qualify with malformed If-Match and non-zero body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-87 | Same-key completed qualify after target ETag changes | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-88 | Retire wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-89 | Maintenance entry wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-060 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-89 | Maintenance entry wins while qualify is in flight | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-060; ADH-2026-061 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-90 | Qualify with fixture-declared logical timeout | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-91 | Authorized create with client metadata.resourceVersion | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-92 | Authorized create with client metadata.generation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |

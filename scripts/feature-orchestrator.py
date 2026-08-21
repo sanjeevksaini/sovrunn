@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_MAKE_TARGETS = {"fmt", "vet", "test", "test-race", "build", "ff-verify", "ff-guardrails"}
+TASK_HEADING = r"(?:Task\s+(\d+)\s*:|TASK-[A-Za-z0-9]+-(\d+)\s+[—:-])"
 
 
 def run(args: list[str], *, capture: bool = False) -> str:
@@ -28,9 +29,12 @@ def run(args: list[str], *, capture: bool = False) -> str:
 def blocks(text: str) -> dict[int, str]:
     found: dict[int, str] = {}
     for match in re.finditer(
-        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)", text
+        rf"(?ms)^### {TASK_HEADING}.*?(?=^### {TASK_HEADING}|^## [^#]|\Z)", text
     ):
-        found[int(match.group(1))] = match.group(0).rstrip()
+        task = int(match.group(1) or match.group(2))
+        if task in found:
+            raise ValueError(f"duplicate task heading: {task}")
+        found[task] = match.group(0).rstrip()
     return found
 
 
