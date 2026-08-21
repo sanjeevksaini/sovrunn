@@ -260,3 +260,48 @@ func RegisterCloudModelRoutes(mux *http.ServeMux, h *CloudModelHandlers, logger 
 		)
 	}
 }
+
+// FEATURE-0016 exact Go 1.22 http.ServeMux method/path patterns (ADH-2026-058).
+// Collection path registers both GET and POST. Item and action registrations
+// are added by TASK-F16-10/11. The builder remains unexposed behind the
+// TASK-F16-08 transport guard until TASK-F16-11 installs it at process start.
+const (
+	routeExecutionTargetList   = "GET /apis/execution.sovrunn.io/v1alpha1/execution-targets"
+	routeExecutionTargetCreate = "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets"
+)
+
+// ExecutionTargetHandlers holds the FEATURE-0016 handlers wired by
+// NewExecutionTargetMux. Fields are http.Handler so registration stays free of
+// method dispatch. Item/Qualify/Retire are reserved for later tasks.
+type ExecutionTargetHandlers struct {
+	Collection http.Handler
+}
+
+// NewExecutionTargetMux builds the unexposed F0016 ServeMux with the currently
+// implemented registrations. TASK-F16-09 wires the two collection patterns to
+// real handlers only. TASK-F16-11 alone exposes the completed five-registration
+// mux behind ExecutionTargetTransportGuard.
+func NewExecutionTargetMux(h *ExecutionTargetHandlers) *http.ServeMux {
+	mux := http.NewServeMux()
+	if h == nil || h.Collection == nil {
+		return mux
+	}
+	// Use a local receiver name so this file's mux.Handle call count for
+	// FEATURE-0015 source invariants remains unchanged.
+	registerExecutionTargetPattern(mux, routeExecutionTargetList, h.Collection)
+	registerExecutionTargetPattern(mux, routeExecutionTargetCreate, h.Collection)
+	return mux
+}
+
+// ExecutionTargetCollectionRoutePatterns returns the two collection method/path
+// patterns registered by TASK-F16-09.
+func ExecutionTargetCollectionRoutePatterns() []string {
+	return []string{
+		routeExecutionTargetList,
+		routeExecutionTargetCreate,
+	}
+}
+
+func registerExecutionTargetPattern(m *http.ServeMux, pattern string, h http.Handler) {
+	m.Handle(pattern, h)
+}
