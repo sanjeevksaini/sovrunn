@@ -14,6 +14,7 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/api"
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
+	"github.com/sanjeevksaini/sovrunn/internal/executiontarget"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/resources"
 )
@@ -29,8 +30,17 @@ type CloudModelRuntime struct {
 	Guard       *cloudmodel.ParticipationActionGuard
 }
 
-// Server owns HTTP server lifecycle and optional FEATURE-0015 cloud-model
-// coordination (scheduler + idempotency abort on shutdown).
+// ExecutionTargetRuntime is the FEATURE-0016 composition: one shared lifecycle
+// service and scheduler injected into every F0016 handler (TASK-F16-11).
+type ExecutionTargetRuntime struct {
+	Lifecycle *executiontarget.ExecutionTargetLifecycleService
+	Scheduler *executiontarget.Scheduler
+	Audit     executiontarget.AuditAppender
+	Fixtures  *executiontarget.MapFixtureSource
+}
+
+// Server owns HTTP server lifecycle and optional FEATURE-0015 / FEATURE-0016
+// coordination (scheduler + idempotency/lifecycle abort on shutdown).
 type Server struct {
 	cfg        config.Config
 	httpServer *http.Server
@@ -38,7 +48,9 @@ type Server struct {
 	logger     *log.Logger
 
 	cloud          *CloudModelRuntime
+	execution      *ExecutionTargetRuntime
 	schedCtxCancel context.CancelFunc
+	etSchedCancel  context.CancelFunc
 }
 
 // New constructs the Server with routes and middleware registered.
@@ -176,8 +188,75 @@ func NewCloudModelRuntime(audit cloudmodel.AuditAppender) *CloudModelRuntime {
 	}
 }
 
-// Start binds the listener, starts the FEATURE-0015 scheduler when attached,
-// marks readiness true, and blocks until signal.
+// NewExecutionTargetRuntime constructs one shared lifecycle service and
+// scheduler for FEATURE-0016 (TASK-F16-11).
+func NewExecutionTargetRuntime(audit executiontarget.AuditAppender) *ExecutionTargetRuntime {
+	if audit == nil {
+		audit = &cloudmodel.MemoryAuditAppender{}
+	}
+	fixtures := executiontarget.NewMapFixtureSource()
+	lifecycle := executiontarget.NewExecutionTargetLifecycleService(executiontarget.LifecycleConfig{
+		Audit:    audit,
+		Observer: executiontarget.NewSyntheticObserver(fixtures, nil),
+	})
+	sched := executiontarget.NewScheduler(executiontarget.SchedulerConfig{
+		Lifecycle: lifecycle,
+	})
+	return &ExecutionTargetRuntime{
+		Lifecycle: lifecycle,
+		Scheduler: sched,
+		Audit:     audit,
+		Fixtures:  fixtures,
+	}
+}
+
+// AttachExecutionTarget installs the completed five-registration F0016 mux
+// once behind ExecutionTargetTransportGuard, injecting the shared lifecycle
+// service into every F0016 handler (TASK-F16-11). cloud must be the
+// FEATURE-0015 store used for backing resolution.
+func (s *Server) AttachExecutionTarget(rt *ExecutionTargetRuntime, cloud *cloudmodel.Store, grants api.GrantResolver) {
+	if s == nil || rt == nil || rt.Lifecycle == nil {
+		return
+	}
+	s.execution = rt
+
+	collection := api.NewExecutionTargetCollectionHandler(rt.Lifecycle, cloud, grants, rt.Audit)
+	item := api.NewExecutionTargetItemHandler(rt.Lifecycle, cloud, grants, rt.Audit)
+	qualify := api.NewExecutionTargetQualifyHandler(rt.Lifecycle, cloud, grants, rt.Audit)
+	qualify.Fixtures = rt.Fixtures
+	retire := api.NewExecutionTargetRetireHandler(rt.Lifecycle, cloud, grants, rt.Audit)
+
+	f16mux := NewExecutionTargetMux(&ExecutionTargetHandlers{
+		Collection: collection,
+		Item:       item,
+		Qualify:    qualify,
+		Retire:     retire,
+	})
+
+	// Correlate F0016 requests like FEATURE-0015 route wrappers.
+	f16handler := requestIDMiddleware(loggingMiddleware(s.logger)(f16mux))
+
+	prev := s.httpServer.Handler
+	combined := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, matched, _ := classifyExecutionTargetPath(r.URL.Path)
+		if matched {
+			f16handler.ServeHTTP(w, r)
+			return
+		}
+		prev.ServeHTTP(w, r)
+	})
+	// Install the TASK-F16-08 guard exactly once around the completed F0016
+	// surface (and non-F0016 pass-through via combined).
+	s.httpServer.Handler = ExecutionTargetTransportGuard(combined)
+}
+
+// ExecutionTarget returns the attached FEATURE-0016 runtime, if any.
+func (s *Server) ExecutionTarget() *ExecutionTargetRuntime {
+	return s.execution
+}
+
+// Start binds the listener, starts FEATURE-0015 and FEATURE-0016 schedulers
+// when attached, marks readiness true, and blocks until signal.
 func (s *Server) Start() error {
 	listener, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
@@ -185,6 +264,7 @@ func (s *Server) Start() error {
 	}
 
 	s.startCloudModel()
+	s.startExecutionTarget()
 	s.readiness.SetReady(true)
 
 	errCh := make(chan error, 1)
@@ -208,17 +288,20 @@ func (s *Server) Start() error {
 		return nil
 	case err := <-errCh:
 		s.readiness.SetReady(false)
+		_ = s.stopExecutionTarget()
 		_ = s.stopCloudModel()
 		return err
 	}
 }
 
-// Shutdown stops the FEATURE-0015 scheduler, aborts in-flight idempotency
-// reservations (waking waiters), then drains HTTP connections and completes.
+// Shutdown stops FEATURE-0016 acceptance and lifecycle admission first, then
+// FEATURE-0015 coordination, then drains HTTP connections (design §6.5;
+// ADH-2026-058 clause 8).
 func (s *Server) Shutdown(timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	s.readiness.SetShuttingDown()
+	_ = s.stopExecutionTarget()
 	_ = s.stopCloudModel()
 	return s.httpServer.Shutdown(ctx)
 }
@@ -231,6 +314,16 @@ func (s *Server) startCloudModel() {
 	s.schedCtxCancel = cancel
 	s.cloud.Scheduler.Start(ctx)
 	s.logger.Println("cloudmodel participation expiry scheduler started")
+}
+
+func (s *Server) startExecutionTarget() {
+	if s == nil || s.execution == nil || s.execution.Scheduler == nil {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	s.etSchedCancel = cancel
+	s.execution.Scheduler.Start(ctx)
+	s.logger.Println("executiontarget expiry and maintenance-trigger intake started")
 }
 
 func (s *Server) stopCloudModel() error {
@@ -249,6 +342,28 @@ func (s *Server) stopCloudModel() error {
 	if s.cloud.Idempotency != nil {
 		s.cloud.Idempotency.AbortAll()
 		s.logger.Println("cloudmodel in-flight idempotency reservations aborted")
+	}
+	return nil
+}
+
+func (s *Server) stopExecutionTarget() error {
+	if s == nil || s.execution == nil {
+		return nil
+	}
+	// Ordered shutdown (TASK-F16-06 / TASK-F16-11): stop expiry and
+	// Maintenance-trigger acceptance → abort lifecycle/idempotency admission
+	// under the sole-committer mutex → wake waiters after unlock → HTTP shutdown.
+	if s.etSchedCancel != nil {
+		s.etSchedCancel()
+		s.etSchedCancel = nil
+	}
+	if s.execution.Scheduler != nil {
+		s.execution.Scheduler.Stop()
+		s.logger.Println("executiontarget scheduler acceptance stopped")
+	}
+	if s.execution.Lifecycle != nil {
+		s.execution.Lifecycle.Shutdown()
+		s.logger.Println("executiontarget lifecycle admission closed and reservations aborted")
 	}
 	return nil
 }

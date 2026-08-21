@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel/model"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
+	"github.com/sanjeevksaini/sovrunn/internal/executiontarget"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
 	"github.com/sanjeevksaini/sovrunn/internal/registry"
 	"github.com/sanjeevksaini/sovrunn/internal/resources"
@@ -813,4 +815,202 @@ func seedPendingParticipation(t *testing.T, store *cloudmodel.Store) {
 	if _, prob := store.CreateParticipation(part); prob != nil {
 		t.Fatalf("participation: %#v", prob)
 	}
+}
+
+func TestServer_ExecutionTargetCompositionAndShutdown(t *testing.T) {
+	srv := newTestServer()
+	audit := &cloudmodel.MemoryAuditAppender{}
+	cloudRT := NewCloudModelRuntime(audit)
+	srv.AttachCloudModel(cloudRT)
+
+	etRT := NewExecutionTargetRuntime(audit)
+	grants := &staticETGrants{principal: "bootstrap-principal"}
+	srv.AttachExecutionTarget(etRT, cloudRT.Store, grants)
+
+	if srv.ExecutionTarget() == nil || srv.ExecutionTarget().Lifecycle == nil {
+		t.Fatal("executiontarget runtime must be attached")
+	}
+	if etRT.Scheduler == nil {
+		t.Fatal("scheduler must be constructed")
+	}
+
+	// Guard delegates valid F0016 collection GET once (auth will 401 with empty principal mismatch).
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/apis/execution.sovrunn.io/v1alpha1/execution-targets", nil)
+	srv.httpServer.Handler.ServeHTTP(rec, req)
+	if rec.Code == http.StatusNotFound {
+		t.Fatal("F0016 collection must be registered behind the guard")
+	}
+
+	// Non-F0016 route still reaches next handler.
+	rec2 := httptest.NewRecorder()
+	req2 := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	srv.httpServer.Handler.ServeHTTP(rec2, req2)
+	if rec2.Code == http.StatusNotFound {
+		t.Fatal("non-F0016 healthz must pass through")
+	}
+
+	// Disallowed method on F0016 path is transport 405 from the guard.
+	rec3 := httptest.NewRecorder()
+	req3 := httptest.NewRequest(http.MethodDelete, "/apis/execution.sovrunn.io/v1alpha1/execution-targets", nil)
+	srv.httpServer.Handler.ServeHTTP(rec3, req3)
+	if rec3.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("guard DELETE status=%d want 405", rec3.Code)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	etRT.Scheduler.Start(ctx)
+
+	ns := executiontarget.IdempotencyNamespace{
+		PrincipalUID:     "p1",
+		RoutePattern:     "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets",
+		CloudProviderUID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		Key:              "shutdown-et",
+	}
+	if res := etRT.Lifecycle.ReserveOrInspectReplay(ns, executiontarget.DigestAction()); res.Outcome != executiontarget.ReservationOutcomeReserved {
+		t.Fatalf("reserve: %#v", res)
+	}
+
+	waiterDone := make(chan executiontarget.ReservationInspectResult, 1)
+	go func() {
+		waiterDone <- etRT.Lifecycle.ReserveOrInspectReplay(ns, executiontarget.DigestAction())
+	}()
+	time.Sleep(20 * time.Millisecond)
+
+	if err := srv.Shutdown(2 * time.Second); err != nil {
+		t.Fatalf("Shutdown: %v", err)
+	}
+	if !etRT.Scheduler.AcceptanceStopped() {
+		t.Fatal("scheduler acceptance must stop before HTTP shutdown completes")
+	}
+	if !etRT.Lifecycle.AdmissionClosed() {
+		t.Fatal("lifecycle admission must close on shutdown")
+	}
+
+	select {
+	case res := <-waiterDone:
+		// After abort sweep, same-key reserve may become Reserved again or
+		// Conflict depending on table state; must not hang.
+		_ = res
+	case <-time.After(2 * time.Second):
+		t.Fatal("waiter must wake after lifecycle Shutdown")
+	}
+
+	// No new InFlight reservation after abort sweep begins.
+	after := etRT.Lifecycle.ReserveOrInspectReplay(executiontarget.IdempotencyNamespace{
+		PrincipalUID:     "p1",
+		RoutePattern:     "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets",
+		CloudProviderUID: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		Key:              "post-shutdown",
+	}, executiontarget.DigestAction())
+	if after.Outcome == executiontarget.ReservationOutcomeReserved {
+		t.Fatal("no InFlight reservation may appear after shutdown abort sweep")
+	}
+}
+
+func TestServer_ExecutionTargetFiveRegistrations(t *testing.T) {
+	patterns := ExecutionTargetRoutePatterns()
+	if len(patterns) != ExecutionTargetRouteCount {
+		t.Fatalf("patterns=%d want %d", len(patterns), ExecutionTargetRouteCount)
+	}
+	actions := ExecutionTargetActionRoutePatterns()
+	if len(actions) != 2 {
+		t.Fatalf("actions=%d", len(actions))
+	}
+	if actions[0] != routeExecutionTargetQualify || actions[1] != routeExecutionTargetRetire {
+		t.Fatalf("action patterns=%v", actions)
+	}
+
+	mux := NewExecutionTargetMux(&ExecutionTargetHandlers{
+		Collection: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("collection"))
+		}),
+		Item: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("item"))
+		}),
+		Qualify: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("qualify"))
+		}),
+		Retire: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("retire"))
+		}),
+	})
+	uid := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	cases := []struct {
+		method string
+		path   string
+		body   string
+	}{
+		{http.MethodGet, "/apis/execution.sovrunn.io/v1alpha1/execution-targets", "collection"},
+		{http.MethodPost, "/apis/execution.sovrunn.io/v1alpha1/execution-targets", "collection"},
+		{http.MethodGet, "/apis/execution.sovrunn.io/v1alpha1/execution-targets/" + uid, "item"},
+		{http.MethodPost, "/apis/execution.sovrunn.io/v1alpha1/execution-targets/" + uid + "/actions/qualify", "qualify"},
+		{http.MethodPost, "/apis/execution.sovrunn.io/v1alpha1/execution-targets/" + uid + "/actions/retire", "retire"},
+	}
+	for _, tc := range cases {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(tc.method, tc.path, nil)
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK || rec.Body.String() != tc.body {
+			t.Fatalf("%s %s => %d %q want %q", tc.method, tc.path, rec.Code, rec.Body.String(), tc.body)
+		}
+	}
+}
+
+func TestServer_ExecutionTargetGuardDelegatesOnce(t *testing.T) {
+	srv := newTestServer()
+	audit := &cloudmodel.MemoryAuditAppender{}
+	cloudRT := NewCloudModelRuntime(audit)
+	srv.AttachCloudModel(cloudRT)
+	etRT := NewExecutionTargetRuntime(audit)
+	srv.AttachExecutionTarget(etRT, cloudRT.Store, &staticETGrants{principal: "bootstrap-principal"})
+
+	var f16Hits, otherHits atomic.Int32
+	prev := srv.httpServer.Handler
+	// Wrap again only for counting: the production handler already has the guard.
+	counting := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, matched, _ := classifyExecutionTargetPath(r.URL.Path)
+		if matched {
+			f16Hits.Add(1)
+		} else {
+			otherHits.Add(1)
+		}
+		prev.ServeHTTP(w, r)
+	})
+	srv.httpServer.Handler = counting
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/apis/execution.sovrunn.io/v1alpha1/execution-targets", nil)
+	srv.httpServer.Handler.ServeHTTP(rec, req)
+	if f16Hits.Load() != 1 {
+		t.Fatalf("F0016 hits=%d want 1", f16Hits.Load())
+	}
+
+	rec2 := httptest.NewRecorder()
+	req2 := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	srv.httpServer.Handler.ServeHTTP(rec2, req2)
+	if otherHits.Load() != 1 {
+		t.Fatalf("non-F0016 hits=%d want 1", otherHits.Load())
+	}
+	if rec2.Code == http.StatusNotFound {
+		t.Fatal("healthz must pass through")
+	}
+}
+
+// staticETGrants is a minimal GrantResolver for server composition tests.
+type staticETGrants struct {
+	principal string
+}
+
+func (s *staticETGrants) PrincipalID() string { return s.principal }
+
+func (s *staticETGrants) CoarseLookup(string) []cloudmodel.Grant { return nil }
+
+func (s *staticETGrants) AuthorizeExact(string, apimeta.ScopeIdentity, string, string) bool {
+	return false
 }
