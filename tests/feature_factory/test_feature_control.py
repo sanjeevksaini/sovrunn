@@ -543,6 +543,15 @@ class ReceiptCheckTests(unittest.TestCase):
             receipt.find_receipts(raw, "task"), ["TASK_STATUS: COMPLETE"]
         )
 
+    def test_feature_task_verification_suffix_after_wrapped_receipt_is_accepted(self):
+        raw = (
+            "`TASK_STATUS: COMPLETE`TASK-F16-12 verification finished successfully: "
+            "conformance passed.\n"
+        )
+        self.assertEqual(
+            receipt.find_receipts(raw, "task"), ["TASK_STATUS: COMPLETE"]
+        )
+
     def test_blocked_receipt_is_parsed_but_not_completion(self):
         self.assertEqual(
             receipt.find_receipts("STAGE_STATUS: BLOCKED ARCHITECTURE_DECISION_REQUIRED\n", "stage"),

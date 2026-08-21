@@ -17,6 +17,9 @@ EXPECTED = {
     "task": "TASK_STATUS: COMPLETE",
 }
 VERIFICATION_SUFFIX = "Verification finished successfully:"
+TASK_VERIFICATION_SUFFIX = re.compile(
+    r"^TASK-F\d+-\d+ verification finished successfully:"
+)
 
 
 def normalized_lines(raw: str) -> list[str]:
@@ -35,6 +38,13 @@ def normalized_lines(raw: str) -> list[str]:
         for receipt in EXPECTED.values():
             wrapped_prefix = f"`{receipt}`{VERIFICATION_SUFFIX}"
             if line.startswith(wrapped_prefix):
+                line = receipt
+                break
+            if (
+                receipt == EXPECTED["task"]
+                and line.startswith(f"`{receipt}`")
+                and TASK_VERIFICATION_SUFFIX.match(line[len(f"`{receipt}`") :])
+            ):
                 line = receipt
                 break
         normalized.append(line)
