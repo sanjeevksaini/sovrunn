@@ -262,25 +262,29 @@ func RegisterCloudModelRoutes(mux *http.ServeMux, h *CloudModelHandlers, logger 
 }
 
 // FEATURE-0016 exact Go 1.22 http.ServeMux method/path patterns (ADH-2026-058).
-// Collection path registers both GET and POST. Item and action registrations
-// are added by TASK-F16-10/11. The builder remains unexposed behind the
-// TASK-F16-08 transport guard until TASK-F16-11 installs it at process start.
+// Collection path registers both GET and POST. Item GET is registered by
+// TASK-F16-10. Qualify/retire registrations are added by TASK-F16-11. The
+// builder remains unexposed behind the TASK-F16-08 transport guard until
+// TASK-F16-11 installs it at process start.
 const (
 	routeExecutionTargetList   = "GET /apis/execution.sovrunn.io/v1alpha1/execution-targets"
 	routeExecutionTargetCreate = "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets"
+	routeExecutionTargetGet    = "GET /apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}"
 )
 
 // ExecutionTargetHandlers holds the FEATURE-0016 handlers wired by
 // NewExecutionTargetMux. Fields are http.Handler so registration stays free of
-// method dispatch. Item/Qualify/Retire are reserved for later tasks.
+// method dispatch. Qualify/Retire are reserved for TASK-F16-11.
 type ExecutionTargetHandlers struct {
 	Collection http.Handler
+	Item       http.Handler
 }
 
 // NewExecutionTargetMux builds the unexposed F0016 ServeMux with the currently
-// implemented registrations. TASK-F16-09 wires the two collection patterns to
-// real handlers only. TASK-F16-11 alone exposes the completed five-registration
-// mux behind ExecutionTargetTransportGuard.
+// implemented registrations. TASK-F16-09 wires the two collection patterns;
+// TASK-F16-10 adds the item-GET pattern to the real item handler with no
+// placeholder. TASK-F16-11 alone exposes the completed five-registration mux
+// behind ExecutionTargetTransportGuard.
 func NewExecutionTargetMux(h *ExecutionTargetHandlers) *http.ServeMux {
 	mux := http.NewServeMux()
 	if h == nil || h.Collection == nil {
@@ -290,6 +294,9 @@ func NewExecutionTargetMux(h *ExecutionTargetHandlers) *http.ServeMux {
 	// FEATURE-0015 source invariants remains unchanged.
 	registerExecutionTargetPattern(mux, routeExecutionTargetList, h.Collection)
 	registerExecutionTargetPattern(mux, routeExecutionTargetCreate, h.Collection)
+	if h.Item != nil {
+		registerExecutionTargetPattern(mux, routeExecutionTargetGet, h.Item)
+	}
 	return mux
 }
 
@@ -300,6 +307,12 @@ func ExecutionTargetCollectionRoutePatterns() []string {
 		routeExecutionTargetList,
 		routeExecutionTargetCreate,
 	}
+}
+
+// ExecutionTargetItemRoutePattern returns the item-GET method/path pattern
+// registered by TASK-F16-10.
+func ExecutionTargetItemRoutePattern() string {
+	return routeExecutionTargetGet
 }
 
 func registerExecutionTargetPattern(m *http.ServeMux, pattern string, h http.Handler) {
