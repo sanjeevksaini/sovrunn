@@ -138,6 +138,27 @@ type QualifyCommitRequest struct {
 	Completion  CompletedResult
 }
 
+// MaintenanceCommitRequest is the fenced maintenance enter/clear input
+// (DD-07; DEC-0057; ADH-2026-061). Delivered only through the target-bound
+// synthetic-observer fixture trigger owned by the scheduler — never an HTTP
+// route or event bus.
+type MaintenanceCommitRequest struct {
+	TargetUID                      string
+	ExpectedInfrastructureStackGen int64
+	ExpectedMaintenanceEpoch       int64
+	Actor                          apimeta.TypedRef
+	RequestID                      string
+	AuditUID                       string
+}
+
+// factExpiryState tracks freshness-input and audit-retry state for one FactSet
+// UID after the injected-clock worker observes expiry (DD-06). Target ETag and
+// qualification are never mutated by expiry.
+type factExpiryState struct {
+	expired bool
+	audited bool
+}
+
 // capturedQualifyFences are the fences sealed when the Qualifying reservation
 // opens (DD-04).
 type capturedQualifyFences struct {
@@ -170,6 +191,9 @@ type ExecutionTargetLifecycleService struct {
 	audit      AuditAppender
 	observer   *SyntheticObserver
 	qualifying map[string]*qualifyingReservation // targetUID -> reservation
+	// factExpiry keys are NormalizedTargetFactSet UIDs. Expiry flips freshness
+	// inputs only; it never changes target ETag or qualification.
+	factExpiry map[string]*factExpiryState
 	stopped    bool
 	now        func() time.Time
 }
@@ -180,8 +204,11 @@ type LifecycleConfig struct {
 	Idempotency *IdempotencyTable
 	Audit       AuditAppender
 	Observer    *SyntheticObserver
+	// Clock, when set, drives Now for retention, observation, and expiry.
+	// TASK-F16-06 owns the shared Clock interface.
+	Clock Clock
 	// Now injects the clock for idempotency retention and observation. Nil
-	// defaults to time.Now().UTC. TASK-F16-06 owns the shared Clock interface.
+	// defaults to Clock.Now when Clock is set, otherwise time.Now().UTC.
 	Now func() time.Time
 }
 
@@ -190,7 +217,12 @@ type LifecycleConfig struct {
 func NewExecutionTargetLifecycleService(cfg LifecycleConfig) *ExecutionTargetLifecycleService {
 	now := cfg.Now
 	if now == nil {
-		now = func() time.Time { return time.Now().UTC() }
+		if cfg.Clock != nil {
+			clock := cfg.Clock
+			now = func() time.Time { return clock.Now().UTC() }
+		} else {
+			now = func() time.Time { return time.Now().UTC() }
+		}
 	}
 	store := cfg.Store
 	if store == nil {
@@ -210,6 +242,7 @@ func NewExecutionTargetLifecycleService(cfg LifecycleConfig) *ExecutionTargetLif
 		audit:      cfg.Audit,
 		observer:   observer,
 		qualifying: make(map[string]*qualifyingReservation),
+		factExpiry: make(map[string]*factExpiryState),
 		now:        now,
 	}
 }
@@ -236,10 +269,14 @@ func (s *ExecutionTargetLifecycleService) unlock() {
 
 // ReserveOrInspectReplay reserves a new InFlight entry, returns a completed
 // replay payload, reports digest conflict, or reports a same-digest InFlight
-// peer. Holds the DD-02 mutex only for the table operation.
+// peer. Holds the DD-02 mutex only for the table operation. After Shutdown,
+// admission is closed: no new InFlight reservation is created.
 func (s *ExecutionTargetLifecycleService) ReserveOrInspectReplay(ns IdempotencyNamespace, digest Digest) ReservationInspectResult {
 	s.lock()
 	defer s.unlock()
+	if s.stopped {
+		return ReservationInspectResult{Outcome: ReservationOutcomeConflict}
+	}
 	res := s.idemp.reserveOrInspect(ns, digest, s.now())
 	out := ReservationInspectResult{}
 	switch res.Outcome {
@@ -832,7 +869,8 @@ func (s *ExecutionTargetLifecycleService) commitQualifyLocked(
 
 // MarkQualificationStopped prevents new Qualifying work and aborts in-flight
 // Qualifying reservations together with their linked InFlight idempotency
-// reservations. TASK-F16-06/11 own ordered shutdown; this is the abort hook.
+// reservations. Prefer Shutdown for the full ordered abort of every F0016
+// InFlight reservation (create/qualify/retire).
 func (s *ExecutionTargetLifecycleService) MarkQualificationStopped() {
 	s.lock()
 	s.stopped = true
@@ -849,6 +887,457 @@ func (s *ExecutionTargetLifecycleService) MarkQualificationStopped() {
 	for _, done := range wakes {
 		closeReservationDone(done)
 	}
+}
+
+// Shutdown closes new lifecycle/idempotency reservation admission under the
+// sole-committer mutex, detaches every existing create/qualify/retire InFlight
+// idempotency reservation and every in-flight Qualifying reservation, then
+// unlocks and wakes all captured waiters exactly once (design §6.5;
+// ADH-2026-058 clause 8). No new InFlight reservation can appear after the
+// abort sweep begins. TASK-F16-11 invokes this before HTTP shutdown.
+func (s *ExecutionTargetLifecycleService) Shutdown() {
+	s.lock()
+	s.stopped = true
+	for uid, qres := range s.qualifying {
+		qres.aborted = apiproblem.New(apiproblem.CodeInternalError).WithDetail("lifecycle shutdown")
+		delete(s.qualifying, uid)
+	}
+	wakes := s.idemp.finalizeAbortAll()
+	s.unlock()
+	for _, done := range wakes {
+		closeReservationDone(done)
+	}
+}
+
+// AdmissionClosed reports whether Shutdown (or MarkQualificationStopped) has
+// closed new reservation admission.
+func (s *ExecutionTargetLifecycleService) AdmissionClosed() bool {
+	s.lock()
+	defer s.unlock()
+	return s.stopped
+}
+
+// CommitMaintenanceEnter applies a fenced Maintenance entry (DD-07;
+// ADH-2026-061). On success it audits before publication, sets the
+// current-Maintenance marker active at the new epoch, increments maintenance
+// epoch and resourceVersion, unconditionally clears FactSet/Result links,
+// persists Active/Unqualified, and aborts only that target's in-flight
+// Qualifying reservation (if any) without a completion. A failed required
+// append returns INTERNAL_ERROR/500 with no state, marker, link, index,
+// tuple, qualification, or idempotency mutation (F16-100).
+func (s *ExecutionTargetLifecycleService) CommitMaintenanceEnter(ctx context.Context, req MaintenanceCommitRequest) (model.ExecutionTarget, *apiproblem.Problem) {
+	var (
+		qualWake chan struct{}
+		stagedET *stagedOutcome
+		stagedMk *stagedOutcome
+		holding  bool
+	)
+	defer func() {
+		if r := recover(); r != nil {
+			if !holding {
+				s.lock()
+				holding = true
+			}
+			if stagedET != nil {
+				s.store.abort(stagedET)
+			}
+			if stagedMk != nil {
+				s.store.abort(stagedMk)
+			}
+			if holding {
+				s.unlock()
+				holding = false
+			}
+			panic(r)
+		}
+	}()
+
+	if err := ctx.Err(); err != nil {
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("maintenance enter cancelled before publication")
+	}
+
+	s.lock()
+	holding = true
+
+	if s.stopped {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("lifecycle stopped")
+	}
+
+	cur, ok := s.store.lookupExecutionTarget(req.TargetUID)
+	if !ok {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeResourceNotFound)
+	}
+	if cur.Status.Lifecycle != model.LifecycleActive {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeConflict).WithViolations([]apiproblem.Violation{{
+			Field:   "/status/lifecycle",
+			Code:    ViolationTargetRetired,
+			Message: "ExecutionTarget is not Active",
+		}})
+	}
+	if marker, has := s.store.lookupMaintenanceMarker(req.TargetUID); has && marker.Active {
+		s.unlock()
+		holding = false
+		// Already in Maintenance: treat as stale-fenced no-op (no mutation/audit).
+		return cur, nil
+	}
+	if !maintenanceFenceMatches(cur, req) {
+		s.unlock()
+		holding = false
+		return cur, nil // stale fence: no state change, AuditEvent, or publication
+	}
+
+	newEpoch := cur.Status.MaintenanceEpoch + 1
+	next := cur
+	next.Status.Lifecycle = model.LifecycleActive
+	next.Status.Qualification = model.QualificationUnqualified
+	next.Status.MaintenanceEpoch = newEpoch
+	next.Status.FactSetRef = nil
+	next.Status.QualificationResultRef = nil
+
+	var prob *apiproblem.Problem
+	stagedET, prob = s.store.stageUpdateExecutionTarget(next)
+	if prob != nil {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, prob
+	}
+	stagedMk, prob = s.store.stageSetMaintenanceMarker(model.CurrentMaintenanceMarker{
+		TargetUID:        req.TargetUID,
+		MaintenanceEpoch: newEpoch,
+		Active:           true,
+	})
+	if prob != nil {
+		s.store.abort(stagedET)
+		stagedET = nil
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, prob
+	}
+
+	event := AssembleMaintenanceEnter(RedactedAuditInput{
+		UID:                    req.AuditUID,
+		RequestID:              req.RequestID,
+		Actor:                  req.Actor,
+		Subject:                subjectRef(cur),
+		SubjectResourceVersion: cur.Metadata.ResourceVersion,
+	})
+
+	if s.audit == nil {
+		s.store.abort(stagedET)
+		s.store.abort(stagedMk)
+		stagedET, stagedMk = nil, nil
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, internalAuditError("audit appender is not configured")
+	}
+	if err := s.audit.Append(ctx, event); err != nil {
+		// F16-100: failed entry must not abort in-flight qualification work.
+		s.store.abort(stagedET)
+		s.store.abort(stagedMk)
+		stagedET, stagedMk = nil, nil
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, internalAuditError("required AuditEvent append failed")
+	}
+
+	// ADH-2026-061: abort only this target's Qualifying reservation after
+	// successful audit, before publication.
+	qualWake = s.abortQualifyingLocked(req.TargetUID, maintenanceWhileQualifyingProblem())
+
+	s.store.publish(stagedET)
+	s.store.publish(stagedMk)
+	stagedET, stagedMk = nil, nil
+	if cur.Status.FactSetRef != nil {
+		delete(s.factExpiry, cur.Status.FactSetRef.UID)
+	}
+	out, _ := s.store.lookupExecutionTarget(req.TargetUID)
+	s.unlock()
+	holding = false
+	closeReservationDone(qualWake)
+	return out, nil
+}
+
+// CommitMaintenanceClear applies a fenced Maintenance clear (DD-07). On
+// success it removes the matching current-Maintenance marker, clears current
+// FactSet/Result links, increments maintenance epoch and resourceVersion,
+// persists Active/Unqualified, and audits before publication. A failed
+// required append returns INTERNAL_ERROR/500 with no mutation (F16-101).
+// Stale-fenced clears produce no state change, AuditEvent, or publication.
+func (s *ExecutionTargetLifecycleService) CommitMaintenanceClear(ctx context.Context, req MaintenanceCommitRequest) (model.ExecutionTarget, *apiproblem.Problem) {
+	var (
+		stagedET *stagedOutcome
+		stagedMk *stagedOutcome
+		holding  bool
+	)
+	defer func() {
+		if r := recover(); r != nil {
+			if !holding {
+				s.lock()
+				holding = true
+			}
+			if stagedET != nil {
+				s.store.abort(stagedET)
+			}
+			if stagedMk != nil {
+				s.store.abort(stagedMk)
+			}
+			if holding {
+				s.unlock()
+				holding = false
+			}
+			panic(r)
+		}
+	}()
+
+	if err := ctx.Err(); err != nil {
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("maintenance clear cancelled before publication")
+	}
+
+	s.lock()
+	holding = true
+
+	if s.stopped {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("lifecycle stopped")
+	}
+
+	cur, ok := s.store.lookupExecutionTarget(req.TargetUID)
+	if !ok {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeResourceNotFound)
+	}
+	if cur.Status.Lifecycle != model.LifecycleActive {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeConflict).WithViolations([]apiproblem.Violation{{
+			Field:   "/status/lifecycle",
+			Code:    ViolationTargetRetired,
+			Message: "ExecutionTarget is not Active",
+		}})
+	}
+	marker, hasMarker := s.store.lookupMaintenanceMarker(req.TargetUID)
+	if !hasMarker || !marker.Active {
+		s.unlock()
+		holding = false
+		return cur, nil // no matching active marker: no-op
+	}
+	if !maintenanceFenceMatches(cur, req) {
+		s.unlock()
+		holding = false
+		return cur, nil // stale fence
+	}
+
+	newEpoch := cur.Status.MaintenanceEpoch + 1
+	next := cur
+	next.Status.Lifecycle = model.LifecycleActive
+	next.Status.Qualification = model.QualificationUnqualified
+	next.Status.MaintenanceEpoch = newEpoch
+	next.Status.FactSetRef = nil
+	next.Status.QualificationResultRef = nil
+
+	var prob *apiproblem.Problem
+	stagedET, prob = s.store.stageUpdateExecutionTarget(next)
+	if prob != nil {
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, prob
+	}
+	stagedMk = s.store.stageClearMaintenanceMarker(req.TargetUID)
+
+	event := AssembleMaintenanceClear(RedactedAuditInput{
+		UID:                    req.AuditUID,
+		RequestID:              req.RequestID,
+		Actor:                  req.Actor,
+		Subject:                subjectRef(cur),
+		SubjectResourceVersion: cur.Metadata.ResourceVersion,
+	})
+
+	if s.audit == nil {
+		s.store.abort(stagedET)
+		s.store.abort(stagedMk)
+		stagedET, stagedMk = nil, nil
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, internalAuditError("audit appender is not configured")
+	}
+	if err := s.audit.Append(ctx, event); err != nil {
+		s.store.abort(stagedET)
+		s.store.abort(stagedMk)
+		stagedET, stagedMk = nil, nil
+		s.unlock()
+		holding = false
+		return model.ExecutionTarget{}, internalAuditError("required AuditEvent append failed")
+	}
+
+	s.store.publish(stagedET)
+	s.store.publish(stagedMk)
+	stagedET, stagedMk = nil, nil
+	if cur.Status.FactSetRef != nil {
+		delete(s.factExpiry, cur.Status.FactSetRef.UID)
+	}
+	out, _ := s.store.lookupExecutionTarget(req.TargetUID)
+	s.unlock()
+	holding = false
+	return out, nil
+}
+
+// ProcessExpiryTick runs one injected-clock-second expiry pass (DD-06). It
+// updates only fact freshness/marker inputs when facts expire, leaves last
+// qualification and ETag unchanged, and retries expiry audit once per tick
+// until append succeeds. Retired and Maintenance outrank expiry. No 500 is
+// returned to a caller.
+func (s *ExecutionTargetLifecycleService) ProcessExpiryTick(ctx context.Context, now time.Time) {
+	s.lock()
+	if s.stopped {
+		s.unlock()
+		return
+	}
+
+	type dueItem struct {
+		targetUID  string
+		factSetUID string
+		subject    apimeta.TypedRef
+		rv         string
+	}
+	var due []dueItem
+
+	for uid, et := range s.store.targets {
+		if et.Status.Lifecycle != model.LifecycleActive {
+			continue // Retired outranks expiry
+		}
+		if marker, ok := s.store.lookupMaintenanceMarker(uid); ok && marker.Active {
+			continue // Maintenance outranks expiry
+		}
+		if et.Status.FactSetRef == nil {
+			continue
+		}
+		fsUID := et.Status.FactSetRef.UID
+		fs, ok := s.store.lookupFactSet(fsUID)
+		if !ok {
+			continue
+		}
+		exp, err := time.Parse(time.RFC3339, fs.ExpiresAt)
+		if err != nil || exp.After(now) {
+			continue
+		}
+		st := s.factExpiry[fsUID]
+		if st == nil {
+			st = &factExpiryState{}
+			s.factExpiry[fsUID] = st
+		}
+		// Update freshness input: facts are no longer fresh.
+		st.expired = true
+		if st.audited {
+			continue
+		}
+		due = append(due, dueItem{
+			targetUID:  uid,
+			factSetUID: fsUID,
+			subject:    subjectRef(et),
+			rv:         et.Metadata.ResourceVersion,
+		})
+	}
+	s.unlock()
+
+	for _, item := range due {
+		if err := ctx.Err(); err != nil {
+			return
+		}
+		s.attemptExpiryAudit(ctx, item.targetUID, item.factSetUID, item.subject, item.rv, now)
+	}
+}
+
+// attemptExpiryAudit performs exactly one expiry AuditEvent append attempt for
+// a FactSet. On success it records audited; on failure the next tick retries.
+func (s *ExecutionTargetLifecycleService) attemptExpiryAudit(
+	ctx context.Context,
+	targetUID, factSetUID string,
+	subject apimeta.TypedRef,
+	rv string,
+	now time.Time,
+) {
+	s.lock()
+	if s.stopped {
+		s.unlock()
+		return
+	}
+	et, ok := s.store.lookupExecutionTarget(targetUID)
+	if !ok || et.Status.Lifecycle != model.LifecycleActive {
+		s.unlock()
+		return
+	}
+	if marker, has := s.store.lookupMaintenanceMarker(targetUID); has && marker.Active {
+		s.unlock()
+		return
+	}
+	if et.Status.FactSetRef == nil || et.Status.FactSetRef.UID != factSetUID {
+		s.unlock()
+		return
+	}
+	st := s.factExpiry[factSetUID]
+	if st == nil {
+		st = &factExpiryState{expired: true}
+		s.factExpiry[factSetUID] = st
+	}
+	if st.audited {
+		s.unlock()
+		return
+	}
+	event := AssembleExpiry(RedactedAuditInput{
+		UID:                    "expiry-" + factSetUID,
+		RequestID:              "expiry-" + factSetUID + "-" + now.UTC().Format(time.RFC3339),
+		Actor:                  ExpirySystemActor(),
+		Subject:                subject,
+		SubjectResourceVersion: rv,
+	})
+	audit := s.audit
+	s.unlock()
+
+	if audit == nil {
+		return
+	}
+	if err := audit.Append(ctx, event); err != nil {
+		return // retry next injected-clock second
+	}
+
+	s.lock()
+	if st := s.factExpiry[factSetUID]; st != nil {
+		st.audited = true
+		st.expired = true
+	}
+	s.unlock()
+}
+
+// FactSetExpired reports whether the injected-clock worker has marked the
+// FactSet UID as expired (freshness input). Used by tests and TASK-F16-07
+// snapshot inputs; it does not compute effectiveAvailability.
+func (s *ExecutionTargetLifecycleService) FactSetExpired(factSetUID string) bool {
+	s.lock()
+	defer s.unlock()
+	st := s.factExpiry[factSetUID]
+	return st != nil && st.expired
+}
+
+// FactSetExpiryAudited reports whether the expiry AuditEvent for factSetUID
+// has successfully appended.
+func (s *ExecutionTargetLifecycleService) FactSetExpiryAudited(factSetUID string) bool {
+	s.lock()
+	defer s.unlock()
+	st := s.factExpiry[factSetUID]
+	return st != nil && st.audited
+}
+
+func maintenanceFenceMatches(cur model.ExecutionTarget, req MaintenanceCommitRequest) bool {
+	return cur.Status.MaintenanceEpoch == req.ExpectedMaintenanceEpoch &&
+		cur.Status.ObservedGeneration == req.ExpectedInfrastructureStackGen
 }
 
 // Observer returns the synthetic observer bound to this lifecycle service.
