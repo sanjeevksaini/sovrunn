@@ -5,7 +5,7 @@
 | Status | Approved boundary (closed under ADH-2026-058) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction), ADH-2026-063 (create phase-one/strict-classification precedence correction) |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction), ADH-2026-063 (create phase-one/strict-classification precedence correction), ADH-2026-064 (VS-000 ExecutionTarget ownership correction), ADH-2026-065 (create phase-one reference extraction and exact classification cases) |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0015 (CloudProviderParticipation, InfrastructureStack — read-only prior-feature authority) |
 
@@ -372,14 +372,55 @@ The four ordered outcomes are:
 |---|---|---|
 | VS0-CF-F16-123 | Authenticated, safe-accessible backing, caller lacks `executiontarget.write`, body is malformed JSON or has a duplicate top-level member | Existing audited `AUTHORIZATION_DENIED`/403 as VS0-CF-F16-08; no body classification, mutation, idempotency digest, reservation, or completion |
 | VS0-CF-F16-124 | Authenticated caller, inaccessible backing, body is malformed JSON or has a duplicate top-level member | Existing audited safe `RESOURCE_NOT_FOUND`/404 + `VS0_AUTHORIZATION_SAFE_DENIAL` as VS0-CF-F16-09; no body classification, mutation, idempotency digest, reservation, or completion |
-| VS0-CF-F16-125 | Authenticated, authorized, safe-accessible backing, retained body is malformed JSON or has a duplicate top-level member | Strict single classification returns the existing `MALFORMED_REQUEST`/400 (as VS0-CF-F16-51) or `DUPLICATE_FIELD`/400 (as VS0-CF-F16-52) as applicable; no mutation, audit, idempotency digest, reservation, or completion |
+| VS0-CF-F16-125 | Authenticated, authorized, safe-accessible backing, retained body is malformed JSON only | Strict single classification returns the existing `MALFORMED_REQUEST`/400 (as VS0-CF-F16-51); no mutation, audit, idempotency digest, reservation, or completion (exact non-family case per ADH-2026-065, distinct from VS0-CF-F16-127) |
 | VS0-CF-F16-126 | Oversized collection-create body | Existing `REQUEST_TOO_LARGE`/400 (as VS0-CF-F16-53) before phase-one extraction, authorization, or safe access; no mutation, audit, idempotency digest, reservation, or completion |
 
-`VS0-CF-F16-123`, `124`, and `125` use named finite equivalence families
-(malformed JSON or duplicate top-level member) per F16-AD-21/25/26.2; each named
-member has the identical declared observable outcome. Existing rows
-`VS0-CF-F16-08`, `09`, `51`, `52`, and `53` are the precedence anchors for these
-new rows and keep their exact case names and observable meanings unchanged.
+`VS0-CF-F16-123` and `124` use named finite equivalence families (malformed JSON
+or duplicate top-level member) per F16-AD-21/25/26.2; each named member has the
+identical declared observable outcome. `VS0-CF-F16-125` is refined by
+ADH-2026-065 into an exact non-family malformed-JSON-only classification case
+(see §4.14). Existing rows `VS0-CF-F16-08`, `09`, `51`, `52`, and `53` are the
+precedence anchors for these rows and keep their exact case names and observable
+meanings unchanged.
+
+### 4.14 Exact create classification and phase-one reference cases (ADH-2026-065)
+
+ADH-2026-065 is a controlling correction that makes the create classification
+and phase-one reference conformance cases exact **without altering the
+ADH-2026-063 precedence**. It introduces no new route, field, resource, state
+machine, writer, dependency, top-level Problem code, or external effect. It
+refines `VS0-CF-F16-125` and adds the two new sequential local conformance rows
+`VS0-CF-F16-127` and `VS0-CF-F16-128`.
+
+1. Split the divergent strict-classification family. Because malformed JSON and
+   a duplicate top-level member map to different registered Problem codes, they
+   are not a single equivalence family. `VS0-CF-F16-125` is now the exact
+   non-family malformed-JSON classification case, and `VS0-CF-F16-127` is the
+   exact non-family duplicate-top-level-member classification case. They are
+   distinct exact cases, not a mixed equivalence family.
+2. Fail closed when phase-one references are not both extractable. After
+   successful authentication and the existing bounded body read, phase one
+   attempts to extract only `spec.cloudProviderParticipationRef.uid` and
+   `spec.infrastructureStackRef.uid`. If it cannot extract exactly one
+   syntactically usable UID at **both** paths, the create fails closed with the
+   existing audited `AUTHORIZATION_DENIED`/403 **before** derived-scope
+   authorization and safe backing access, disclosing no body-classification
+   detail and no backing-resource existence, and performing no strict
+   classification, canonicalization, digest, idempotency reservation, observer
+   invocation, mutation, publication, or completion. It adds no violation or
+   top-level Problem code.
+
+| Row | Condition | Outcome |
+|---|---|---|
+| VS0-CF-F16-125 | Authenticated, authorized, safe-accessible backing, retained body is malformed JSON only | Strict single classification of the retained same bytes returns the existing `MALFORMED_REQUEST`/400 (as VS0-CF-F16-51); no mutation, audit, idempotency digest, reservation, or completion. Exact non-family case, distinct from VS0-CF-F16-127 |
+| VS0-CF-F16-127 | Authenticated, authorized, safe-accessible backing, retained body has a duplicate top-level member only | Strict single classification of the retained same bytes returns the existing `DUPLICATE_FIELD`/400 (as VS0-CF-F16-52); no mutation, audit, idempotency digest, reservation, or completion. Exact non-family case, distinct from VS0-CF-F16-125 |
+| VS0-CF-F16-128 | Authenticated caller, existing bounded body read succeeds, but phase one cannot extract exactly one syntactically usable UID at both `spec.cloudProviderParticipationRef.uid` and `spec.infrastructureStackRef.uid` (missing/unextractable required phase-one reference) | Fail-closed existing audited `AUTHORIZATION_DENIED`/403 (as VS0-CF-F16-08) before derived-scope authorization and safe backing access; no body/backing disclosure; no strict classification, canonicalization, digest, idempotency reservation, observer invocation, mutation, publication, or completion; no violation or top-level Problem code |
+
+`VS0-CF-F16-123`, `VS0-CF-F16-124`, and `VS0-CF-F16-126` remain unchanged.
+`VS0-CF-F16-125`, `VS0-CF-F16-127`, and `VS0-CF-F16-128` map to `REQ-F16-05` and
+its affected acceptance proof. The controlling FEATURE-0016 semantic authorities
+are ADH-2026-058 together with ADH-2026-059/060/061/062/063/064/065; ADH-2026-058
+is not the sole current semantic authority.
 
 ---
 
@@ -392,11 +433,12 @@ state, or conformance case.
 
 ---
 
-## 6. Local Conformance (VS0-CF-F16-01..126)
+## 6. Local Conformance (VS0-CF-F16-01..128)
 
-FEATURE-0016 owns an exact, closed, feature-local conformance suite of 126
+FEATURE-0016 owns an exact, closed, feature-local conformance suite of 128
 cases (122 under ADH-2026-058; `VS0-CF-F16-123..126` added by ADH-2026-063 per
-§4.13) registered in `docs/architecture/vertical-slices/VS-000-contract-registry.yaml`
+§4.13; `VS0-CF-F16-125` refined and `VS0-CF-F16-127..128` added by ADH-2026-065
+per §4.14) registered in `docs/architecture/vertical-slices/VS-000-contract-registry.yaml`
 and cross-referenced in `docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md`.
 No shared or downstream case (`VS0-CF-F10`, `VS0-CF-X03`, `VS0-CF-HP01`) is
 counted as F0016-local proof; they remain cross-feature/shared references

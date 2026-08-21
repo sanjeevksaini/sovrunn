@@ -41,7 +41,7 @@ CHARTER = ROOT / "docs/architecture/vertical-slices/VS-000-core-skeleton.md"
 CONTROL = ROOT / ".automation/features/FEATURE-0016.control.json"
 ADH_058 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-058-feature-0016-adapter-and-executiontarget-executable-contract-closure.md"
 
-F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 127)]
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 129)]
 
 # Removed placeholder concepts that must never reappear as active FEATURE-0016 behavior.
 REMOVED_PLACEHOLDER_TERMS = [
@@ -282,11 +282,16 @@ def check_maintenance_entry_link_clearing(f16_arch: str, f16_feat: str) -> None:
 def check_adh_063_create_precedence(reg: dict, f16_arch: str, steer: str) -> None:
     """ADH-2026-063: the ExecutionTarget collection-create phase-one and
     strict-classification precedence correction adds the four new sequential
-    local conformance rows VS0-CF-F16-123..126. Fail closed if any of the four
-    rows is missing or deviates, if the authoritative text permits strict
-    classification before authorization/safe access, if phase one permits body
-    classification/digest/reservation, or if the oversized body is not rejected
-    first."""
+    local conformance rows VS0-CF-F16-123..126. ADH-2026-065 then makes the
+    classification and phase-one reference cases exact: it refines
+    VS0-CF-F16-125 to malformed-JSON only, adds VS0-CF-F16-127 (duplicate
+    top-level member only) and VS0-CF-F16-128 (fail-closed missing/unextractable
+    required phase-one reference denial). Fail closed if any row is missing or
+    deviates, if the authoritative text permits strict classification before
+    authorization/safe access, if phase one permits body
+    classification/digest/reservation, if the oversized body is not rejected
+    first, if F16-125 names a duplicate case, if F16-127 names a malformed case,
+    or if F16-128 does not pin the exact fail-closed extraction denial."""
     by_id = {c.get("id"): c for c in reg.get("conformance", [])}
     f123 = by_id.get("VS0-CF-F16-123")
     f124 = by_id.get("VS0-CF-F16-124")
@@ -300,16 +305,46 @@ def check_adh_063_create_precedence(reg: dict, f16_arch: str, steer: str) -> Non
         e("ADH063: VS0-CF-F16-124 must exist and be safe RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
     elif "never classifies, canonicalizes, digests, or reserves" not in str(f124.get("expectedSideEffects", "")).lower():
         e("ADH063: VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
-    if not f125 or f125.get("expectedError") != "MALFORMED_REQUEST":
-        e("ADH063: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (with DUPLICATE_FIELD as the applicable family member) (ADH-2026-063)")
-    else:
-        f125_fx = str(f125.get("expectedSideEffects", "")).lower()
-        if "strict single classification" not in f125_fx or "duplicate_field" not in f125_fx:
-            e("ADH063: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST or DUPLICATE_FIELD (ADH-2026-063)")
     if not f126 or f126.get("expectedError") != "REQUEST_TOO_LARGE":
         e("ADH063: VS0-CF-F16-126 must exist and be REQUEST_TOO_LARGE (ADH-2026-063)")
     elif "before phase-one extraction, authorization, or safe access" not in str(f126.get("expectedSideEffects", "")).lower():
         e("ADH063: VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+
+    # ADH-2026-065: split the strict-classification family into exact non-family
+    # cases and add the fail-closed missing/unextractable phase-one reference
+    # denial. F16-125 is malformed-JSON only; F16-127 is duplicate-top-level
+    # member only; F16-128 is the phase-one extraction denial.
+    f127 = by_id.get("VS0-CF-F16-127")
+    f128 = by_id.get("VS0-CF-F16-128")
+    if not f125 or f125.get("expectedError") != "MALFORMED_REQUEST":
+        e("ADH065: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (exact non-family malformed-JSON case) (ADH-2026-065)")
+    else:
+        f125_fx = str(f125.get("expectedSideEffects", "")).lower()
+        if "duplicate" in f125_fx:
+            e("ADH065: VS0-CF-F16-125 must not name a duplicate case; it is the exact malformed-JSON classification case (ADH-2026-065)")
+        elif "malformed" not in f125_fx or "malformed_request" not in f125_fx or "strict single classification" not in f125_fx:
+            e("ADH065: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST for malformed JSON (ADH-2026-065)")
+    if not f127 or f127.get("expectedError") != "DUPLICATE_FIELD":
+        e("ADH065: VS0-CF-F16-127 must exist and be DUPLICATE_FIELD (exact non-family duplicate-top-level-member case) (ADH-2026-065)")
+    else:
+        f127_fx = str(f127.get("expectedSideEffects", "")).lower()
+        if "malformed" in f127_fx:
+            e("ADH065: VS0-CF-F16-127 must not name a malformed case; it is the exact duplicate-top-level-member classification case (ADH-2026-065)")
+        elif "duplicate" not in f127_fx or "duplicate_field" not in f127_fx or "strict single classification" not in f127_fx:
+            e("ADH065: VS0-CF-F16-127 must state a single strict classification returning DUPLICATE_FIELD for a duplicate top-level member (ADH-2026-065)")
+    if not f128 or f128.get("expectedError") != "AUTHORIZATION_DENIED":
+        e("ADH065: VS0-CF-F16-128 must exist and be the existing audited AUTHORIZATION_DENIED phase-one extraction denial (ADH-2026-065)")
+    else:
+        f128_fx = (str(f128.get("inputs", "")) + " " + str(f128.get("expectedSideEffects", ""))).lower()
+        if not ("exactly one syntactically usable uid" in f128_fx and "both" in f128_fx
+                and "spec.cloudproviderparticipationref.uid" in f128_fx and "spec.infrastructurestackref.uid" in f128_fx):
+            e("ADH065: VS0-CF-F16-128 must state phase one cannot extract exactly one syntactically usable UID at both required reference paths (ADH-2026-065)")
+        elif not ("audited" in f128_fx and "403" in f128_fx
+                  and "no body-classification detail" in f128_fx and "no backing-resource existence" in f128_fx):
+            e("ADH065: VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
+        elif not all(tok in f128_fx for tok in ("strict classification", "canonicalization", "digest",
+                     "reservation", "observer", "mutation", "publication", "completion")):
+            e("ADH065: VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
     if f16_arch:
         lower = f16_arch.lower()
         if "adh-2026-063" not in lower:
@@ -320,8 +355,12 @@ def check_adh_063_create_precedence(reg: dict, f16_arch: str, steer: str) -> Non
             e("ADH063: F0016 architecture must state phase one never classifies/canonicalizes/digests/reserves a body (ADH-2026-063)")
         if "only then are the retained same bytes strictly classified" not in lower:
             e("ADH063: F0016 architecture must state authorization and safe access precede the single strict classification (ADH-2026-063)")
+        if "adh-2026-065" not in lower:
+            e("ADH065: F0016 architecture must reference ADH-2026-065 as a controlling correction")
     if steer and "adh-2026-063" not in steer.lower():
         e("ADH063: .kiro/steering/slice0-contract.md must record the ADH-2026-063 safe precedence invariant")
+    if steer and "adh-2026-065" not in steer.lower():
+        e("ADH065: .kiro/steering/slice0-contract.md must record the ADH-2026-065 exact classification/phase-one-reference invariant")
 
 
 def check_conformance_completeness(reg: dict) -> None:
@@ -400,6 +439,9 @@ def check_control_manifest_exists() -> None:
     handoffs = data.get("feature", {}).get("handoffs", [])
     if not any("ADH-2026-063" in str(h) for h in handoffs):
         e("CONTROL: feature.handoffs must include the ADH-2026-063 handoff path (ADH-2026-063)")
+    # ADH-2026-065: the control manifest must record the ADH-2026-065 handoff.
+    if not any("ADH-2026-065" in str(h) for h in handoffs):
+        e("CONTROL: feature.handoffs must include the ADH-2026-065 handoff path (ADH-2026-065)")
 
 
 def check_reuse_assessment_exists() -> None:
@@ -468,8 +510,9 @@ def main() -> None:
         sys.exit(1)
     print(
         "PASS: FEATURE-0016 architecture readiness — ADH-2026-058 placeholder replacement, "
-        "five-route surface, sole writer/observer, closed violation set, 126-case conformance "
-        "(incl. ADH-2026-063 create phase-one/strict-classification precedence rows VS0-CF-F16-123..126), "
+        "five-route surface, sole writer/observer, closed violation set, 128-case conformance "
+        "(incl. ADH-2026-063 create phase-one/strict-classification precedence rows VS0-CF-F16-123..126 "
+        "and ADH-2026-065 exact classification/phase-one-reference rows VS0-CF-F16-125/127/128), "
         "traceability, closure matrix, control manifest, reuse assessment, and steering are consistent"
     )
 

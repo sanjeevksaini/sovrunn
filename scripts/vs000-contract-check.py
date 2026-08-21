@@ -34,7 +34,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
 F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
-F16_CF_IDS = [f"F16-{i:02d}" for i in range(1,127)]
+F16_CF_IDS = [f"F16-{i:02d}" for i in range(1,129)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -424,14 +424,35 @@ def run():
     if not f16_124: e("VS0-CF-F16-124 not found in registry (ADH-2026-063)")
     elif f16_124.get("expectedError")!="RESOURCE_NOT_FOUND" or f16_124.get("expectedViolation")!="VS0_AUTHORIZATION_SAFE_DENIAL": e("VS0-CF-F16-124 must be safe 404 RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
     elif "never classifies, canonicalizes, digests, or reserves" not in str(f16_124.get("expectedSideEffects","")).lower(): e("VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
-    if not f16_125: e("VS0-CF-F16-125 not found in registry (ADH-2026-063)")
-    elif f16_125.get("expectedError")!="MALFORMED_REQUEST": e("VS0-CF-F16-125 must be MALFORMED_REQUEST (with DUPLICATE_FIELD as the applicable family member) (ADH-2026-063)")
-    else:
-        f125=str(f16_125.get("expectedSideEffects","")).lower()
-        if "strict single classification" not in f125 or "duplicate_field" not in f125: e("VS0-CF-F16-125 must state strict single classification returning MALFORMED_REQUEST or DUPLICATE_FIELD (ADH-2026-063)")
     if not f16_126: e("VS0-CF-F16-126 not found in registry (ADH-2026-063)")
     elif f16_126.get("expectedError")!="REQUEST_TOO_LARGE": e("VS0-CF-F16-126 must be REQUEST_TOO_LARGE (ADH-2026-063)")
     elif "before phase-one extraction, authorization, or safe access" not in str(f16_126.get("expectedSideEffects","")).lower(): e("VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    # ADH-2026-065: F16-125 is malformed-JSON only; F16-127 is duplicate
+    # top-level member only; F16-128 is the fail-closed missing/unextractable
+    # phase-one reference denial. Each is an exact non-family case.
+    f16_127=f16_by_id.get("VS0-CF-F16-127"); f16_128=f16_by_id.get("VS0-CF-F16-128")
+    if not f16_125: e("VS0-CF-F16-125 not found in registry (ADH-2026-065)")
+    elif f16_125.get("expectedError")!="MALFORMED_REQUEST": e("VS0-CF-F16-125 must be MALFORMED_REQUEST (exact non-family malformed-JSON case) (ADH-2026-065)")
+    else:
+        f125=str(f16_125.get("expectedSideEffects","")).lower()
+        if "duplicate" in f125: e("VS0-CF-F16-125 must not name a duplicate case; it is the exact malformed-JSON classification case (ADH-2026-065)")
+        elif "malformed" not in f125 or "malformed_request" not in f125 or "strict single classification" not in f125: e("VS0-CF-F16-125 must state strict single classification returning MALFORMED_REQUEST for malformed JSON (ADH-2026-065)")
+    if not f16_127: e("VS0-CF-F16-127 not found in registry (ADH-2026-065)")
+    elif f16_127.get("expectedError")!="DUPLICATE_FIELD": e("VS0-CF-F16-127 must be DUPLICATE_FIELD (exact non-family duplicate-top-level-member case) (ADH-2026-065)")
+    else:
+        f127=str(f16_127.get("expectedSideEffects","")).lower()
+        if "malformed" in f127: e("VS0-CF-F16-127 must not name a malformed case; it is the exact duplicate-top-level-member classification case (ADH-2026-065)")
+        elif "duplicate" not in f127 or "duplicate_field" not in f127 or "strict single classification" not in f127: e("VS0-CF-F16-127 must state strict single classification returning DUPLICATE_FIELD for a duplicate top-level member (ADH-2026-065)")
+    if not f16_128: e("VS0-CF-F16-128 not found in registry (ADH-2026-065)")
+    elif f16_128.get("expectedError")!="AUTHORIZATION_DENIED": e("VS0-CF-F16-128 must be the existing audited AUTHORIZATION_DENIED phase-one extraction denial (ADH-2026-065)")
+    else:
+        f128=(str(f16_128.get("inputs",""))+" "+str(f16_128.get("expectedSideEffects",""))).lower()
+        if not("exactly one syntactically usable uid" in f128 and "both" in f128 and "spec.cloudproviderparticipationref.uid" in f128 and "spec.infrastructurestackref.uid" in f128):
+            e("VS0-CF-F16-128 must state phase one cannot extract exactly one syntactically usable UID at both required reference paths (ADH-2026-065)")
+        elif not("audited" in f128 and "403" in f128 and "no body-classification detail" in f128 and "no backing-resource existence" in f128):
+            e("VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
+        elif not all(tok in f128 for tok in ("strict classification","canonicalization","digest","reservation","observer","mutation","publication","completion")):
+            e("VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")

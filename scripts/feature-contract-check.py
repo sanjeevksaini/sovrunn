@@ -43,7 +43,7 @@ F15_ACTIONS = (
 F15_LOGICAL_PATHS = 22
 F15_METHOD_PATTERNS = 35
 
-F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 127)]
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 129)]
 F16_ROUTES = (
     ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
     ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
@@ -341,12 +341,6 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
     if f16_124 is not None:
         require(errors, "never classifies, canonicalizes, digests, or reserves" in str(f16_124.get("expectedSideEffects", "")).lower(),
                 "ADH063: VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
-    require(errors, f16_125 is not None and f16_125.get("expectedError") == "MALFORMED_REQUEST",
-            "ADH063: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (with DUPLICATE_FIELD as the applicable family member) (ADH-2026-063)")
-    if f16_125 is not None:
-        f125_effects = str(f16_125.get("expectedSideEffects", "")).lower()
-        require(errors, "strict single classification" in f125_effects and "duplicate_field" in f125_effects,
-                "ADH063: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST or DUPLICATE_FIELD (ADH-2026-063)")
     require(errors, f16_126 is not None and f16_126.get("expectedError") == "REQUEST_TOO_LARGE",
             "ADH063: VS0-CF-F16-126 must exist and be REQUEST_TOO_LARGE (ADH-2026-063)")
     if f16_126 is not None:
@@ -354,6 +348,45 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
                 "ADH063: VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
     require(errors, "adh-2026-063" in arch_lower,
             "ADH063: F0016 architecture must reference ADH-2026-063 as a controlling correction")
+
+    # ADH-2026-065: split the divergent strict-classification family into exact
+    # non-family cases and add the fail-closed missing/unextractable phase-one
+    # reference denial. F16-125 is malformed-JSON only; F16-127 is duplicate
+    # top-level member only; F16-128 is the phase-one extraction denial.
+    f16_127 = cases.get("VS0-CF-F16-127")
+    f16_128 = cases.get("VS0-CF-F16-128")
+    require(errors, f16_125 is not None and f16_125.get("expectedError") == "MALFORMED_REQUEST",
+            "ADH065: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (exact non-family malformed-JSON case) (ADH-2026-065)")
+    if f16_125 is not None:
+        f125_effects = str(f16_125.get("expectedSideEffects", "")).lower()
+        require(errors, "duplicate" not in f125_effects,
+                "ADH065: VS0-CF-F16-125 must not name a duplicate case; it is the exact malformed-JSON classification case (ADH-2026-065)")
+        require(errors, "malformed" in f125_effects and "malformed_request" in f125_effects and "strict single classification" in f125_effects,
+                "ADH065: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST for malformed JSON (ADH-2026-065)")
+    require(errors, f16_127 is not None and f16_127.get("expectedError") == "DUPLICATE_FIELD",
+            "ADH065: VS0-CF-F16-127 must exist and be DUPLICATE_FIELD (exact non-family duplicate-top-level-member case) (ADH-2026-065)")
+    if f16_127 is not None:
+        f127_effects = str(f16_127.get("expectedSideEffects", "")).lower()
+        require(errors, "malformed" not in f127_effects,
+                "ADH065: VS0-CF-F16-127 must not name a malformed case; it is the exact duplicate-top-level-member classification case (ADH-2026-065)")
+        require(errors, "duplicate" in f127_effects and "duplicate_field" in f127_effects and "strict single classification" in f127_effects,
+                "ADH065: VS0-CF-F16-127 must state a single strict classification returning DUPLICATE_FIELD for a duplicate top-level member (ADH-2026-065)")
+    require(errors, f16_128 is not None and f16_128.get("expectedError") == "AUTHORIZATION_DENIED",
+            "ADH065: VS0-CF-F16-128 must exist and be the existing audited AUTHORIZATION_DENIED phase-one extraction denial (ADH-2026-065)")
+    if f16_128 is not None:
+        f128_text = (str(f16_128.get("inputs", "")) + " " + str(f16_128.get("expectedSideEffects", ""))).lower()
+        require(errors, "exactly one syntactically usable uid" in f128_text and "both" in f128_text
+                and "spec.cloudproviderparticipationref.uid" in f128_text and "spec.infrastructurestackref.uid" in f128_text,
+                "ADH065: VS0-CF-F16-128 must state phase one cannot extract exactly one syntactically usable UID at both required reference paths (ADH-2026-065)")
+        require(errors, "audited" in f128_text and "403" in f128_text
+                and "no body-classification detail" in f128_text and "no backing-resource existence" in f128_text,
+                "ADH065: VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
+        require(errors, all(tok in f128_text for tok in (
+                "strict classification", "canonicalization", "digest", "reservation",
+                "observer", "mutation", "publication", "completion")),
+                "ADH065: VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
+    require(errors, "adh-2026-065" in arch_lower,
+            "ADH065: F0016 architecture must reference ADH-2026-065 as a controlling correction")
     require(errors, "before phase-one extraction, authorization, or safe access" in arch_lower,
             "ADH063: F0016 architecture must state the oversized body is rejected before phase-one extraction, authorization, or safe access (ADH-2026-063)")
     require(errors, "never classifies, canonicalizes, digests, or reserves a body" in arch_lower,
@@ -384,7 +417,7 @@ def main() -> None:
     if args.feature == "FEATURE-0015":
         print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
     else:
-        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..126), and ADH-2026-063 create phase-one/strict-classification precedence evidence")
+        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..128), ADH-2026-063 create phase-one/strict-classification precedence, and ADH-2026-065 exact classification/phase-one-reference evidence")
 
 
 if __name__ == "__main__":

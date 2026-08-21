@@ -21,7 +21,7 @@ kiro_slug: adapter-boundary-and-executiontarget-qualification
 | Depended On By | FEATURE-0017, FEATURE-0019, FEATURE-0022, FEATURE-0023, FEATURE-0024 (future consumers; no activation or modification) |
 | Architecture Boundary | docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058 |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065 |
 
 ---
 
@@ -234,10 +234,20 @@ approved FEATURE-0016 boundary.
 ## 4. Traceability
 
 Every REQ/AC above maps to `docs/architecture/vertical-slices/VS-000-contract-registry.yaml`
-(`VS0-SCHEMA-015..017`, `VS0-STATE-004`, `VS0-CF-F16-01..122`) and
-`docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md`. No downstream ID
-(`VS0-CF-HP01`, `VS0-CF-F09`) is counted as F0016-local proof; `VS0-CF-F10`
-and `VS0-CF-X03` remain cross-feature/shared references only.
+(`VS0-SCHEMA-015..017`, `VS0-STATE-004`, `VS0-CF-F16-01..128`) and
+`docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md`. The F0016 local
+conformance range is `VS0-CF-F16-01..128`: `VS0-CF-F16-123..126` were added by
+ADH-2026-063 (create phase-one/strict-classification precedence), and
+ADH-2026-065 refined `VS0-CF-F16-125` into the exact non-family malformed-JSON
+classification case and added `VS0-CF-F16-127` (exact non-family
+duplicate-top-level-member classification) and `VS0-CF-F16-128` (fail-closed
+missing/unextractable required phase-one reference denial). `VS0-CF-F16-125`,
+`VS0-CF-F16-127`, and `VS0-CF-F16-128` map to `REQ-F16-05`. The current
+FEATURE-0016 semantic authorities are ADH-2026-058 together with
+ADH-2026-059/060/061/062/063/064/065; ADH-2026-058 is not the sole current
+semantic authority. No downstream ID (`VS0-CF-HP01`, `VS0-CF-F09`) is counted as
+F0016-local proof; `VS0-CF-F10` and `VS0-CF-X03` remain cross-feature/shared
+references only.
 
 ---
 

@@ -15,8 +15,9 @@
       "docs/reviews/architecture-decision-handoffs/ADH-2026-060-feature-0016-maintenance-race-outcome-clarification.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-061-feature-0016-maintenance-entry-link-clearing-correction.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-062-feature-0016-task-scope-inventory-path-classification-correction.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-063-feature-0016-create-phase-one-strict-classification-precedence-correction.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-064-feature-0016-vs000-executiontarget-ownership-correction.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-063-feature-0016-create-phase-one-security-precedence-correction.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-064-feature-0016-vs000-executiontarget-ownership-correction.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-065-feature-0016-create-phase-one-reference-extraction-and-exact-classification-cases.md"
     ],
     "spec_path": ".kiro/specs/adapter-boundary-and-executiontarget-qualification"
   },

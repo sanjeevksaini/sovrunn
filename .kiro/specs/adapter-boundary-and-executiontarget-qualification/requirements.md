@@ -44,8 +44,8 @@ the exact conformance semantics ledger covering the FEATURE-0016 local conforman
 | Owned state machine | `VS0-STATE-004` |
 | Owned writer | `VS0-WRITER-006` (`ExecutionTargetLifecycleService`) |
 | Controlling decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-063 |
-| Local conformance | VS0-CF-F16-01..99, VS0-CF-F16-100..126 |
+| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065 |
+| Local conformance | VS0-CF-F16-01..99, VS0-CF-F16-100..128 |
 
 This document translates the approved FEATURE-0016 feature authority
 (`docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md`),
@@ -505,8 +505,10 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 | VS0-CF-F16-122 | FEATURE-0016 | Current-fence observer fault after qualification starts from Active/Qualified | unchanged | INTERNAL_ERROR | — | 500 INTERNAL_ERROR; abort reservation with unchanged committed target, ETag, and FactSet/Result links; publish no AuditEvent or idempotency completion. | feature |
 | VS0-CF-F16-123 | FEATURE-0016 | Authenticated caller with a safe-accessible backing but lacking executiontarget.write, submitting a collection-create body in the malformed-JSON-or-duplicate-top-level-member equivalence family | unchanged | AUTHORIZATION_DENIED | — | 403 AUTHORIZATION_DENIED audited denial exactly as VS0-CF-F16-08; phase one extracts only spec.cloudProviderParticipationRef.uid and spec.infrastructureStackRef.uid and never classifies, canonicalizes, digests, or reserves the body; no body-classification Problem, mutation, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
 | VS0-CF-F16-124 | FEATURE-0016 | Authenticated caller with an inaccessible backing reference, submitting a collection-create body in the malformed-JSON-or-duplicate-top-level-member equivalence family | Safe 404 RESOURCE_NOT_FOUND | RESOURCE_NOT_FOUND | VS0_AUTHORIZATION_SAFE_DENIAL | Safe 404 RESOURCE_NOT_FOUND plus VS0_AUTHORIZATION_SAFE_DENIAL audited denial exactly as VS0-CF-F16-09; phase one extracts only the two allowed UID references and never classifies, canonicalizes, digests, or reserves the body; no body-classification Problem, mutation, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
-| VS0-CF-F16-125 | FEATURE-0016 | Authenticated authorized caller with a safe-accessible backing whose retained collection-create body is in the malformed-JSON-or-duplicate-top-level-member equivalence family | unchanged | MALFORMED_REQUEST | — | Strict single classification of the retained same bytes returns the applicable existing outcome — 400 MALFORMED_REQUEST for malformed JSON (as VS0-CF-F16-51) or 400 DUPLICATE_FIELD for a duplicate top-level member (as VS0-CF-F16-52); no mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
+| VS0-CF-F16-125 | FEATURE-0016 | Authenticated authorized caller with a safe-accessible backing whose retained collection-create body contains malformed JSON | unchanged | MALFORMED_REQUEST | — | Strict single classification of the retained same bytes returns the existing 400 MALFORMED_REQUEST outcome for malformed JSON (as VS0-CF-F16-51); no mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-065). Exact non-family malformed-JSON classification case, distinct from VS0-CF-F16-127. | feature |
 | VS0-CF-F16-126 | FEATURE-0016 | Oversized collection-create body exceeding the existing bounded single-body-read limit | unchanged | REQUEST_TOO_LARGE | — | 400 REQUEST_TOO_LARGE from the bounded single body read before phase-one extraction, authorization, or safe access (as VS0-CF-F16-53); no phase-one extraction, mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
+| VS0-CF-F16-127 | FEATURE-0016 | Authenticated authorized caller with a safe-accessible backing whose retained collection-create body contains a duplicate top-level member | unchanged | DUPLICATE_FIELD | — | Strict single classification of the retained same bytes returns the existing 400 DUPLICATE_FIELD outcome for a duplicate top-level member (as VS0-CF-F16-52); no mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-065). Exact non-family duplicate-top-level-member classification case, distinct from VS0-CF-F16-125. | feature |
+| VS0-CF-F16-128 | FEATURE-0016 | Authenticated caller whose existing bounded body read succeeds but phase one cannot extract exactly one syntactically usable UID at both spec.cloudProviderParticipationRef.uid and spec.infrastructureStackRef.uid (missing or unextractable required phase-one reference) | unchanged | AUTHORIZATION_DENIED | — | Fail-closed existing audited 403 AUTHORIZATION_DENIED before derived-scope authorization and safe backing access, disclosing no body-classification detail and no backing-resource existence; no strict classification, canonicalization, digest, idempotency reservation, observer invocation, mutation, publication, or completion (ADH-2026-065). No violation or top-level Problem code beyond the existing authorization denial. | feature |
 
 ## 5. Security, privacy, compatibility, and operational requirements
 
@@ -600,6 +602,8 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 |-----------|--------------------|-------------|
 | Malformed JSON, duplicate top-level member, oversized body | 400 MALFORMED_REQUEST / DUPLICATE_FIELD / REQUEST_TOO_LARGE; no publication | VS0-CF-F16-51,52,53 |
 | Create malformed/duplicate/oversized body under the ADH-2026-063 precedence: oversized rejected first before phase one; unauthorized 403; inaccessible-backing safe 404; authorized strict classification 400 | REQUEST_TOO_LARGE before phase one; AUTHORIZATION_DENIED; RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL; MALFORMED_REQUEST / DUPLICATE_FIELD; no body classification/mutation/idempotency effect beyond the applicable existing outcome | VS0-CF-F16-126,123,124,125 |
+| Authorized create strict classification made exact (ADH-2026-065): malformed JSON only versus duplicate top-level member only are distinct non-family classification cases | MALFORMED_REQUEST for malformed JSON only; DUPLICATE_FIELD for a duplicate top-level member only; single strict classification of the retained same bytes; no mutation/AuditEvent/idempotency effect | VS0-CF-F16-125,127 |
+| Create where phase one cannot extract exactly one syntactically usable UID at both spec.cloudProviderParticipationRef.uid and spec.infrastructureStackRef.uid (missing/unextractable required phase-one reference) | Fail-closed existing audited AUTHORIZATION_DENIED/403 before derived-scope authorization and safe backing access; no body/backing disclosure; no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065) | VS0-CF-F16-128 |
 | Missing required create field, invalid typed reference shape, non-`synthetic-iaas` targetClass | 422 VALIDATION_FAILED; no publication | VS0-CF-F16-54,55,56 |
 | Empty, malformed, or overlong Idempotency-Key | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-58,59,60 |
 | Collection create with an If-Match header | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-105 |
@@ -682,9 +686,12 @@ target projection are out of scope.
 | DEC-0042 | Canonical cloud model; superseded `ResourcePool`/`ProviderCapability`/generic Provider |
 | DEC-0057 | ExecutionTarget qualification/availability semantics |
 | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045 | Prior controlling handoffs and delegation of the ExecutionTarget contract to FEATURE-0016 |
-| ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004 (the sole current semantic authority) |
+| ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004. It is a foundational authority but not the sole current semantic authority; ADH-2026-059/060/061/062/063/064/065 are also controlling for FEATURE-0016 |
 | ADH-2026-060 | Maintenance-race outcome correction; makes `VS0-CF-F16-75` (inactive-marker epoch-stale) and `VS0-CF-F16-89` (active-marker Maintenance-wins) mutually exclusive |
+| ADH-2026-061 | Maintenance-entry link-clearing correction; every successful Maintenance entry unconditionally clears both current FactSet/Result links and persists `Active/Unqualified`; an in-flight qualification abort is narrowed to that qualification and its linked idempotency reservation only. `VS0-CF-F16-42`, `VS0-CF-F16-43`, and `VS0-CF-F16-89` retain their exact observable semantics |
 | ADH-2026-063 | Collection-create phase-one/strict-classification precedence correction; the bounded body read returns `REQUEST_TOO_LARGE`/400 first for an oversized body, phase one extracts only the two allowed UID references without classifying/canonicalizing/digesting/reserving a body, authorization and safe access precede one strict classification of the retained same bytes, and action `If-Match` header-form precedence is preserved; adds `VS0-CF-F16-123..126` with `VS0-CF-F16-08/09/51/52/53` as precedence anchors |
+| ADH-2026-064 | VS-000 ExecutionTarget ownership correction; keeps FEATURE-0016 the sole owner/activator of the ExecutionTarget contract without transferring activation to any dependent feature |
+| ADH-2026-065 | Create phase-one reference extraction and exact classification cases; `VS0-CF-F16-125` becomes the exact non-family malformed-JSON classification case (`MALFORMED_REQUEST`/400), `VS0-CF-F16-127` is added as the exact non-family duplicate-top-level-member classification case (`DUPLICATE_FIELD`/400), and `VS0-CF-F16-128` is added as the fail-closed missing/unextractable required phase-one reference denial (existing audited `AUTHORIZATION_DENIED`/403). `VS0-CF-F16-125`, `VS0-CF-F16-127`, and `VS0-CF-F16-128` map to `REQ-F16-05` and its affected acceptance proof; `VS0-CF-F16-123`, `124`, and `126` remain unchanged |
 
 ### 8.2 Registry IDs consumed
 
@@ -694,7 +701,7 @@ target projection are out of scope.
   conflict `STALE_RESOURCE_VERSION`).
 - State machine: `VS0-STATE-004` (Active/Retired × Unqualified/Qualified/
   Rejected/Indeterminate; Qualifying is an in-flight reservation only).
-- Conformance: `VS0-CF-F16-01..99`, `VS0-CF-F16-100..126` (all FEATURE-0016-local).
+- Conformance: `VS0-CF-F16-01..99`, `VS0-CF-F16-100..128` (all FEATURE-0016-local).
 
 ### 8.3 Inherited error contract (FEATURE-0012 top-level Problem codes)
 
@@ -761,10 +768,13 @@ authorities above and are not open design questions.
   has exactly one normative detail heading in approved order (§4.1).
 - Canonical acceptance ledger: all 12 approved AC rows copied verbatim; each is
   mapped to an acceptance scenario and exact conformance IDs (§4.2).
-- Exact conformance semantics ledger: all 126 cases in the FEATURE-0016 local
+- Exact conformance semantics ledger: all 128 cases in the FEATURE-0016 local
   conformance suite copied with ID, owner, inputs, expectedState,
   expectedError, expectedViolation (where registered), expectedSideEffects,
-  and gate (§4.3).
+  and gate (§4.3). `VS0-CF-F16-125` (exact malformed-JSON classification),
+  `VS0-CF-F16-127` (exact duplicate-top-level-member classification), and
+  `VS0-CF-F16-128` (fail-closed missing/unextractable required phase-one
+  reference denial) map to `REQ-F16-05` per ADH-2026-065.
 - Owned schema (VS0-SCHEMA-015..017), writer (VS0-WRITER-006), and state
   (VS0-STATE-004) IDs are referenced without redefinition.
 
