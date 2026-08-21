@@ -461,6 +461,49 @@ mutation, AuditEvent, idempotency reservation, or completion. Thus malformed
 URI grammar never becomes a safe-404 existence probe, while unauthenticated
 requests still stop at 401 first.
 
+#### F16-AD-06/07.3 — collection-create phase-one and strict-classification precedence (ADH-2026-063)
+
+ADH-2026-063 is a controlling correction to the create-only route
+`POST /apis/execution.sovrunn.io/v1alpha1/execution-targets`. It introduces no
+new route, field, resource, state, top-level error, dependency, or phase scope;
+it only fixes the exact create precedence and adds four sequential local
+conformance rows `VS0-CF-F16-123..126`. The ordered pipeline is: (1) transport
+guard, authentication, and existing method/media/header-form validation; (2) a
+bounded single body read — if the body exceeds the existing limit the request
+returns the existing `REQUEST_TOO_LARGE`/400 before phase-one extraction,
+authorization, or safe access; otherwise the exact bytes are retained and phase
+one extracts only `spec.cloudProviderParticipationRef.uid` and
+`spec.infrastructureStackRef.uid`, emitting no body-classification Problem;
+(3) derived-scope `executiontarget.write` authorization and safe backing access;
+(4) strict classification of the retained same bytes exactly once, then existing
+graph/reference validation, idempotency, audit, and publication. Phase one never
+classifies, canonicalizes, digests, or reserves a body; invalid, unknown, and
+duplicate bodies are never digested or reserved. Action `If-Match` header-form
+precedence (F16-AD-06.1/06/07.1) is preserved.
+
+The four ordered outcomes, each using a named finite equivalence family where a
+row covers malformed JSON or a duplicate top-level member (F16-AD-21/25/26.2):
+
+- `VS0-CF-F16-123`: authenticated, safe-accessible backing, caller lacks
+  `executiontarget.write`, malformed/duplicate body — existing audited
+  `AUTHORIZATION_DENIED`/403 (as F16-08); no body classification, mutation,
+  idempotency digest, reservation, or completion.
+- `VS0-CF-F16-124`: authenticated caller, inaccessible backing,
+  malformed/duplicate body — existing audited safe `RESOURCE_NOT_FOUND`/404 +
+  `VS0_AUTHORIZATION_SAFE_DENIAL` (as F16-09); no body classification, mutation,
+  idempotency digest, reservation, or completion.
+- `VS0-CF-F16-125`: authenticated, authorized, safe-accessible backing, retained
+  malformed/duplicate body — strict single classification returns the existing
+  `MALFORMED_REQUEST`/400 (as F16-51) or `DUPLICATE_FIELD`/400 (as F16-52) as
+  applicable; no mutation, audit, idempotency digest, reservation, or completion.
+- `VS0-CF-F16-126`: oversized collection-create body — existing
+  `REQUEST_TOO_LARGE`/400 (as F16-53) before phase-one extraction,
+  authorization, or safe access; no mutation, audit, idempotency digest,
+  reservation, or completion.
+
+Existing rows `VS0-CF-F16-08`, `09`, `51`, `52`, and `53` are the precedence
+anchors for these rows and keep their exact case names and observable meanings.
+
 #### F16-AD-17/21.1 — expiry and audit retry
 
 Expiry leaves the last completed qualification and ETag unchanged but projects

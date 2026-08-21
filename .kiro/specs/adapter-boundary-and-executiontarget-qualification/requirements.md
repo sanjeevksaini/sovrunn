@@ -44,8 +44,8 @@ the exact conformance semantics ledger covering the FEATURE-0016 local conforman
 | Owned state machine | `VS0-STATE-004` |
 | Owned writer | `VS0-WRITER-006` (`ExecutionTargetLifecycleService`) |
 | Controlling decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060 |
-| Local conformance | VS0-CF-F16-01..99, VS0-CF-F16-100..122 |
+| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-063 |
+| Local conformance | VS0-CF-F16-01..99, VS0-CF-F16-100..126 |
 
 This document translates the approved FEATURE-0016 feature authority
 (`docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md`),
@@ -503,6 +503,10 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 | VS0-CF-F16-120 | FEATURE-0016 | Fresh Qualified target backing returns viable before fact expiry | GET projects effectiveAvailability Available with unchanged target ETag and no F0016 mutation or AuditEvent | null | — | GET projects effectiveAvailability Available with unchanged target ETag and no F0016 mutation or AuditEvent. | feature |
 | VS0-CF-F16-121 | FEATURE-0016 | Qualify starts from Active/Qualified with current fences | Create an internal Qualifying reservation | null | — | Create an internal Qualifying reservation; retain the public committed target projection, ETag, and FactSet/Result links, with no AuditEvent or idempotency completion. | feature |
 | VS0-CF-F16-122 | FEATURE-0016 | Current-fence observer fault after qualification starts from Active/Qualified | unchanged | INTERNAL_ERROR | — | 500 INTERNAL_ERROR; abort reservation with unchanged committed target, ETag, and FactSet/Result links; publish no AuditEvent or idempotency completion. | feature |
+| VS0-CF-F16-123 | FEATURE-0016 | Authenticated caller with a safe-accessible backing but lacking executiontarget.write, submitting a collection-create body in the malformed-JSON-or-duplicate-top-level-member equivalence family | unchanged | AUTHORIZATION_DENIED | — | 403 AUTHORIZATION_DENIED audited denial exactly as VS0-CF-F16-08; phase one extracts only spec.cloudProviderParticipationRef.uid and spec.infrastructureStackRef.uid and never classifies, canonicalizes, digests, or reserves the body; no body-classification Problem, mutation, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
+| VS0-CF-F16-124 | FEATURE-0016 | Authenticated caller with an inaccessible backing reference, submitting a collection-create body in the malformed-JSON-or-duplicate-top-level-member equivalence family | Safe 404 RESOURCE_NOT_FOUND | RESOURCE_NOT_FOUND | VS0_AUTHORIZATION_SAFE_DENIAL | Safe 404 RESOURCE_NOT_FOUND plus VS0_AUTHORIZATION_SAFE_DENIAL audited denial exactly as VS0-CF-F16-09; phase one extracts only the two allowed UID references and never classifies, canonicalizes, digests, or reserves the body; no body-classification Problem, mutation, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
+| VS0-CF-F16-125 | FEATURE-0016 | Authenticated authorized caller with a safe-accessible backing whose retained collection-create body is in the malformed-JSON-or-duplicate-top-level-member equivalence family | unchanged | MALFORMED_REQUEST | — | Strict single classification of the retained same bytes returns the applicable existing outcome — 400 MALFORMED_REQUEST for malformed JSON (as VS0-CF-F16-51) or 400 DUPLICATE_FIELD for a duplicate top-level member (as VS0-CF-F16-52); no mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
+| VS0-CF-F16-126 | FEATURE-0016 | Oversized collection-create body exceeding the existing bounded single-body-read limit | unchanged | REQUEST_TOO_LARGE | — | 400 REQUEST_TOO_LARGE from the bounded single body read before phase-one extraction, authorization, or safe access (as VS0-CF-F16-53); no phase-one extraction, mutation, AuditEvent, idempotency digest, reservation, or completion (ADH-2026-063). | feature |
 
 ## 5. Security, privacy, compatibility, and operational requirements
 
@@ -595,6 +599,7 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 | Edge case | Observable outcome | Conformance |
 |-----------|--------------------|-------------|
 | Malformed JSON, duplicate top-level member, oversized body | 400 MALFORMED_REQUEST / DUPLICATE_FIELD / REQUEST_TOO_LARGE; no publication | VS0-CF-F16-51,52,53 |
+| Create malformed/duplicate/oversized body under the ADH-2026-063 precedence: oversized rejected first before phase one; unauthorized 403; inaccessible-backing safe 404; authorized strict classification 400 | REQUEST_TOO_LARGE before phase one; AUTHORIZATION_DENIED; RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL; MALFORMED_REQUEST / DUPLICATE_FIELD; no body classification/mutation/idempotency effect beyond the applicable existing outcome | VS0-CF-F16-126,123,124,125 |
 | Missing required create field, invalid typed reference shape, non-`synthetic-iaas` targetClass | 422 VALIDATION_FAILED; no publication | VS0-CF-F16-54,55,56 |
 | Empty, malformed, or overlong Idempotency-Key | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-58,59,60 |
 | Collection create with an If-Match header | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-105 |
@@ -679,6 +684,7 @@ target projection are out of scope.
 | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045 | Prior controlling handoffs and delegation of the ExecutionTarget contract to FEATURE-0016 |
 | ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004 (the sole current semantic authority) |
 | ADH-2026-060 | Maintenance-race outcome correction; makes `VS0-CF-F16-75` (inactive-marker epoch-stale) and `VS0-CF-F16-89` (active-marker Maintenance-wins) mutually exclusive |
+| ADH-2026-063 | Collection-create phase-one/strict-classification precedence correction; the bounded body read returns `REQUEST_TOO_LARGE`/400 first for an oversized body, phase one extracts only the two allowed UID references without classifying/canonicalizing/digesting/reserving a body, authorization and safe access precede one strict classification of the retained same bytes, and action `If-Match` header-form precedence is preserved; adds `VS0-CF-F16-123..126` with `VS0-CF-F16-08/09/51/52/53` as precedence anchors |
 
 ### 8.2 Registry IDs consumed
 
@@ -688,7 +694,7 @@ target projection are out of scope.
   conflict `STALE_RESOURCE_VERSION`).
 - State machine: `VS0-STATE-004` (Active/Retired × Unqualified/Qualified/
   Rejected/Indeterminate; Qualifying is an in-flight reservation only).
-- Conformance: `VS0-CF-F16-01..99`, `VS0-CF-F16-100..122` (all FEATURE-0016-local).
+- Conformance: `VS0-CF-F16-01..99`, `VS0-CF-F16-100..126` (all FEATURE-0016-local).
 
 ### 8.3 Inherited error contract (FEATURE-0012 top-level Problem codes)
 
@@ -720,6 +726,17 @@ never Problem `code` values, and no `429`/quota code is used.
 | Safe denial never discloses inaccessible resources | §5.2; VS0-CF-F16-09,17,19,66 |
 | Closed five-route surface; transport guard has no side effect | REQ-F16-03; VS0-CF-F16-44,113..118 |
 
+### 8.6 Feature-level reuse summary (reference only)
+
+The canonical FEATURE-0016 feature-level reuse summary and capability
+assessment are authoritative in
+`docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md`.
+This requirements stage reuses FEATURE-0012 API/Problem/ETag semantics,
+FEATURE-0013 AuditEvent semantics, and FEATURE-0015 backing authority by
+reference; it introduces only the approved F0016-owned observation,
+qualification, lifecycle, and safe-projection behavior. This reference does
+not duplicate the assessment or add a requirement.
+
 ## 9. Design questions explicitly delegated by architecture
 
 The architecture boundary (§2.2 DESIGN-Delegated Mechanics and ADH-2026-058
@@ -744,7 +761,7 @@ authorities above and are not open design questions.
   has exactly one normative detail heading in approved order (§4.1).
 - Canonical acceptance ledger: all 12 approved AC rows copied verbatim; each is
   mapped to an acceptance scenario and exact conformance IDs (§4.2).
-- Exact conformance semantics ledger: all 122 cases in the FEATURE-0016 local
+- Exact conformance semantics ledger: all 126 cases in the FEATURE-0016 local
   conformance suite copied with ID, owner, inputs, expectedState,
   expectedError, expectedViolation (where registered), expectedSideEffects,
   and gate (§4.3).

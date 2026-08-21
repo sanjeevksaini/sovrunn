@@ -37,6 +37,133 @@ executable contract.
 
 ---
 
+## Feature-level reuse summary
+
+This summary follows the canonical
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md` format. It records approved
+dispositions only; it neither selects an external product nor changes the
+approved FEATURE-0016 boundary.
+
+| Capability / decision unit | Disposition | Rationale | Decision status | Controlling reference |
+|---|---|---|---|---|
+| FEATURE-0012 API grammar, Problem Details, media, and optimistic-concurrency contract | Reuse | These platform-wide contracts already provide the closed HTTP, error, ETag, and representation behavior required by F0016. | Approved | DEC-0026; ADH-2026-058 |
+| FEATURE-0013 AuditEvent atomic-publication contract | Reuse | F0016 needs durable redacted audit evidence before publication, not a second audit model. | Approved | DEC-0026; ADH-2026-058 |
+| FEATURE-0015 CloudProviderParticipation and InfrastructureStack backing authority | Reuse | F0016 consumes effective participation and stack state by reference without re-owning their resources, routes, or lifecycle. | Approved | DEC-0042; ADH-2026-058 |
+| Deterministic target observation, qualification, lifecycle, and safe projection | Build | No existing candidate supplies Sovrunn's closed target model, fenced qualification, sole-committer, audit, and Phase 2R no-external-effect contract. | Approved | DEC-0036; DEC-0042; ADH-2026-058; ADH-2026-060; ADH-2026-061 |
+| In-process synthetic observation boundary | Build | The deterministic `synthetic-iaas` observer is the minimum replaceable anti-corruption boundary; it performs no real integration in Phase 2R. | Approved | DEC-0036; ADH-2026-058 |
+
+## Capability assessment: deterministic target observation and qualification
+
+### Identity
+
+| Field | Value |
+|---|---|
+| Feature identity | FEATURE-0016 |
+| Capability or decision-unit identity | Deterministic `synthetic-iaas` target observation, qualification, lifecycle publication, and safe projection |
+| Assessment owner | Sanjeev Kumar, Sovrunn Architecture Owner |
+
+### Classification
+
+| Field | Value |
+|---|---|
+| Disposition | Build |
+| Decision status | Approved |
+
+### Analysis
+
+| Field | Value |
+|---|---|
+| Assessment scope | The F0016-owned ExecutionTarget, NormalizedTargetFactSet, TargetQualificationResult, synthetic observation, qualification, maintenance, expiry, and safe-projection boundary only. |
+| Candidate category | In-process target observation and qualification control-plane boundary. |
+| Mature candidates / applicable standards | FEATURE-0012 API contract, FEATURE-0013 AuditEvent contract, FEATURE-0015 backing-resource authority, and the approved internal adapter-boundary principle in DEC-0036. |
+| Relevant candidate strengths | The inherited contracts supply stable request grammar, authorization, Problem handling, audit publication, and backing-resource semantics without duplicating them. |
+| Material candidate constraints | None supplies the F0016-specific closed resource model, deterministic synthetic facts, current-marker fencing, audit-before-publication, or Phase 2R external-effect prohibition. |
+| Rationale | Build only the Sovrunn-owned differentiation while reusing all applicable shared contracts and retaining a thin observation boundary for later replacement. |
+| Selected foundation or approach | `ExecutionTargetLifecycleService` is the sole committer; `sovrunn.synthetic-iaas-observer/v1` proposes normalized facts; F0016 reuses prior-feature contracts by reference. |
+
+### Boundary
+
+| Field | Value |
+|---|---|
+| Sovrunn-owned responsibility | Normalize four deterministic facts; evaluate the closed qualification profile; fence stale work; commit current records and target state; and project safe response-only availability. |
+| Reused or extended responsibility | FEATURE-0012 owns shared API, Problem, media, authorization, and ETag contracts; FEATURE-0013 owns AuditEvent semantics; FEATURE-0015 owns participation and InfrastructureStack authority. |
+| Data crossing the boundary | Target-bound synthetic fixture input and normalized fact proposals enter the lifecycle service; internal FactSet and Result records remain unprojected. |
+| Control crossing the boundary | Qualification and fixture-maintenance triggers are submitted to the lifecycle service; only it publishes committed state after the inherited audit append succeeds. |
+| Adapter required | Yes |
+| Adapter rationale | DEC-0036 requires a Sovrunn-owned anti-corruption boundary before any external integration; the in-process observer keeps F0016 deterministic and replaceable without coupling core state to an external system. |
+| Adapter or contract identifier | `sovrunn.synthetic-iaas-observer/v1` |
+| Vendor-native types allowed | No |
+
+### Suitability
+
+| Field | Value |
+|---|---|
+| Sovereignty and deployment fit | Fully in-process and deterministic; suitable for disconnected and air-gapped deployments because it has no network, credential, or vendor dependency. |
+| Security and trust | No raw credential or external call crosses the boundary; F0012 authentication/safe denial and F0013 redacted audit evidence remain authoritative. |
+| Operational and supportability | Injected-clock behavior, bounded in-process idempotency, deterministic fixtures, closed outcomes, and conformance cases permit repeatable local diagnosis. |
+| Licensing and supply-chain | Standard-library implementation and inherited repository contracts only; no new third-party runtime dependency is selected. |
+| Portability and provider-neutrality impact | The target model is CloudProvider-scoped and provider-neutral; no provider-native type or external API becomes canonical. |
+
+### Phase and scope
+
+| Field | Value |
+|---|---|
+| Allowed in current phase | Yes |
+| Current-phase work | Implement deterministic synthetic observation, qualification, lifecycle, audit, idempotency, five-route HTTP behavior, and conformance proof only. |
+| Deferred work | Real observation integration, realization, placement, provisioning, plugin execution, credential handling, and customer IaaS exposure require a separately approved future feature. |
+| Explicit non-goals | No real adapter, provider-native type, credential, external call, external persistence, placement, provisioning, plugin execution, generic event bus, or customer target API. |
+| Exit or migration boundary | A later approved feature may substitute a real observation implementation behind a compatible boundary; it must not rewrite F0016 lifecycle, qualification, audit, or safe-projection semantics without a new ADH. |
+| Phase 2 non-goal acknowledgement | Phase 2R permits deterministic observation and qualification only; real infrastructure execution and external integrations remain non-goals. |
+
+### Build justification
+
+| Field | Value |
+|---|---|
+| Why Reuse is insufficient | Shared F0012/F0013/F0015 contracts are reused, but none owns an ExecutionTarget qualification model or its fenced lifecycle semantics. |
+| Why Wrap is insufficient | There is no selected mature engine to wrap in Phase 2R, and wrapping one would introduce prohibited external coupling. |
+| Why Extend is insufficient | Extending a prior resource or lifecycle would violate the approved F0015/F0016 ownership boundary and create competing writers. |
+| Protected Sovrunn differentiation and long-term ownership | Sovrunn owns the provider-neutral target model, normalized fact vocabulary, qualification conclusions, fencing, audit boundary, and later-replaceable observation contract. |
+
+### Risk mitigation
+
+#### Applicable architecture risks
+
+#### Risk-control matrix
+
+| Risk | Preventive control | Detection control | Corrective path |
+|---|---|---|---|
+| External-coupling or credential leakage | Closed `synthetic-iaas` contract; no credential/external-call fields; Phase 2R exclusions. | Feature-contract, Phase 2R drift, and conformance checks. | Remove prohibited coupling and require an approved ADH before any real integration. |
+| Incorrect or stale qualification publication | Sole lifecycle committer; fence recheck; ADH-2026-060 precedence; ADH-2026-061 link-clearing rule; audit-before-publication. | F16 conformance, formal models, race tests, and audit-failure cases. | Abort the proposal, preserve committed state, and correct the lifecycle implementation under the existing contract. |
+| Ownership or safe-projection leakage | FEATURE-0015 references are read-only; internal FactSet/Result records are never projected; closed five-route surface. | Registry, traceability, projection, and safe-denial conformance checks. | Restore the approved ownership boundary and reject unauthorized field/route expansion. |
+
+- Residual risk: Low. Synthetic fixtures cannot validate a real environment,
+  and F0016 in-memory state intentionally resets on restart.
+- Replacement risk: Medium
+- Reassessment triggers: Approval of a real observation or realization feature,
+  a new credential or external dependency requirement, or a change to lifecycle
+  states, fence inputs, audit semantics, restart/retention policy, schema,
+  route, or cross-feature ownership.
+
+### Traceability
+
+| Field | Value |
+|---|---|
+| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0042, DEC-0057, RFC-0021, ADH-2026-058, ADH-2026-060, ADH-2026-061 |
+| Linked acceptance criteria | AC-F16-01 through AC-F16-12; VS0-CF-F16-01 through VS0-CF-F16-122 |
+| Validation and review evidence | Approved ADH-2026-058/060/061; `docs/reviews/reuse-assessments/FEATURE-0016-approval-evidence.md`; FEATURE-0016 readiness, feature-contract, VS-000, Phase 2R drift, formal, conformance, and final feature-gate evidence. |
+
+### Human-approval evidence
+
+| Field | Value |
+|---|---|
+| Structured approval-evidence record | `docs/reviews/reuse-assessments/FEATURE-0016-approval-evidence.md` |
+| Approval status | Approved |
+| Approving role | Sanjeev Kumar, Sovrunn Architecture Owner |
+| Approval date | 2026-08-20 |
+| Approval basis | ADH-2026-058 and the recorded FEATURE-0016 reuse-assessment approval evidence confirm the disposition and responsibility boundary. |
+
+---
+
 ## 2. Scope Classification
 
 ### 2.1 REQUIREMENTS-Owned Observable Behavior

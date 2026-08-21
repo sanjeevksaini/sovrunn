@@ -5,7 +5,7 @@
 | Status | Approved boundary (closed under ADH-2026-058) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction) |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction), ADH-2026-063 (create phase-one/strict-classification precedence correction) |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0015 (CloudProviderParticipation, InfrastructureStack — read-only prior-feature authority) |
 
@@ -338,6 +338,49 @@ Requirements, design, tasks, and Cursor may not choose an omitted observable
 behavior, authority, proof meaning, or implementation scope beyond this
 document and ADH-2026-058.
 
+### 4.13 Collection-create phase-one and strict-classification precedence (ADH-2026-063)
+
+ADH-2026-063 is a controlling correction that fixes, without broadening, the
+exact observable precedence of the create-only route
+`POST /apis/execution.sovrunn.io/v1alpha1/execution-targets`. It introduces no
+new route, field, resource, state machine, top-level error, dependency, or
+phase scope; it adds only the four new sequential local conformance rows
+`VS0-CF-F16-123..126` and the following ordered pipeline:
+
+1. The closed transport guard, authentication, and the existing
+   method/media/header-form validation run first, unchanged.
+2. A bounded single body read runs next. If the body exceeds the existing
+   single-body-read limit, the request returns the existing
+   `REQUEST_TOO_LARGE`/400 **before** phase-one extraction, authorization, or
+   safe access. Otherwise the exact bytes are retained and phase one extracts
+   **only** `spec.cloudProviderParticipationRef.uid` and
+   `spec.infrastructureStackRef.uid`, emitting no body-classification Problem.
+   Phase one never classifies, canonicalizes, digests, or reserves a body;
+   invalid, unknown, and duplicate bodies are never digested or reserved.
+3. Derived-scope `executiontarget.write` authorization and safe backing access
+   are evaluated using the phase-one-extracted references.
+4. Only then are the retained same bytes strictly classified exactly once,
+   followed by the existing graph/reference validation, idempotency, audit, and
+   publication steps.
+
+Action `If-Match` header-form precedence (§4.6, VS0-CF-F16-70,71,72,73,86) is
+preserved and unaffected by this create-only correction.
+
+The four ordered outcomes are:
+
+| Row | Condition | Outcome |
+|---|---|---|
+| VS0-CF-F16-123 | Authenticated, safe-accessible backing, caller lacks `executiontarget.write`, body is malformed JSON or has a duplicate top-level member | Existing audited `AUTHORIZATION_DENIED`/403 as VS0-CF-F16-08; no body classification, mutation, idempotency digest, reservation, or completion |
+| VS0-CF-F16-124 | Authenticated caller, inaccessible backing, body is malformed JSON or has a duplicate top-level member | Existing audited safe `RESOURCE_NOT_FOUND`/404 + `VS0_AUTHORIZATION_SAFE_DENIAL` as VS0-CF-F16-09; no body classification, mutation, idempotency digest, reservation, or completion |
+| VS0-CF-F16-125 | Authenticated, authorized, safe-accessible backing, retained body is malformed JSON or has a duplicate top-level member | Strict single classification returns the existing `MALFORMED_REQUEST`/400 (as VS0-CF-F16-51) or `DUPLICATE_FIELD`/400 (as VS0-CF-F16-52) as applicable; no mutation, audit, idempotency digest, reservation, or completion |
+| VS0-CF-F16-126 | Oversized collection-create body | Existing `REQUEST_TOO_LARGE`/400 (as VS0-CF-F16-53) before phase-one extraction, authorization, or safe access; no mutation, audit, idempotency digest, reservation, or completion |
+
+`VS0-CF-F16-123`, `124`, and `125` use named finite equivalence families
+(malformed JSON or duplicate top-level member) per F16-AD-21/25/26.2; each named
+member has the identical declared observable outcome. Existing rows
+`VS0-CF-F16-08`, `09`, `51`, `52`, and `53` are the precedence anchors for these
+new rows and keep their exact case names and observable meanings unchanged.
+
 ---
 
 ## 5. Preserve FEATURE-0015 as Read-Only Prior-Feature Authority
@@ -349,10 +392,11 @@ state, or conformance case.
 
 ---
 
-## 6. Local Conformance (VS0-CF-F16-01..122)
+## 6. Local Conformance (VS0-CF-F16-01..126)
 
-FEATURE-0016 owns an exact, closed, feature-local conformance suite of 122
-cases registered in `docs/architecture/vertical-slices/VS-000-contract-registry.yaml`
+FEATURE-0016 owns an exact, closed, feature-local conformance suite of 126
+cases (122 under ADH-2026-058; `VS0-CF-F16-123..126` added by ADH-2026-063 per
+§4.13) registered in `docs/architecture/vertical-slices/VS-000-contract-registry.yaml`
 and cross-referenced in `docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md`.
 No shared or downstream case (`VS0-CF-F10`, `VS0-CF-X03`, `VS0-CF-HP01`) is
 counted as F0016-local proof; they remain cross-feature/shared references

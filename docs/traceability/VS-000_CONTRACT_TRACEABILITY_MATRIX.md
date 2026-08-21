@@ -15,7 +15,7 @@
 |----------|-----------|------|
 | 1 | Active architecture baseline | `docs/context/CURRENT_ARCHITECTURE_BASELINE.md` |
 | 2 | Canonical model and catalog | `docs/architecture/canonical/` |
-| 3 | Accepted decisions and controlling handoff | `docs/decisions/DECISION_INDEX.md`; ADH-2026-042 |
+| 3 | Accepted decisions and controlling handoffs | `docs/decisions/DECISION_INDEX.md`; ADH-2026-042; ADH-2026-064 (ExecutionTarget ownership correction) |
 | 4 | VS-000 core skeleton | `docs/architecture/vertical-slices/VS-000-core-skeleton.md` |
 | 5 | VS-000 contract specification | `docs/architecture/vertical-slices/VS-000-contract-specification.md` |
 | 6 | VS-000 contract registry YAML | `docs/architecture/vertical-slices/VS-000-contract-registry.yaml` |
@@ -226,9 +226,11 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | VS0-CF-F15-40 | Completed replay response allowlist and Aborted re-reservation | FEATURE-0015 | idempotency | ADH-2026-056 | VS0-SCHEMA-008..014 |
 | VS0-CF-F15-41 | Mutable-spec writer-boundary denial | FEATURE-0015 | security | DEC-0037; ADH-2026-057 | VS0-WRITER-002,003 |
 
-## FEATURE-0016 Conformance (VS0-CF-F16-01..122)
+## FEATURE-0016 Conformance (VS0-CF-F16-01..126)
 
 FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` definitions with the approved ADH-2026-058 ExecutionTarget executable contract: closed create fields and derived CloudProvider scope, five exact routes, a synthetic-only observer, a lifecycle-service-only Qualifying reservation that is never persisted or projected, a response-only `effectiveAvailability` projection, and the complete fail-closed proof annex below. `VS0-CF-F10` and `VS0-CF-X03` remain the cross-feature/shared references; every row below is the exact F0016-local proof case per ADH-2026-058 §2/§3.
+
+ADH-2026-063 adds the collection-create phase-one/strict-classification precedence correction and its four new sequential local conformance rows `VS0-CF-F16-123..126`. Its safe precedence invariant is: the bounded single body read returns the existing `REQUEST_TOO_LARGE`/400 first for an oversized body; otherwise phase one extracts only `spec.cloudProviderParticipationRef.uid` and `spec.infrastructureStackRef.uid` and never classifies, canonicalizes, digests, or reserves a body; derived-scope `executiontarget.write` authorization and safe backing access are evaluated before the retained same bytes are strictly classified exactly once. Existing rows `VS0-CF-F16-08`, `VS0-CF-F16-09`, `VS0-CF-F16-51`, `VS0-CF-F16-52`, and `VS0-CF-F16-53` are annotated as precedence anchors for these new rows; their existing case names and observable meanings are unchanged.
 
 | Conformance ID | Class | Owner | Gate | Controlling Decision | Registry Evidence |
 |----------------|-------|-------|------|---------------------|-------------------|
@@ -239,8 +241,8 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-05 | Create/action with a missing Idempotency-Key | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-06 | POST with non-application/json media | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-07 | Create with missing authentication | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-08 | Authenticated create without executiontarget.write | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-09 | Inaccessible create backing reference | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-08 | Authenticated create without executiontarget.write | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-063 (precedence anchor) | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-09 | Inaccessible create backing reference | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-063 (precedence anchor) | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-10 | Authorized ineffective participation | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-11 | Authorized non-Active InfrastructureStack | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-12 | Authorized cross-CloudProvider participation/stack graph | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
@@ -282,9 +284,9 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-48 | Problem response with any Accept value | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-49 | Same principal/key/digest action on another target UID | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-50 | Same principal/key/digest create in another derived CloudProvider scope | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-51 | Malformed JSON request body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-52 | Duplicate top-level JSON member | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
-| VS0-CF-F16-53 | Oversized request body | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-51 | Malformed JSON request body | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-063 (precedence anchor) | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-52 | Duplicate top-level JSON member | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-063 (precedence anchor) | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-53 | Oversized request body | FEATURE-0016 | feature | ADH-2026-058; ADH-2026-063 (precedence anchor) | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-54 | Missing required create field | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-55 | Invalid typed reference shape | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-56 | targetClass other than synthetic-iaas | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
@@ -354,6 +356,10 @@ FEATURE-0016 replaces the placeholder `VS0-SCHEMA-015..017`/`VS0-STATE-004` defi
 | VS0-CF-F16-120 | Fresh Qualified target backing returns viable before fact expiry | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-121 | Qualify starts from Active/Qualified with current fences | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 | VS0-CF-F16-122 | Current-fence observer fault after qualification starts from Active/Qualified | FEATURE-0016 | feature | ADH-2026-058 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-123 | Unauthorized create (no executiontarget.write) with a malformed/duplicate body over safe-accessible backing | FEATURE-0016 | feature | ADH-2026-063 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-124 | Inaccessible-backing create with a malformed/duplicate body | FEATURE-0016 | feature | ADH-2026-063 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-125 | Authorized create over safe-accessible backing with a malformed/duplicate retained body strictly classified | FEATURE-0016 | feature | ADH-2026-063 | VS0-SCHEMA-015..017, VS0-STATE-004 |
+| VS0-CF-F16-126 | Oversized collection-create body rejected before phase-one extraction, authorization, or safe access | FEATURE-0016 | feature | ADH-2026-063 | VS0-SCHEMA-015..017, VS0-STATE-004 |
 
 
 

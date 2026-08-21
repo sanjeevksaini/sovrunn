@@ -43,7 +43,7 @@ F15_ACTIONS = (
 F15_LOGICAL_PATHS = 22
 F15_METHOD_PATTERNS = 35
 
-F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 123)]
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 127)]
 F16_ROUTES = (
     ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
     ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
@@ -322,6 +322,45 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
         require(errors, "no qualification result, completion, or qualification auditevent" in f89_effects,
                 "MAINTENANCE-LINKS: VS0-CF-F16-89 must keep its no-result/no-completion/no-AuditEvent outcome unchanged (ADH-2026-061)")
 
+    # ADH-2026-063: the four new collection-create phase-one/strict-classification
+    # rows must exist and must not deviate; the architecture authority must pin
+    # the ordered precedence (oversized first; phase one never classifies/digests/
+    # reserves; authorization/safe access precede strict classification).
+    f16_123 = cases.get("VS0-CF-F16-123")
+    f16_124 = cases.get("VS0-CF-F16-124")
+    f16_125 = cases.get("VS0-CF-F16-125")
+    f16_126 = cases.get("VS0-CF-F16-126")
+    require(errors, f16_123 is not None and f16_123.get("expectedError") == "AUTHORIZATION_DENIED",
+            "ADH063: VS0-CF-F16-123 must exist and be AUTHORIZATION_DENIED with no body classification (ADH-2026-063)")
+    if f16_123 is not None:
+        require(errors, "never classifies, canonicalizes, digests, or reserves" in str(f16_123.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-123 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    require(errors, f16_124 is not None and f16_124.get("expectedError") == "RESOURCE_NOT_FOUND"
+            and (f16_124 or {}).get("expectedViolation") == "VS0_AUTHORIZATION_SAFE_DENIAL",
+            "ADH063: VS0-CF-F16-124 must exist and be safe RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
+    if f16_124 is not None:
+        require(errors, "never classifies, canonicalizes, digests, or reserves" in str(f16_124.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    require(errors, f16_125 is not None and f16_125.get("expectedError") == "MALFORMED_REQUEST",
+            "ADH063: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (with DUPLICATE_FIELD as the applicable family member) (ADH-2026-063)")
+    if f16_125 is not None:
+        f125_effects = str(f16_125.get("expectedSideEffects", "")).lower()
+        require(errors, "strict single classification" in f125_effects and "duplicate_field" in f125_effects,
+                "ADH063: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST or DUPLICATE_FIELD (ADH-2026-063)")
+    require(errors, f16_126 is not None and f16_126.get("expectedError") == "REQUEST_TOO_LARGE",
+            "ADH063: VS0-CF-F16-126 must exist and be REQUEST_TOO_LARGE (ADH-2026-063)")
+    if f16_126 is not None:
+        require(errors, "before phase-one extraction, authorization, or safe access" in str(f16_126.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    require(errors, "adh-2026-063" in arch_lower,
+            "ADH063: F0016 architecture must reference ADH-2026-063 as a controlling correction")
+    require(errors, "before phase-one extraction, authorization, or safe access" in arch_lower,
+            "ADH063: F0016 architecture must state the oversized body is rejected before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    require(errors, "never classifies, canonicalizes, digests, or reserves a body" in arch_lower,
+            "ADH063: F0016 architecture must state phase one never classifies/canonicalizes/digests/reserves a body (ADH-2026-063)")
+    require(errors, "only then are the retained same bytes strictly classified" in arch_lower,
+            "ADH063: F0016 architecture must state authorization and safe access precede the single strict classification (ADH-2026-063)")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -345,7 +384,7 @@ def main() -> None:
     if args.feature == "FEATURE-0015":
         print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
     else:
-        print("PASS: FEATURE-0016 feature contract closes route, violation-code, and conformance-catalog evidence")
+        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..126), and ADH-2026-063 create phase-one/strict-classification precedence evidence")
 
 
 if __name__ == "__main__":

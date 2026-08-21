@@ -35,12 +35,13 @@ TRACE_PATH = ROOT / "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md"
 F16_ARCH = ROOT / "docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
 F16_FEAT = ROOT / "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
 CLOSURE = ROOT / "docs/reviews/architecture-readiness/FEATURE-0016-architecture-closure-matrix.md"
-REUSE = ROOT / "docs/reviews/reuse-assessments/FEATURE-0016-reuse-assessment.md"
+REUSE = ROOT / "docs/reviews/reuse-assessments/FEATURE-0016-approval-evidence.md"
 STEER = ROOT / ".kiro/steering/slice0-contract.md"
+CHARTER = ROOT / "docs/architecture/vertical-slices/VS-000-core-skeleton.md"
 CONTROL = ROOT / ".automation/features/FEATURE-0016.control.json"
 ADH_058 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-058-feature-0016-adapter-and-executiontarget-executable-contract-closure.md"
 
-F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 123)]
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 127)]
 
 # Removed placeholder concepts that must never reappear as active FEATURE-0016 behavior.
 REMOVED_PLACEHOLDER_TERMS = [
@@ -278,6 +279,51 @@ def check_maintenance_entry_link_clearing(f16_arch: str, f16_feat: str) -> None:
         e("MAINTENANCE-LINKS: F0016 architecture must state every successful Maintenance entry clears both current FactSet/Result links (ADH-2026-061)")
 
 
+def check_adh_063_create_precedence(reg: dict, f16_arch: str, steer: str) -> None:
+    """ADH-2026-063: the ExecutionTarget collection-create phase-one and
+    strict-classification precedence correction adds the four new sequential
+    local conformance rows VS0-CF-F16-123..126. Fail closed if any of the four
+    rows is missing or deviates, if the authoritative text permits strict
+    classification before authorization/safe access, if phase one permits body
+    classification/digest/reservation, or if the oversized body is not rejected
+    first."""
+    by_id = {c.get("id"): c for c in reg.get("conformance", [])}
+    f123 = by_id.get("VS0-CF-F16-123")
+    f124 = by_id.get("VS0-CF-F16-124")
+    f125 = by_id.get("VS0-CF-F16-125")
+    f126 = by_id.get("VS0-CF-F16-126")
+    if not f123 or f123.get("expectedError") != "AUTHORIZATION_DENIED":
+        e("ADH063: VS0-CF-F16-123 must exist and be AUTHORIZATION_DENIED (ADH-2026-063)")
+    elif "never classifies, canonicalizes, digests, or reserves" not in str(f123.get("expectedSideEffects", "")).lower():
+        e("ADH063: VS0-CF-F16-123 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    if not f124 or f124.get("expectedError") != "RESOURCE_NOT_FOUND" or f124.get("expectedViolation") != "VS0_AUTHORIZATION_SAFE_DENIAL":
+        e("ADH063: VS0-CF-F16-124 must exist and be safe RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
+    elif "never classifies, canonicalizes, digests, or reserves" not in str(f124.get("expectedSideEffects", "")).lower():
+        e("ADH063: VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    if not f125 or f125.get("expectedError") != "MALFORMED_REQUEST":
+        e("ADH063: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (with DUPLICATE_FIELD as the applicable family member) (ADH-2026-063)")
+    else:
+        f125_fx = str(f125.get("expectedSideEffects", "")).lower()
+        if "strict single classification" not in f125_fx or "duplicate_field" not in f125_fx:
+            e("ADH063: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST or DUPLICATE_FIELD (ADH-2026-063)")
+    if not f126 or f126.get("expectedError") != "REQUEST_TOO_LARGE":
+        e("ADH063: VS0-CF-F16-126 must exist and be REQUEST_TOO_LARGE (ADH-2026-063)")
+    elif "before phase-one extraction, authorization, or safe access" not in str(f126.get("expectedSideEffects", "")).lower():
+        e("ADH063: VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    if f16_arch:
+        lower = f16_arch.lower()
+        if "adh-2026-063" not in lower:
+            e("ADH063: F0016 architecture must reference ADH-2026-063 as a controlling correction")
+        if "before phase-one extraction, authorization, or safe access" not in lower:
+            e("ADH063: F0016 architecture must reject an oversized body before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+        if "never classifies, canonicalizes, digests, or reserves a body" not in lower:
+            e("ADH063: F0016 architecture must state phase one never classifies/canonicalizes/digests/reserves a body (ADH-2026-063)")
+        if "only then are the retained same bytes strictly classified" not in lower:
+            e("ADH063: F0016 architecture must state authorization and safe access precede the single strict classification (ADH-2026-063)")
+    if steer and "adh-2026-063" not in steer.lower():
+        e("ADH063: .kiro/steering/slice0-contract.md must record the ADH-2026-063 safe precedence invariant")
+
+
 def check_conformance_completeness(reg: dict) -> None:
     confs = reg.get("conformance", [])
     found = {c.get("id") for c in confs}
@@ -291,6 +337,25 @@ def check_conformance_completeness(reg: dict) -> None:
                 e(f"CONFORMANCE: {c.get('id', '?')} missing required field {field!r}")
         if c.get("owner") != "FEATURE-0016":
             e(f"CONFORMANCE: {c.get('id')} owner must be FEATURE-0016, found {c.get('owner')!r}")
+
+
+def check_vs000_executiontarget_ownership(charter: str) -> None:
+    """ADH-2026-064: the VS-000 charter must not reclaim ExecutionTarget
+    for FEATURE-0015; FEATURE-0016 consumes only the F0015 participation and
+    stack contracts read-only."""
+    if not charter:
+        return
+    cloud_row = next((line for line in charter.splitlines() if line.startswith("| Cloud model |")), "")
+    expected = ("| Cloud model | CloudPlatform, CloudProvider, CloudProviderParticipation, "
+                "HostingLocation, Datacenter, FaultDomain, InfrastructureStack | FEATURE-0015 |")
+    if cloud_row != expected:
+        e("OWNERSHIP: VS-000 Cloud model row must assign only CloudPlatform through InfrastructureStack to FEATURE-0015 (ADH-2026-064)")
+    if "ExecutionTarget" in cloud_row:
+        e("OWNERSHIP: VS-000 Cloud model row must never assign ExecutionTarget to FEATURE-0015 (ADH-2026-064)")
+    integration_row = next((line for line in charter.splitlines() if line.startswith("| Integration |")), "")
+    for marker in ("ExecutionTarget", "normalized target facts", "qualification", "synthetic observer boundary", "CloudProviderParticipation and InfrastructureStack read-only"):
+        if marker not in integration_row or not integration_row.endswith("| FEATURE-0016 |"):
+            e("OWNERSHIP: VS-000 Integration row must assign " + repr(marker) + " to FEATURE-0016 (ADH-2026-064)")
 
 
 def check_traceability(trace: str) -> None:
@@ -331,6 +396,10 @@ def check_control_manifest_exists() -> None:
     expected = {"ExecutionTarget", "NormalizedTargetFactSet", "TargetQualificationResult"}
     if owned != expected:
         e(f"CONTROL: owned_resources mismatch: {sorted(owned ^ expected)}")
+    # ADH-2026-063: the control manifest must record the ADH-2026-063 handoff.
+    handoffs = data.get("feature", {}).get("handoffs", [])
+    if not any("ADH-2026-063" in str(h) for h in handoffs):
+        e("CONTROL: feature.handoffs must include the ADH-2026-063 handoff path (ADH-2026-063)")
 
 
 def check_reuse_assessment_exists() -> None:
@@ -374,6 +443,7 @@ def main() -> None:
     trace = read(TRACE_PATH)
     closure = read(CLOSURE)
     steer = read(STEER)
+    charter = read(CHARTER)
 
     check_adh_058_approved()
     check_no_reintroduced_placeholders(reg, f16_arch, f16_feat)
@@ -382,7 +452,9 @@ def main() -> None:
     check_sole_writer_and_observer(reg, f16_arch)
     check_maintenance_race_mutual_exclusivity(reg, f16_arch)
     check_maintenance_entry_link_clearing(f16_arch, f16_feat)
+    check_adh_063_create_precedence(reg, f16_arch, steer)
     check_conformance_completeness(reg)
+    check_vs000_executiontarget_ownership(charter)
     check_traceability(trace)
     check_closure_matrix(closure)
     check_control_manifest_exists()
@@ -396,7 +468,8 @@ def main() -> None:
         sys.exit(1)
     print(
         "PASS: FEATURE-0016 architecture readiness — ADH-2026-058 placeholder replacement, "
-        "five-route surface, sole writer/observer, closed violation set, 122-case conformance, "
+        "five-route surface, sole writer/observer, closed violation set, 126-case conformance "
+        "(incl. ADH-2026-063 create phase-one/strict-classification precedence rows VS0-CF-F16-123..126), "
         "traceability, closure matrix, control manifest, reuse assessment, and steering are consistent"
     )
 
