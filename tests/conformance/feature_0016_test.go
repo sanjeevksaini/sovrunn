@@ -312,22 +312,19 @@ func f16RetireNS(uid, key string) executiontarget.IdempotencyNamespace {
 }
 
 func f16ResolveBacking(h *f16Harness, et etmodel.ExecutionTarget) executiontarget.BackingViability {
-	out := executiontarget.BackingViability{
-		ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
-		StackUID:         et.Spec.InfrastructureStackRef.UID,
-	}
-	if part, ok := h.cloud.GetParticipation(et.Spec.CloudProviderParticipationRef.UID); ok {
-		out.ParticipationEffectiveActive = part.Status.Phase == model.ParticipationPhaseActive && !part.Status.PlatformSuspended
-		out.ParticipationScopeUID = part.Spec.CloudProviderRef.UID
-	}
-	if stack, ok := h.cloud.GetInfrastructureStack(et.Spec.InfrastructureStackRef.UID); ok {
-		out.StackPhase = string(stack.Status.Phase)
-		out.StackGeneration = stack.Metadata.Generation
-		if stack.Metadata.ScopeRef != nil {
-			out.StackScopeUID = stack.Metadata.ScopeRef.UID
+	access := executiontarget.NewBackingAccessProvider(h.cloud).Access(
+		context.Background(), f16Principal, api.ActionExecutionTargetRead,
+		et.Spec.CloudProviderParticipationRef.UID,
+		et.Spec.InfrastructureStackRef.UID,
+		h.grants,
+	)
+	if access.Disposition != executiontarget.BackingAllowed {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
 		}
 	}
-	return out
+	return access.View.AsViability()
 }
 
 func f16QualifyViaLifecycle(t *testing.T, h *f16Harness, uid, key string) (etmodel.ExecutionTarget, *apiproblem.Problem) {
@@ -342,12 +339,33 @@ func f16QualifyViaLifecycle(t *testing.T, h *f16Harness, uid, key string) (etmod
 	}
 	backing := f16ResolveBacking(h, et)
 	spec := et.Spec
+	provider := executiontarget.NewBackingAccessProvider(h.cloud)
 	req := executiontarget.QualifyCommitRequest{
 		TargetUID: uid,
 		Backing:   backing,
-		RefreshBacking: func() executiontarget.BackingViability {
-			// Must not call F0016 Store getters (would re-enter store mutex under DD-02).
-			return f16ResolveBacking(h, etmodel.ExecutionTarget{Spec: spec})
+		UnderFinalBackingLease: func(commit executiontarget.FinalQualifyCommitFunc) (
+			etmodel.ExecutionTarget, *apiproblem.Problem, chan struct{}, bool,
+		) {
+			var (
+				out     etmodel.ExecutionTarget
+				prob    *apiproblem.Problem
+				wake    chan struct{}
+				allowed bool
+			)
+			disposition := provider.WithFinalQualificationLease(
+				context.Background(), f16Principal, api.ActionExecutionTargetQualify,
+				spec.CloudProviderParticipationRef.UID,
+				spec.InfrastructureStackRef.UID,
+				h.grants,
+				func(view executiontarget.BackingView) {
+					allowed = true
+					out, prob, wake = commit(view.AsViability())
+				},
+			)
+			if disposition != executiontarget.BackingAllowed {
+				return etmodel.ExecutionTarget{}, nil, nil, false
+			}
+			return out, prob, wake, allowed
 		},
 		FactSetUID:  "fs-" + key,
 		ResultUID:   "qr-" + key,

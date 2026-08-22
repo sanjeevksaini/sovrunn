@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/sanjeevksaini/sovrunn/internal/apiconform"
@@ -104,23 +105,25 @@ func (h *ExecutionTargetItemHandler) get(w http.ResponseWriter, r *http.Request,
 }
 
 func (h *ExecutionTargetItemHandler) resolveBackingViability(et etmodel.ExecutionTarget) executiontarget.BackingViability {
-	out := executiontarget.BackingViability{
-		ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
-		StackUID:         et.Spec.InfrastructureStackRef.UID,
+	if h.Cloud == nil || h.Grants == nil {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if h.Cloud == nil {
-		return out
+	access := executiontarget.NewBackingAccessProvider(h.Cloud).Access(
+		context.Background(), "", ActionExecutionTargetRead,
+		et.Spec.CloudProviderParticipationRef.UID,
+		et.Spec.InfrastructureStackRef.UID,
+		h.Grants,
+	)
+	if access.Disposition != executiontarget.BackingAllowed {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if part, ok := h.Cloud.GetParticipation(et.Spec.CloudProviderParticipationRef.UID); ok {
-		out.ParticipationEffectiveActive = participationEffectiveActive(part)
-		out.ParticipationScopeUID = part.Spec.CloudProviderRef.UID
-	}
-	if stack, ok := h.Cloud.GetInfrastructureStack(et.Spec.InfrastructureStackRef.UID); ok {
-		out.StackPhase = string(stack.Status.Phase)
-		out.StackScopeUID = apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID
-		out.StackGeneration = stack.Metadata.Generation
-	}
-	return out
+	return access.View.AsViability()
 }
 
 func (h *ExecutionTargetItemHandler) writeAuditedAuthorizationDenial(

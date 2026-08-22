@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"mime"
 	"net/http"
@@ -163,11 +164,10 @@ func (h *ExecutionTargetCollectionHandler) createAttempt(
 	}
 
 	var (
-		part             cmmodel.CloudProviderParticipation
-		stack            cmmodel.InfrastructureStack
 		cloudProviderUID string
-		providerScope    apimeta.ScopeIdentity
 		backing          executiontarget.BackingViability
+		allowedView      executiontarget.BackingView
+		haveAllowedView  bool
 	)
 
 	if participationUID == "" || stackUID == "" {
@@ -180,28 +180,24 @@ func (h *ExecutionTargetCollectionHandler) createAttempt(
 			return false, true
 		}
 	} else {
-		var partOK bool
-		part, partOK = h.Cloud.GetParticipation(participationUID)
-		if !partOK {
+		access := executiontarget.NewBackingAccessProvider(h.Cloud).Access(
+			r.Context(), principal, ActionExecutionTargetWrite, participationUID, stackUID, h.Grants,
+		)
+		switch access.Disposition {
+		case executiontarget.BackingSafeDenied:
 			h.writeAuditedSafeDenial(w, r, principal)
 			return false, true
-		}
-		cloudProviderUID = part.Spec.CloudProviderRef.UID
-		if cloudProviderUID == "" {
-			h.writeAuditedSafeDenial(w, r, principal)
-			return false, true
-		}
-		providerScope = apimeta.ScopeIdentity{Kind: apimeta.ScopeCloudProvider, UID: cloudProviderUID}
-		if !h.Grants.AuthorizeExact(ActionExecutionTargetWrite, providerScope, "", "") {
+		case executiontarget.BackingAuthorizationDenied:
 			h.writeAuditedAuthorizationDenial(w, r, principal,
 				apiproblem.New(apiproblem.CodeAuthorizationDenied).WithDetail("executiontarget.write grant is required"),
 			)
 			return false, true
-		}
-
-		var stackOK bool
-		stack, stackOK = h.Cloud.GetInfrastructureStack(stackUID)
-		if !stackOK {
+		case executiontarget.BackingAllowed:
+			allowedView = access.View
+			haveAllowedView = true
+			cloudProviderUID = access.View.ParticipationCloudProviderUID
+			backing = access.View.AsViability()
+		default:
 			h.writeAuditedSafeDenial(w, r, principal)
 			return false, true
 		}
@@ -214,23 +210,14 @@ func (h *ExecutionTargetCollectionHandler) createAttempt(
 	}
 
 	name := strings.TrimSpace(phaseOne.Name)
-	targetClass, graphProb := validateExecutionTargetCreateGraph(name, part, stack, phaseOne.Body)
+	targetClass, graphProb := validateExecutionTargetCreateGraph(name, allowedView, haveAllowedView, phaseOne.Body)
 	if graphProb != nil {
 		writeProblem(w, r, graphProb)
 		return false, true
 	}
 
-	if cloudProviderUID == "" {
-		cloudProviderUID = part.Spec.CloudProviderRef.UID
-	}
-	backing = executiontarget.BackingViability{
-		ParticipationUID:             part.Metadata.UID,
-		ParticipationEffectiveActive: participationEffectiveActive(part),
-		ParticipationScopeUID:        cloudProviderUID,
-		StackUID:                     stack.Metadata.UID,
-		StackPhase:                   string(stack.Status.Phase),
-		StackScopeUID:                apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID,
-		StackGeneration:              stack.Metadata.Generation,
+	if cloudProviderUID == "" && haveAllowedView {
+		cloudProviderUID = allowedView.ParticipationCloudProviderUID
 	}
 
 	digest, err := executiontarget.DigestCreate(json.RawMessage(phaseOne.Body))
@@ -294,18 +281,20 @@ func (h *ExecutionTargetCollectionHandler) createAttempt(
 	partRef := apimeta.TypedRef{
 		APIVersion: cmmodel.APIVersionCloudProviderParticipation,
 		Kind:       cmmodel.KindCloudProviderParticipation,
-		Name:       part.Metadata.Name,
-		UID:        part.Metadata.UID,
+		UID:        backing.ParticipationUID,
 	}
 	stackRef := apimeta.TypedRef{
 		APIVersion: cmmodel.APIVersionInfrastructureStack,
 		Kind:       cmmodel.KindInfrastructureStack,
-		Name:       stack.Metadata.Name,
-		UID:        stack.Metadata.UID,
+		UID:        backing.StackUID,
+	}
+	if haveAllowedView {
+		partRef.UID = allowedView.ParticipationUID
+		stackRef.UID = allowedView.StackUID
 	}
 
 	proposed := etmodel.NewCreateProposal(
-		name, uid, cloudProviderUID, partRef, stackRef, stack.Metadata.Generation,
+		name, uid, cloudProviderUID, partRef, stackRef, backing.StackGeneration,
 	)
 	if targetClass != "" {
 		proposed.Spec.TargetClass = targetClass
@@ -330,7 +319,7 @@ func (h *ExecutionTargetCollectionHandler) createAttempt(
 		CloudProviderScopeUID: cloudProviderUID,
 		ParticipationRef:      partRef,
 		StackRef:              stackRef,
-		StackGeneration:       stack.Metadata.Generation,
+		StackGeneration:       backing.StackGeneration,
 		TargetClass:           targetClass,
 		ClientStatusAttempted: clientStatusAttempted,
 		Actor:                 actorRef(principal),
@@ -558,8 +547,8 @@ func collectExecutionTargetPaths(v any, prefix string) []string {
 
 func validateExecutionTargetCreateGraph(
 	name string,
-	part cmmodel.CloudProviderParticipation,
-	stack cmmodel.InfrastructureStack,
+	view executiontarget.BackingView,
+	haveView bool,
 	body []byte,
 ) (etmodel.TargetClass, *apiproblem.Problem) {
 	if name == "" {
@@ -569,14 +558,14 @@ func validateExecutionTargetCreateGraph(
 			Message: "metadata.name is required",
 		}})
 	}
-	if part.Metadata.UID == "" {
+	if !haveView || view.ParticipationUID == "" {
 		return "", apiproblem.New(apiproblem.CodeValidationFailed).WithViolations([]apiproblem.Violation{{
 			Field:   "/spec/cloudProviderParticipationRef/uid",
 			Code:    apiproblem.ViolationOutOfRange,
 			Message: "participation uid is required",
 		}})
 	}
-	if stack.Metadata.UID == "" {
+	if view.StackUID == "" {
 		return "", apiproblem.New(apiproblem.CodeValidationFailed).WithViolations([]apiproblem.Violation{{
 			Field:   "/spec/infrastructureStackRef/uid",
 			Code:    apiproblem.ViolationOutOfRange,
@@ -600,14 +589,14 @@ func validateExecutionTargetCreateGraph(
 		}})
 	}
 
-	if !participationEffectiveActive(part) {
+	if !view.ParticipationEffectiveActive {
 		return "", apiproblem.New(apiproblem.CodeConflict).WithViolations([]apiproblem.Violation{{
 			Field:   "/spec/cloudProviderParticipationRef/uid",
 			Code:    executiontarget.ViolationExecutionTargetParticipationUnavailable,
 			Message: "CloudProviderParticipation is not effective-Active",
 		}})
 	}
-	if stack.Status.Phase != cmmodel.InfrastructureStackPhaseActive {
+	if !view.StackActive() {
 		return "", apiproblem.New(apiproblem.CodeConflict).WithViolations([]apiproblem.Violation{{
 			Field:   "/spec/infrastructureStackRef/uid",
 			Code:    executiontarget.ViolationExecutionTargetStackUnavailable,
@@ -615,9 +604,8 @@ func validateExecutionTargetCreateGraph(
 		}})
 	}
 
-	partScope := part.Spec.CloudProviderRef.UID
-	stackScope := apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID
-	if partScope == "" || stackScope == "" || partScope != stackScope {
+	if view.ParticipationCloudProviderUID == "" || view.StackScopeUID == "" ||
+		view.ParticipationCloudProviderUID != view.StackScopeUID {
 		return "", apiproblem.New(apiproblem.CodeValidationFailed).WithViolations([]apiproblem.Violation{{
 			Field:   "/spec",
 			Code:    executiontarget.ViolationExecutionTargetScopeMismatch,
@@ -627,30 +615,26 @@ func validateExecutionTargetCreateGraph(
 	return targetClass, nil
 }
 
-func participationEffectiveActive(part cmmodel.CloudProviderParticipation) bool {
-	return part.Status.Phase == cmmodel.ParticipationPhaseActive &&
-		!part.Status.PlatformSuspended &&
-		!part.Status.ProviderSuspended
-}
-
 func (h *ExecutionTargetCollectionHandler) resolveBackingViability(et etmodel.ExecutionTarget) executiontarget.BackingViability {
-	out := executiontarget.BackingViability{
-		ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
-		StackUID:         et.Spec.InfrastructureStackRef.UID,
+	if h.Cloud == nil || h.Grants == nil {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if h.Cloud == nil {
-		return out
+	access := executiontarget.NewBackingAccessProvider(h.Cloud).Access(
+		context.Background(), "", ActionExecutionTargetRead,
+		et.Spec.CloudProviderParticipationRef.UID,
+		et.Spec.InfrastructureStackRef.UID,
+		h.Grants,
+	)
+	if access.Disposition != executiontarget.BackingAllowed {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if part, ok := h.Cloud.GetParticipation(et.Spec.CloudProviderParticipationRef.UID); ok {
-		out.ParticipationEffectiveActive = participationEffectiveActive(part)
-		out.ParticipationScopeUID = part.Spec.CloudProviderRef.UID
-	}
-	if stack, ok := h.Cloud.GetInfrastructureStack(et.Spec.InfrastructureStackRef.UID); ok {
-		out.StackPhase = string(stack.Status.Phase)
-		out.StackScopeUID = apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID
-		out.StackGeneration = stack.Metadata.Generation
-	}
-	return out
+	return access.View.AsViability()
 }
 
 func (h *ExecutionTargetCollectionHandler) writeAuditedAuthorizationDenial(

@@ -904,3 +904,72 @@ func TestQualify_PanicCleansReservations(t *testing.T) {
 		t.Fatal("panic must clear Qualifying reservation")
 	}
 }
+
+func TestQualify_UnderFinalBackingLease_DeniedAbortsWithoutAudit(t *testing.T) {
+	t.Parallel()
+	svc, store, idemp, audit, fixtures := newQualifyLifecycle(t, nil)
+	et := createActiveTarget(t, svc)
+	fixtures.Set(et.Metadata.UID, presentFixture("fx", allSupportedTruths()))
+	beforeAudit := audit.Len()
+	beforeRV := et.Metadata.ResourceVersion
+
+	req := baseQualifyReq(et.Metadata.UID, "k-lease-deny")
+	req.UnderFinalBackingLease = func(commit FinalQualifyCommitFunc) (model.ExecutionTarget, *apiproblem.Problem, chan struct{}, bool) {
+		_ = commit
+		return model.ExecutionTarget{}, nil, nil, false
+	}
+	if res := svc.ReserveOrInspectReplay(req.Idempotency, req.Digest); res.Outcome != ReservationOutcomeReserved {
+		t.Fatalf("reserve: %#v", res)
+	}
+	_, prob := svc.Qualify(context.Background(), req)
+	if prob == nil || prob.Code != apiproblem.CodeStaleResourceVersion {
+		t.Fatalf("want viability-stale, got %#v", prob)
+	}
+	if len(prob.Violations) == 0 || prob.Violations[0].Code != ViolationExecutionTargetViabilityStale {
+		t.Fatalf("want VS0_EXECUTION_TARGET_VIABILITY_STALE, got %#v", prob.Violations)
+	}
+	after, _ := store.GetExecutionTarget(et.Metadata.UID)
+	if after.Metadata.ResourceVersion != beforeRV || after.Status.FactSetRef != nil {
+		t.Fatal("denied final lease must not publish")
+	}
+	if _, ok := idemp.stateForTest(req.Idempotency, svc.now()); ok {
+		t.Fatal("must remove InFlight")
+	}
+	if audit.Len() != beforeAudit {
+		t.Fatal("must not qualify-audit")
+	}
+}
+
+func TestQualify_ParticipationGenerationNotFence(t *testing.T) {
+	t.Parallel()
+	svc, store, _, audit, fixtures := newQualifyLifecycle(t, nil)
+	et := createActiveTarget(t, svc)
+	fixtures.Set(et.Metadata.UID, presentFixture("fx", allSupportedTruths()))
+	beforeAudit := audit.Len()
+
+	req := baseQualifyReq(et.Metadata.UID, "k-part-gen")
+	// Synthesize a final lease view that only "changes" participation generation
+	// indirectly by keeping the same viability fingerprint (generation is not
+	// part of BackingViability / fences).
+	req.UnderFinalBackingLease = func(commit FinalQualifyCommitFunc) (model.ExecutionTarget, *apiproblem.Problem, chan struct{}, bool) {
+		out, prob, wake := commit(req.Backing)
+		return out, prob, wake, true
+	}
+	if res := svc.ReserveOrInspectReplay(req.Idempotency, req.Digest); res.Outcome != ReservationOutcomeReserved {
+		t.Fatalf("reserve: %#v", res)
+	}
+	got, prob := svc.Qualify(context.Background(), req)
+	if prob != nil {
+		t.Fatalf("participation generation must not fence: %#v", prob)
+	}
+	if got.Status.FactSetRef == nil {
+		t.Fatal("qualification must publish")
+	}
+	if audit.Len() != beforeAudit+1 {
+		t.Fatalf("audit=%d", audit.Len()-beforeAudit)
+	}
+	after, _ := store.GetExecutionTarget(et.Metadata.UID)
+	if after.Status.Qualification != model.QualificationQualified {
+		t.Fatalf("qualification=%s", after.Status.Qualification)
+	}
+}

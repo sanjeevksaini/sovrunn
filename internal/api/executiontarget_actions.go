@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -275,13 +276,35 @@ func (h *ExecutionTargetActionHandler) dispatchQualify(
 
 	cloud := h.Cloud
 	spec := live.Spec
+	provider := executiontarget.NewBackingAccessProvider(cloud)
 	req := executiontarget.QualifyCommitRequest{
 		TargetUID: uid,
 		Backing:   backing,
-		RefreshBacking: func() executiontarget.BackingViability {
-			// Invoked under the DD-02 mutex + store publication lock. Must not
-			// call F0016 Store getters (would re-enter the store mutex).
-			return resolveBackingViabilityFromCloud(cloud, etmodel.ExecutionTarget{Spec: spec})
+		UnderFinalBackingLease: func(commit executiontarget.FinalQualifyCommitFunc) (
+			etmodel.ExecutionTarget, *apiproblem.Problem, chan struct{}, bool,
+		) {
+			var (
+				out     etmodel.ExecutionTarget
+				prob    *apiproblem.Problem
+				wake    chan struct{}
+				allowed bool
+			)
+			disposition := provider.WithFinalQualificationLease(
+				r.Context(),
+				principal,
+				ActionExecutionTargetQualify,
+				spec.CloudProviderParticipationRef.UID,
+				spec.InfrastructureStackRef.UID,
+				h.Grants,
+				func(view executiontarget.BackingView) {
+					allowed = true
+					out, prob, wake = commit(view.AsViability())
+				},
+			)
+			if disposition != executiontarget.BackingAllowed {
+				return etmodel.ExecutionTarget{}, nil, nil, false
+			}
+			return out, prob, wake, allowed
 		},
 		FactSetUID:  factUID,
 		ResultUID:   resultUID,
@@ -394,21 +417,23 @@ func (h *ExecutionTargetActionHandler) admitQualifyBacking(
 ) bool {
 	partUID := et.Spec.CloudProviderParticipationRef.UID
 	stackUID := et.Spec.InfrastructureStackRef.UID
-	part, partOK := h.Cloud.GetParticipation(partUID)
-	stack, stackOK := h.Cloud.GetInfrastructureStack(stackUID)
-	if !partOK || !stackOK {
+	access := executiontarget.NewBackingAccessProvider(h.Cloud).Access(
+		r.Context(), principal, ActionExecutionTargetQualify, partUID, stackUID, h.Grants,
+	)
+	switch access.Disposition {
+	case executiontarget.BackingSafeDenied:
 		h.writeAuditedSafeDenial(w, r, principal)
 		return true
-	}
-
-	*backing = executiontarget.BackingViability{
-		ParticipationUID:             part.Metadata.UID,
-		ParticipationEffectiveActive: participationEffectiveActive(part),
-		ParticipationScopeUID:        part.Spec.CloudProviderRef.UID,
-		StackUID:                     stack.Metadata.UID,
-		StackPhase:                   string(stack.Status.Phase),
-		StackScopeUID:                apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID,
-		StackGeneration:              stack.Metadata.Generation,
+	case executiontarget.BackingAuthorizationDenied:
+		h.writeAuditedAuthorizationDenial(w, r, principal,
+			apiproblem.New(apiproblem.CodeAuthorizationDenied).WithDetail("executiontarget.qualify grant is required"),
+		)
+		return true
+	case executiontarget.BackingAllowed:
+		*backing = access.View.AsViability()
+	default:
+		h.writeAuditedSafeDenial(w, r, principal)
+		return true
 	}
 
 	if !backing.ParticipationEffectiveActive {
@@ -440,27 +465,25 @@ func (h *ExecutionTargetActionHandler) admitQualifyBacking(
 }
 
 func (h *ExecutionTargetActionHandler) resolveBackingViability(et etmodel.ExecutionTarget) executiontarget.BackingViability {
-	return resolveBackingViabilityFromCloud(h.Cloud, et)
-}
-
-func resolveBackingViabilityFromCloud(cloud *cloudmodel.Store, et etmodel.ExecutionTarget) executiontarget.BackingViability {
-	out := executiontarget.BackingViability{
-		ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
-		StackUID:         et.Spec.InfrastructureStackRef.UID,
+	if h.Cloud == nil || h.Grants == nil {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if cloud == nil {
-		return out
+	access := executiontarget.NewBackingAccessProvider(h.Cloud).Access(
+		context.Background(), "", ActionExecutionTargetRead,
+		et.Spec.CloudProviderParticipationRef.UID,
+		et.Spec.InfrastructureStackRef.UID,
+		h.Grants,
+	)
+	if access.Disposition != executiontarget.BackingAllowed {
+		return executiontarget.BackingViability{
+			ParticipationUID: et.Spec.CloudProviderParticipationRef.UID,
+			StackUID:         et.Spec.InfrastructureStackRef.UID,
+		}
 	}
-	if part, ok := cloud.GetParticipation(et.Spec.CloudProviderParticipationRef.UID); ok {
-		out.ParticipationEffectiveActive = participationEffectiveActive(part)
-		out.ParticipationScopeUID = part.Spec.CloudProviderRef.UID
-	}
-	if stack, ok := cloud.GetInfrastructureStack(et.Spec.InfrastructureStackRef.UID); ok {
-		out.StackPhase = string(stack.Status.Phase)
-		out.StackScopeUID = apimeta.CanonicalScopeIdentity(stack.Metadata.ScopeRef).UID
-		out.StackGeneration = stack.Metadata.Generation
-	}
-	return out
+	return access.View.AsViability()
 }
 
 func validateExecutionTargetActionGrammar(r *http.Request) (ifMatch string, prob *apiproblem.Problem) {

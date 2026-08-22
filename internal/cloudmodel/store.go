@@ -561,6 +561,38 @@ func (s *Store) LookupInfrastructureStack(uid string) (model.InfrastructureStack
 	return st, ok
 }
 
+// PairedBackingSnapshot is an F0016-only compatibility view: immutable copies of
+// both backing resources obtained under one store-lock acquisition (ADH-2026-066).
+// It is not a FEATURE-0015 public API, route, schema, writer, or lifecycle.
+type PairedBackingSnapshot struct {
+	Participation   model.CloudProviderParticipation
+	ParticipationOK bool
+	Stack           model.InfrastructureStack
+	StackOK         bool
+}
+
+// WithPairedBackingRead acquires the existing store lock once, copies the
+// requested CloudProviderParticipation and InfrastructureStack, and invokes fn
+// while that lock remains held. FEATURE-0016's BackingAccessProvider is the
+// sole intended caller. fn must not re-enter store methods that acquire mu.
+func (s *Store) WithPairedBackingRead(participationUID, stackUID string, fn func(PairedBackingSnapshot)) {
+	if fn == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var snap PairedBackingSnapshot
+	if p, ok := s.participations[participationUID]; ok {
+		snap.Participation = p
+		snap.ParticipationOK = true
+	}
+	if st, ok := s.stacks[stackUID]; ok {
+		snap.Stack = st
+		snap.StackOK = true
+	}
+	fn(snap)
+}
+
 // CreateCloudPlatform is a convenience helper that stages and publishes under
 // the publication lock (used by store tests and later coordinators).
 func (s *Store) CreateCloudPlatform(cp model.CloudPlatform) (model.CloudPlatform, *apiproblem.Problem) {

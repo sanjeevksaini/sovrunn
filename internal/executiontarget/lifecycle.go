@@ -122,8 +122,23 @@ type QualifyCommitRequest struct {
 	// Backing is the already-resolved participation/stack snapshot for the
 	// under-mutex viability recheck and initial fence capture.
 	Backing BackingViability
-	// RefreshBacking, when non-nil, is invoked under the commit mutex to obtain
-	// the current generation/viability fences. Nil means Backing remains current.
+
+	// UnderFinalBackingLease, when non-nil, must hold a fresh FEATURE-0015
+	// paired backing-read lease across the commit callback. The lifecycle
+	// service invokes it after unlocked observation and the callback acquires
+	// the lifecycle mutex — preserving lease → lifecycle → audit → publication
+	// order (ADH-2026-066). When access is not Allowed, allowed=false and the
+	// service aborts without publication.
+	UnderFinalBackingLease func(commit FinalQualifyCommitFunc) (
+		out model.ExecutionTarget,
+		prob *apiproblem.Problem,
+		wake chan struct{},
+		allowed bool,
+	)
+
+	// RefreshBacking, when non-nil and UnderFinalBackingLease is nil, is
+	// invoked outside the lifecycle mutex to obtain the current
+	// generation/viability fences (test helper path only).
 	RefreshBacking func() BackingViability
 
 	FactSetUID string
@@ -137,6 +152,15 @@ type QualifyCommitRequest struct {
 	Digest      Digest
 	Completion  CompletedResult
 }
+
+// FinalQualifyCommitFunc is invoked while a fresh paired backing-read lease is
+// held (or, in tests, with a synthesized current view). It must acquire the
+// lifecycle mutex itself.
+type FinalQualifyCommitFunc func(currentBacking BackingViability) (
+	out model.ExecutionTarget,
+	prob *apiproblem.Problem,
+	wake chan struct{},
+)
 
 // MaintenanceCommitRequest is the fenced maintenance enter/clear input
 // (DD-07; DEC-0057; ADH-2026-061). Delivered only through the target-bound
@@ -691,42 +715,69 @@ func (s *ExecutionTargetLifecycleService) Qualify(ctx context.Context, req Quali
 
 	eval, evalErr := EvaluateObservation(obs, s.now())
 
-	s.lock()
-	holding = true
+	commit := func(currentBacking BackingViability) (model.ExecutionTarget, *apiproblem.Problem, chan struct{}) {
+		s.lock()
+		holding = true
+		if s.stopped {
+			wake := s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
+			s.unlock()
+			holding = false
+			return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("qualification stopped"), wake
+		}
+		if res.aborted != nil {
+			// Winning transition already removed the reservation from the map and
+			// will close the linked idempotency done channel after its unlock.
+			s.unlock()
+			holding = false
+			return model.ExecutionTarget{}, res.aborted, nil
+		}
+		if s.qualifying[req.TargetUID] != res {
+			wake := s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
+			s.unlock()
+			holding = false
+			return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("qualifying reservation lost"), wake
+		}
+		if evalErr != nil {
+			wake := s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
+			s.unlock()
+			holding = false
+			return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("observer fault"), wake
+		}
+		commitReq := req
+		commitReq.Backing = currentBacking
+		out, prob, wake := s.commitQualifyLocked(ctx, commitReq, res, obs, eval)
+		s.unlock()
+		holding = false
+		return out, prob, wake
+	}
 
-	if s.stopped {
-		wake = s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
-		s.unlock()
-		holding = false
-		closeReservationDone(wake)
-		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("qualification stopped")
+	var (
+		out     model.ExecutionTarget
+		prob    *apiproblem.Problem
+		wakeOut chan struct{}
+	)
+	if req.UnderFinalBackingLease != nil {
+		var allowed bool
+		out, prob, wakeOut, allowed = req.UnderFinalBackingLease(commit)
+		if !allowed {
+			s.lock()
+			holding = true
+			wakeOut = s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
+			s.unlock()
+			holding = false
+			closeReservationDone(wakeOut)
+			return model.ExecutionTarget{}, viabilityStaleProblem()
+		}
+	} else {
+		current := req.Backing
+		if req.RefreshBacking != nil {
+			// Test helper path only: refresh outside the lifecycle mutex so the
+			// production lease → mutex order remains the only cross-package order.
+			current = req.RefreshBacking()
+		}
+		out, prob, wakeOut = commit(current)
 	}
-	if res.aborted != nil {
-		// Winning transition already removed the reservation from the map and
-		// will close the linked idempotency done channel after its unlock.
-		s.unlock()
-		holding = false
-		return model.ExecutionTarget{}, res.aborted
-	}
-	if s.qualifying[req.TargetUID] != res {
-		wake = s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
-		s.unlock()
-		holding = false
-		closeReservationDone(wake)
-		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("qualifying reservation lost")
-	}
-	if evalErr != nil {
-		wake = s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
-		s.unlock()
-		holding = false
-		closeReservationDone(wake)
-		return model.ExecutionTarget{}, apiproblem.New(apiproblem.CodeInternalError).WithDetail("observer fault")
-	}
-
-	out, prob, wake := s.commitQualifyLocked(ctx, req, res, obs, eval)
-	s.unlock()
-	holding = false
-	closeReservationDone(wake)
+	closeReservationDone(wakeOut)
 	return out, prob
 }
 
@@ -758,9 +809,6 @@ func (s *ExecutionTargetLifecycleService) commitQualifyLocked(
 	}
 
 	currentBacking := req.Backing
-	if req.RefreshBacking != nil {
-		currentBacking = req.RefreshBacking()
-	}
 	if currentBacking.StackGeneration != res.fences.stackGeneration {
 		wake := s.abortQualifyAndIdempotencyLocked(res, req.Idempotency)
 		return model.ExecutionTarget{}, epochStaleProblem(), wake
