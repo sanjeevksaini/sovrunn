@@ -27,6 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "docs/architecture/vertical-slices/VS-000-contract-registry.yaml"
 F15_ARCH = ROOT / "docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md"
 F15_FEATURE = ROOT / "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"
+F16_ARCH = ROOT / "docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
+F16_FEATURE = ROOT / "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
 
 F15_KINDS = (
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
@@ -40,6 +42,21 @@ F15_ACTIONS = (
 # has no PATCH surface, hence Go 1.22 needs 14 + 13 + 8 = 35 method patterns.
 F15_LOGICAL_PATHS = 22
 F15_METHOD_PATTERNS = 35
+
+F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 129)]
+F16_ROUTES = (
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
+    ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets"),
+    ("GET", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}"),
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/qualify"),
+    ("POST", "/apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/retire"),
+)
+F16_CLOSED_VIOLATIONS = (
+    "VS0_TARGET_RETIRED", "VS0_TARGET_MAINTENANCE", "VS0_TARGET_QUALIFICATION_IN_PROGRESS",
+    "VS0_TARGET_EPOCH_STALE", "VS0_EXECUTION_TARGET_PARTICIPATION_UNAVAILABLE",
+    "VS0_EXECUTION_TARGET_STACK_UNAVAILABLE", "VS0_EXECUTION_TARGET_SCOPE_MISMATCH",
+    "VS0_EXECUTION_TARGET_VIABILITY_STALE",
+)
 
 
 def load_registry() -> dict:
@@ -218,22 +235,200 @@ def check_f0015(registry: dict, errors: list[str]) -> None:
             "ROUTING: authority must prohibit path-only internal method dispatch")
 
 
+def check_f0016(registry: dict, errors: list[str]) -> None:
+    """FEATURE-0016 route catalog per ADH-2026-058.
+
+    This checker validates only the route/conformance/violation closure that
+    is this checker's concern; the full architecture-readiness surface
+    (placeholder removal, sole writer/observer, closure matrix, control
+    manifest, reuse assessment, steering) is separately and more completely
+    validated by scripts/feature-0016-architecture-readiness-check.py.
+    """
+    cases = by_id(registry)
+
+    missing_cf = [cid for cid in F16_REQUIRED_CF_IDS if cid not in cases]
+    require(errors, not missing_cf,
+            f"CONFORMANCE: missing {len(missing_cf)} required VS0-CF-F16 case(s): {missing_cf[:10]}")
+    for case in cases.values():
+        if not str(case.get("id", "")).startswith("VS0-CF-F16-"):
+            continue
+        require(errors, case.get("owner") == "FEATURE-0016",
+                f"CONFORMANCE: {case.get('id')} owner must be FEATURE-0016, found {case.get('owner')!r}")
+
+    if not F16_ARCH.exists():
+        require(errors, False, f"ROUTES: missing architecture authority {F16_ARCH.relative_to(ROOT)}")
+        return
+    arch_lower = F16_ARCH.read_text().lower()
+    for method, path in F16_ROUTES:
+        require(errors, path.lower() in arch_lower,
+                f"ROUTES: F0016 architecture must state route {method} {path} (ADH-2026-058 clause 3)")
+    require(errors, "no patch" in arch_lower,
+            "ROUTES: F0016 architecture must state no PATCH/PUT/DELETE/HEAD public route exists (ADH-2026-058 clause 3)")
+    require(errors, "pre-servemux" in arch_lower,
+            "ROUTES: F0016 architecture must describe the pre-ServeMux transport-only method/path guard (ADH-2026-058 clause 3)")
+
+    vcs = {vc.get("code") for vc in registry.get("violationCodes", {}).get("slice0", [])}
+    for code in F16_CLOSED_VIOLATIONS:
+        require(errors, code in vcs, f"VIOLATIONS: {code} must be a registered violation code (ADH-2026-058 clause 9)")
+
+    if F16_FEATURE.exists():
+        feat_lower = F16_FEATURE.read_text().lower()
+        require(errors, "exactly five" in feat_lower or "five routes" in feat_lower or "five explicit" in feat_lower,
+                "ROUTES: F0016 feature must state the exact five-route closure (ADH-2026-058 clause 3)")
+
+    # ADH-2026-060: F16-75 (inactive-marker epoch-stale) and F16-89 (active-marker
+    # Maintenance-wins) must be mutually exclusive and must not be reversed.
+    f16_75 = cases.get("VS0-CF-F16-75")
+    f16_89 = cases.get("VS0-CF-F16-89")
+    require(errors, f16_75 is not None, "MAINTENANCE-RACE: VS0-CF-F16-75 not found in registry (ADH-2026-060)")
+    require(errors, f16_89 is not None, "MAINTENANCE-RACE: VS0-CF-F16-89 not found in registry (ADH-2026-060)")
+    if f16_75 is not None and f16_89 is not None:
+        f75_inputs = str(f16_75.get("inputs", "")).lower()
+        f89_inputs = str(f16_89.get("inputs", "")).lower()
+        require(errors, "maintenance entry wins" not in f75_inputs and "maintenance-entry wins" not in f75_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-75 must not say Maintenance entry wins (ADH-2026-060); that is the F16-89 case")
+        require(errors, "no active current-maintenance marker" in f75_inputs or "no active current-maintenance marker exists" in f75_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-75 input must state no active current-Maintenance marker exists (ADH-2026-060)")
+        require(errors, "maintenance entry wins" in f89_inputs,
+                "MAINTENANCE-RACE: VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
+        require(errors, f16_75.get("expectedError") == "STALE_RESOURCE_VERSION",
+                f"MAINTENANCE-RACE: VS0-CF-F16-75 expectedError must be STALE_RESOURCE_VERSION, found {f16_75.get('expectedError')!r} (ADH-2026-060)")
+        require(errors, f16_75.get("expectedViolation") == "VS0_TARGET_EPOCH_STALE",
+                f"MAINTENANCE-RACE: VS0-CF-F16-75 expectedViolation must be VS0_TARGET_EPOCH_STALE, found {f16_75.get('expectedViolation')!r} (ADH-2026-060)")
+        require(errors, f16_89.get("expectedError") == "CONFLICT",
+                f"MAINTENANCE-RACE: VS0-CF-F16-89 expectedError must be CONFLICT, found {f16_89.get('expectedError')!r} (ADH-2026-060)")
+        require(errors, f16_89.get("expectedViolation") == "VS0_TARGET_MAINTENANCE",
+                f"MAINTENANCE-RACE: VS0-CF-F16-89 expectedViolation must be VS0_TARGET_MAINTENANCE, found {f16_89.get('expectedViolation')!r} (ADH-2026-060)")
+
+    # ADH-2026-061: F16-42 (Maintenance entry clears links), F16-43 (Maintenance
+    # clear), and F16-89 (Maintenance-wins during in-flight qualification) must
+    # keep their exact pre-existing observable semantics; the registry itself is
+    # not the source of the fixed contradiction, so this checker only verifies
+    # it remains unaltered by this correction.
+    f16_42 = cases.get("VS0-CF-F16-42")
+    f16_43 = cases.get("VS0-CF-F16-43")
+    require(errors, f16_42 is not None, "MAINTENANCE-LINKS: VS0-CF-F16-42 not found in registry (ADH-2026-061)")
+    require(errors, f16_43 is not None, "MAINTENANCE-LINKS: VS0-CF-F16-43 not found in registry (ADH-2026-061)")
+    if f16_42 is not None:
+        f42_effects = str(f16_42.get("expectedSideEffects", "")).lower()
+        require(errors, "current factset/result links clear" in f42_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-42 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_43 is not None:
+        f43_effects = str(f16_43.get("expectedSideEffects", "")).lower()
+        require(errors, "current factset/result links clear" in f43_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-43 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_89 is not None:
+        f89_effects = str(f16_89.get("expectedSideEffects", "")).lower()
+        require(errors, "no qualification result, completion, or qualification auditevent" in f89_effects,
+                "MAINTENANCE-LINKS: VS0-CF-F16-89 must keep its no-result/no-completion/no-AuditEvent outcome unchanged (ADH-2026-061)")
+
+    # ADH-2026-063: the four new collection-create phase-one/strict-classification
+    # rows must exist and must not deviate; the architecture authority must pin
+    # the ordered precedence (oversized first; phase one never classifies/digests/
+    # reserves; authorization/safe access precede strict classification).
+    f16_123 = cases.get("VS0-CF-F16-123")
+    f16_124 = cases.get("VS0-CF-F16-124")
+    f16_125 = cases.get("VS0-CF-F16-125")
+    f16_126 = cases.get("VS0-CF-F16-126")
+    require(errors, f16_123 is not None and f16_123.get("expectedError") == "AUTHORIZATION_DENIED",
+            "ADH063: VS0-CF-F16-123 must exist and be AUTHORIZATION_DENIED with no body classification (ADH-2026-063)")
+    if f16_123 is not None:
+        require(errors, "never classifies, canonicalizes, digests, or reserves" in str(f16_123.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-123 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    require(errors, f16_124 is not None and f16_124.get("expectedError") == "RESOURCE_NOT_FOUND"
+            and (f16_124 or {}).get("expectedViolation") == "VS0_AUTHORIZATION_SAFE_DENIAL",
+            "ADH063: VS0-CF-F16-124 must exist and be safe RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
+    if f16_124 is not None:
+        require(errors, "never classifies, canonicalizes, digests, or reserves" in str(f16_124.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    require(errors, f16_126 is not None and f16_126.get("expectedError") == "REQUEST_TOO_LARGE",
+            "ADH063: VS0-CF-F16-126 must exist and be REQUEST_TOO_LARGE (ADH-2026-063)")
+    if f16_126 is not None:
+        require(errors, "before phase-one extraction, authorization, or safe access" in str(f16_126.get("expectedSideEffects", "")).lower(),
+                "ADH063: VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    require(errors, "adh-2026-063" in arch_lower,
+            "ADH063: F0016 architecture must reference ADH-2026-063 as a controlling correction")
+
+    # ADH-2026-065: split the divergent strict-classification family into exact
+    # non-family cases and add the fail-closed missing/unextractable phase-one
+    # reference denial. F16-125 is malformed-JSON only; F16-127 is duplicate
+    # top-level member only; F16-128 is the phase-one extraction denial.
+    f16_127 = cases.get("VS0-CF-F16-127")
+    f16_128 = cases.get("VS0-CF-F16-128")
+    require(errors, f16_125 is not None and f16_125.get("expectedError") == "MALFORMED_REQUEST",
+            "ADH065: VS0-CF-F16-125 must exist and be MALFORMED_REQUEST (exact non-family malformed-JSON case) (ADH-2026-065)")
+    if f16_125 is not None:
+        f125_effects = str(f16_125.get("expectedSideEffects", "")).lower()
+        require(errors, "duplicate" not in f125_effects,
+                "ADH065: VS0-CF-F16-125 must not name a duplicate case; it is the exact malformed-JSON classification case (ADH-2026-065)")
+        require(errors, "malformed" in f125_effects and "malformed_request" in f125_effects and "strict single classification" in f125_effects,
+                "ADH065: VS0-CF-F16-125 must state a single strict classification returning MALFORMED_REQUEST for malformed JSON (ADH-2026-065)")
+    require(errors, f16_127 is not None and f16_127.get("expectedError") == "DUPLICATE_FIELD",
+            "ADH065: VS0-CF-F16-127 must exist and be DUPLICATE_FIELD (exact non-family duplicate-top-level-member case) (ADH-2026-065)")
+    if f16_127 is not None:
+        f127_effects = str(f16_127.get("expectedSideEffects", "")).lower()
+        require(errors, "malformed" not in f127_effects,
+                "ADH065: VS0-CF-F16-127 must not name a malformed case; it is the exact duplicate-top-level-member classification case (ADH-2026-065)")
+        require(errors, "duplicate" in f127_effects and "duplicate_field" in f127_effects and "strict single classification" in f127_effects,
+                "ADH065: VS0-CF-F16-127 must state a single strict classification returning DUPLICATE_FIELD for a duplicate top-level member (ADH-2026-065)")
+    require(errors, f16_128 is not None and f16_128.get("expectedError") == "AUTHORIZATION_DENIED",
+            "ADH065: VS0-CF-F16-128 must exist and be the existing audited AUTHORIZATION_DENIED phase-one extraction denial (ADH-2026-065)")
+    if f16_128 is not None:
+        f128_text = (str(f16_128.get("inputs", "")) + " " + str(f16_128.get("expectedSideEffects", ""))).lower()
+        require(errors, "exactly one syntactically usable uid" in f128_text and "both" in f128_text
+                and "spec.cloudproviderparticipationref.uid" in f128_text and "spec.infrastructurestackref.uid" in f128_text,
+                "ADH065: VS0-CF-F16-128 must state phase one cannot extract exactly one syntactically usable UID at both required reference paths (ADH-2026-065)")
+        require(errors, "audited" in f128_text and "403" in f128_text
+                and "no body-classification detail" in f128_text and "no backing-resource existence" in f128_text,
+                "ADH065: VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
+        require(errors, all(tok in f128_text for tok in (
+                "strict classification", "canonicalization", "digest", "reservation",
+                "observer", "mutation", "publication", "completion")),
+                "ADH065: VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
+    require(errors, "adh-2026-065" in arch_lower,
+            "ADH065: F0016 architecture must reference ADH-2026-065 as a controlling correction")
+    require(errors, "before phase-one extraction, authorization, or safe access" in arch_lower,
+            "ADH063: F0016 architecture must state the oversized body is rejected before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    require(errors, "never classifies, canonicalizes, digests, or reserves a body" in arch_lower,
+            "ADH063: F0016 architecture must state phase one never classifies/canonicalizes/digests/reserves a body (ADH-2026-063)")
+    require(errors, "only then are the retained same bytes strictly classified" in arch_lower,
+            "ADH063: F0016 architecture must state authorization and safe access precede the single strict classification (ADH-2026-063)")
+    # ADH-2026-066 adds only an internal F0016 backing-access compatibility
+    # bridge. It must not change the public contract, but its ownership and
+    # registered-fence limits must remain explicit.
+    normalized_arch = " ".join(arch_lower.split())
+    for marker in (
+        "adh-2026-066", "backingaccessprovider", "private feature-0015 store-backed read lease",
+        "infrastructurestack-generation and viability-fingerprint fences",
+        "participation generation is not a fence",
+    ):
+        require(errors, marker in normalized_arch,
+                f"ADH066: F0016 architecture must state {marker!r} for the private backing-access bridge")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature", required=True)
     args = parser.parse_args()
-    if args.feature != "FEATURE-0015":
+    if args.feature not in ("FEATURE-0015", "FEATURE-0016"):
         raise SystemExit(f"FAIL: no route catalog is configured for {args.feature}")
 
     errors: list[str] = []
-    check_f0015(load_registry(), errors)
+    registry = load_registry()
+    if args.feature == "FEATURE-0015":
+        check_f0015(registry, errors)
+    else:
+        check_f0016(registry, errors)
     if errors:
         print(f"FAIL: {args.feature} feature-contract-check — {len(errors)} error(s)")
         for error in errors:
             print(f"  ✗ {error}")
         print("Kiro requirements/design/tasks generation is BLOCKED until the feature contract closes.")
         raise SystemExit(1)
-    print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
+    if args.feature == "FEATURE-0015":
+        print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
+    else:
+        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..128), ADH-2026-063 create phase-one/strict-classification precedence, ADH-2026-065 exact classification/phase-one-reference evidence, and the ADH-2026-066 private backing-access bridge")
 
 
 if __name__ == "__main__":

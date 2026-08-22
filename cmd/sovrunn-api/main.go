@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/sanjeevksaini/sovrunn/internal/api"
+	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
 	"github.com/sanjeevksaini/sovrunn/internal/config"
 	"github.com/sanjeevksaini/sovrunn/internal/health"
@@ -87,10 +88,31 @@ func main() {
 	// signal-driven Shutdown() stops the scheduler, aborts in-flight
 	// idempotency reservations (waking waiters), then completes process exit.
 	auditLog := &cloudmodel.MemoryAuditAppender{}
-	srv.AttachCloudModel(server.NewCloudModelRuntime(auditLog))
+	cloudRT := server.NewCloudModelRuntime(auditLog)
+	srv.AttachCloudModel(cloudRT)
+
+	// FEATURE-0016 TASK-F16-11: one shared lifecycle service and scheduler,
+	// injected into every F0016 handler, wrapped once by the pre-ServeMux
+	// guard after all five registrations exist. Process-start routes begin at
+	// authentication; grants are empty until identity wiring lands (401).
+	etRT := server.NewExecutionTargetRuntime(auditLog)
+	srv.AttachExecutionTarget(etRT, cloudRT.Store, emptyExecutionTargetGrants{})
 
 	if err := srv.Start(); err != nil {
 		log.Printf("server error: %v", err)
 		os.Exit(1)
 	}
+}
+
+// emptyExecutionTargetGrants is the process-start GrantResolver for FEATURE-0016:
+// authentication requires a bearer matching PrincipalID (empty → always 401);
+// no coarse or exact grants are issued.
+type emptyExecutionTargetGrants struct{}
+
+func (emptyExecutionTargetGrants) PrincipalID() string { return "" }
+
+func (emptyExecutionTargetGrants) CoarseLookup(string) []cloudmodel.Grant { return nil }
+
+func (emptyExecutionTargetGrants) AuthorizeExact(string, apimeta.ScopeIdentity, string, string) bool {
+	return false
 }

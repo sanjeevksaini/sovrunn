@@ -75,7 +75,9 @@ def main() -> None:
         forbidden = control["ownership"]["forbidden_concepts"]
         production = [
             path for path in changed_paths()
-            if path.startswith(("internal/", "cmd/", "api/schemas/")) and (ROOT / path).is_file()
+            if path.startswith(("internal/", "cmd/", "api/schemas/"))
+            and not path.endswith("_test.go")
+            and (ROOT / path).is_file()
         ]
         violations = []
         for relative in production:

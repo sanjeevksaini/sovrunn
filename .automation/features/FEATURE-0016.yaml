@@ -1,0 +1,7 @@
+feature_id: FEATURE-0016
+slug: adapter-boundary-and-executiontarget-qualification
+title: Adapter Boundary and ExecutionTarget Qualification
+phase_branch: phase2-reuse-first-paas-fabric-foundation
+feature_branch: feature-0016-adapter-boundary-and-executiontarget-qualification
+spec_path: .kiro/specs/adapter-boundary-and-executiontarget-qualification
+status: branch_created

@@ -34,6 +34,7 @@ PROHIBITED = ["ResourcePool","ProviderCapability","generic Provider as combined 
 CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
 F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
+F16_CF_IDS = [f"F16-{i:02d}" for i in range(1,129)]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -185,7 +186,7 @@ def run():
     if reg.get("migrationFailureMappings"): e("migrationFailureMappings must not exist as an active section (DEC-0059)")
     # Conformance
     confs = reg.get("conformance",[])
-    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS}; found_cf=set(); seen_cf=set()
+    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS}; found_cf=set(); seen_cf=set()
     for c in confs:
         cid=c.get("id","?")
         if cid in seen_cf: e(f"Dup conformance: {cid}")
@@ -315,7 +316,7 @@ def run():
     # Traceability
     if TRACE_PATH.exists():
         txt=TRACE_PATH.read_text()
-        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS])
+        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS])
         for a in all_ids:
             if a not in txt: e(f"Traceability missing: {a}")
         for p in ("VS-000-contract-registry.yaml","VS-000-contract-specification.md","VS-000_CONTRACT_TRACEABILITY_MATRIX.md"):
@@ -357,6 +358,15 @@ def run():
             cnt=len(re.findall(rf"^\|\s*{re.escape(fid)}\s*\|",ch,re.MULTILINE))
             if cnt==0: e(f"Charter missing {fid}")
             elif cnt>1: e(f"Charter has {fid} {cnt}x (need 1)")
+        cloud_row=next((ln for ln in ch.splitlines() if re.match(r"^\|\s*Cloud model\s*\|",ln)), "")
+        expected_cloud_contracts="CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack"
+        if not cloud_row: e("Charter missing Cloud model ownership row")
+        elif f"| {expected_cloud_contracts} | FEATURE-0015 |" not in cloud_row: e("Charter Cloud model row must assign only the seven FEATURE-0015 resources through InfrastructureStack")
+        if "ExecutionTarget" in cloud_row: e("Charter must not assign ExecutionTarget to FEATURE-0015 (ADH-2026-064)")
+        integration_row=next((ln for ln in ch.splitlines() if re.match(r"^\|\s*Integration\s*\|",ln)), "")
+        for required in ("ExecutionTarget", "normalized target facts", "qualification", "synthetic observer boundary"):
+            if required not in integration_row or not integration_row.rstrip().endswith("| FEATURE-0016 |"):
+                e(f"Charter Integration row must assign {required} to FEATURE-0016 (ADH-2026-064)")
     else: e("Charter not found")
     # Feature ownership is checked against the authoritative Phase 2 sequence and
     # the executable feature-control manifest, preventing prose-only reassignment.
@@ -373,9 +383,84 @@ def run():
     if phlr != {"introducedBy":"FEATURE-0021", "activatedBy":"FEATURE-0021"}: e("permittedHostingLocationRefs must be introduced and activated by FEATURE-0021 (ADH-2026-047 decision 4)")
     if any(str(x).startswith("spec.permittedHostingLocationRefs:") for x in participation.get("required",[])): e("permittedHostingLocationRefs must remain optional before FEATURE-0021")
     execution=schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{})
-    for field in ("spec.infrastructureStackRef","spec.participationRef","spec.targetClass","status.qualification","status.availability","status.maintenanceEpoch","status.factSetRef","status.observedGeneration","status.conditions"):
+    for field in ("spec.cloudProviderParticipationRef","spec.infrastructureStackRef","spec.targetClass","status.lifecycle","status.qualification","status.maintenanceEpoch","status.observedGeneration","status.factSetRef","status.qualificationResultRef"):
         if execution.get(field) != {"introducedBy":"FEATURE-0016","activatedBy":"FEATURE-0016"}: e(f"ExecutionTarget.{field} must be FEATURE-0016-owned")
+    if "status.availability" in schema_by_kind.get("ExecutionTarget",{}).get("fieldOwnership",{}): e("ExecutionTarget must not have an active persisted status.availability field (ADH-2026-058)")
     if schema_by_kind.get("ExecutionTarget",{}).get("owner") != "FEATURE-0016": e("ExecutionTarget must be owned by FEATURE-0016 in its entirety (DEC-0059/ADH-2026-045)")
+    # ADH-2026-060: F16-75 (inactive-marker epoch-stale) and F16-89 (active-marker
+    # Maintenance-wins) must be mutually exclusive and never reversed.
+    f16_by_id={str(c.get("id")):c for c in reg.get("conformance",[]) if str(c.get("id","")).startswith("VS0-CF-F16-")}
+    f16_75=f16_by_id.get("VS0-CF-F16-75"); f16_89=f16_by_id.get("VS0-CF-F16-89")
+    if not f16_75: e("VS0-CF-F16-75 not found in registry (ADH-2026-060)")
+    if not f16_89: e("VS0-CF-F16-89 not found in registry (ADH-2026-060)")
+    if f16_75 and f16_89:
+        f75_in=str(f16_75.get("inputs","")).lower(); f89_in=str(f16_89.get("inputs","")).lower()
+        if "maintenance entry wins" in f75_in: e("VS0-CF-F16-75 must not say Maintenance entry wins; reversed predicate (ADH-2026-060)")
+        if "no active current-maintenance marker" not in f75_in: e("VS0-CF-F16-75 input must state no active current-Maintenance marker exists (ADH-2026-060)")
+        if "maintenance entry wins" not in f89_in: e("VS0-CF-F16-89 input must state Maintenance entry wins (ADH-2026-060)")
+        if f16_75.get("expectedError")!="STALE_RESOURCE_VERSION" or f16_75.get("expectedViolation")!="VS0_TARGET_EPOCH_STALE": e("VS0-CF-F16-75 must be 412 STALE_RESOURCE_VERSION/VS0_TARGET_EPOCH_STALE (ADH-2026-060)")
+        if f16_89.get("expectedError")!="CONFLICT" or f16_89.get("expectedViolation")!="VS0_TARGET_MAINTENANCE": e("VS0-CF-F16-89 must be 409 CONFLICT/VS0_TARGET_MAINTENANCE (ADH-2026-060)")
+    # ADH-2026-061: F16-42/43/89 registry evidence (link-clearing and abort
+    # scope) must remain intact and unaltered by this correction; this
+    # checker is not the source of the fixed contradiction, only a guard that
+    # the reconciled feature authority did not drift from already-correct
+    # registry semantics.
+    f16_42=f16_by_id.get("VS0-CF-F16-42"); f16_43=f16_by_id.get("VS0-CF-F16-43")
+    if not f16_42: e("VS0-CF-F16-42 not found in registry (ADH-2026-061)")
+    if not f16_43: e("VS0-CF-F16-43 not found in registry (ADH-2026-061)")
+    if f16_42 and "current factset/result links clear" not in str(f16_42.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-42 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_43 and "current factset/result links clear" not in str(f16_43.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-43 must state current FactSet/Result links clear (ADH-2026-061)")
+    if f16_89 and "no qualification result, completion, or qualification auditevent" not in str(f16_89.get("expectedSideEffects","")).lower():
+        e("VS0-CF-F16-89 must keep its no-result/no-completion/no-AuditEvent outcome unchanged (ADH-2026-061)")
+    # ADH-2026-063: the four new collection-create phase-one/strict-classification
+    # rows must exist and must not deviate from their exact approved outcomes.
+    f16_123=f16_by_id.get("VS0-CF-F16-123"); f16_124=f16_by_id.get("VS0-CF-F16-124")
+    f16_125=f16_by_id.get("VS0-CF-F16-125"); f16_126=f16_by_id.get("VS0-CF-F16-126")
+    if not f16_123: e("VS0-CF-F16-123 not found in registry (ADH-2026-063)")
+    elif f16_123.get("expectedError")!="AUTHORIZATION_DENIED": e("VS0-CF-F16-123 must be AUTHORIZATION_DENIED (ADH-2026-063)")
+    elif "never classifies, canonicalizes, digests, or reserves" not in str(f16_123.get("expectedSideEffects","")).lower(): e("VS0-CF-F16-123 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    if not f16_124: e("VS0-CF-F16-124 not found in registry (ADH-2026-063)")
+    elif f16_124.get("expectedError")!="RESOURCE_NOT_FOUND" or f16_124.get("expectedViolation")!="VS0_AUTHORIZATION_SAFE_DENIAL": e("VS0-CF-F16-124 must be safe 404 RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL (ADH-2026-063)")
+    elif "never classifies, canonicalizes, digests, or reserves" not in str(f16_124.get("expectedSideEffects","")).lower(): e("VS0-CF-F16-124 must state phase one never classifies/canonicalizes/digests/reserves the body (ADH-2026-063)")
+    if not f16_126: e("VS0-CF-F16-126 not found in registry (ADH-2026-063)")
+    elif f16_126.get("expectedError")!="REQUEST_TOO_LARGE": e("VS0-CF-F16-126 must be REQUEST_TOO_LARGE (ADH-2026-063)")
+    elif "before phase-one extraction, authorization, or safe access" not in str(f16_126.get("expectedSideEffects","")).lower(): e("VS0-CF-F16-126 must state REQUEST_TOO_LARGE before phase-one extraction, authorization, or safe access (ADH-2026-063)")
+    # ADH-2026-065: F16-125 is malformed-JSON only; F16-127 is duplicate
+    # top-level member only; F16-128 is the fail-closed missing/unextractable
+    # phase-one reference denial. Each is an exact non-family case.
+    f16_127=f16_by_id.get("VS0-CF-F16-127"); f16_128=f16_by_id.get("VS0-CF-F16-128")
+    if not f16_125: e("VS0-CF-F16-125 not found in registry (ADH-2026-065)")
+    elif f16_125.get("expectedError")!="MALFORMED_REQUEST": e("VS0-CF-F16-125 must be MALFORMED_REQUEST (exact non-family malformed-JSON case) (ADH-2026-065)")
+    else:
+        f125=str(f16_125.get("expectedSideEffects","")).lower()
+        if "duplicate" in f125: e("VS0-CF-F16-125 must not name a duplicate case; it is the exact malformed-JSON classification case (ADH-2026-065)")
+        elif "malformed" not in f125 or "malformed_request" not in f125 or "strict single classification" not in f125: e("VS0-CF-F16-125 must state strict single classification returning MALFORMED_REQUEST for malformed JSON (ADH-2026-065)")
+    if not f16_127: e("VS0-CF-F16-127 not found in registry (ADH-2026-065)")
+    elif f16_127.get("expectedError")!="DUPLICATE_FIELD": e("VS0-CF-F16-127 must be DUPLICATE_FIELD (exact non-family duplicate-top-level-member case) (ADH-2026-065)")
+    else:
+        f127=str(f16_127.get("expectedSideEffects","")).lower()
+        if "malformed" in f127: e("VS0-CF-F16-127 must not name a malformed case; it is the exact duplicate-top-level-member classification case (ADH-2026-065)")
+        elif "duplicate" not in f127 or "duplicate_field" not in f127 or "strict single classification" not in f127: e("VS0-CF-F16-127 must state strict single classification returning DUPLICATE_FIELD for a duplicate top-level member (ADH-2026-065)")
+    if not f16_128: e("VS0-CF-F16-128 not found in registry (ADH-2026-065)")
+    elif f16_128.get("expectedError")!="AUTHORIZATION_DENIED": e("VS0-CF-F16-128 must be the existing audited AUTHORIZATION_DENIED phase-one extraction denial (ADH-2026-065)")
+    else:
+        f128=(str(f16_128.get("inputs",""))+" "+str(f16_128.get("expectedSideEffects",""))).lower()
+        if not("exactly one syntactically usable uid" in f128 and "both" in f128 and "spec.cloudproviderparticipationref.uid" in f128 and "spec.infrastructurestackref.uid" in f128):
+            e("VS0-CF-F16-128 must state phase one cannot extract exactly one syntactically usable UID at both required reference paths (ADH-2026-065)")
+        elif not("audited" in f128 and "403" in f128 and "no body-classification detail" in f128 and "no backing-resource existence" in f128):
+            e("VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
+        elif not all(tok in f128 for tok in ("strict classification","canonicalization","digest","reservation","observer","mutation","publication","completion")):
+            e("VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
+    # ADH-2026-066 introduces no registry semantics. It only records an
+    # internal compatibility bridge, whose traceability must not be allowed to
+    # drift into a FEATURE-0015 ownership or a new conformance requirement.
+    trace = TRACE_PATH.read_text() if TRACE_PATH.exists() else ""
+    if "ADH-2026-066" not in trace:
+        e("TRACEABILITY: ADH-2026-066 backing-access bridge must be recorded in the VS-000 traceability matrix")
+    if any("ParticipationGeneration" in str(case) for case in f16_by_id.values()):
+        e("ADH-2026-066: ParticipationGeneration must not become a registered F0016 conformance fence")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")

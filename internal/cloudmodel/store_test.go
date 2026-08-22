@@ -3,6 +3,7 @@ package cloudmodel_test
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
@@ -492,5 +493,118 @@ func TestStore_TopologyLookupUnderPublicationLock(t *testing.T) {
 	// Public Get… methods remain for unlocked reads and acquire the Store lock.
 	if got, ok := s.GetHostingLocation(hlUID); !ok || got.Metadata.UID != hlUID {
 		t.Fatalf("GetHostingLocation unlocked read failed: %#v ok=%v", got, ok)
+	}
+}
+
+func TestStore_PairedBackingRead_NonInterleaving(t *testing.T) {
+	t.Parallel()
+	s := cloudmodel.NewStore()
+	platformUID := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	providerUID := "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	partUID := "cccccccccccccccccccccccccccccccc"
+	stackUID := "dddddddddddddddddddddddddddddddd"
+
+	if _, prob := s.CreateCloudPlatform(platformScoped("plat", platformUID)); prob != nil {
+		t.Fatalf("platform: %#v", prob)
+	}
+	if _, prob := s.CreateCloudProvider(providerScoped("prov", providerUID)); prob != nil {
+		t.Fatalf("provider: %#v", prob)
+	}
+	part := model.CloudProviderParticipation{
+		Metadata: apimeta.ObjectMeta{
+			Name: "part", UID: partUID, ResourceVersion: "1", Generation: 1,
+			ScopeRef: &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+				APIVersion: model.APIVersionCloudPlatform, Kind: string(apimeta.ScopeCloudPlatform),
+				Name: "plat", UID: platformUID,
+			}},
+		},
+		Spec: model.CloudProviderParticipationSpec{
+			CloudPlatformRef: apimeta.TypedRef{UID: platformUID},
+			CloudProviderRef: apimeta.TypedRef{UID: providerUID},
+		},
+		Status: model.CloudProviderParticipationStatus{Phase: model.ParticipationPhaseActive},
+	}
+	if _, prob := s.CreateParticipation(part); prob != nil {
+		t.Fatalf("participation: %#v", prob)
+	}
+	scope := &apimeta.ScopeRef{TypedRef: apimeta.TypedRef{
+		APIVersion: model.APIVersionCloudProvider, Kind: string(apimeta.ScopeCloudProvider),
+		Name: "prov", UID: providerUID,
+	}}
+	stack := model.InfrastructureStack{
+		Metadata: apimeta.ObjectMeta{Name: "stack", UID: stackUID, ScopeRef: scope, ResourceVersion: "1", Generation: 3},
+		Status:   model.InfrastructureStackStatus{Phase: model.InfrastructureStackPhaseActive},
+	}
+	if _, prob := s.CreateInfrastructureStack(stack); prob != nil {
+		t.Fatalf("stack: %#v", prob)
+	}
+
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.WithPairedBackingRead(partUID, stackUID, func(snap cloudmodel.PairedBackingSnapshot) {
+			if !snap.ParticipationOK || !snap.StackOK {
+				t.Errorf("paired snapshot missing resources")
+			}
+			if snap.Participation.Status.Phase != model.ParticipationPhaseActive {
+				t.Errorf("unexpected participation phase=%s", snap.Participation.Status.Phase)
+			}
+			if snap.Stack.Metadata.Generation != 3 {
+				t.Errorf("unexpected stack generation=%d", snap.Stack.Metadata.Generation)
+			}
+			close(entered)
+			<-release
+			if snap.Participation.Status.Phase != model.ParticipationPhaseActive {
+				t.Errorf("lease view mutated while held")
+			}
+			if snap.Stack.Metadata.Generation != 3 {
+				t.Errorf("lease stack generation mutated while held")
+			}
+		})
+	}()
+	<-entered
+
+	writeDone := make(chan struct{})
+	go func() {
+		cur, ok := s.GetParticipation(partUID)
+		if !ok {
+			t.Errorf("participation vanished")
+			close(writeDone)
+			return
+		}
+		cur.Status.Phase = model.ParticipationPhaseSuspended
+		if _, prob := s.UpdateParticipation(cur); prob != nil {
+			t.Errorf("update while lease held: %#v", prob)
+		}
+		close(writeDone)
+	}()
+
+	select {
+	case <-writeDone:
+		t.Fatal("FEATURE-0015 write interleaved through paired backing-read lease")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	<-writeDone
+	wg.Wait()
+
+	after, ok := s.GetParticipation(partUID)
+	if !ok || after.Status.Phase != model.ParticipationPhaseSuspended {
+		t.Fatalf("write must apply after lease release: %#v ok=%v", after, ok)
+	}
+}
+
+func TestStore_PairedBackingRead_MissingCopies(t *testing.T) {
+	t.Parallel()
+	s := cloudmodel.NewStore()
+	var got cloudmodel.PairedBackingSnapshot
+	s.WithPairedBackingRead("missing-part", "missing-stack", func(snap cloudmodel.PairedBackingSnapshot) {
+		got = snap
+	})
+	if got.ParticipationOK || got.StackOK {
+		t.Fatalf("missing resources must report !OK: %#v", got)
 	}
 }

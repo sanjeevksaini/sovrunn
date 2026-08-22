@@ -214,6 +214,13 @@ Long-form commit detail is allowed in the plan.
         self.assertEqual(orchestrator.commit_message(plan[1]), "feat(example): add service")
         self.assertIsNone(orchestrator.commit_message(plan[18]))
 
+    def test_feature_task_heading_is_parsed_by_cursor_and_orchestrator(self):
+        plan = self.task_plan_fixture.replace("### Task 1:", "### TASK-F16-01 —").replace(
+            "### Task 18:", "### TASK-F16-18 —"
+        )
+        self.assertEqual(sorted(orchestrator.blocks(plan)), [1, 18])
+        self.assertEqual(sorted(cursor_prompt.task_blocks(plan)), [1, 18])
+
     def test_grouped_path_bullets_expand_to_every_exact_path(self):
         block = """### Task 13: Grouped paths
 
@@ -532,6 +539,15 @@ class ReceiptCheckTests(unittest.TestCase):
 
     def test_cursor_transport_suffix_after_wrapped_receipt_is_accepted(self):
         raw = "`TASK_STATUS: COMPLETE`Verification finished successfully: make test passed.\n"
+        self.assertEqual(
+            receipt.find_receipts(raw, "task"), ["TASK_STATUS: COMPLETE"]
+        )
+
+    def test_feature_task_verification_suffix_after_wrapped_receipt_is_accepted(self):
+        raw = (
+            "`TASK_STATUS: COMPLETE`TASK-F16-12 verification finished successfully: "
+            "conformance passed.\n"
+        )
         self.assertEqual(
             receipt.find_receipts(raw, "task"), ["TASK_STATUS: COMPLETE"]
         )

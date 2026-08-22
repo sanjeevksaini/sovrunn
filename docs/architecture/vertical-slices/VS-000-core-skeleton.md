@@ -98,8 +98,8 @@ Fixture names are synthetic. They do not assert a real NIC/Yotta contract, facil
 |---|---|---|
 | Common grammar | metadata, scopeRef, ownerRef, typed references, generation/resourceVersion, status/conditions, stable Problem Details | FEATURE-0012 retained |
 | Decision/audit | DecisionProfile, DecisionRecord, AuditEvent | FEATURE-0013 retained |
-| Cloud model | CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack, ExecutionTarget (identity), CanonicalMigrationPlan, CanonicalMigrationRecord | FEATURE-0015 |
-| Integration | adapter contracts, normalized target facts, qualification and fake adapter | FEATURE-0016 |
+| Cloud model | CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack | FEATURE-0015 |
+| Integration | ExecutionTarget, normalized target facts, qualification, and synthetic observer boundary; consumes CloudProviderParticipation and InfrastructureStack read-only | FEATURE-0016 |
 | Policy | PolicyEvaluationRequest, PolicyEvaluationResult, fake PolicyEngineAdapter | FEATURE-0017 |
 | IAM/governance | PrincipalRef, Membership, RoleDefinition, RoleAssignment, GovernanceProfile; approval/exception shapes where applicable | FEATURE-0018 |
 | Sovereignty inputs | SovereigntyProfile, RegulatoryPolicyBundle, SovereigntyFactSet, EvidenceRecord | FEATURE-0019 |

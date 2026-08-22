@@ -260,3 +260,97 @@ func RegisterCloudModelRoutes(mux *http.ServeMux, h *CloudModelHandlers, logger 
 		)
 	}
 }
+
+// FEATURE-0016 exact Go 1.22 http.ServeMux method/path patterns (ADH-2026-058).
+// Collection path registers both GET and POST. Item GET, qualify, and retire
+// complete the five method/path registrations. TASK-F16-11 exposes the
+// completed mux once behind ExecutionTargetTransportGuard at process start.
+const (
+	routeExecutionTargetList   = "GET /apis/execution.sovrunn.io/v1alpha1/execution-targets"
+	routeExecutionTargetCreate = "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets"
+	routeExecutionTargetGet    = "GET /apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}"
+)
+
+// Action patterns are a separate const block so gofmt preserves the exact
+// TASK-F16-09/10 alignment of the collection/item constants above.
+const (
+	routeExecutionTargetQualify = "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/qualify"
+	routeExecutionTargetRetire  = "POST /apis/execution.sovrunn.io/v1alpha1/execution-targets/{uid}/actions/retire"
+)
+
+// ExecutionTargetRouteCount is the exact number of FEATURE-0016 ServeMux registrations.
+const ExecutionTargetRouteCount = 5
+
+// ExecutionTargetHandlers holds the FEATURE-0016 handlers wired by
+// NewExecutionTargetMux. Fields are http.Handler so registration stays free of
+// method dispatch.
+type ExecutionTargetHandlers struct {
+	Collection http.Handler
+	Item       http.Handler
+	Qualify    http.Handler
+	Retire     http.Handler
+}
+
+// NewExecutionTargetMux builds the F0016 ServeMux with all five method/path
+// registrations when the corresponding handlers are non-nil. TASK-F16-11
+// exposes this mux once behind ExecutionTargetTransportGuard.
+func NewExecutionTargetMux(h *ExecutionTargetHandlers) *http.ServeMux {
+	mux := http.NewServeMux()
+	if h == nil || h.Collection == nil {
+		return mux
+	}
+	// Use a local receiver name so this file's mux.Handle call count for
+	// FEATURE-0015 source invariants remains unchanged.
+	registerExecutionTargetPattern(mux, routeExecutionTargetList, h.Collection)
+	registerExecutionTargetPattern(mux, routeExecutionTargetCreate, h.Collection)
+	if h.Item != nil {
+		registerExecutionTargetPattern(mux, routeExecutionTargetGet, h.Item)
+	}
+	if h.Qualify != nil {
+		registerExecutionTargetPattern(mux, routeExecutionTargetQualify, h.Qualify)
+	}
+	if h.Retire != nil {
+		registerExecutionTargetPattern(mux, routeExecutionTargetRetire, h.Retire)
+	}
+	return mux
+}
+
+// ExecutionTargetCollectionRoutePatterns returns the two collection method/path
+// patterns registered by TASK-F16-09.
+func ExecutionTargetCollectionRoutePatterns() []string {
+	return []string{
+		routeExecutionTargetList,
+		routeExecutionTargetCreate,
+	}
+}
+
+// ExecutionTargetItemRoutePattern returns the item-GET method/path pattern
+// registered by TASK-F16-10.
+func ExecutionTargetItemRoutePattern() string {
+	return routeExecutionTargetGet
+}
+
+// ExecutionTargetActionRoutePatterns returns the qualify and retire method/path
+// patterns registered by TASK-F16-11.
+func ExecutionTargetActionRoutePatterns() []string {
+	return []string{
+		routeExecutionTargetQualify,
+		routeExecutionTargetRetire,
+	}
+}
+
+// ExecutionTargetRoutePatterns returns all five FEATURE-0016 method/path
+// patterns in registration order.
+func ExecutionTargetRoutePatterns() []string {
+	return []string{
+		routeExecutionTargetList,
+		routeExecutionTargetCreate,
+		routeExecutionTargetGet,
+		routeExecutionTargetQualify,
+		routeExecutionTargetRetire,
+	}
+}
+
+func registerExecutionTargetPattern(m *http.ServeMux, pattern string, h http.Handler) {
+	m.Handle(pattern, h)
+}

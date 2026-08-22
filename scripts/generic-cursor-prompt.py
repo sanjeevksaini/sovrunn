@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TASK_HEADING = r"(?:Task\s+(\d+)\s*:|TASK-[A-Za-z0-9]+-(\d+)\s+[—:-])"
 
 
 def sha256(path: Path) -> str:
@@ -20,10 +21,13 @@ def sha256(path: Path) -> str:
 def task_blocks(text: str) -> dict[int, str]:
     blocks: dict[int, str] = {}
     pattern = re.compile(
-        r"(?ms)^### Task (\d+)\s*:\s*.*?(?=^### Task \d+\s*:|^## [^#]|\Z)"
+        rf"(?ms)^### {TASK_HEADING}.*?(?=^### {TASK_HEADING}|^## [^#]|\Z)"
     )
     for match in pattern.finditer(text):
-        blocks[int(match.group(1))] = match.group(0).rstrip()
+        task = int(match.group(1) or match.group(2))
+        if task in blocks:
+            raise SystemExit(f"ERROR: duplicate task heading: {task}")
+        blocks[task] = match.group(0).rstrip()
     return blocks
 
 

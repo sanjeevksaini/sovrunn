@@ -22,6 +22,10 @@ STAGES = ("requirements", "design", "tasks")
 RECEIPT = "STAGE_STATUS: COMPLETE"
 REQ_ID = re.compile(r"REQ-[A-Z0-9]+-\d+")
 AC_ID = re.compile(r"AC-[A-Z0-9]+-\d+")
+TASK_HEADING = re.compile(
+    r"^(#{2,6})\s+(?:Task\s+(?P<generic>\d+)|(?P<feature>TASK-[A-Z0-9]+(?:-[A-Z0-9]+)+))\b.*$",
+    re.MULTILINE,
+)
 # Conformance IDs have both historical compact forms (for example, MIGF01)
 # and feature-local forms (for example, F15-01).  The word boundaries prevent
 # a local ID from also being counted as its non-existent F15 prefix.
@@ -39,7 +43,7 @@ def _mention_at_position_allowed(text: str, position: int) -> bool:
     allow_markers = (
         "must not", "no longer", "superseded", "retired", "removed", "does not",
         "not implement", "excluded", "non-goal", "tombstone", "never",
-        "must never", "reject",
+        "must never", "reject", "not counted", "no shared", "no downstream",
     )
     return any(marker in window for marker in allow_markers)
 
@@ -195,10 +199,32 @@ def owned_conformance_ids(
     registry cases whose registered owner is this feature are included;
     downstream, unowned, or unknown IDs mentioned in either authority are
     never authorized by this function."""
-    mentioned = expand_cf_ranges(feature_text) | expand_cf_ranges(authority_text)
+    feature_mentions = {
+        cf_id
+        for cf_id, position in expand_cf_ranges_with_positions(feature_text).items()
+        if not _mention_at_position_allowed(feature_text, position)
+    }
+    authority_mentions = {
+        cf_id
+        for cf_id, position in expand_cf_ranges_with_positions(authority_text).items()
+        if not _mention_at_position_allowed(authority_text, position)
+    }
+    mentioned = feature_mentions | authority_mentions
+    # A range such as F16-01..122 has heterogeneous numeric widths.  Preserve
+    # historical zero-padded IDs where they exist, but canonicalize only a
+    # source reference whose unpadded form is an actual registry ID.  The
+    # requirements ledger itself remains exact and must use that registry ID.
+    canonical_mentioned: set[str] = set()
+    for cf_id in mentioned:
+        canonical_mentioned.add(cf_id)
+        match = re.fullmatch(r"(VS0-CF-[A-Z]+\d+)-(\d+)", cf_id)
+        if match:
+            unpadded = f"{match.group(1)}-{int(match.group(2))}"
+            if unpadded in conformance:
+                canonical_mentioned.add(unpadded)
     return {
         cf_id
-        for cf_id in mentioned
+        for cf_id in canonical_mentioned
         if cf_id in conformance and conformance[cf_id].get("owner") == feature
     }
 
@@ -453,15 +479,17 @@ def check_coverage(
 
 
 def check_tasks(errors: list[str], target_text: str, tier: str) -> None:
-    matches = list(
-        re.finditer(r"^(#{2,6})\s+Task\s+(\d+)\b.*$", target_text, re.MULTILINE)
-    )
+    matches = list(TASK_HEADING.finditer(target_text))
     if tier == "A" and not 6 <= len(matches) <= 12:
         errors.append(f"Tier A tasks must contain 6..12 Task headings; found {len(matches)}")
     for index, match in enumerate(matches):
         end = matches[index + 1].start() if index + 1 < len(matches) else len(target_text)
+        task_heading_level = len(match.group(1))
+        following_heading = re.search(r"^(#{1,6})\s+", target_text[match.end():], re.MULTILINE)
+        if following_heading and len(following_heading.group(1)) <= task_heading_level:
+            end = min(end, match.end() + following_heading.start())
         body = target_text[match.start():end]
-        task_id = match.group(2)
+        task_id = match.group("generic") or match.group("feature")
         for label in (
             "Writable paths:",
             "Tests:",
@@ -547,13 +575,15 @@ def write_revision_prompt(path: Path, feature: str, stage: str, errors: list[str
 
 
 def self_test() -> None:
-    """Deterministic, offline regression coverage for the two checker defects
+    """Deterministic, offline regression coverage for the three checker defects
     corrected here: (1) the normative REQ detail heading matcher must accept
     an optional approved Markdown section-number prefix before the REQ ID
     while still rejecting duplicates and incidental in-body mentions; and (2)
     Exact conformance semantics ledger authorization must be derived from the
     union of the feature authority and the control-manifest architecture
-    authority, filtered to registry cases owned by the feature."""
+    authority, filtered to registry cases owned by the feature; and (3) Tier A
+    task counting must recognize both generic and feature-qualified task
+    headings without counting a non-task verification checkpoint."""
     failures: list[str] = []
 
     def check(label: str, condition: bool) -> None:
@@ -637,12 +667,48 @@ def self_test() -> None:
         == set(),
     )
 
+    # --- Case 3: generic and feature-qualified task headings ---
+    task_text = "\n".join(
+        [
+            "### Task 1 — generic",
+            "Writable paths:",
+            "Tests:",
+            "Verification commands:",
+            "Acceptance criteria:",
+            "Commit message:",
+            "### TASK-F16-01 — feature-qualified",
+            "Writable paths:",
+            "Tests:",
+            "Verification commands:",
+            "Acceptance criteria:",
+            "Commit message:",
+            "## Final Verification Checkpoint",
+            "**Checkpoint:** verification only",
+        ]
+    )
+    task_matches = list(TASK_HEADING.finditer(task_text))
+    check(
+        "recognizes generic and feature-qualified parent task headings",
+        [match.group("generic") or match.group("feature") for match in task_matches]
+        == ["1", "TASK-F16-01"],
+    )
+    check(
+        "does not count a non-task verification checkpoint as a parent task",
+        len(task_matches) == 2,
+    )
+    checkpoint_errors: list[str] = []
+    check_tasks(checkpoint_errors, task_text, "B")
+    check(
+        "ends a task before a same-or-higher-level non-task checkpoint heading",
+        checkpoint_errors == [],
+    )
+
     if failures:
         print(f"FAIL: kiro-semantic-check self-test — {len(failures)} failure(s)")
         for failure in failures:
             print(f"  ✗ {failure}")
         raise SystemExit(1)
-    print(f"PASS: kiro-semantic-check self-test — {6 + 4} checks")
+    print(f"PASS: kiro-semantic-check self-test — {6 + 4 + 3} checks")
 
 
 def main() -> None:
