@@ -4,10 +4,14 @@
 
 This document is the FEATURE-0016 Requirements stage for Adapter Boundary and
 ExecutionTarget Qualification. It translates the approved FEATURE-0016 feature
-authority, the architecture boundary, and ADH-2026-058 into observable-behavior
-requirements, introducing no decision beyond those authorities. Full identity,
-stage, purpose, actors, use cases, and terms appear in Sections 1-3 below; the
-canonical requirement and acceptance ledgers appear in Section 4.
+authority, the architecture boundary, and the manifest-controlled FEATURE-0016
+handoff set into observable-behavior requirements, introducing no decision
+beyond those authorities. That set is ADH-2026-058 as foundational contract
+closure together with ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064,
+and ADH-2026-065; ADH-2026-058 is foundational but not the sole current
+semantic authority. Full identity, stage, purpose,
+actors, use cases, and terms appear in Sections 1-3 below; the canonical
+requirement and acceptance ledgers appear in Section 4.
 
 ## Glossary
 
@@ -51,8 +55,12 @@ This document translates the approved FEATURE-0016 feature authority
 (`docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md`),
 the architecture boundary
 (`docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md`),
-and ADH-2026-058 into observable-behavior requirements. It introduces no
-decision beyond those authorities. It owns observable behavior only: intent,
+and the manifest-controlled FEATURE-0016 handoff set — ADH-2026-058 as
+foundational contract closure together with ADH-2026-060, ADH-2026-061,
+ADH-2026-063, ADH-2026-064, and ADH-2026-065 — into observable-behavior
+requirements. It introduces no decision beyond those authorities. ADH-2026-058
+is foundational but not the sole current semantic authority. It owns observable
+behavior only: intent,
 actors, scenarios, invariants, validation outcomes, security/privacy,
 compatibility, non-goals, and acceptance criteria. It does not own packages,
 files, routes as code, storage structures, algorithms, libraries, internal
@@ -250,7 +258,39 @@ fields and no `If-Match`; zero-byte actions alone carry `If-Match` and no client
 graph. A malformed `If-Match` header-form failure therefore precedes its
 non-zero-body failure; current-version comparison occurs after replay/reservation
 and before Maintenance state evaluation. Proof:
-VS0-CF-F16-07..12,18,19,24,25,70..74,85,86,105..111.
+VS0-CF-F16-07..12,18,19,24,25,70..74,85,86,105..111,123..128.
+
+For collection create, ADH-2026-063 and ADH-2026-065 make this precedence exact
+and normative, without altering the general pipeline above. The existing bounded
+single body read runs first: an oversized body that exceeds the existing limit
+returns the existing `REQUEST_TOO_LARGE`/400 before phase-one extraction,
+authorization, or safe access (`VS0-CF-F16-126`). Otherwise the exact bytes are
+retained and phase one extracts only `spec.cloudProviderParticipationRef.uid`
+and `spec.infrastructureStackRef.uid`, performing no strict classification,
+canonicalization, digest, or reservation. If phase one cannot extract exactly
+one syntactically usable UID at both required locations (missing or
+unextractable required phase-one reference), the create fails closed with the
+existing audited `AUTHORIZATION_DENIED`/403 before derived-scope authorization
+and safe backing access, disclosing no body-classification detail and no
+backing-resource existence, and performing no strict classification,
+canonicalization, digest, idempotency reservation, observer invocation,
+mutation, publication, or completion (`VS0-CF-F16-128`). Only after successful
+extraction do derived-scope `executiontarget.write` authorization and safe
+backing access run, and only for an authorized, safe-accessible request are the
+retained same bytes strictly classified exactly once: malformed JSON returns the
+existing `MALFORMED_REQUEST`/400 (`VS0-CF-F16-125`, the exact non-family
+malformed-JSON case, as `VS0-CF-F16-51`) and a duplicate top-level member
+returns the existing `DUPLICATE_FIELD`/400 (`VS0-CF-F16-127`, the exact
+non-family duplicate-top-level-member case, as `VS0-CF-F16-52`); these two are
+distinct exact non-family classification cases, not a mixed equivalence family.
+An authenticated caller lacking `executiontarget.write` over safe-accessible
+backing whose create body is in the malformed-JSON-or-duplicate-top-level-member
+family retains denial-family precedence with the existing audited
+`AUTHORIZATION_DENIED`/403 and no body classification (`VS0-CF-F16-123`), and an
+inaccessible backing reference retains safe-denial precedence with the existing
+`RESOURCE_NOT_FOUND`/404 plus `VS0_AUTHORIZATION_SAFE_DENIAL` and no body
+classification (`VS0-CF-F16-124`); `VS0-CF-F16-126` retains oversized-first
+rejection. Action `If-Match` header-form precedence is preserved.
 
 #### REQ-F16-06 — Idempotency namespace, digest, retention, and isolation
 
@@ -307,7 +347,14 @@ fence abort the reservation without target mutation, AuditEvent, or completion.
 `effectiveAvailability` is ordered: Retired → Unavailable; else Active with
 current Maintenance → Maintenance; else only Active Qualified with fresh current
 facts and viable backing → Available; every other Active combination →
-Unavailable. Proof:
+Unavailable. Every successful Maintenance entry committed by the lifecycle
+service unconditionally persists `Active/Unqualified`, clears both the current
+`NormalizedTargetFactSet` and `TargetQualificationResult` links, and advances
+maintenance epoch and resourceVersion/ETag (ADH-2026-061); when a qualification
+is in flight, Maintenance entry additionally aborts only that target's in-flight
+qualification and its linked idempotency reservation and wakes only that
+qualification's waiters — never all reservations for the target (see REQ-F16-09
+for the full Maintenance-entry and target-local abort invariant). Proof:
 VS0-CF-F16-01,20..23,26..30,36,39,41..43,75,79..83,87,88,99..101,119..122.
 
 #### REQ-F16-09 — Expiry, maintenance trigger, retirement, shutdown, and audit matrix
@@ -325,7 +372,23 @@ once per injected-clock second until one succeeds. Service shutdown first stops
 acceptance of expiry and Maintenance triggers, then aborts in-flight
 qualification and idempotency reservations and wakes waiters, and only then
 stops HTTP serving; a trigger accepted after that boundary neither mutates state
-nor appends an AuditEvent. Proof:
+nor appends an AuditEvent.
+
+Per ADH-2026-061, every successful Maintenance entry persists `Active/Unqualified`
+and unconditionally clears both the current `NormalizedTargetFactSet` and
+`TargetQualificationResult` links, whether or not a qualification is in flight;
+it never preserves the last completed conclusion, and the successful entry is
+always audited. When a qualification is in flight at Maintenance entry, the entry
+additionally aborts only that target's in-flight qualification and its linked
+idempotency reservation and wakes only that qualification's waiters — never all
+reservations for the target — and the qualifying caller keeps the existing
+`CONFLICT`/409 plus `VS0_TARGET_MAINTENANCE` outcome with no qualification
+result, completion, or qualification AuditEvent. When no qualification is in
+flight, no idempotency reservation is cancelled, and the Maintenance entry is
+still audited. A successful Maintenance clear likewise persists
+`Active/Unqualified` with both current links cleared and is audited. `VS0-CF-F16-42`,
+`VS0-CF-F16-43`, and `VS0-CF-F16-89` retain their exact observable semantics
+unchanged. Proof:
 VS0-CF-F16-36,38,41..43,66,75,77,79,80,83,88,89,99..104,111,112.
 
 #### REQ-F16-10 — Closed local violation set
@@ -357,9 +420,9 @@ explicit acceptance evidence outside the canonical acceptance ledger.
 | AC | Acceptance scenario (observable) | Conformance IDs |
 |----|----------------------------------|-----------------|
 | AC-F16-01 | A valid create with exactly the four closed fields persists Active/Unqualified at epoch 0 with participation-derived scope; unknown/adapterAuthorityRef/SecretRef fields are rejected | VS0-CF-F16-01,02,57,84 |
-| AC-F16-02 | Inaccessible, ineffective, non-Active, cross-scope, duplicate-name, and live-duplicate-tuple backings each return their exact outcome, with safe access before graph validation | VS0-CF-F16-09,10,11,12,13,65,98 |
+| AC-F16-02 | Inaccessible, ineffective, non-Active, cross-scope, duplicate-name, and live-duplicate-tuple backings each return their exact outcome, with safe access before graph validation | VS0-CF-F16-09,10,11,12,13,65,98,124,128 |
 | AC-F16-03 | Exactly five routes register; HEAD, PUT, trailing-slash, unmatched-method, and missing/invalid-auth transport cases produce transport-only outcomes or 401 with no side effect | VS0-CF-F16-44,61,62,63,64,66,93,94,95,96,105,106,107,108,109,110,111,112,113,114,115,116,117,118 |
-| AC-F16-04 | POST media/key header-form failures, action If-Match/zero-body failures, and their ordering (header-form before body classification) return their exact outcomes | VS0-CF-F16-05,06,24,25,58,59,60,70,71,72,73,74,85,86 |
+| AC-F16-04 | POST media/key header-form failures, action If-Match/zero-body failures, and their ordering (header-form before body classification) return their exact outcomes; collection-create precedence cases (bounded read, phase-one extraction failure, authorization/safe-denial before classification, exact strict classification) hold | VS0-CF-F16-05,06,24,25,58,59,60,70,71,72,73,74,85,86,123,124,125,126,127,128 |
 | AC-F16-05 | Replay, reuse-mismatch, isolation, expiry, eviction, panic/cancellation, and waiter recheck behave exactly as specified; GET/LIST ignore idempotency | VS0-CF-F16-14,16,31,32,33,34,35,46,47,49,50,76,77,78,81,82,86,87,88,89,99 |
 | AC-F16-06 | Four Supported/Unsupported/Unknown facts, malformed/duplicate/missing facts, missing fixture, and logical timeout each produce their exact conclusion | VS0-CF-F16-20,21,22,23,67,68,69,90 |
 | AC-F16-07 | Sole committer, non-projected Qualifying, effectiveAvailability truth table, viability-only projection changes, and stale-fence aborts hold across all state cases | VS0-CF-F16-01,20,21,22,26,27,28,29,30,36,39,41,42,43,75,77,79,80,81,82,83,87,88,99,100,101,119,120,121,122 |
@@ -368,6 +431,26 @@ explicit acceptance evidence outside the canonical acceptance ledger.
 | AC-F16-10 | Success/denial/safe-denial audit and every append-failure case return INTERNAL_ERROR/500 with no disclosure | VS0-CF-F16-39,40,82,99,100,101,102,103,104,112 |
 | AC-F16-11 | Only the eight closed local violation codes appear; ineffective/non-Active/cross-scope/retired/maintenance/in-progress/epoch-stale/viability-stale cases carry them | VS0-CF-F16-10,11,12,26,27,28,29,30,38,75 |
 | AC-F16-12 | Process restart demonstrates no external observer call and no persisted external effect | VS0-CF-F16-46 |
+
+#### 4.2.1 Supplemental collection-create precedence mapping (ADH-2026-063/065)
+
+This supplemental subsection maps the full six-case collection-create precedence
+set to `REQ-F16-05` and identifies the acceptance proof it affects. The six
+create-precedence conformance IDs (VS0-CF-F16-123..128) are recorded in AC-F16-04
+and the safe-denial/fail-closed cases (VS0-CF-F16-124,128) additionally in
+AC-F16-02 in the §4.2 mapping table above. This subsection preserves the exact
+case-by-case detail for each create-precedence outcome closed by ADH-2026-063
+and ADH-2026-065. AC-F16-05 idempotency evidence is unaffected because phase one
+never digests or reserves.
+
+| Case | REQ | Outcome (observable) |
+|------|-----|----------------------|
+| VS0-CF-F16-126 | REQ-F16-05 | Oversized body returns the existing `REQUEST_TOO_LARGE`/400 from the bounded single body read, before phase-one extraction, authorization, or safe access; no phase-one extraction, classification, digest, reservation, mutation, AuditEvent, or completion |
+| VS0-CF-F16-123 | REQ-F16-05 | Authenticated caller lacking `executiontarget.write` over safe-accessible backing, malformed-JSON-or-duplicate-top-level-member create body: existing audited `AUTHORIZATION_DENIED`/403 exactly as VS0-CF-F16-08; phase one extracts only the two allowed UID references and never classifies, canonicalizes, digests, or reserves the body |
+| VS0-CF-F16-124 | REQ-F16-05 | Inaccessible backing reference, malformed-JSON-or-duplicate-top-level-member create body: safe `RESOURCE_NOT_FOUND`/404 plus `VS0_AUTHORIZATION_SAFE_DENIAL` exactly as VS0-CF-F16-09; no body classification, digest, reservation, mutation, or completion |
+| VS0-CF-F16-128 | REQ-F16-05 | Bounded body read succeeds but phase one cannot extract exactly one syntactically usable UID at both `spec.cloudProviderParticipationRef.uid` and `spec.infrastructureStackRef.uid`: fail-closed existing audited `AUTHORIZATION_DENIED`/403 before derived-scope authorization and safe backing access; no body-classification detail or backing disclosure; no strict classification, canonicalization, digest, idempotency reservation, observer invocation, mutation, publication, or completion; no added violation or top-level Problem code |
+| VS0-CF-F16-125 | REQ-F16-05 | Authorized, safe-accessible request whose retained bytes contain malformed JSON: single strict classification returns the existing `MALFORMED_REQUEST`/400 (as VS0-CF-F16-51); exact non-family malformed-JSON case, distinct from VS0-CF-F16-127; no mutation, AuditEvent, digest, reservation, or completion |
+| VS0-CF-F16-127 | REQ-F16-05 | Authorized, safe-accessible request whose retained bytes contain a duplicate top-level member: single strict classification returns the existing `DUPLICATE_FIELD`/400 (as VS0-CF-F16-52); exact non-family duplicate-top-level-member case, distinct from VS0-CF-F16-125; no mutation, AuditEvent, digest, reservation, or completion |
 
 ### 4.3 Exact conformance semantics ledger
 
@@ -530,10 +613,27 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 
 ### 5.2 Safe denial and non-disclosure
 
-- Phase-one safe resolution reads only the path UID needed to derive scope; an
-  inaccessible target or backing reference returns safe `RESOURCE_NOT_FOUND`/404
-  with `VS0_AUTHORIZATION_SAFE_DENIAL` and never discloses existence or details
-  (VS0-CF-F16-09,17,19,66).
+Safe resolution takes two distinct forms in FEATURE-0016:
+
+- **Item-operation path-UID safe resolution** (item GET, qualify, retire): the
+  pipeline reads only the path `{uid}` segment to derive the target's scope; an
+  inaccessible target returns safe `RESOURCE_NOT_FOUND`/404 with
+  `VS0_AUTHORIZATION_SAFE_DENIAL` and never discloses existence or details
+  (VS0-CF-F16-17,19,66).
+- **Collection-create phase-one extraction and safe backing access**: the
+  pipeline extracts `spec.cloudProviderParticipationRef.uid` and
+  `spec.infrastructureStackRef.uid` from the retained body bytes (after the
+  bounded body read succeeds). If phase one cannot extract exactly one
+  syntactically usable UID at both required locations, the create fails closed
+  with audited `AUTHORIZATION_DENIED`/403 before derived-scope authorization and
+  safe backing access, disclosing no body-classification detail and no
+  backing-resource existence (`VS0-CF-F16-128`). Only after successful extraction
+  does derived-scope authorization run; an inaccessible backing reference then
+  returns safe `RESOURCE_NOT_FOUND`/404 with `VS0_AUTHORIZATION_SAFE_DENIAL`
+  (VS0-CF-F16-09,124).
+
+Additional safe-denial invariants:
+
 - LIST without a read grant returns audited 403 rather than an empty 200.
 - Error responses never confirm the existence of an inaccessible resource
   (inherited FEATURE-0012 safe-denial semantics).
@@ -600,11 +700,13 @@ state-machine ID (`VS0-STATE-004`) and no downstream or shared case
 
 | Edge case | Observable outcome | Conformance |
 |-----------|--------------------|-------------|
-| Malformed JSON, duplicate top-level member, oversized body | 400 MALFORMED_REQUEST / DUPLICATE_FIELD / REQUEST_TOO_LARGE; no publication | VS0-CF-F16-51,52,53 |
-| Create malformed/duplicate/oversized body under the ADH-2026-063 precedence: oversized rejected first before phase one; unauthorized 403; inaccessible-backing safe 404; authorized strict classification 400 | REQUEST_TOO_LARGE before phase one; AUTHORIZATION_DENIED; RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL; MALFORMED_REQUEST / DUPLICATE_FIELD; no body classification/mutation/idempotency effect beyond the applicable existing outcome | VS0-CF-F16-126,123,124,125 |
+| Malformed JSON, duplicate top-level member (strict single classification outcome — applies only to authorized, safe-accessible collection create after successful phase-one extraction of both required UIDs; see the create-precedence rows below for the bounded-read, phase-one, authorization, and safe-denial outcomes that precede classification) | For authorized, safe-accessible collection create only: malformed JSON returns 400 MALFORMED_REQUEST (VS0-CF-F16-125, as VS0-CF-F16-51); a duplicate top-level member returns 400 DUPLICATE_FIELD (VS0-CF-F16-127, as VS0-CF-F16-52); these are distinct exact non-family classification cases; no mutation, AuditEvent, or idempotency effect. Collection create never reaches this classification when the bounded body read rejects first (VS0-CF-F16-126), when phase one cannot extract both required UIDs (VS0-CF-F16-128), when the caller lacks authorization (VS0-CF-F16-123), or when backing is inaccessible (VS0-CF-F16-124) | VS0-CF-F16-125,127 (established outcome anchors: VS0-CF-F16-51,52) |
+| Qualify/retire action with non-zero body (action body semantics — distinct from collection-create strict classification; qualify and retire require a zero-byte body per REQ-F16-04) | After applicable If-Match header-form precedence (VS0-CF-F16-70..74,86), a non-zero action body returns 400 MALFORMED_REQUEST; no publication, mutation, AuditEvent, or idempotency effect | VS0-CF-F16-25 |
+| Oversized request body (bounded single body read — precedes phase-one extraction, authorization, and safe access for collection create; runs at the same pipeline position for all routes) | 400 REQUEST_TOO_LARGE; no phase-one extraction, classification, mutation, AuditEvent, digest, reservation, or completion | VS0-CF-F16-53,126 |
+| Create malformed/duplicate/oversized body under the ADH-2026-063/065 precedence: oversized rejected first before phase one; unextractable reference fail-closed 403; unauthorized 403; inaccessible-backing safe 404; authorized strict classification 400 | REQUEST_TOO_LARGE before phase one; AUTHORIZATION_DENIED (F16-128 fail-closed or F16-123 unauthorized); RESOURCE_NOT_FOUND + VS0_AUTHORIZATION_SAFE_DENIAL; MALFORMED_REQUEST / DUPLICATE_FIELD; no body classification/mutation/idempotency effect beyond the applicable existing outcome | VS0-CF-F16-126,128,123,124,125,127 |
 | Authorized create strict classification made exact (ADH-2026-065): malformed JSON only versus duplicate top-level member only are distinct non-family classification cases | MALFORMED_REQUEST for malformed JSON only; DUPLICATE_FIELD for a duplicate top-level member only; single strict classification of the retained same bytes; no mutation/AuditEvent/idempotency effect | VS0-CF-F16-125,127 |
 | Create where phase one cannot extract exactly one syntactically usable UID at both spec.cloudProviderParticipationRef.uid and spec.infrastructureStackRef.uid (missing/unextractable required phase-one reference) | Fail-closed existing audited AUTHORIZATION_DENIED/403 before derived-scope authorization and safe backing access; no body/backing disclosure; no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065) | VS0-CF-F16-128 |
-| Missing required create field, invalid typed reference shape, non-`synthetic-iaas` targetClass | 422 VALIDATION_FAILED; no publication | VS0-CF-F16-54,55,56 |
+| Missing required create field, invalid typed reference shape, non-`synthetic-iaas` targetClass (applies only after both phase-one UIDs are successfully extracted, authorization succeeds, safe backing access succeeds, and strict classification passes; a missing or unextractable required phase-one UID is exclusively VS0-CF-F16-128 and its audited 403 outcome, never a 422) | 422 VALIDATION_FAILED; no publication | VS0-CF-F16-54,55,56 |
 | Empty, malformed, or overlong Idempotency-Key | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-58,59,60 |
 | Collection create with an If-Match header | 400 MALFORMED_REQUEST; no publication | VS0-CF-F16-105 |
 | Any route with a query parameter (`?x=1`) | 400 MALFORMED_REQUEST before safe resolution | VS0-CF-F16-106 |
@@ -686,7 +788,7 @@ target projection are out of scope.
 | DEC-0042 | Canonical cloud model; superseded `ResourcePool`/`ProviderCapability`/generic Provider |
 | DEC-0057 | ExecutionTarget qualification/availability semantics |
 | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045 | Prior controlling handoffs and delegation of the ExecutionTarget contract to FEATURE-0016 |
-| ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004. It is a foundational authority but not the sole current semantic authority; ADH-2026-059/060/061/062/063/064/065 are also controlling for FEATURE-0016 |
+| ADH-2026-058 | Executable contract closure; replaced placeholder VS0-SCHEMA-015..017 and VS0-STATE-004. It is a foundational authority but not the sole current semantic authority; the manifest-controlled requirements-semantic set that is also controlling for FEATURE-0016 is ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, and ADH-2026-065 |
 | ADH-2026-060 | Maintenance-race outcome correction; makes `VS0-CF-F16-75` (inactive-marker epoch-stale) and `VS0-CF-F16-89` (active-marker Maintenance-wins) mutually exclusive |
 | ADH-2026-061 | Maintenance-entry link-clearing correction; every successful Maintenance entry unconditionally clears both current FactSet/Result links and persists `Active/Unqualified`; an in-flight qualification abort is narrowed to that qualification and its linked idempotency reservation only. `VS0-CF-F16-42`, `VS0-CF-F16-43`, and `VS0-CF-F16-89` retain their exact observable semantics |
 | ADH-2026-063 | Collection-create phase-one/strict-classification precedence correction; the bounded body read returns `REQUEST_TOO_LARGE`/400 first for an oversized body, phase one extracts only the two allowed UID references without classifying/canonicalizing/digesting/reserving a body, authorization and safe access precede one strict classification of the retained same bytes, and action `If-Match` header-form precedence is preserved; adds `VS0-CF-F16-123..126` with `VS0-CF-F16-08/09/51/52/53` as precedence anchors |
@@ -771,10 +873,15 @@ authorities above and are not open design questions.
 - Exact conformance semantics ledger: all 128 cases in the FEATURE-0016 local
   conformance suite copied with ID, owner, inputs, expectedState,
   expectedError, expectedViolation (where registered), expectedSideEffects,
-  and gate (§4.3). `VS0-CF-F16-125` (exact malformed-JSON classification),
+  and gate (§4.3). This is the FEATURE-0016 local ledger of 128 rows
+  (`VS0-CF-F16-01..128`); it is not a 199-row local ledger. The registry total
+  conformance count across all features is 199, of which the FEATURE-0016 local
+  ledger is these 128 cases. `VS0-CF-F16-125` (exact malformed-JSON classification),
   `VS0-CF-F16-127` (exact duplicate-top-level-member classification), and
   `VS0-CF-F16-128` (fail-closed missing/unextractable required phase-one
-  reference denial) map to `REQ-F16-05` per ADH-2026-065.
+  reference denial) map to `REQ-F16-05` per ADH-2026-065 and are traced in its
+  proof line and in the §4.2 acceptance-scenario mapping (AC-F16-04 and
+  AC-F16-02).
 - Owned schema (VS0-SCHEMA-015..017), writer (VS0-WRITER-006), and state
   (VS0-STATE-004) IDs are referenced without redefinition.
 
@@ -794,9 +901,13 @@ authorities above and are not open design questions.
 
 None. No `ARCHITECTURE_DECISION_REQUIRED`, `REQUIREMENT_CLARIFICATION_REQUIRED`,
 `BOUNDARY_CHANGE_REQUIRED`, `DEPENDENCY_APPROVAL_REQUIRED`, or
-`SECURITY_REVIEW_REQUIRED` condition was encountered. ADH-2026-058 supplies one
-complete, closed, executable contract, and every requirement maps to existing
-registry entries.
+`SECURITY_REVIEW_REQUIRED` condition was encountered. ADH-2026-058 supplies the
+foundational executable contract closure, and the manifest-controlled
+requirements-semantic set completing it — ADH-2026-060, ADH-2026-061,
+ADH-2026-063, ADH-2026-064, and ADH-2026-065 — supplies the remaining
+create-precedence, maintenance-entry, and exact-classification semantics;
+together they form one complete, closed, executable contract, and every
+requirement maps to existing registry entries.
 
 ---
 
