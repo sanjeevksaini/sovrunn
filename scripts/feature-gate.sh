@@ -259,7 +259,7 @@ text = Path("docs/features/FEATURE_INDEX.md").read_text(encoding="utf-8")
 for line in text.splitlines():
     if not line.strip().startswith("|"):
         continue
-    cells = [c.strip().replace("`", "") for c in line.strip().strip("|").split("|")]
+    cells = [c.strip().replace(chr(96), "") for c in line.strip().strip("|").split("|")]
     if cells and cells[0] == feature and len(cells) > 4:
         print(cells[4])
         break
