@@ -49,7 +49,7 @@
         "relationship": "reuses AuditEvent atomic-publication semantics; does not redefine",
         "context": {
           "requirements": ["docs/features/FEATURE-0013-decision-object-and-auditevent-standard.md"],
-          "design": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"]
+          "design": []
         }
       },
       {
@@ -57,7 +57,7 @@
         "relationship": "read-only prior-feature authority for CloudProviderParticipation and InfrastructureStack; FEATURE-0016 does not modify FEATURE-0015",
         "context": {
           "requirements": [],
-          "design": ["docs/architecture/FEATURE-0015-canonical-cloud-model-foundation.md"]
+          "design": ["docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"]
         }
       }
     ],
