@@ -18,8 +18,11 @@ assessment_format_version: 1.0.0
 | Approver or approving role | Sanjeev Kumar, Sovrunn Architecture Owner |
 | Assessment format version | 1.0.0 |
 | Assessment artifact | docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md |
-| Disposition | Extend |
+| Disposition | Build |
 | Controlling ADH | ADH-2026-058 |
+| Sovrunn-owned responsibility | Normalize four deterministic facts; evaluate the closed qualification profile; fence stale work; commit current records and target state; and project safe response-only availability. |
+| Reused or extended responsibility | FEATURE-0012 owns shared API, Problem, media, authorization, and ETag contracts; FEATURE-0013 owns AuditEvent semantics; FEATURE-0015 owns participation and InfrastructureStack authority; F0016 owns its private `BackingAccessProvider` over the approved read-only lease. |
+| Responsibility/control boundary | FEATURE-0016 composes inherited FEATURE-0012/0013 contracts and consumes FEATURE-0015's `CloudProviderParticipation`/`InfrastructureStack` by reference only. It does not redefine those contracts. Later realization, placement, plugin execution, IAM, and customer-projection responsibilities remain outside this feature. |
 
 ## Canonical standard
 

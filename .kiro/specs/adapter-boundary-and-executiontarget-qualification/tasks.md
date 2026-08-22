@@ -38,8 +38,8 @@ strictly verification-only with no self-authorized edit escape hatch.
 | Owned state machine | `VS0-STATE-004` |
 | Owned writer | `VS0-WRITER-006` (`ExecutionTargetLifecycleService`) |
 | Controlling decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-062 |
-| Local conformance | VS0-CF-F16-01..122 |
+| Controlling handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065, ADH-2026-066 |
+| Local conformance | VS0-CF-F16-01..128 |
 
 ### 1.2 Stage inputs (consumed by reference, not redefined)
 
@@ -53,9 +53,9 @@ The approved requirements §4 (11 REQ, 12 AC, 122 conformance cases) and approve
 design §2–10 (10 design decisions, component/responsibility/path, HTTP surface,
 correctness properties, error precedence, security/observability/compatibility,
 test strategy), together with the approved higher-precedence corrections
-ADH-2026-060 and ADH-2026-061, are the semantic authorities for this stage.
-ADH-2026-061 is consumed directly by this tasks-only revision; it does not
-reopen requirements or design.
+ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065, and
+ADH-2026-066 are the semantic authorities for this stage. ADH-2026-066 is a
+private compatibility bridge, not a reopening of FEATURE-0015.
 
 FEATURE-0012 (ObjectMeta, TypedRef, Problem Details, Condition, media,
 If-Match/ETag, validation pipeline), FEATURE-0013 (AuditEvent atomic
@@ -2162,12 +2162,106 @@ Relates: FEATURE-0016, requirements §4.3, AC-F16-01..12, ADH-2026-058.
 
 ---
 
+### ADH-066 remediation task — F16-R01: coherent backing-access bridge
+
+**Prerequisites:** TASK-F16-01 through TASK-F16-12 complete; ADH-2026-066 is
+approved and present in the FEATURE-0016 control manifest.
+
+**Purpose:** Repair the already-implemented F0016 backing-access path without
+reopening FEATURE-0015. This is a bounded post-plan remediation task, not a
+thirteenth numbered vertical slice and not a change to the approved five-route
+surface or the 128-case public contract.
+
+**Requirement authority:** REQ-F16-02, REQ-F16-04, REQ-F16-05, REQ-F16-08, and
+REQ-F16-09; existing VS0-CF-F16-09..13,17,19,29,30,65,66,98,119,120.
+
+**Design authority:** DD-02, DD-04, DD-15, DD-17.
+
+**Architecture authority:** ADH-2026-066 only; it authorizes the private bridge
+and explicitly prohibits a FEATURE-0015 product-scope change.
+
+**Writable paths:**
+
+- `internal/cloudmodel/store.go`
+- `internal/cloudmodel/store_test.go`
+- `internal/executiontarget/`
+- `internal/api/executiontarget_*.go`
+- `internal/api/executiontarget_*_test.go`
+- `tests/conformance/feature_0016_test.go`
+
+**Implementation contract:**
+
+- Add only a private store-backed read-lease primitive in `internal/cloudmodel`
+  that acquires the existing store lock once and supplies immutable copies of
+  both backing resources to an F0016 callback. It must not add an F0015 route,
+  schema field, writer, lifecycle transition, conformance case, or public API.
+- Implement the F0016-owned, principal-aware `BackingAccessProvider` on top of
+  that lease. It alone evaluates inherited F0012 grants against the derived
+  CloudProvider scope and returns safe denial, authorization denial, or the
+  minimal immutable allowed snapshot.
+- Replace sequential F0015 `GetParticipation`/`GetInfrastructureStack` use in
+  F0016 create/qualify/GET/LIST paths. Final qualification holds the fresh
+  backing lease through the ordered `lease → lifecycle mutex → AuditEvent
+  append → target publication` critical section. No F0016 lifecycle-held path
+  may acquire the lease.
+- Compare only InfrastructureStack generation and viability fingerprint at
+  qualification commit. Participation generation is never stored or evaluated
+  as a fence.
+- Treat participation suspension as unavailable for new admission only; never
+  mutate or stop an existing InfrastructureStack, ExecutionTarget, or workload.
+
+**Tests and acceptance criteria:**
+
+- Deterministically prove a paired backing read cannot be interleaved by a
+  FEATURE-0015 backing write while the F0016 provider evaluates safe access.
+- Prove safe 404 and authorized 403 remain caller-relative and do not disclose
+  raw backing existence.
+- Prove a changed InfrastructureStack generation or viability fingerprint aborts
+  before AuditEvent, publication, or replayable completion; prove no
+  participation-generation fence exists.
+- Prove GET/LIST freshness changes only response-only
+  `effectiveAvailability`, never target state or ETag.
+- Prove the required cross-package lock order with race tests and no deadlock.
+- Run F0015 regression (`go test ./internal/cloudmodel/...` and
+  `make feature-contract-check FEATURE=FEATURE-0015`) plus the F0016 checks
+  below. No F0015 feature artifact is changed.
+
+**Verification commands:**
+
+```bash
+make fmt
+make vet
+make test
+go test -race ./internal/cloudmodel/... ./internal/executiontarget/... ./internal/api/... ./tests/conformance/...
+make feature-contract-check FEATURE=FEATURE-0015
+make feature-contract-check FEATURE=FEATURE-0016
+make feature-0016-architecture-readiness
+make ff-feature-gate FEATURE=FEATURE-0016
+git diff --check
+```
+
+**Security and observability:** Safe-denial remains principal-relative; no raw
+backing resource leaks. The bridge preserves the inherited audit-before-
+publication boundary and adds no new AuditEvent type or public violation.
+
+**Exclusions:** No F0015 product code outside the private `store.go` lease, no
+F0015 docs/specs/control changes, and no new route, schema, state, conformance
+ID, external call, provisioning, or placement behavior.
+
+**Commit message:**
+
+```text
+fix(f16): add coherent principal-aware backing access bridge
+```
+
+---
+
 ## Final Verification Checkpoint
 
 **Checkpoint:** Repository-wide verification and command execution report
 (strictly verification-only; not a numbered task).
 
-**Prerequisites:** TASK-F16-01 through TASK-F16-12 complete.
+**Prerequisites:** TASK-F16-01 through TASK-F16-12 and remediation task F16-R01 complete.
 
 **Requirement authority:** All REQ-F16-01..11, all AC-F16-01..12.
 

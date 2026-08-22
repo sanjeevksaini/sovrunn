@@ -904,9 +904,6 @@ func TestExecutionTargetActions_RetireWithoutWriteGrant(t *testing.T) {
 	rtDenied.life = rtWrite.life
 	rtDenied.cloud = rtWrite.cloud
 	rtDenied.audit = rtWrite.audit
-	rtDenied.etRuntime.life = rtWrite.life
-	rtDenied.etRuntime.cloud = rtWrite.cloud
-	rtDenied.etRuntime.audit = rtWrite.audit
 	rtDenied.retire = NewExecutionTargetRetireHandler(rtWrite.life, rtWrite.cloud,
 		executionTargetActionGrants(testPrincipal, testProviderUID, false, true, true), rtWrite.audit)
 	before := rtWrite.audit.Len()

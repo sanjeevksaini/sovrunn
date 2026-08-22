@@ -21,7 +21,7 @@ kiro_slug: adapter-boundary-and-executiontarget-qualification
 | Depended On By | FEATURE-0017, FEATURE-0019, FEATURE-0022, FEATURE-0023, FEATURE-0024 (future consumers; no activation or modification) |
 | Architecture Boundary | docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065 |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, ADH-2026-042, ADH-2026-045, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065, ADH-2026-066 |
 
 ---
 
@@ -48,7 +48,8 @@ approved FEATURE-0016 boundary.
 |---|---|---|---|---|
 | FEATURE-0012 API grammar, Problem Details, media, and optimistic-concurrency contract | Reuse | These platform-wide contracts already provide the closed HTTP, error, ETag, and representation behavior required by F0016. | Approved | DEC-0026; ADH-2026-058 |
 | FEATURE-0013 AuditEvent atomic-publication contract | Reuse | F0016 needs durable redacted audit evidence before publication, not a second audit model. | Approved | DEC-0026; ADH-2026-058 |
-| FEATURE-0015 CloudProviderParticipation and InfrastructureStack backing authority | Reuse | F0016 consumes effective participation and stack state by reference without re-owning their resources, routes, or lifecycle. | Approved | DEC-0042; ADH-2026-058 |
+| FEATURE-0015 CloudProviderParticipation and InfrastructureStack backing authority | Reuse | F0016 consumes backing state without re-owning the resources, routes, or lifecycle. | Approved | DEC-0042; ADH-2026-058 |
+| F0016-owned coherent backing access over FEATURE-0015 authority | Extend | A private, read-only store-backed lease supplies principal-aware safe access and immutable paired backing inputs for F0016 qualification/publication; it changes no F0015 public behavior or ownership. | Approved | ADH-2026-066 |
 | Deterministic target observation, qualification, lifecycle, and safe projection | Build | No existing candidate supplies Sovrunn's closed target model, fenced qualification, sole-committer, audit, and Phase 2R no-external-effect contract. | Approved | DEC-0036; DEC-0042; ADH-2026-058; ADH-2026-060; ADH-2026-061 |
 | In-process synthetic observation boundary | Build | The deterministic `synthetic-iaas` observer is the minimum replaceable anti-corruption boundary; it performs no real integration in Phase 2R. | Approved | DEC-0036; ADH-2026-058 |
 
@@ -86,7 +87,8 @@ approved FEATURE-0016 boundary.
 | Field | Value |
 |---|---|
 | Sovrunn-owned responsibility | Normalize four deterministic facts; evaluate the closed qualification profile; fence stale work; commit current records and target state; and project safe response-only availability. |
-| Reused or extended responsibility | FEATURE-0012 owns shared API, Problem, media, authorization, and ETag contracts; FEATURE-0013 owns AuditEvent semantics; FEATURE-0015 owns participation and InfrastructureStack authority. |
+| Reused or extended responsibility | FEATURE-0012 owns shared API, Problem, media, authorization, and ETag contracts; FEATURE-0013 owns AuditEvent semantics; FEATURE-0015 owns participation and InfrastructureStack authority; F0016 owns its private `BackingAccessProvider` over the approved read-only lease. |
+| Responsibility/control boundary | FEATURE-0016 composes inherited FEATURE-0012/0013 contracts and consumes FEATURE-0015's `CloudProviderParticipation`/`InfrastructureStack` by reference only. It does not redefine those contracts. Later realization, placement, plugin execution, IAM, and customer-projection responsibilities remain outside this feature. |
 | Data crossing the boundary | Target-bound synthetic fixture input and normalized fact proposals enter the lifecycle service; internal FactSet and Result records remain unprojected. |
 | Control crossing the boundary | Qualification and fixture-maintenance triggers are submitted to the lifecycle service; only it publishes committed state after the inherited audit append succeeds. |
 | Adapter required | Yes |
@@ -134,7 +136,7 @@ approved FEATURE-0016 boundary.
 |---|---|---|---|
 | External-coupling or credential leakage | Closed `synthetic-iaas` contract; no credential/external-call fields; Phase 2R exclusions. | Feature-contract, Phase 2R drift, and conformance checks. | Remove prohibited coupling and require an approved ADH before any real integration. |
 | Incorrect or stale qualification publication | Sole lifecycle committer; fence recheck; ADH-2026-060 precedence; ADH-2026-061 link-clearing rule; audit-before-publication. | F16 conformance, formal models, race tests, and audit-failure cases. | Abort the proposal, preserve committed state, and correct the lifecycle implementation under the existing contract. |
-| Ownership or safe-projection leakage | FEATURE-0015 references are read-only; internal FactSet/Result records are never projected; closed five-route surface. | Registry, traceability, projection, and safe-denial conformance checks. | Restore the approved ownership boundary and reject unauthorized field/route expansion. |
+| Ownership or safe-projection leakage | FEATURE-0015 references remain read-only; the ADH-2026-066 lease is private and F0016-owned; internal FactSet/Result records are never projected; closed five-route surface. | Registry, traceability, projection, safe-denial, and backing-access readiness checks. | Restore the approved ownership boundary and reject unauthorized field/route expansion. |
 
 - Residual risk: Low. Synthetic fixtures cannot validate a real environment,
   and F0016 in-memory state intentionally resets on restart.
@@ -148,7 +150,7 @@ approved FEATURE-0016 boundary.
 
 | Field | Value |
 |---|---|
-| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0042, DEC-0057, RFC-0021, ADH-2026-058, ADH-2026-060, ADH-2026-061 |
+| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0042, DEC-0057, RFC-0021, ADH-2026-058, ADH-2026-060, ADH-2026-061, ADH-2026-063, ADH-2026-064, ADH-2026-065, ADH-2026-066 |
 | Linked acceptance criteria | AC-F16-01 through AC-F16-12; VS0-CF-F16-01 through VS0-CF-F16-122 |
 | Validation and review evidence | Approved ADH-2026-058/060/061; `docs/reviews/reuse-assessments/FEATURE-0016-approval-evidence.md`; FEATURE-0016 readiness, feature-contract, VS-000, Phase 2R drift, formal, conformance, and final feature-gate evidence. |
 
@@ -158,7 +160,7 @@ approved FEATURE-0016 boundary.
 |---|---|
 | Structured approval-evidence record | `docs/reviews/reuse-assessments/FEATURE-0016-approval-evidence.md` |
 | Approval status | Approved |
-| Approving role | Sanjeev Kumar, Sovrunn Architecture Owner |
+| Approving person or role | Sanjeev Kumar, Sovrunn Architecture Owner |
 | Approval date | 2026-08-20 |
 | Approval basis | ADH-2026-058 and the recorded FEATURE-0016 reuse-assessment approval evidence confirm the disposition and responsibility boundary. |
 
@@ -244,8 +246,10 @@ duplicate-top-level-member classification) and `VS0-CF-F16-128` (fail-closed
 missing/unextractable required phase-one reference denial). `VS0-CF-F16-125`,
 `VS0-CF-F16-127`, and `VS0-CF-F16-128` map to `REQ-F16-05`. The current
 FEATURE-0016 semantic authorities are ADH-2026-058 together with
-ADH-2026-059/060/061/062/063/064/065; ADH-2026-058 is not the sole current
-semantic authority. No downstream ID (`VS0-CF-HP01`, `VS0-CF-F09`) is counted as
+ADH-2026-060/061/063/064/065/066; ADH-2026-058 is not the sole current semantic
+authority. ADH-2026-066 supplies only the F0016-owned private backing-access
+bridge; it changes no public F0015 behavior or F0016 local conformance outcome.
+No downstream ID (`VS0-CF-HP01`, `VS0-CF-F09`) is counted as
 F0016-local proof; `VS0-CF-F10` and `VS0-CF-X03` remain cross-feature/shared
 references only.
 

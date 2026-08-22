@@ -393,6 +393,17 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
             "ADH063: F0016 architecture must state phase one never classifies/canonicalizes/digests/reserves a body (ADH-2026-063)")
     require(errors, "only then are the retained same bytes strictly classified" in arch_lower,
             "ADH063: F0016 architecture must state authorization and safe access precede the single strict classification (ADH-2026-063)")
+    # ADH-2026-066 adds only an internal F0016 backing-access compatibility
+    # bridge. It must not change the public contract, but its ownership and
+    # registered-fence limits must remain explicit.
+    normalized_arch = " ".join(arch_lower.split())
+    for marker in (
+        "adh-2026-066", "backingaccessprovider", "private feature-0015 store-backed read lease",
+        "infrastructurestack-generation and viability-fingerprint fences",
+        "participation generation is not a fence",
+    ):
+        require(errors, marker in normalized_arch,
+                f"ADH066: F0016 architecture must state {marker!r} for the private backing-access bridge")
 
 
 def main() -> None:
@@ -417,7 +428,7 @@ def main() -> None:
     if args.feature == "FEATURE-0015":
         print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
     else:
-        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..128), ADH-2026-063 create phase-one/strict-classification precedence, and ADH-2026-065 exact classification/phase-one-reference evidence")
+        print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..128), ADH-2026-063 create phase-one/strict-classification precedence, ADH-2026-065 exact classification/phase-one-reference evidence, and the ADH-2026-066 private backing-access bridge")
 
 
 if __name__ == "__main__":

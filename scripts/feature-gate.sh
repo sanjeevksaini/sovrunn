@@ -101,7 +101,7 @@ rows = []
 for line in text.splitlines():
     if not line.strip().startswith("|"):
         continue
-    cells = [c.strip().replace("`", "") for c in line.strip().strip("|").split("|")]
+    cells = [c.strip().replace(chr(96), "") for c in line.strip().strip("|").split("|")]
     if len(cells) < 5:
         continue
     if cells[0] == "Feature" or set(cells[0]) <= {"-"}:

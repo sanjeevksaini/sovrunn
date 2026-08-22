@@ -835,7 +835,7 @@ never Problem `code` values, and no `429`/quota code is used.
 | Safe denial never discloses inaccessible resources | §5.2; VS0-CF-F16-09,17,19,66 |
 | Closed five-route surface; transport guard has no side effect | REQ-F16-03; VS0-CF-F16-44,113..118 |
 
-### 8.6 Feature-level reuse summary (reference only)
+### 8.6 Feature-level Reuse Assessment summary (reference only)
 
 The canonical FEATURE-0016 feature-level reuse summary and capability
 assessment are authoritative in

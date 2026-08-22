@@ -453,6 +453,14 @@ def run():
             e("VS0-CF-F16-128 must state the existing audited AUTHORIZATION_DENIED/403 with no body/backing disclosure (ADH-2026-065)")
         elif not all(tok in f128 for tok in ("strict classification","canonicalization","digest","reservation","observer","mutation","publication","completion")):
             e("VS0-CF-F16-128 must state no strict classification/canonicalization/digest/reservation/observer/mutation/publication/completion (ADH-2026-065)")
+    # ADH-2026-066 introduces no registry semantics. It only records an
+    # internal compatibility bridge, whose traceability must not be allowed to
+    # drift into a FEATURE-0015 ownership or a new conformance requirement.
+    trace = TRACE_PATH.read_text() if TRACE_PATH.exists() else ""
+    if "ADH-2026-066" not in trace:
+        e("TRACEABILITY: ADH-2026-066 backing-access bridge must be recorded in the VS-000 traceability matrix")
+    if any("ParticipationGeneration" in str(case) for case in f16_by_id.values()):
+        e("ADH-2026-066: ParticipationGeneration must not become a registered F0016 conformance fence")
     region=schema_by_kind.get("ServiceRegion",{}).get("fieldOwnership",{})
     for field in ("spec.displayName","spec.hostingLocationRefs"):
         if region.get(field) != {"introducedBy":"FEATURE-0022","activatedBy":"FEATURE-0022"}: e(f"ServiceRegion.{field} must be FEATURE-0022-owned")

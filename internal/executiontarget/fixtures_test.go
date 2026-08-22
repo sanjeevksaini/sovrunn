@@ -20,17 +20,6 @@ func allSupportedTruths() model.FactSetTruths {
 	}
 }
 
-func allUnknownTruths() model.FactSetTruths {
-	return model.FactSetTruths{
-		Compute: model.FactComputeTruths{VM: model.FactUnknown},
-		Storage: model.FactStorageTruths{
-			Block:  model.FactUnknown,
-			Object: model.FactUnknown,
-		},
-		Network: model.FactNetworkTruths{Private: model.FactUnknown},
-	}
-}
-
 func unsupportedVMTruths() model.FactSetTruths {
 	t := allSupportedTruths()
 	t.Compute.VM = model.FactUnsupported

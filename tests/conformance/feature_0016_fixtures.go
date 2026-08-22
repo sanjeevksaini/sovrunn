@@ -15,7 +15,6 @@ import (
 	"unsafe"
 
 	"github.com/sanjeevksaini/sovrunn/internal/api"
-	"github.com/sanjeevksaini/sovrunn/internal/apiconform"
 	"github.com/sanjeevksaini/sovrunn/internal/apimeta"
 	"github.com/sanjeevksaini/sovrunn/internal/apiproblem"
 	"github.com/sanjeevksaini/sovrunn/internal/cloudmodel"
@@ -153,16 +152,6 @@ func (b *f16ArmedBlockingFixture) Lookup(targetUID string) (executiontarget.Targ
 	}
 	<-b.release
 	return fx, ok
-}
-
-// ---------------------------------------------------------------------------
-// Panic audit appender (qualify/create panic paths)
-// ---------------------------------------------------------------------------
-
-type f16PanicAuditAppender struct{}
-
-func (p *f16PanicAuditAppender) Append(context.Context, apiconform.AuditEvent) error {
-	panic("injected audit panic")
 }
 
 // ---------------------------------------------------------------------------
@@ -737,6 +726,7 @@ type f16StoreShadow struct {
 }
 
 func (h *f16Harness) bumpMaintenanceEpochNoMarker(uid string, epoch int64) {
+	// #nosec G103 -- test-only white-box fixture required to model the registered stale-epoch/no-marker case.
 	shadow := (*f16StoreShadow)(unsafe.Pointer(h.life.Store()))
 	shadow.mu.Lock()
 	defer shadow.mu.Unlock()

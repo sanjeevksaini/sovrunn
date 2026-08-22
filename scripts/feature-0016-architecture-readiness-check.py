@@ -40,6 +40,7 @@ STEER = ROOT / ".kiro/steering/slice0-contract.md"
 CHARTER = ROOT / "docs/architecture/vertical-slices/VS-000-core-skeleton.md"
 CONTROL = ROOT / ".automation/features/FEATURE-0016.control.json"
 ADH_058 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-058-feature-0016-adapter-and-executiontarget-executable-contract-closure.md"
+ADH_066 = ROOT / "docs/reviews/architecture-decision-handoffs/ADH-2026-066-feature-0016-coherent-backing-access-compatibility-bridge.md"
 
 F16_REQUIRED_CF_IDS = [f"VS0-CF-F16-{i:02d}" for i in range(1, 129)]
 
@@ -406,6 +407,31 @@ def check_traceability(trace: str) -> None:
     for schema_id in ("VS0-SCHEMA-015", "VS0-SCHEMA-016", "VS0-SCHEMA-017", "VS0-STATE-004", "VS0-WRITER-006"):
         if schema_id not in trace:
             e(f"TRACEABILITY: traceability matrix missing {schema_id}")
+    if "ADH-2026-066" not in trace:
+        e("TRACEABILITY: traceability matrix must record the ADH-2026-066 backing-access bridge")
+
+
+def check_adh_066_backing_access(f16_arch: str, f16_feat: str, closure: str) -> None:
+    if not ADH_066.exists():
+        e(f"ADH066: handoff file missing: {ADH_066.relative_to(ROOT)}")
+        return
+    handoff = ADH_066.read_text()
+    if "Approval status: Approved" not in handoff:
+        e("ADH066: handoff must record 'Approval status: Approved'")
+    normalized_arch = " ".join(f16_arch.split()).lower()
+    required_arch_markers = (
+        "ADH-2026-066", "BackingAccessProvider", "private FEATURE-0015 store-backed read lease",
+        "InfrastructureStack-generation and viability-fingerprint fences", "participation generation is not a fence",
+        "FEATURE-0015 backing lease, then the FEATURE-0016 lifecycle-service mutex",
+        "prospective admission control",
+    )
+    for marker in required_arch_markers:
+        if marker.lower() not in normalized_arch:
+            e(f"ADH066: F0016 architecture missing backing-access marker: {marker}")
+    if "ADH-2026-066" not in f16_feat or "BackingAccessProvider" not in f16_feat:
+        e("ADH066: F0016 feature authority must record the F0016-owned backing-access bridge")
+    if "ARC-F16-15" not in closure or "ADH-2026-066" not in closure:
+        e("ADH066: closure matrix must record ARC-F16-15 as the resolved backing-access bridge")
 
 
 def check_closure_matrix(closure: str) -> None:
@@ -442,6 +468,8 @@ def check_control_manifest_exists() -> None:
     # ADH-2026-065: the control manifest must record the ADH-2026-065 handoff.
     if not any("ADH-2026-065" in str(h) for h in handoffs):
         e("CONTROL: feature.handoffs must include the ADH-2026-065 handoff path (ADH-2026-065)")
+    if not any("ADH-2026-066" in str(h) for h in handoffs):
+        e("CONTROL: feature.handoffs must include the ADH-2026-066 handoff path (ADH-2026-066)")
 
 
 def check_reuse_assessment_exists() -> None:
@@ -495,6 +523,7 @@ def main() -> None:
     check_maintenance_race_mutual_exclusivity(reg, f16_arch)
     check_maintenance_entry_link_clearing(f16_arch, f16_feat)
     check_adh_063_create_precedence(reg, f16_arch, steer)
+    check_adh_066_backing_access(f16_arch, f16_feat, closure)
     check_conformance_completeness(reg)
     check_vs000_executiontarget_ownership(charter)
     check_traceability(trace)
@@ -512,7 +541,8 @@ def main() -> None:
         "PASS: FEATURE-0016 architecture readiness — ADH-2026-058 placeholder replacement, "
         "five-route surface, sole writer/observer, closed violation set, 128-case conformance "
         "(incl. ADH-2026-063 create phase-one/strict-classification precedence rows VS0-CF-F16-123..126 "
-        "and ADH-2026-065 exact classification/phase-one-reference rows VS0-CF-F16-125/127/128), "
+        "and ADH-2026-065 exact classification/phase-one-reference rows VS0-CF-F16-125/127/128; "
+        "ADH-2026-066 coherent principal-aware backing access), "
         "traceability, closure matrix, control manifest, reuse assessment, and steering are consistent"
     )
 

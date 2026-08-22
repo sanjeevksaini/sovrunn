@@ -5,7 +5,7 @@
 | Status | Approved boundary (closed under ADH-2026-058) |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Controlling Decisions | DEC-0036, DEC-0042, DEC-0057 |
-| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction), ADH-2026-063 (create phase-one/strict-classification precedence correction), ADH-2026-064 (VS-000 ExecutionTarget ownership correction), ADH-2026-065 (create phase-one reference extraction and exact classification cases) |
+| Controlling Handoffs | ADH-2026-025, ADH-2026-040, consolidated ADH-2026-042, ADH-2026-045 (delegation), ADH-2026-058 (executable contract closure), ADH-2026-060 (Maintenance-race outcome clarification), ADH-2026-061 (Maintenance-entry link-clearing correction), ADH-2026-063 (create phase-one/strict-classification precedence correction), ADH-2026-064 (VS-000 ExecutionTarget ownership correction), ADH-2026-065 (create phase-one reference extraction and exact classification cases), ADH-2026-066 (coherent backing-access compatibility bridge) |
 | Phase | 2R |
 | Depends On | FEATURE-0011 (reuse), FEATURE-0012 (grammar/errors), FEATURE-0013 (decision/audit), FEATURE-0015 (CloudProviderParticipation, InfrastructureStack — read-only prior-feature authority) |
 
@@ -419,17 +419,51 @@ refines `VS0-CF-F16-125` and adds the two new sequential local conformance rows
 `VS0-CF-F16-123`, `VS0-CF-F16-124`, and `VS0-CF-F16-126` remain unchanged.
 `VS0-CF-F16-125`, `VS0-CF-F16-127`, and `VS0-CF-F16-128` map to `REQ-F16-05` and
 its affected acceptance proof. The controlling FEATURE-0016 semantic authorities
-are ADH-2026-058 together with ADH-2026-059/060/061/062/063/064/065; ADH-2026-058
-is not the sole current semantic authority.
+are ADH-2026-058 together with ADH-2026-060/061/063/064/065; ADH-2026-058
+is not the sole current semantic authority. ADH-2026-066 adds the private
+backing-access compatibility mechanism without changing these observable
+conformance meanings.
+
+### 4.15 Coherent, principal-aware backing access (ADH-2026-066)
+
+FEATURE-0016 owns the internal `BackingAccessProvider`. It uses the existing
+FEATURE-0012 grant evaluator and a private FEATURE-0015 store-backed read lease;
+it does not transfer ownership of `CloudProviderParticipation` or
+`InfrastructureStack`, and it adds no public FEATURE-0015 behavior.
+
+The lease takes one existing FEATURE-0015 store lock, obtains immutable copies
+of both backing resources, and evaluates caller-relative safe access while the
+lease is held. It returns only the F0016 decision inputs: safe 404 or
+authorization 403 outcome, derived CloudProvider UID, effective participation
+state, InfrastructureStack phase and generation, and the registered viability
+fingerprint. A qualification's final backing recheck uses a fresh lease and
+compares only the registered InfrastructureStack-generation and
+viability-fingerprint fences; participation generation is not a fence.
+
+For qualification publication, lock order is strictly FEATURE-0015 backing
+lease, then the FEATURE-0016 lifecycle-service mutex, then inherited audit
+append, then F0016 target publication. No path holding the F0016 lifecycle
+mutex may acquire the backing lease, and FEATURE-0015 writers never acquire the
+F0016 mutex. GET and LIST use fresh backing access only to compute response-only
+`effectiveAvailability`; they do not mutate target state or ETags.
+
+Participation suspension is prospective admission control: it makes the
+backing environment unavailable for new ExecutionTarget qualification and later
+placement/provisioning admission. It does not stop, suspend, or mutate existing
+InfrastructureStacks, ExecutionTargets, or already-realized workloads. Thus an
+F0016 `effectiveAvailability: Unavailable` projection never means a workload
+has stopped.
 
 ---
 
 ## 5. Preserve FEATURE-0015 as Read-Only Prior-Feature Authority
 
 FEATURE-0016 consumes FEATURE-0015's `CloudProviderParticipation` and
-`InfrastructureStack` contracts by reference only. FEATURE-0016 does not
-modify, extend, or reinterpret any FEATURE-0015 document, schema, writer,
-state, or conformance case.
+`InfrastructureStack` contracts by reference only. ADH-2026-066 permits only
+the private, read-only backing-read lease needed by the F0016-owned
+`BackingAccessProvider`; FEATURE-0016 does not modify or reinterpret any
+FEATURE-0015 resource, route, schema, writer, state machine, conformance case,
+requirements, design, tasks, control manifest, or feature authority.
 
 ---
 

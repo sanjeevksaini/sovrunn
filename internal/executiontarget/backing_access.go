@@ -121,7 +121,7 @@ func (p *BackingAccessProvider) WithFinalQualificationLease(
 	if p == nil || p.store == nil || grants == nil {
 		return BackingSafeDenied
 	}
-	var disposition BackingDisposition = BackingSafeDenied
+	disposition := BackingSafeDenied
 	p.store.WithPairedBackingRead(participationUID, stackUID, func(snap cloudmodel.PairedBackingSnapshot) {
 		res := evaluatePairedBacking(snap, grantAction, grants)
 		disposition = res.Disposition
