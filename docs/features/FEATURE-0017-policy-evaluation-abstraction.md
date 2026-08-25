@@ -2,7 +2,7 @@
 doc_type: feature
 id: FEATURE-0017
 title: Policy Evaluation Abstraction
-status: architecture-ready
+status: architecture-approved
 phase: 2R
 reuse_assessment_format_version: 1.0.0
 canonical_architecture: docs/architecture/policy-evaluation-abstraction.md
@@ -11,14 +11,14 @@ controlling_handoff: ADH-2026-067
 clarifying_handoff: ADH-2026-068
 corrective_handoff: ADH-2026-069
 ai_load_priority: feature
-ai_summary: Architecture-ready scope contract for the deterministic, in-process, engine-neutral FEATURE-0017 evaluation seam and fake; requirements are not started.
+ai_summary: Architecture-approved scope and generation-control contract for the deterministic, in-process, engine-neutral FEATURE-0017 evaluation seam and fake.
 ---
 
 # FEATURE-0017: Policy Evaluation Abstraction
 
 | Field | Value |
 |---|---|
-| Status | Architecture ready; feature-factory scaffold created; requirements not started |
+| Status | Architecture approved; feature-factory architecture gate recorded |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Phase / order | Phase 2R / 7 |
 | Direct dependencies | FEATURE-0013 and FEATURE-0016 |
@@ -130,18 +130,70 @@ fixture serialization, goroutine mechanics, or production topology. Examples
 in the architecture are illustrative and cannot become required fixtures or
 business rules by inference.
 
+### 5.1 Canonical requirement generation ledger
+
+The rows below are subordinate generation-control mirrors of the six canonical
+architecture decision groups. They give the feature factory stable requirement
+identifiers but create no independent architecture authority. The exact
+observable behavior remains owned solely by the referenced CDG in
+`docs/architecture/policy-evaluation-abstraction.md`.
+
+| Requirement ID | Architecture group | Exact title |
+|---|---|---|
+| REQ-F17-01 | CDG-F17-01 | Minimal request boundary |
+| REQ-F17-02 | CDG-F17-02 | Exact v1 canonicalization and digest |
+| REQ-F17-03 | CDG-F17-03 | Adapter, result, timing, and failure normalization |
+| REQ-F17-04 | CDG-F17-04 | Deterministic fake |
+| REQ-F17-05 | CDG-F17-05 | Transient FEATURE-0013 evidence linkage |
+| REQ-F17-06 | CDG-F17-06 | In-process operation, precedence, proof, and governance |
+
+### 5.2 Canonical acceptance generation ledger
+
+The rows below are subordinate generation-control mirrors of the canonical
+architecture's 24-item local conformance inventory. Their order and text are
+copied verbatim. They create no independent acceptance or architecture
+authority and may not be repurposed, renumbered, merged, split, or paraphrased.
+
+| Acceptance ID | Exact acceptance item |
+|---|---|
+| AC-F17-01 | valid request and every registered bound; |
+| AC-F17-02 | unknown-field and malformed-reference rejection; |
+| AC-F17-03 | invalid request invokes no adapter; |
+| AC-F17-04 | optional absent and valid-present `contextRef`; |
+| AC-F17-05 | `null`, empty, and partial field rules; |
+| AC-F17-06 | duplicate reference rejection; |
+| AC-F17-07 | list-order-independent digest; |
+| AC-F17-08 | semantic input change alters digest; |
+| AC-F17-09 | `requestId`-only change preserves digest; |
+| AC-F17-10 | exact RFC 8785/SHA-256 test vector; |
+| AC-F17-11 | all four valid outcomes; |
+| AC-F17-12 | missing fixture and configured adapter failure; |
+| AC-F17-13 | invalid fixture construction failure; |
+| AC-F17-14 | cancellation, deadline, zero-invocation-before-call, at-most-once invocation, and late-output discard; |
+| AC-F17-15 | invalid adapter conclusion rejection; |
+| AC-F17-16 | fixed-time-source deterministic replay; |
+| AC-F17-17 | reason-code grammar, duplicate rejection, sorting, and redaction; |
+| AC-F17-18 | absence of obligations in the Phase 2R fake; |
+| AC-F17-19 | successful result/timing transport and separate pure FEATURE-0013 mapping for all four results, with the exact populated fields and exact omitted fields required by CDG-F17-05; |
+| AC-F17-20 | malformed structural mapper-input failure with no mutation or side effect; |
+| AC-F17-21 | no mapping for non-result interactions; |
+| AC-F17-22 | no FEATURE-0017 DecisionRecord, AuditEvent, route, controller, or store; |
+| AC-F17-23 | concurrent equivalent-call determinism; and |
+| AC-F17-24 | zero network, OPA, Cedar, Kubernetes, CloudProvider, database, identity, provisioning, or other external effects. |
+
 ## 6. Acceptance boundary
 
 The complete feature-level acceptance inventory is the 24-case local
-conformance list in Section 11 of the sole architecture authority. Later Kiro
+conformance list in Section 10 of the sole architecture authority and its
+subordinate generation-control mirror in Section 5.2 above. Later Kiro
 requirements must make every case traceable and testable without broadening
 it. The FEATURE-0017 contract checker must validate schemas, the six decision
 groups, digest vector, adapter/fake boundaries, conformance inventory, and
 zero-route/store/controller guarantees; it must not require a route catalog.
 
 The feature is not implementation-complete until the repository feature gate
-passes. Creation of this file and the Kiro scaffold is not approval to generate
-requirements or to implement code.
+passes. Architecture-gate approval authorizes requirements generation only;
+it does not authorize design, tasks, Cursor execution, or implementation.
 
 ## 7. Explicit non-goals
 
@@ -170,7 +222,8 @@ order, `requirements.md`, `design.md`, and `tasks.md` within
 required gate. Cursor may act only from an approved complete `tasks.md` and
 must not change architecture.
 
-The next action is explicit human approval at the generic feature-factory
-architecture gate, which pins this feature file, the sole architecture,
-ADH-2026-067, ADH-2026-068, ADH-2026-069, and the control manifest by digest.
-Until that gate is recorded, requirements remain blocked.
+The generic feature-factory architecture gate pins this feature file, the sole
+architecture, ADH-2026-067, ADH-2026-068, ADH-2026-069, and the control
+manifest by digest. Any later change to that package invalidates the recorded
+approval and requires a fresh explicit architecture-gate approval before
+requirements generation resumes.
