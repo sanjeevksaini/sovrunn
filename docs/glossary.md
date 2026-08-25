@@ -145,9 +145,9 @@ One concept = one canonical term.
 | EvaluationResult | Atomic result within a DecisionRecord: allow, deny, unknown, error. |
 | SovereigntyAssessment | DecisionRecord profile for sovereignty evaluation (DEC-0043). |
 | PlacementDecision | DecisionRecord profile for placement evaluation (DEC-0043). |
-| PolicyEvaluationRequest | Engine-neutral request sent to a policy engine adapter. |
-| PolicyEvaluationResult | Engine-neutral result returned from a policy engine adapter. |
-| PolicyEngineAdapter | Adapter boundary for OPA, Cedar, or other policy engines. |
+| PolicyEvaluationRequest | Engine-neutral request accepted by the FEATURE-0017 evaluation boundary for structural validation, canonicalization, and adapter invocation. |
+| PolicyEvaluationResult | Immutable transient evaluator evidence constructed by the FEATURE-0017 evaluation boundary from a valid adapter conclusion, canonical input digest, and boundary-owned evaluation time. |
+| PolicyEngineAdapter | Engine-neutral port that receives normalized semantic input plus its digest and returns either a normalized policy conclusion or `AdapterFailure`. |
 
 ## 12. Scope Terms
 

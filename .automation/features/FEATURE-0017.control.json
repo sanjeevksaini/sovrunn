@@ -1,0 +1,246 @@
+{
+  "schema_version": "1.0",
+  "feature": {
+    "id": "FEATURE-0017",
+    "slug": "policy-evaluation-abstraction",
+    "title": "Policy Evaluation Abstraction",
+    "tier": "A",
+    "phase": 2,
+    "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+    "feature_branch": "feature-0017-policy-evaluation-abstraction",
+    "feature_file": "docs/features/FEATURE-0017-policy-evaluation-abstraction.md",
+    "architecture": "docs/architecture/policy-evaluation-abstraction.md",
+    "handoffs": [
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-067-feature-0017-policy-evaluation-architecture-closure.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-068-feature-0017-structural-mapper-clarification.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-069-feature-0017-timing-transport-and-mapper-field-closure.md"
+    ],
+    "spec_path": ".kiro/specs/policy-evaluation-abstraction"
+  },
+  "ownership": {
+    "owned_resources": [
+      "PolicyEvaluationRequest",
+      "PolicyEvaluationResult",
+      "PolicyEngineAdapter",
+      "Policy evaluation boundary",
+      "Deterministic in-process fake",
+      "Pure FEATURE-0013 EvaluationResult mapper"
+    ],
+    "previous_features": [
+      {
+        "id": "FEATURE-0011",
+        "relationship": "reuses the Reuse Assessment Standard governance contract",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0011-reuse-assessment-standard.md"],
+          "design": []
+        }
+      },
+      {
+        "id": "FEATURE-0012",
+        "relationship": "reuses TypedRef, transient-contract, structural-validation, and redaction foundations without redefining them",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md"],
+          "design": ["docs/architecture/api-resource-standard.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0013",
+        "relationship": "direct dependency; reuses EvaluationResult structurally while DecisionRecord, DecisionProfile, AuditEvent, adoption, and publication remain FEATURE-0013-owned",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0013-decision-object-and-auditevent-standard.md"],
+          "design": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0015",
+        "relationship": "reuses canonical CloudPlatform and CloudProvider scope terminology as read-only prior-feature authority",
+        "context": {
+          "requirements": [],
+          "design": ["docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0016",
+        "relationship": "direct dependency; reuses adapter-boundary precedent while ExecutionTarget qualification, facts, lifecycle, backing access, and stores remain FEATURE-0016-owned",
+        "context": {
+          "requirements": [],
+          "design": [
+            "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md",
+            "docs/architecture/adapter-boundary-model.md"
+          ]
+        }
+      }
+    ],
+    "excluded_features": [
+      {
+        "id": "FEATURE-0018",
+        "concepts": ["PrincipalRef creation", "Membership", "RoleDefinition semantics", "RoleAssignment", "authorization resolution", "ApprovalRequest", "ExceptionGrant"]
+      },
+      {
+        "id": "FEATURE-0019",
+        "concepts": ["SovereigntyProfile semantics", "RegulatoryPolicyBundle semantics", "SovereigntyFactSet", "EvidenceRecord", "governed dimension interpretation"]
+      },
+      {
+        "id": "FEATURE-0020",
+        "concepts": ["EffectiveGovernanceContext construction", "assignment", "inheritance", "conflict resolution", "exception resolution"]
+      },
+      {
+        "id": "FEATURE-0021",
+        "concepts": ["entitlement", "quota", "provider-selection intent"]
+      },
+      {
+        "id": "FEATURE-0022",
+        "concepts": ["ServicePlacementProfile semantics", "service requirements", "ServiceRegion"]
+      },
+      {
+        "id": "FEATURE-0023",
+        "concepts": ["DecisionProfile adoption compatibility", "DecisionRecord publication", "candidate-set evaluation", "per-candidate outcomes", "ranking", "placement", "selection"]
+      },
+      {
+        "id": "FEATURE-0024",
+        "concepts": ["production adapter selection", "plugin execution", "real realization", "provisioning", "execution authority"]
+      },
+      {
+        "id": "FEATURE-0025",
+        "concepts": ["customer-safe explanation", "CloudProvider-safe explanation", "AI-readable projection"]
+      },
+      {
+        "id": "FEATURE-0026",
+        "concepts": ["cross-feature orchestration", "Slice 0 integration ownership"]
+      }
+    ],
+    "forbidden_concepts": [
+      "policy business logic in core",
+      "custom policy language",
+      "custom policy engine",
+      "real OPA execution",
+      "real Cedar execution",
+      "engine-native core types",
+      "production adapter selector",
+      "adapter registry",
+      "adapter routing",
+      "automatic retry",
+      "public API route",
+      "HTTP handler",
+      "controller",
+      "request store",
+      "result store",
+      "idempotency repository",
+      "credential",
+      "network call",
+      "database call",
+      "CloudProvider SDK call",
+      "policy profile taxonomy",
+      "profile lookup",
+      "EffectiveGovernanceContext lookup",
+      "candidate interpretation",
+      "DecisionRecord publication",
+      "AuditEvent publication",
+      "adopting-profile compatibility validation",
+      "fake-generated obligation",
+      "durationMs mapper output",
+      "conditional optional EvaluationResult field population"
+    ]
+  },
+  "context": {
+    "always": [
+      "AGENTS.md",
+      "docs/foundation/constitution.md",
+      "docs/decisions/DECISION_INDEX.md",
+      "docs/glossary.md",
+      "docs/engineering/ai-context-loading-standard.md",
+      "docs/context/ARCHITECTURE_VERSION.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/context/SOVRUNN_CONTEXT_PACK.md",
+      "docs/context/CURRENT_PHASE_CONTEXT.md",
+      "docs/phase2/PHASE2R_REBASELINE.md",
+      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md",
+      "docs/architecture/vertical-slices/VS-000-contract-specification.md",
+      "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
+      ".kiro/steering/slice0-contract.md"
+    ],
+    "stages": {
+      "requirements": [
+        "docs/decisions/DEC-0028-policy-engine-adapter.md",
+        "docs/rfc/RFC-0025-policy-evaluation-abstraction.md"
+      ],
+      "design": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/architecture/controller-reconciliation-model.md",
+        "docs/architecture/observability-and-audit-baseline.md"
+      ],
+      "tasks": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/engineering/go-observability-standard.md"
+      ],
+      "implementation": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/engineering/go-version-standard.md",
+        "docs/engineering/go-observability-standard.md"
+      ],
+      "review": ["docs/governance/REVIEW_GATES.md"]
+    },
+    "budgets": {
+      "requirements": 550000,
+      "design": 700000,
+      "tasks": 650000,
+      "implementation": 800000,
+      "review": 700000
+    }
+  },
+  "guardrails": {
+    "kiro": {
+      "writable_by_stage": {
+        "requirements": [".kiro/specs/policy-evaluation-abstraction/requirements.md"],
+        "design": [".kiro/specs/policy-evaluation-abstraction/design.md"],
+        "tasks": [".kiro/specs/policy-evaluation-abstraction/tasks.md"]
+      },
+      "forbidden_outputs": ["internal/", "cmd/", "api/schemas/", "tests/"]
+    },
+    "cursor": {
+      "go_context": [
+        "docs/engineering/go-coding-guardrails.md",
+        "docs/engineering/go-version-standard.md",
+        "docs/engineering/go-observability-standard.md"
+      ],
+      "require_complete_receipt": true,
+      "verify_commands": ["make fmt", "make vet", "make test"]
+    },
+    "stop_conditions": [
+      "ARCHITECTURE_DECISION_REQUIRED",
+      "REQUIREMENT_CLARIFICATION_REQUIRED",
+      "BOUNDARY_CHANGE_REQUIRED",
+      "DEPENDENCY_APPROVAL_REQUIRED",
+      "SECURITY_REVIEW_REQUIRED"
+    ]
+  },
+  "execution": {
+    "human_gates": ["architecture", "executable_plan", "final"],
+    "tasks_per_run": 2,
+    "require_clean_tree": true,
+    "commit_per_task": true,
+    "max_stage_revisions": 2
+  },
+  "models": {
+    "architecture": "architecture",
+    "requirements": "requirements",
+    "design": "design",
+    "tasks": "tasks",
+    "review": "review",
+    "implementation": "implementation",
+    "mechanical": "deterministic_first"
+  },
+  "closeout": {
+    "mode": "prepare_only",
+    "metadata_targets": [
+      "docs/features/FEATURE_INDEX.md",
+      "docs/context/CURRENT_PHASE_CONTEXT.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/context/CURRENT_DECISION_SUMMARY.md",
+      "docs/traceability/FEATURE_TRACEABILITY_MATRIX.md",
+      "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md"
+    ],
+    "commit": false,
+    "push": false
+  }
+}

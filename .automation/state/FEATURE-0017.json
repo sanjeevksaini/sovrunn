@@ -1,0 +1,20 @@
+{
+  "architecture_approval_token": "APPROVED_ARCHITECTURE",
+  "architecture_approved_at": "2026-08-25T12:55:22.286826+00:00",
+  "architecture_approved_by": "Sanjeev Kumar",
+  "architecture_approved_sha256": "dfb63bb3b37a4e50c08f43ad93ddb764ac46833464cba54cf9a5274617dcaece",
+  "control_approved_sha256": "3a05ffcd5d67ef8585805489868d33d12e06758deccadf230e5b36e5d683e48d",
+  "created_at": "2026-08-25T11:28:10Z",
+  "current_stage": "requirements",
+  "current_task": null,
+  "feature_branch": "feature-0017-policy-evaluation-abstraction",
+  "feature_id": "FEATURE-0017",
+  "generated_prompt_path": "docs/generated-prompts/FEATURE-0017",
+  "human_gate_required": false,
+  "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+  "slug": "policy-evaluation-abstraction",
+  "spec_path": ".kiro/specs/policy-evaluation-abstraction",
+  "status": "architecture_approved",
+  "title": "Policy Evaluation Abstraction",
+  "updated_at": "2026-08-25T12:55:22.287212+00:00"
+}
