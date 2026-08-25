@@ -478,6 +478,262 @@ func TestRequestUnmarshalJSONDelegatesToStrictDecoder(t *testing.T) {
 	})
 }
 
+// TASK-F17-05 — UID pinning, EffectiveGovernanceContext kind, and duplicate
+// normalized-reference rejection (AC-F17-04 extension, AC-F17-06).
+
+func TestRequestValidationAcceptsUIDPinnedContextAndUniqueRefs(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ContextRef: &apimeta.TypedRef{
+			APIVersion: "governance.sovrunn.io/v1alpha1",
+			Kind:       "EffectiveGovernanceContext",
+			Name:       "egc",
+			UID:        "egc-001",
+		},
+		ProfileRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-001",
+			},
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-002",
+			},
+		},
+		CandidateRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-a",
+			},
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-b",
+			},
+		},
+		RequestID: "corr-1",
+	}
+	if err := req.Validate(); err != nil {
+		t.Fatalf("Validate: %v", err)
+	}
+}
+
+func TestRequestValidationRejectsDuplicateProfileRefs(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ProfileRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-001",
+			},
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-001",
+			},
+		},
+		RequestID: "corr-1",
+	}
+	err := req.Validate()
+	if !errors.Is(err, errRequestInvalid) {
+		t.Fatalf("err=%v, want errRequestInvalid", err)
+	}
+	if strings.Contains(err.Error(), "role-001") || strings.Contains(err.Error(), "reader") {
+		t.Fatalf("error leaked request values: %v", err)
+	}
+}
+
+func TestRequestValidationRejectsDuplicateCandidateRefs(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ProfileRefs: []apimeta.TypedRef{{
+			APIVersion: "iam.sovrunn.io/v1alpha1",
+			Kind:       "RoleDefinition",
+			Name:       "reader",
+			UID:        "role-001",
+		}},
+		CandidateRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-a",
+			},
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-a",
+			},
+		},
+		RequestID: "corr-1",
+	}
+	err := req.Validate()
+	if !errors.Is(err, errRequestInvalid) {
+		t.Fatalf("err=%v, want errRequestInvalid", err)
+	}
+	if strings.Contains(err.Error(), "plan-a") {
+		t.Fatalf("error leaked request values: %v", err)
+	}
+}
+
+func TestRequestValidationRejectsContextRefWrongKind(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ContextRef: &apimeta.TypedRef{
+			APIVersion: "governance.sovrunn.io/v1alpha1",
+			Kind:       "SovereigntyProfile",
+			Name:       "egc",
+			UID:        "egc-001",
+		},
+		ProfileRefs: []apimeta.TypedRef{{
+			APIVersion: "iam.sovrunn.io/v1alpha1",
+			Kind:       "RoleDefinition",
+			Name:       "reader",
+			UID:        "role-001",
+		}},
+		RequestID: "corr-1",
+	}
+	err := req.Validate()
+	if !errors.Is(err, errRequestInvalid) {
+		t.Fatalf("err=%v, want errRequestInvalid", err)
+	}
+	if strings.Contains(err.Error(), "SovereigntyProfile") || strings.Contains(err.Error(), "egc") {
+		t.Fatalf("error leaked request values: %v", err)
+	}
+}
+
+func TestRequestValidationRejectsContextRefMissingUID(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ContextRef: &apimeta.TypedRef{
+			APIVersion: "governance.sovrunn.io/v1alpha1",
+			Kind:       "EffectiveGovernanceContext",
+			Name:       "egc",
+		},
+		ProfileRefs: []apimeta.TypedRef{{
+			APIVersion: "iam.sovrunn.io/v1alpha1",
+			Kind:       "RoleDefinition",
+			Name:       "reader",
+			UID:        "role-001",
+		}},
+		RequestID: "corr-1",
+	}
+	err := req.Validate()
+	if !errors.Is(err, errRequestInvalid) {
+		t.Fatalf("err=%v, want errRequestInvalid", err)
+	}
+}
+
+func TestRequestValidationRejectsProfileRefsMissingUID(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ProfileRefs: []apimeta.TypedRef{{
+			APIVersion: "iam.sovrunn.io/v1alpha1",
+			Kind:       "RoleDefinition",
+			Name:       "reader",
+		}},
+		RequestID: "corr-1",
+	}
+	err := req.Validate()
+	if !errors.Is(err, errRequestInvalid) {
+		t.Fatalf("err=%v, want errRequestInvalid", err)
+	}
+}
+
+func TestRequestValidationNoFalsePositiveDuplicateWhenUIDsDiffer(t *testing.T) {
+	t.Parallel()
+
+	req := PolicyEvaluationRequest{
+		SubjectRef: apimeta.TypedRef{
+			APIVersion: "services.sovrunn.io/v1alpha1",
+			Kind:       "ServiceInstance",
+			Name:       "reporting-api",
+		},
+		Action: "service.read",
+		ProfileRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-001",
+			},
+			{
+				APIVersion: "iam.sovrunn.io/v1alpha1",
+				Kind:       "RoleDefinition",
+				Name:       "reader",
+				UID:        "role-002",
+			},
+		},
+		CandidateRefs: []apimeta.TypedRef{
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-a",
+				UID:        "cand-001",
+			},
+			{
+				APIVersion: "services.sovrunn.io/v1alpha1",
+				Kind:       "ServicePlan",
+				Name:       "plan-a",
+				UID:        "cand-002",
+			},
+		},
+		RequestID: "corr-1",
+	}
+	if err := req.Validate(); err != nil {
+		t.Fatalf("Validate: %v", err)
+	}
+}
+
 // --- test helpers ---
 
 type requestOpt func(map[string]json.RawMessage)

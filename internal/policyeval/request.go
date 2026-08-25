@@ -69,12 +69,11 @@ func (r *PolicyEvaluationRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Validate performs presence/bound checks and FEATURE-0012 structural reference
-// validation. Direct Go construction uses the same rules: nil ContextRef means
-// absence; nil or empty CandidateRefs means the approved empty set.
-//
-// UID pinning, EffectiveGovernanceContext kind enforcement, and duplicate
-// reference detection are deferred to a later validation step.
+// Validate performs presence/bound checks, FEATURE-0012 structural reference
+// validation, UID/kind rules for contextRef and profileRefs, and
+// normalized-reference duplicate rejection. Direct Go construction uses the
+// same rules: nil ContextRef means absence; nil or empty CandidateRefs means
+// the approved empty set.
 func (r PolicyEvaluationRequest) Validate() error {
 	return validatePolicyEvaluationRequest(r)
 }
@@ -172,6 +171,13 @@ func (dto policyEvaluationRequestDTO) toRequest() (PolicyEvaluationRequest, erro
 	}, nil
 }
 
+// contextRefConstraint restricts present contextRef to
+// EffectiveGovernanceContext (D-04 / CDG-F17-01). UID pinning is enforced
+// after the shared structural pass.
+var contextRefConstraint = apiref.Constraint{
+	AllowedKinds: []string{"EffectiveGovernanceContext"},
+}
+
 func validatePolicyEvaluationRequest(r PolicyEvaluationRequest) error {
 	actionLen := utf8.RuneCountInString(r.Action)
 	if actionLen < minActionLen || actionLen > maxActionLen {
@@ -188,11 +194,12 @@ func validatePolicyEvaluationRequest(r PolicyEvaluationRequest) error {
 		return errRequestInvalid
 	}
 
+	// (c) FEATURE-0012 structural validation of every reference.
 	if issues := (apiref.Constraint{}).ValidateRef(r.SubjectRef, "/subjectRef"); len(issues) > 0 {
 		return errRequestInvalid
 	}
 	if r.ContextRef != nil {
-		if issues := (apiref.Constraint{}).ValidateRef(*r.ContextRef, "/contextRef"); len(issues) > 0 {
+		if issues := contextRefConstraint.ValidateRef(*r.ContextRef, "/contextRef"); len(issues) > 0 {
 			return errRequestInvalid
 		}
 	}
@@ -202,7 +209,59 @@ func validatePolicyEvaluationRequest(r PolicyEvaluationRequest) error {
 	if issues := apiref.Refs(r.CandidateRefs).Validate(apiref.Constraint{}, "/candidateRefs", maxCandidateRefs); len(issues) > 0 {
 		return errRequestInvalid
 	}
+
+	// (d) UID pinning for present contextRef and every profileRefs entry.
+	if r.ContextRef != nil && r.ContextRef.UID == "" {
+		return errRequestInvalid
+	}
+	for i := range r.ProfileRefs {
+		if r.ProfileRefs[i].UID == "" {
+			return errRequestInvalid
+		}
+	}
+
+	// (e) Duplicate detection over normalized-reference identity
+	// (apiVersion, kind, name, uid-or-empty). Reject; never deduplicate.
+	if hasDuplicateNormalizedRefs(r.ProfileRefs) {
+		return errRequestInvalid
+	}
+	if hasDuplicateNormalizedRefs(r.CandidateRefs) {
+		return errRequestInvalid
+	}
 	return nil
+}
+
+// normalizedRefIdentity is the D-05 / CDG-F17-02 equality key for sorting and
+// duplicate detection: (apiVersion, kind, name, uid-or-empty).
+type normalizedRefIdentity struct {
+	apiVersion string
+	kind       string
+	name       string
+	uid        string
+}
+
+func normalizedRefIdentityOf(ref apimeta.TypedRef) normalizedRefIdentity {
+	return normalizedRefIdentity{
+		apiVersion: ref.APIVersion,
+		kind:       ref.Kind,
+		name:       ref.Name,
+		uid:        ref.UID,
+	}
+}
+
+func hasDuplicateNormalizedRefs(refs []apimeta.TypedRef) bool {
+	if len(refs) < 2 {
+		return false
+	}
+	seen := make(map[normalizedRefIdentity]struct{}, len(refs))
+	for i := range refs {
+		key := normalizedRefIdentityOf(refs[i])
+		if _, dup := seen[key]; dup {
+			return true
+		}
+		seen[key] = struct{}{}
+	}
+	return false
 }
 
 func decodeRequiredString(raw json.RawMessage) (string, error) {
