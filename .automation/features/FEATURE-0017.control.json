@@ -53,10 +53,10 @@
       },
       {
         "id": "FEATURE-0015",
-        "relationship": "reuses canonical CloudPlatform and CloudProvider scope terminology as read-only prior-feature authority",
+        "relationship": "reuses CloudPlatform and CloudProvider scope terminology established by FEATURE-0015; exact terminology remains glossary-owned",
         "context": {
           "requirements": [],
-          "design": ["docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"]
+          "design": ["docs/glossary.md"]
         }
       },
       {
@@ -65,7 +65,6 @@
         "context": {
           "requirements": [],
           "design": [
-            "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md",
             "docs/architecture/adapter-boundary-model.md"
           ]
         }
