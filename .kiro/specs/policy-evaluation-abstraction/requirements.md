@@ -25,6 +25,21 @@ verifiable statements. It creates no independent architecture authority and
 reopens no closed decision. Any conflict between this document and the sole
 architecture authority stops work with `ARCHITECTURE_DECISION_REQUIRED`.
 
+### 1.1 FEATURE-0017 Reuse Assessment reference
+
+The canonical FEATURE-0017 feature-level Reuse Assessment is owned by
+`docs/features/FEATURE-0017-policy-evaluation-abstraction.md` and governed by
+FEATURE-0011. This requirements stage consumes that approved assessment by
+reference; it does not duplicate, extend, or reinterpret its capability
+dispositions.
+
+The approved boundary remains unchanged: reuse FEATURE-0012/0013 foundations,
+RFC 8785 JCS, SHA-256, and the injected UTC time-source pattern; build only the
+Sovrunn evaluation port, boundary, pure mapper, and deterministic in-process
+fake; and defer wrapping any real OPA, Cedar, or other engine to a later
+approved feature. This subsection is generation-control metadata, not an
+independent requirement or architecture authority.
+
 ## 2. Purpose and use cases
 
 FEATURE-0017 supplies a deterministic, in-process, engine-neutral policy
