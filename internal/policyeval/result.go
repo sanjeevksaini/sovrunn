@@ -2,7 +2,6 @@ package policyeval
 
 import (
 	"encoding/json"
-	"regexp"
 )
 
 // Outcome is the closed PolicyEvaluationResult outcome vocabulary (CDG-F17-03).
@@ -47,8 +46,35 @@ const (
 	MaxReasonCodeLen  = 63
 )
 
-// ReasonCodeRegexp matches the approved reason-code grammar.
-var ReasonCodeRegexp = regexp.MustCompile(ReasonCodePattern)
+// reasonCodeMatcher implements the approved ASCII-only reason-code grammar
+// without adding regexp to the closed FEATURE-0017 production import surface.
+type reasonCodeMatcher struct{}
+
+// MatchString reports whether code matches ^[A-Z][A-Z0-9_]{0,62}$.
+func (reasonCodeMatcher) MatchString(code string) bool {
+	if len(code) == 0 || len(code) > MaxReasonCodeLen {
+		return false
+	}
+	if code[0] < 'A' || code[0] > 'Z' {
+		return false
+	}
+	for i := 1; i < len(code); i++ {
+		c := code[i]
+		if (c < 'A' || c > 'Z') && (c < '0' || c > '9') && c != '_' {
+			return false
+		}
+	}
+	return true
+}
+
+// String returns the canonical grammar for diagnostics and parity tests.
+func (reasonCodeMatcher) String() string {
+	return ReasonCodePattern
+}
+
+// ReasonCodeRegexp retains the existing matcher surface while using the
+// feature-owned deterministic ASCII implementation above.
+var ReasonCodeRegexp reasonCodeMatcher
 
 // PolicyEvaluationResult is the FEATURE-0017 engine-facing evaluation output
 // envelope (VS0-SCHEMA-019). It is a TransientRequestResult-profile value with

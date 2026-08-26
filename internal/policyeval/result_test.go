@@ -129,6 +129,8 @@ func TestResultReasonCodeGrammarRegex(t *testing.T) {
 		"HAS-DASH",
 		"HAS.DOT",
 		"HAS SPACE",
+		"Å",
+		"AÅ",
 		"A" + string(bytes.Repeat([]byte("0"), 63)), // 64 chars
 	}
 	for _, code := range invalid {
