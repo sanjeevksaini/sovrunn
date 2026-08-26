@@ -166,7 +166,7 @@ func TestCanonicalContextRefAbsentAndPresent(t *testing.T) {
 	profIdx := bytes.Index(presentBytes, []byte(`"profileRefs"`))
 	schemaIdx := bytes.Index(presentBytes, []byte(`"schema"`))
 	subjIdx := bytes.Index(presentBytes, []byte(`"subjectRef"`))
-	if !(actionIdx < candIdx && candIdx < ctxIdx && ctxIdx < profIdx && profIdx < schemaIdx && schemaIdx < subjIdx) {
+	if actionIdx >= candIdx || candIdx >= ctxIdx || ctxIdx >= profIdx || profIdx >= schemaIdx || schemaIdx >= subjIdx {
 		t.Fatalf("root key JCS order incorrect: %s", presentBytes)
 	}
 
@@ -231,7 +231,7 @@ func TestCanonicalListOrderIndependentDigest(t *testing.T) {
 	if readerIdx < 0 || writerIdx < 0 || alphaIdx < 0 || betaIdx < 0 {
 		t.Fatalf("missing sorted names in %s", baseBytes)
 	}
-	if !(readerIdx < writerIdx && alphaIdx < betaIdx) {
+	if readerIdx >= writerIdx || alphaIdx >= betaIdx {
 		t.Fatalf("refs not sorted: %s", baseBytes)
 	}
 }

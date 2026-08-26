@@ -142,6 +142,7 @@ func TestEvaluate_NilContextRequestInvalid(t *testing.T) {
 	spy := &evaluateSpyAdapter{conclusion: validAllowConclusion()}
 	b := mustBoundary(t, spy, NewFixedTimeSource(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)))
 
+	//nolint:staticcheck // Nil context is an explicit FEATURE-0017 validation input.
 	result, timing, nr, err := b.Evaluate(nil, validEvaluateRequest())
 	assertZeroNonResult(t, result, timing, nr, NonResultRequestInvalid, err, errRequestInvalid, spy.callCount())
 }

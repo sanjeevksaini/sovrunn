@@ -250,7 +250,7 @@ func appendJCSString(buf []byte, s string) ([]byte, error) {
 		case r == '\r':
 			buf = append(buf, '\\', 'r')
 		case r < 0x20:
-			buf = append(buf, '\\', 'u', '0', '0', lowerHex(byte(r>>4)), lowerHex(byte(r&0xf)))
+			buf = append(buf, '\\', 'u', '0', '0', lowerHex(r>>4), lowerHex(r&0xf))
 		default:
 			buf = append(buf, s[i:i+size]...)
 		}
@@ -260,9 +260,6 @@ func appendJCSString(buf []byte, s string) ([]byte, error) {
 	return buf, nil
 }
 
-func lowerHex(v byte) byte {
-	if v < 10 {
-		return '0' + v
-	}
-	return 'a' + (v - 10)
+func lowerHex(v rune) byte {
+	return "0123456789abcdef"[v]
 }

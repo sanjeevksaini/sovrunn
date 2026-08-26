@@ -101,6 +101,125 @@ selects no real engine. Extend is not applicable because there is no approved
 external implementation to extend. This disposition does not authorize a
 custom policy engine.
 
+## Capability assessment: deterministic policy-evaluation seam and fake
+
+This assessment applies the canonical
+`docs/phase2/PHASE2_REUSE_ASSESSMENT_STANDARD.md` fields without redefining
+them. It consolidates only the dispositions and boundaries already approved by
+ADH-2026-067, ADH-2026-068, and ADH-2026-069.
+
+### Identity
+
+| Field | Value |
+|---|---|
+| Feature identity | FEATURE-0017 |
+| Capability or decision-unit identity | Deterministic, engine-neutral policy-evaluation seam, pure FEATURE-0013 mapper, and in-process fake |
+| Assessment owner | Sanjeev Kumar, Sovrunn Architecture Owner |
+
+### Classification
+
+| Field | Value |
+|---|---|
+| Disposition | Build |
+| Decision status | Approved |
+
+### Analysis
+
+| Field | Value |
+|---|---|
+| Assessment scope | The FEATURE-0017 request/result contracts, evaluation boundary, adapter port, canonical input digest, pure FEATURE-0013 mapper, and deterministic fake only. |
+| Candidate category | In-process policy-evaluation contract and replaceable engine boundary. |
+| Mature candidates / applicable standards | RFC 8785 JCS, SHA-256, FEATURE-0012 reference/validation foundations, FEATURE-0013 evaluation evidence, and the DEC-0036 adapter-boundary principle. No production policy engine is selected. |
+| Relevant candidate strengths | The reused standards and prior-feature contracts supply deterministic canonicalization, stable input identity, structural references, timing/evidence carriers, and replaceable integration boundaries. |
+| Material candidate constraints | No mature external component owns Sovrunn's complete canonical request/result, validation, failure normalization, digest, transient evidence, and downstream-neutral mapping contract; Phase 2R also prohibits real external engine execution. |
+| Rationale | Build only the Sovrunn-owned seam and deterministic conformance fake while reusing applicable standards and prior-feature contracts unchanged. |
+| Selected foundation or approach | One in-process `PolicyEngineAdapter` port surrounded by the FEATURE-0017 boundary, RFC 8785/SHA-256 input identity, an injected UTC time source, a pure FEATURE-0013 mapper, and one immutable digest-keyed fake. |
+
+### Boundary
+
+| Field | Value |
+|---|---|
+| Sovrunn-owned responsibility | Validate and canonicalize the request, compute its digest, invoke one injected adapter at most once, normalize conclusion or failure, construct transient result/timing evidence, and perform the pure structural FEATURE-0013 mapping. |
+| Reused or extended responsibility | FEATURE-0012 owns TypedRef validation/redaction foundations; FEATURE-0013 owns EvaluationResult and structural evidence carriers; FEATURE-0015 owns CloudPlatform/CloudProvider terminology; FEATURE-0016 supplies adapter-boundary precedent; RFC 8785 and SHA-256 remain external standards. |
+| Responsibility/control boundary | FEATURE-0017 owns only the generic in-process evaluation seam and fake. Prior features retain their canonical contracts, while later domains retain IAM, governance, sovereignty, placement, approval, execution, explanation, adoption, publication, and orchestration authority. |
+| Data crossing the boundary | A normalized request plus its precomputed digest enters the injected adapter; only a normalized outcome/reason-code conclusion or adapter-failure signal returns. Tenant-confidential request/result values remain in process. |
+| Control crossing the boundary | The evaluation boundary invokes exactly one configured adapter only after cancellation, request-validation, canonicalization, and digest checks succeed; no adapter selects another adapter or performs a retry. |
+| Adapter required | Yes |
+| Adapter rationale | DEC-0036 requires the canonical Sovrunn contract to remain independent of any replaceable policy engine; the Phase 2R fake implements the same seam without external execution. |
+| Adapter or contract identifier | `PolicyEngineAdapter` |
+| Vendor-native types allowed | No |
+
+### Suitability
+
+| Field | Value |
+|---|---|
+| Sovereignty and deployment fit | Fully in-process and deterministic in Phase 2R; suitable for disconnected and air-gapped deployment because no network, credential, CloudProvider SDK, or external engine is used. |
+| Security and trust | Request and result values are Tenant-confidential; fixed sanitized failures never echo request, digest, fixture, reason-code, or raw adapter-error values; no credential field or secret reference is introduced. |
+| Operational and supportability | Fixed-time replay, frozen digest vectors, immutable fixtures, closed outcomes/non-results, exact precedence, race tests, and conformance tests provide repeatable local diagnosis. |
+| Licensing and supply-chain | Production uses the Go standard library and existing Sovrunn contracts only; test-only YAML uses the repository's existing `gopkg.in/yaml.v3` dependency; no production policy-engine dependency is added. |
+| Portability and provider-neutrality impact | The seam uses canonical CloudProvider terminology and opaque typed references; no provider-native or engine-native type becomes canonical. |
+
+### Phase and scope
+
+| Field | Value |
+|---|---|
+| Allowed in current phase | Yes |
+| Current-phase work | Implement only the deterministic in-process request/result contracts, adapter port and boundary, canonical digest, injected time seam, pure mapper, immutable fake, and FEATURE-0017-local conformance proof. |
+| Deferred work | Selecting or executing a real OPA, Cedar, or other engine; production adapter selection/registration; profile publication; external policy loading; credentials; persistence; routes; and later IAM, governance, sovereignty, placement, approval, execution, explanation, and orchestration semantics. |
+| Explicit non-goals | No real policy engine, external call, credential, CloudProvider SDK, route, handler, controller, store, persistence, retry, plugin execution, provisioning, DecisionRecord/AuditEvent publication, or downstream domain-policy interpretation. |
+| Exit or migration boundary | A separately approved later feature may implement a real engine adapter behind the unchanged `PolicyEngineAdapter` port. Any v1 semantic-input change requires an approved v2 digest contract; any ownership or canonical-contract change requires a new ADH. |
+| Phase 2 non-goal acknowledgement | Phase 2R authorizes deterministic in-process evaluation and fake conformance only; real external policy-engine execution and infrastructure effects remain non-goals. |
+
+### Build justification
+
+| Field | Value |
+|---|---|
+| Why Reuse is insufficient | Existing standards and prior-feature contracts are reused, but none supplies the complete Sovrunn policy-evaluation seam, normalized failure model, transient evidence linkage, and exact Phase 2R boundary. |
+| Why Wrap is insufficient | No production engine is selected or allowed in FEATURE-0017, so there is no approved external runtime to wrap. |
+| Why Extend is insufficient | Extending FEATURE-0012, FEATURE-0013, or FEATURE-0016 would violate their ownership and couple generic policy evaluation to reference, decision-adoption, or ExecutionTarget lifecycle semantics. |
+| Protected Sovrunn differentiation and long-term ownership | Sovrunn owns the provider-neutral request/result contract, adapter port, validation/canonicalization boundary, normalized outcome/failure evidence, pure mapper, and deterministic fake conformance behavior. |
+
+### Risk mitigation
+
+#### Applicable architecture risks
+
+#### Risk-control matrix
+
+| Risk | Preventive control | Detection control | Corrective path |
+|---|---|---|---|
+| Architecture leakage or premature engine selection | Closed six-group architecture; exact exclusions; engine-neutral adapter; deterministic fake only. | Requirements/design/tasks semantic review, Phase 2R scope checks, and production-import conformance. | Remove leaked semantics or dependencies; require an approved ADH before changing the engine or responsibility boundary. |
+| Nondeterministic input identity or result timing | Frozen RFC 8785/SHA-256 vector, sorted semantic sets, injected UTC time, immutable fixtures, and exact precedence. | Digest, replay, concurrency, race, cancellation, and malformed-input tests. | Restore the approved v1 canonicalization/timing contract; require an approved v2 digest decision for semantic-input changes. |
+| Tenant-confidential data or external-effect leakage | Sanitized fixed diagnostics, defensive copying, closed production import surface, no route/store/controller, and no credential or external-call surface. | Leakage sentinels, fixture-corpus review, import/declaration conformance, Phase 2R scope checks, and feature gate. | Remove the leaking value/effect, restore the closed import and diagnostic boundary, and reassess through an ADH if external behavior is required. |
+| Prior-feature ownership drift | Pure structural FEATURE-0013 mapper, shared FEATURE-0012 validators, opaque candidate/profile references, and no adopting-profile validation or publication. | Mapper structural/parity tests, dependency-direction checks, spec semantic review, and traceability review. | Revert duplicated or downstream semantics to the owning feature and require approval for any dependency extension. |
+
+- Residual risk: Low. The deterministic fake proves the seam but cannot prove
+  the behavior, performance, or operational suitability of an unselected real
+  policy engine.
+- Replacement risk: Medium
+- Reassessment triggers: selection of a real engine or new runtime dependency;
+  a v1 request/digest or result vocabulary change; obligations becoming active;
+  external calls, credentials, persistence, or routes; a mapper ownership
+  change; or a material licensing, maintenance, security, sovereignty, or
+  deployment-context change.
+
+### Traceability
+
+| Field | Value |
+|---|---|
+| Related DEC / RFC / ADH references | DEC-0026, DEC-0028, DEC-0036, DEC-0043, RFC-0021, RFC-0025, ADH-2026-067, ADH-2026-068, ADH-2026-069 |
+| Linked acceptance criteria | AC-F17-01 through AC-F17-24 |
+| Validation and review evidence | Approved ADH-2026-067/068/069; recorded FEATURE-0017 architecture and executable-plan gates; independent requirements/design/tasks reviews; FEATURE-0017 semantic, boundary, Phase 2R, conformance, deterministic, race, and repository verification evidence. |
+
+### Human-approval evidence
+
+| Field | Value |
+|---|---|
+| Structured approval-evidence record | `docs/reviews/reuse-assessments/FEATURE-0017-approval-evidence.md` |
+| Approval status | Approved |
+| Approving person or role | Sanjeev Kumar, Sovrunn Architecture Owner |
+| Approval date | 2026-08-25 |
+| Approval basis | ADH-2026-067, ADH-2026-068, ADH-2026-069, and the recorded FEATURE-0017 architecture-gate approval apply to the listed dispositions and responsibility boundary. |
+
 ## 5. Requirements-generation boundary
 
 Requirements must derive only observable behavior and FEATURE-0017-local proof

@@ -821,7 +821,7 @@ Disposition legend: `IMPLEMENT` = realized by design components above;
 - **Conformance IDs:** none owned (`VS0-CF-*` zero inventory); acceptance
   inventory is `AC-F17-01..24`.
 
-### Reuse dispositions realized
+### Implementation classification ledger (reuse dispositions realized)
 
 | Capability | Disposition | Design realization |
 |---|---|---|
