@@ -44,7 +44,35 @@ PY
     while IFS= read -r f; do FILES+=("$f"); done < <(find "$SPEC_PATH" -maxdepth 1 -type f -name '*.md' | sort)
   fi
 elif [[ -d ".kiro/specs" ]]; then
-  while IFS= read -r f; do FILES+=("$f"); done < <(grep -Ril "$FEATURE" .kiro/specs/*/*.md 2>/dev/null | sort || true)
+  # Resolve only the active feature's exact Kiro slug. A repository-wide grep
+  # also selects earlier specs that merely mention this feature as a future
+  # boundary, which caused retained FEATURE-0012 history to be judged as if it
+  # were active FEATURE-0017 scope.
+  SPEC_PATH="$(python3 - "$FEATURE" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+feature = sys.argv[1]
+index = Path("docs/features/FEATURE_INDEX.md")
+if not index.is_file():
+    raise SystemExit(0)
+
+for line in index.read_text(encoding="utf-8").splitlines():
+    if not re.match(rf"^\|\s*{re.escape(feature)}\s*\|", line):
+        continue
+    columns = [column.strip() for column in line.strip().strip("|").split("|")]
+    if len(columns) < 5:
+        raise SystemExit(0)
+    slug = columns[4].strip("`")
+    if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+        print(f".kiro/specs/{slug}")
+    raise SystemExit(0)
+PY
+)"
+  if [[ -n "$SPEC_PATH" && -d "$SPEC_PATH" ]]; then
+    while IFS= read -r f; do FILES+=("$f"); done < <(find "$SPEC_PATH" -maxdepth 1 -type f -name '*.md' | sort)
+  fi
 fi
 
 if [[ ${#FILES[@]} -eq 0 ]]; then

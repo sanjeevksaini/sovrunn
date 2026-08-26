@@ -9,7 +9,7 @@ This matrix links decisions to architecture docs, RFCs, features, and validation
 | DEC-0026 Reuse Before Build | Accepted | constitution, reuse-first architecture, PHASE2_REUSE_ASSESSMENT_STANDARD | RFC-0021 | FEATURE-0011 | Validated |
 | DEC-0036 Adapter Boundaries | Accepted | adapter-boundary-model | RFC-0021 | FEATURE-0011, FEATURE-0016 | Pending |
 | DEC-0027 Phase 2 Scope | Accepted (extended by Phase 2R) | development-phases, PHASE2_SCOPE, PHASE2R_REBASELINE | RFC-0021 | FEATURE-0011..0026 | Active |
-| DEC-0028 Policy Engine Abstraction | Accepted | policy-evaluation-abstraction | RFC-0025 | FEATURE-0017 | Pending |
+| DEC-0028 Policy Engine Abstraction | Accepted | `docs/architecture/policy-evaluation-abstraction.md`; ADH-2026-067/068/069 | RFC-0025 (Approved) | FEATURE-0017 | Architecture reconciled; implementation pending |
 | DEC-0029 Plugin Taxonomy | Accepted | plugin-taxonomy-and-boundaries | RFC-0027 | FEATURE-0024 | Pending |
 | DEC-0030 PostgreSQL MVP | Accepted | MVP_001_GOVERNED_POSTGRESQL_PAAS | RFC-0029 | FEATURE-0027..0034 | Pending |
 | DEC-0032 ResourcePool as Placement Boundary | Superseded by DEC-0042 | provider-neutral-resource-model (historical) | RFC-0024 | FEATURE-0015 (old) | Superseded |

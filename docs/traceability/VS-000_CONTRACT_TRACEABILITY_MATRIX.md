@@ -44,8 +44,8 @@
 | VS0-SCHEMA-015 | ExecutionTarget | FEATURE-0016 | DEC-0042/0057; ADH-2026-025/040/042/045/058 | canonical data model | VS0-CF-F10,X03,F16-01..122 |
 | VS0-SCHEMA-016 | NormalizedTargetFactSet | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
 | VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
-| VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042 | canonical data model | VS0-CF-F07..F09 |
-| VS0-SCHEMA-019 | PolicyEvaluationResult | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042 | canonical data model | VS0-CF-F07..F09 |
+| VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
+| VS0-SCHEMA-019 | PolicyEvaluationResult | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
 | VS0-SCHEMA-020 | PrincipalRef | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
 | VS0-SCHEMA-021 | Membership | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
 | VS0-SCHEMA-022 | RoleDefinition | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |

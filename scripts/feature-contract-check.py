@@ -6,13 +6,17 @@ checks whether a feature's approved registry contract contains enough exact,
 local evidence to generate requirements, design, and tasks without choosing
 observable behavior in a later stage.
 
-The framework accepts a feature argument so future features can add their own
-route catalog.  FEATURE-0015 is the first enforced catalog.
+The framework accepts a feature argument so each feature can register the
+contract evidence appropriate to its boundary. Route-owning features validate
+route catalogs; route-free in-process features validate their explicit
+no-route contract instead.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import re
 import sys
 from pathlib import Path
 
@@ -29,6 +33,7 @@ F15_ARCH = ROOT / "docs/architecture/FEATURE-0015-canonical-cloud-model-foundati
 F15_FEATURE = ROOT / "docs/features/FEATURE-0015-canonical-cloud-model-foundation.md"
 F16_ARCH = ROOT / "docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
 F16_FEATURE = ROOT / "docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"
+F17_ARCH = ROOT / "docs/architecture/policy-evaluation-abstraction.md"
 
 F15_KINDS = (
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
@@ -58,6 +63,16 @@ F16_CLOSED_VIOLATIONS = (
     "VS0_EXECUTION_TARGET_VIABILITY_STALE",
 )
 
+F17_DIGEST_PREIMAGE = (
+    '{"action":"service.read","candidateRefs":[],"profileRefs":'
+    '[{"apiVersion":"iam.sovrunn.io/v1alpha1","kind":"RoleDefinition",'
+    '"name":"reader","uid":"role-001"}],"schema":'
+    '"sovrunn.policy-evaluation-request/v1","subjectRef":'
+    '{"apiVersion":"services.sovrunn.io/v1alpha1","kind":"ServiceInstance",'
+    '"name":"reporting-api","uid":"service-001"}}'
+)
+F17_DIGEST = "daca15fd0310c46b45d5aff9bbe4f1a5dedd4b788c44c3780838a8be40a56103"
+
 
 def load_registry() -> dict:
     try:
@@ -68,6 +83,10 @@ def load_registry() -> dict:
 
 def by_id(registry: dict) -> dict[str, dict]:
     return {str(case.get("id")): case for case in registry.get("conformance", [])}
+
+
+def schemas_by_id(registry: dict) -> dict[str, dict]:
+    return {str(schema.get("id")): schema for schema in registry.get("schemas", [])}
 
 
 def has_audit_effect(case: dict) -> bool:
@@ -406,19 +425,126 @@ def check_f0016(registry: dict, errors: list[str]) -> None:
                 f"ADH066: F0016 architecture must state {marker!r} for the private backing-access bridge")
 
 
+def check_f0017(registry: dict, errors: list[str]) -> None:
+    """Validate the route-free FEATURE-0017 generation contract.
+
+    FEATURE-0017 is an in-process transient seam. Its readiness proof is the
+    exact request/result registry shape plus the sole architecture authority;
+    a public route catalog would itself be architecture drift.
+    """
+    schemas = schemas_by_id(registry)
+    request = schemas.get("VS0-SCHEMA-018")
+    result = schemas.get("VS0-SCHEMA-019")
+
+    require(errors, request is not None,
+            "SCHEMA: missing VS0-SCHEMA-018 PolicyEvaluationRequest")
+    if request is not None:
+        require(errors, request.get("identity") == "policy.sovrunn.io/v1alpha1/PolicyEvaluationRequest",
+                "SCHEMA: VS0-SCHEMA-018 identity must be PolicyEvaluationRequest")
+        require(errors, request.get("owner") == "FEATURE-0017",
+                "SCHEMA: VS0-SCHEMA-018 owner must be FEATURE-0017")
+        require(errors, request.get("profile") == "TransientRequestResult",
+                "SCHEMA: VS0-SCHEMA-018 must remain a TransientRequestResult")
+        require(errors, request.get("boundary") == "internal-engine-facing",
+                "SCHEMA: VS0-SCHEMA-018 must remain internal-engine-facing")
+        require(errors, request.get("scopes") == ["Project", "CloudPlatform", "CloudProvider"],
+                "SCHEMA: VS0-SCHEMA-018 scopes must be Project, CloudPlatform, CloudProvider")
+        require(errors, request.get("required") == [
+            "subjectRef:TypedRef(required)",
+            "action:string(1..63)",
+            "profileRefs:TypedRef[](1..32,uid-pinned)",
+            "requestId:string(1..128)",
+        ], "SCHEMA: VS0-SCHEMA-018 required fields/bounds do not match CDG-F17-01")
+        require(errors, request.get("optional") == [
+            "contextRef:TypedRef<EffectiveGovernanceContext>(uid-pinned)",
+            "candidateRefs:TypedRef[](max64)",
+        ], "SCHEMA: VS0-SCHEMA-018 contextRef/candidateRefs must be the exact optional fields")
+        require(errors, request.get("retention") == "none",
+                "SCHEMA: VS0-SCHEMA-018 retention must be none")
+
+    require(errors, result is not None,
+            "SCHEMA: missing VS0-SCHEMA-019 PolicyEvaluationResult")
+    if result is not None:
+        require(errors, result.get("identity") == "policy.sovrunn.io/v1alpha1/PolicyEvaluationResult",
+                "SCHEMA: VS0-SCHEMA-019 identity must be PolicyEvaluationResult")
+        require(errors, result.get("owner") == "FEATURE-0017",
+                "SCHEMA: VS0-SCHEMA-019 owner must be FEATURE-0017")
+        require(errors, result.get("profile") == "TransientRequestResult",
+                "SCHEMA: VS0-SCHEMA-019 must remain a TransientRequestResult")
+        require(errors, result.get("required") == [
+            "outcome:enum[Allow,Deny,Indeterminate,RequiresApproval]",
+            "reasonCodes:string[](1..32,unique,sorted,pattern=^[A-Z][A-Z0-9_]{0,62}$)",
+            "inputDigest:string(64,lowercase-sha256-hex)",
+            "evaluatedAt:RFC3339",
+        ], "SCHEMA: VS0-SCHEMA-019 required fields/outcomes do not match CDG-F17-03")
+        require(errors, result.get("optional") == ["obligations:object[](max32;absent-in-phase2r-fake)"],
+                "SCHEMA: VS0-SCHEMA-019 must retain obligations as its sole optional field")
+        require(errors, result.get("retention") == "decision-input",
+                "SCHEMA: VS0-SCHEMA-019 retention must be decision-input")
+
+    if not F17_ARCH.exists():
+        require(errors, False, f"ARCHITECTURE: missing {F17_ARCH.relative_to(ROOT)}")
+        return
+
+    arch = F17_ARCH.read_text()
+    arch_lower = " ".join(arch.lower().split())
+
+    groups = re.findall(r"^### (CDG-F17-\d{2})\b", arch, flags=re.MULTILINE)
+    require(errors, groups == [f"CDG-F17-{i:02d}" for i in range(1, 7)],
+            f"ARCHITECTURE: expected exactly CDG-F17-01..06, found {groups}")
+
+    calculated = hashlib.sha256(F17_DIGEST_PREIMAGE.encode("utf-8")).hexdigest()
+    require(errors, calculated == F17_DIGEST,
+            "DIGEST: checker fixture does not match the approved SHA-256 vector")
+    require(errors, F17_DIGEST_PREIMAGE in arch,
+            "DIGEST: architecture must contain the exact no-newline JCS preimage")
+    require(errors, F17_DIGEST in arch,
+            "DIGEST: architecture must contain the exact lowercase SHA-256 result")
+    for marker in (
+        "rfc 8785 json canonicalization scheme",
+        "the adapter does not return a complete `policyevaluationresult`",
+        "a normalized conclusion containing only `outcome` and `reasoncodes`",
+        "perform exact immutable lookup by approved v1 input digest",
+        "contain no conditional that interprets action, subject, profile, governance context",
+        "no public route, store, controller, idempotency repository",
+        "production adapter selection is explicitly outside feature-0017",
+        "zero network, opa, cedar, kubernetes, cloudprovider, database, identity",
+        "it neither receives nor resolves a `decisionprofile`",
+        "later adopting domain validates the constructed `evaluationresult`",
+    ):
+        require(errors, marker in arch_lower,
+                f"ARCHITECTURE: missing required FEATURE-0017 boundary marker {marker!r}")
+
+    conformance_match = re.search(
+        r"^## \d+\. Required local conformance\s*$([\s\S]*?)^## \d+\.",
+        arch,
+        flags=re.MULTILINE,
+    )
+    require(errors, conformance_match is not None,
+            "CONFORMANCE: architecture must contain the local conformance section")
+    if conformance_match is not None:
+        numbers = [int(value) for value in re.findall(
+            r"^(\d+)\.", conformance_match.group(1), flags=re.MULTILINE
+        )]
+        require(errors, numbers == list(range(1, 25)),
+                f"CONFORMANCE: expected exact local inventory 1..24, found {numbers}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature", required=True)
     args = parser.parse_args()
-    if args.feature not in ("FEATURE-0015", "FEATURE-0016"):
-        raise SystemExit(f"FAIL: no route catalog is configured for {args.feature}")
+    if args.feature not in ("FEATURE-0015", "FEATURE-0016", "FEATURE-0017"):
+        raise SystemExit(f"FAIL: no feature contract is configured for {args.feature}")
 
     errors: list[str] = []
     registry = load_registry()
     if args.feature == "FEATURE-0015":
         check_f0015(registry, errors)
-    else:
+    elif args.feature == "FEATURE-0016":
         check_f0016(registry, errors)
+    else:
+        check_f0017(registry, errors)
     if errors:
         print(f"FAIL: {args.feature} feature-contract-check — {len(errors)} error(s)")
         for error in errors:
@@ -427,8 +553,10 @@ def main() -> None:
         raise SystemExit(1)
     if args.feature == "FEATURE-0015":
         print("PASS: FEATURE-0015 feature contract closes route, audit, idempotency, authentication, validation-proof, and registration evidence")
-    else:
+    elif args.feature == "FEATURE-0016":
         print("PASS: FEATURE-0016 feature contract closes route, violation-code, conformance-catalog (VS0-CF-F16-01..128), ADH-2026-063 create phase-one/strict-classification precedence, ADH-2026-065 exact classification/phase-one-reference evidence, and the ADH-2026-066 private backing-access bridge")
+    else:
+        print("PASS: FEATURE-0017 feature contract closes request/result schemas, six decision groups, exact digest vector, adapter/fake boundaries, 24-case local conformance inventory, structural-only FEATURE-0013 mapping, and zero public route/store/controller")
 
 
 if __name__ == "__main__":
