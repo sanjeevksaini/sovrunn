@@ -54,7 +54,10 @@
         "relationship": "reuses DecisionRecord, DecisionProfile, EvaluationResult and AuditEvent envelopes; FEATURE-0018 only adopts the three approved profiles and event taxonomy",
         "context": {
           "requirements": ["docs/features/FEATURE-0013-decision-object-and-auditevent-standard.md"],
-          "design": ["docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md"]
+          "design": [
+            ".automation/context-projections/FEATURE-0018.design-dependencies.md",
+            ".automation/context-projections/FEATURE-0018.design-dependencies.manifest.json"
+          ]
         }
       },
       {

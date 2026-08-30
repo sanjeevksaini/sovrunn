@@ -1,0 +1,60 @@
+{
+  "feature": "FEATURE-0018",
+  "projection": ".automation/context-projections/FEATURE-0018.design-dependencies.md",
+  "projection_bytes": 51264,
+  "projection_estimated_tokens": 12816,
+  "projection_sha256": "1c8b8f69468e8c45f126b68f7a2bb013f0cc4282ca8fc7c68bb32ed197ddaebd",
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "bytes": 136420,
+      "path": "docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md",
+      "selections": [
+        {
+          "end": 510,
+          "excerpt_sha256": "8c55f00bdb04757508dcbccd405871be4bc56c902e43649f7336327bc7c563ce",
+          "kind": "line_range",
+          "label": "Canonical DecisionRecord, DecisionProfile and FEATURE-0018 adoption contracts",
+          "start": 140
+        },
+        {
+          "end": 677,
+          "excerpt_sha256": "e2a3f6205024d9010f7a0ad3be7efc7b04203dd2e838c1efef40b598cee9a3bc",
+          "kind": "line_range",
+          "label": "Evaluation composition, execution neutrality and data locality",
+          "start": 512
+        },
+        {
+          "end": 775,
+          "excerpt_sha256": "c2bed0ad903686aa6dfa5ec5161dd46a4b364ace257e31b26fc4e72548c3e2eb",
+          "kind": "line_range",
+          "label": "Audit consistency contract",
+          "start": 736
+        },
+        {
+          "end": 988,
+          "excerpt_sha256": "6ab24906c0e05b3fe5d8fca72faddf61e4118051fa5c4235d2b85fee35785675",
+          "kind": "line_range",
+          "label": "Security, privacy and trust boundaries",
+          "start": 860
+        },
+        {
+          "end": 1122,
+          "excerpt_sha256": "bc2d366e02adcf09797b8029f68bc418774b41c0d199ce4910b9cb16435ad4cc",
+          "kind": "line_range",
+          "label": "Compatibility and observability adoption constraints",
+          "start": 1035
+        },
+        {
+          "end": 2104,
+          "excerpt_sha256": "ffae29d2bd52d5aabe8c0f0f3c2a91344116d15a919fb6269c29532174e58124",
+          "kind": "line_range",
+          "label": "Lightweight downstream adoption contract",
+          "start": 1942
+        }
+      ],
+      "sha256": "325c20278da09149dabe7f4d0cee583269f78959a37294a98eb5bceeb13f6097"
+    }
+  ],
+  "stage": "design"
+}

@@ -1,9 +1,9 @@
 {
   "architecture_approval_token": "APPROVED_ARCHITECTURE",
-  "architecture_approved_at": "2026-08-30T14:03:35.406398+00:00",
+  "architecture_approved_at": "2026-08-30T14:30:16.458015+00:00",
   "architecture_approved_by": "Sanjeev Kumar",
   "architecture_approved_sha256": "1623315ca3048c400b11190ce33b1371c592f3293c871597d5cce3f570907121",
-  "control_approved_sha256": "ccd83134468a66842863d7e98b68d1ef303af99d10cea486c5ec1a11c930bb0c",
+  "control_approved_sha256": "b3ed27586fb0b29e5a0975a99610bca236e6d4cc099194accb34a389a48b47da",
   "created_at": "2026-08-30T09:03:51.175231+00:00",
   "current_stage": "design",
   "current_task": null,
@@ -14,7 +14,7 @@
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "requirements_approval_source": "openai_machine_review",
   "requirements_approval_token": "APPROVED_FOR_DESIGN",
-  "requirements_approved_at": "2026-08-30T14:16:36Z",
+  "requirements_approved_at": "2026-08-30T14:30:16Z",
   "requirements_approved_sha256": "103c31281264a249c6352ec0d0ca00e02ab01c93372686b9103461709af520ae",
   "requirements_context_sha256": "205368028391595b89fad8c4e69d9b1d218bc03af5e89a85fb4099ab2072ded8",
   "requirements_generation_approval_token": "APPROVED_REQUIREMENTS_GENERATION",
@@ -26,5 +26,5 @@
   "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation",
   "status": "requirements_approved",
   "title": "Governance, IAM, Approval and Exception Foundation",
-  "updated_at": "2026-08-30T14:16:36.570948+00:00"
+  "updated_at": "2026-08-30T14:30:16.734055+00:00"
 }
