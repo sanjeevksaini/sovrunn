@@ -17,7 +17,7 @@ ai_summary: Approved scope, reuse and generation-control contract for FEATURE-00
 
 | Field | Value |
 |---|---|
-| Status | Architecture approved; requirements authorization pending |
+| Status | Architecture approved; requirements generation authorized |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Phase / order | Phase 2R / 8 |
 | Direct dependencies | FEATURE-0012 and FEATURE-0017; adopting registrations in FEATURE-0013 and FEATURE-0016 |
@@ -199,3 +199,97 @@ implementation stage. Once requirements generation is separately authorized,
 requirements may derive verifiable statements only from F18-RD-01..24 and the
 approved evidence ledgers. Any missing value is a blocker, not permission to
 invent architecture.
+
+### 6.1 Canonical requirement generation ledger
+
+The rows below are subordinate generation-control mirrors of the 24 approved
+architecture decision groups. They create no independent architecture or
+requirement semantics. Each identifier maps one-to-one to its controlling
+decision group and must not be repurposed, renumbered, merged, split or
+paraphrased during requirements generation.
+
+| Requirement ID | Architecture decision | Exact title |
+|---|---|---|
+| REQ-F18-01 | F18-RD-01 | Current-feature-only authority |
+| REQ-F18-02 | F18-RD-02 | Closed contract inventory and profiles |
+| REQ-F18-03 | F18-RD-03 | Stable principal identity |
+| REQ-F18-04 | F18-RD-04 | Direct principal and scoped AccessGroup assignments |
+| REQ-F18-05 | F18-RD-05 | Membership is non-authorizing |
+| REQ-F18-06 | F18-RD-06 | Distributed action ownership and central role composition |
+| REQ-F18-07 | F18-RD-07 | Versioned RoleDefinition |
+| REQ-F18-08 | F18-RD-08 | Scoped RoleAssignment |
+| REQ-F18-09 | F18-RD-09 | Deterministic scoped authorization composition |
+| REQ-F18-10 | F18-RD-10 | FEATURE-0017 adoption without reinterpretation |
+| REQ-F18-11 | F18-RD-11 | Bounded FEATURE-0017 subject/target use |
+| REQ-F18-12 | F18-RD-12 | Bounded ApprovalPolicy |
+| REQ-F18-13 | F18-RD-13 | Immutable terminal approval evidence |
+| REQ-F18-14 | F18-RD-14 | JIT privileged access authorizes one temporary grant |
+| REQ-F18-15 | F18-RD-15 | Constrained break-glass access |
+| REQ-F18-16 | F18-RD-16 | Snapshot-based AccessReview |
+| REQ-F18-17 | F18-RD-17 | Bounded immutable exception evidence |
+| REQ-F18-18 | F18-RD-18 | FEATURE-0018-limited GovernanceProfile v1 |
+| REQ-F18-19 | F18-RD-19 | FEATURE-0013 adoption |
+| REQ-F18-20 | F18-RD-20 | Audit before authorization-changing publication |
+| REQ-F18-21 | F18-RD-21 | Deterministic validation and safe denial |
+| REQ-F18-22 | F18-RD-22 | Deterministic in-memory foundation and local conformance |
+| REQ-F18-23 | F18-RD-23 | Standards-validation gate |
+| REQ-F18-24 | F18-RD-24 | Progressive and normally hidden user friction |
+
+### 6.2 Canonical acceptance generation ledger
+
+The rows below are subordinate generation-control mirrors of the approved
+F18-SCN-01..49 enterprise scenario ledger. They create no independent scenario,
+evidence or architecture authority. `AC-F18-38` preserves the retired duplicate
+as excluded and must never be treated as an active acceptance obligation.
+
+| Acceptance ID | Architecture scenario | Exact scenario title | Disposition |
+|---|---|---|---|
+| AC-F18-01 | F18-SCN-01 | Active employee receives project-scoped developer access | Active |
+| AC-F18-02 | F18-SCN-02 | Employee email changes | Active |
+| AC-F18-03 | F18-SCN-03 | Employee is suspended during an active assignment | Active |
+| AC-F18-04 | F18-SCN-04 | Employee leaves and later rejoins | Active |
+| AC-F18-05 | F18-SCN-05 | Workload calls a control-plane operation | Active |
+| AC-F18-06 | F18-SCN-06 | System controller performs an owned transition | Active |
+| AC-F18-07 | F18-SCN-07 | Consultant belongs to supplier and customer contexts | Active |
+| AC-F18-08 | F18-SCN-08 | External IdP group claim and provisioned AccessGroup are distinguished | Active |
+| AC-F18-09 | F18-SCN-09 | Organization administrator delegates project authority | Active |
+| AC-F18-10 | F18-SCN-10 | ExecutionTarget operator reads and qualifies one target | Active |
+| AC-F18-11 | F18-SCN-11 | Target operator tries to retire with qualifier role | Active |
+| AC-F18-12 | F18-SCN-12 | Organization wants create-only but not retire authority | Active |
+| AC-F18-13 | F18-SCN-13 | Engineer requests two-hour production DB administration | Active |
+| AC-F18-14 | F18-SCN-14 | Engineer approves own privileged request | Active |
+| AC-F18-15 | F18-SCN-15 | Required approver is revoked before deciding | Active |
+| AC-F18-16 | F18-SCN-16 | Approval and expiry occur concurrently | Active |
+| AC-F18-17 | F18-SCN-17 | Same approved JIT request is activated twice | Active |
+| AC-F18-18 | F18-SCN-18 | Emergency access is needed without normal approver availability | Active |
+| AC-F18-19 | F18-SCN-19 | Access review finds stale administrator access | Active |
+| AC-F18-20 | F18-SCN-20 | Assignment changes during review | Active |
+| AC-F18-21 | F18-SCN-21 | Incident requires change-window exception plus DB role | Active |
+| AC-F18-22 | F18-SCN-22 | Request attempts to except tenant isolation | Active |
+| AC-F18-23 | F18-SCN-23 | Exception is revoked before its planned expiry | Active |
+| AC-F18-24 | F18-SCN-24 | Two exception grants overlap | Active |
+| AC-F18-25 | F18-SCN-25 | FEATURE-0017 returns Allow but role is expired | Active |
+| AC-F18-26 | F18-SCN-26 | FEATURE-0017 returns RequiresApproval | Active |
+| AC-F18-27 | F18-SCN-27 | FEATURE-0017 returns Indeterminate | Active |
+| AC-F18-28 | F18-SCN-28 | Required AuditEvent append fails during JIT activation | Active |
+| AC-F18-29 | F18-SCN-29 | End customer performs a routine low-risk operation | Active |
+| AC-F18-30 | F18-SCN-30 | User receives denial involving inaccessible target | Active |
+| AC-F18-31 | F18-SCN-31 | Production workload needs durable narrow access | Active |
+| AC-F18-32 | F18-SCN-32 | Guest assignment omits expiry | Active |
+| AC-F18-33 | F18-SCN-33 | Two assignments grant an action but a mandatory guardrail excludes it | Active |
+| AC-F18-34 | F18-SCN-34 | A published role version is suspended during use | Active |
+| AC-F18-35 | F18-SCN-35 | AuthorizationResult is replayed for a different target | Active |
+| AC-F18-36 | F18-SCN-36 | Federated membership provenance is stale or responsible owner is absent | Active |
+| AC-F18-37 | F18-SCN-37 | Access review has no or incomplete usage telemetry | Active |
+| AC-F18-38 | F18-SCN-38 | Retired duplicate of F18-SCN-29 | Excluded |
+| AC-F18-39 | F18-SCN-39 | Access administrator grants ordinary project access | Active |
+| AC-F18-40 | F18-SCN-40 | Engineer requests time-bound privileged access | Active |
+| AC-F18-41 | F18-SCN-41 | Approver decides a privileged or exception request | Active |
+| AC-F18-42 | F18-SCN-42 | Reviewer certifies or remediates access | Active |
+| AC-F18-43 | F18-SCN-43 | User requests a bounded control exception | Active |
+| AC-F18-44 | F18-SCN-44 | Resource-narrowed administrator tries to delegate another resource or the whole scope | Active |
+| AC-F18-45 | F18-SCN-45 | Standing beneficiary attempts to certify retained access | Active |
+| AC-F18-46 | F18-SCN-46 | Temporary membership administrator attempts to create durable group-derived access | Active |
+| AC-F18-47 | F18-SCN-47 | Membership administrator attempts to manufacture approval or privileged eligibility | Active |
+| AC-F18-48 | F18-SCN-48 | Reviewer eligibility is missing, indirect, stale or scope-incompatible | Active |
+| AC-F18-49 | F18-SCN-49 | Role grantor or later rule publisher attempts to manufacture eligibility | Active |
