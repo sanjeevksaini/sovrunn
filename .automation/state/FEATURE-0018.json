@@ -1,8 +1,8 @@
 {
   "architecture_approval_token": "APPROVED_ARCHITECTURE",
-  "architecture_approved_at": "2026-08-30T09:21:42.921846+00:00",
+  "architecture_approved_at": "2026-08-30T13:08:24.855469+00:00",
   "architecture_approved_by": "Sanjeev Kumar",
-  "architecture_approved_sha256": "ad3324e2d25a7e656681dc0f38cbe89bbe6f71e27c578c6ca5833ea30c5363b6",
+  "architecture_approved_sha256": "c28b122ae6a83cba11becd926d86769fcc2fb84bfab2890e157e2e3f8d5a7e69",
   "control_approved_sha256": "77f8cba65a3a4f4903f4594074cfa1779d87827b62edad245c63bc42cd7cb53f",
   "created_at": "2026-08-30T09:03:51.175231+00:00",
   "current_stage": "requirements",
@@ -12,15 +12,15 @@
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0018",
   "human_gate_required": false,
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
-  "requirements_context_sha256": "bb5f7463bfcd647d266af72bed8def683bed0c11200d5bbe745280986dd7fea5",
+  "requirements_context_sha256": "819475407d7f4f03eaa354de6f320612d7fcaf036bad920bc539d6afb1750edd",
   "requirements_generation_approval_token": "APPROVED_REQUIREMENTS_GENERATION",
-  "requirements_generation_approved_at": "2026-08-30T09:21:49Z",
+  "requirements_generation_approved_at": "2026-08-30T13:08:25Z",
   "requirements_generation_approved_by": "Sanjeev Kumar",
   "requirements_projection_sha256": "8f004423e09141636e5f3f3020ec08cb6ba98be6fc458d51d08f7ff3e217ce85",
-  "requirements_prompt_sha256": "a5decd32fc19c9af6a8be524171fffb88d49d81f9f8715a2e2e8dd3cba03708d",
+  "requirements_prompt_sha256": "b683d3fffdcef0c8c662e92fb74ae872e3c8395ac07b4fd99e1f907bb0bf48aa",
   "slug": "governance-iam-approval-exception-foundation",
   "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation",
   "status": "requirements_authorized_prompt_ready",
   "title": "Governance, IAM, Approval and Exception Foundation",
-  "updated_at": "2026-08-30T09:22:06.412083+00:00"
+  "updated_at": "2026-08-30T13:08:36.995603+00:00"
 }

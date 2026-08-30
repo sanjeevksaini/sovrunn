@@ -293,3 +293,22 @@ as excluded and must never be treated as an active acceptance obligation.
 | AC-F18-47 | F18-SCN-47 | Membership administrator attempts to manufacture approval or privileged eligibility | Active |
 | AC-F18-48 | F18-SCN-48 | Reviewer eligibility is missing, indirect, stale or scope-incompatible | Active |
 | AC-F18-49 | F18-SCN-49 | Role grantor or later rule publisher attempts to manufacture eligibility | Active |
+
+### 6.3 Canonical conformance adoption ledger
+
+The four Slice-0 cases below are registered as FEATURE-0018-owned security
+proof. Their exact inputs, expected state, error, side effects and gate remain
+owned by `docs/architecture/vertical-slices/VS-000-contract-registry.yaml` and
+must be copied without reinterpretation into the requirements conformance
+ledger. This adoption adds no public route, authentication implementation,
+identity-provider integration or new error contract. In particular,
+`VS0-CF-F01` proves rejection when an already-authenticated operation context is
+absent; FEATURE-0018 still does not validate tokens or contact an identity
+provider.
+
+| Conformance ID | FEATURE-0018 adoption boundary |
+|---|---|
+| VS0-CF-F01 | Presence of the already-authenticated operation context; exact registry semantics only |
+| VS0-CF-F02 | Authorization safe-denial behavior; exact registry semantics only |
+| VS0-CF-X01 | Cross-Organization isolation; exact registry semantics only |
+| VS0-CF-X02 | Cross-Project isolation; exact registry semantics only |
