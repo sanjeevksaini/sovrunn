@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "feature": "FEATURE-0018",
+  "stage": "requirements",
+  "output": ".automation/context-projections/FEATURE-0018.requirements.md",
+  "manifest": ".automation/context-projections/FEATURE-0018.requirements.manifest.json",
+  "sources": [
+    {
+      "path": "docs/architecture/canonical/sovrunn-finalized-data-model.md",
+      "sha256": "e08ad2713bba45233b553eaa8caaca1a51e911ca0af68e7e36e8784f3b240ef9",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Canonical identity, authorization and governance model",
+          "start": 327,
+          "end": 429
+        }
+      ]
+    },
+    {
+      "path": "docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md",
+      "sha256": "a74e2e54f974ceb974bb203acb28d239c07a03559e52b56b770a0292e347f772",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Canonical FEATURE-0018 contract ledger and composition path",
+          "start": 488,
+          "end": 552
+        },
+        {
+          "kind": "line_range",
+          "label": "Canonical GovernanceProfile contract boundary",
+          "start": 699,
+          "end": 724
+        },
+        {
+          "kind": "line_range",
+          "label": "Canonical writers and retention boundaries",
+          "start": 1244,
+          "end": 1290
+        }
+      ]
+    },
+    {
+      "path": "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
+      "sha256": "8038466933d424734b530ac8985fd3a158d1a1ef34184416cfdae84522346148",
+      "selections": [
+        {
+          "kind": "matching_lines",
+          "label": "FEATURE-0018 schema, writer and cross-scope registry entries",
+          "pattern": "FEATURE-0018|DEC-0060 Accepted|F18-RD-|VS0-CF-X0[12]"
+        }
+      ]
+    },
+    {
+      "path": "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
+      "sha256": "b193a9039c2bb9cdb2ae16d1b0dabf88d0da80551a51db476e85738f8cb1afd5",
+      "selections": [
+        {
+          "kind": "matching_lines",
+          "label": "FEATURE-0018 canonical traceability rows",
+          "pattern": "FEATURE-0018|DEC-0060 Accepted"
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-readiness/FEATURE-0018-industry-validation-matrix.md",
+      "sha256": "fc6ee39865534a653727045dda62e19507c115d917bbd6ea4a7ba301656634c6",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Approved enterprise scenarios F18-SCN-01 through F18-SCN-49",
+          "start": 278,
+          "end": 337
+        }
+      ]
+    }
+  ]
+}

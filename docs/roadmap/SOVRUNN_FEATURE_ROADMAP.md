@@ -63,7 +63,7 @@ Phase 2R features are executable scope under the canonical model (ADH-2026-042).
 | FEATURE-0015 | Canonical Cloud Model Foundation | Executable | Seven-scope canonical bootstrap; CloudPlatform; CloudProvider; CloudProviderParticipation; topology through InfrastructureStack. No alpha runtime migration (DEC-0059); ExecutionTarget owned by FEATURE-0016. |
 | FEATURE-0016 | Adapter Boundary and ExecutionTarget Qualification | Executable | Core adapter interfaces; target qualification; fake adapter. |
 | FEATURE-0017 | Policy Evaluation Abstraction | Executable | PolicyEvaluationRequest/Result; PolicyEngineAdapter; DecisionRecord linkage. |
-| FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | Executable | GovernanceProfile; Membership; Roles; Approval; ExceptionGrant. |
+| FEATURE-0018 | Governance, IAM, Approval and Exception Foundation | Architecture approved; requirements authorization pending | AccessGroup and Membership; scoped RoleDefinition/RoleAssignment; exact-Human PrincipalRef-only approval/review/privileged eligibility; privileged access; approval; access review; immutable exception evidence; FEATURE-0018-limited GovernanceProfile. |
 | FEATURE-0019 | Sovereignty Facts, Evidence and Policy Foundation | Executable | SovereigntyProfile; SovereigntyFactSet; EvidenceRecord. |
 | FEATURE-0020 | Assignment and Effective Governance Resolution | Executable | ProfileAssignment; EffectiveGovernanceContext. |
 | FEATURE-0021 | CloudEnrollment, Personal Onboarding, Entitlement and Quota | Executable | CloudEnrollment; Personal Organization; EntitlementPackage; QuotaPolicy. |

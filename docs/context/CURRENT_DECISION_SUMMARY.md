@@ -38,6 +38,10 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - External maintenance has explicit notice authority, epochs, fences, mandatory requalification (`DEC-0057`).
 - Alpha migration is one signed cutover, no dual authority, immutable history preserved (`DEC-0058`) — superseded by `DEC-0059`.
 - Canonical bootstrap replaces alpha runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion; no CanonicalMigrationPlan/Record, migration controller, or cutover state machine (`DEC-0059`, supersedes `DEC-0058`).
+- FEATURE-0018 provides canonical scoped Sovrunn authorization, direct-member
+  AccessGroup assignments, exact-Human approval/review/privileged eligibility,
+  immutable exception evidence and a Sovrunn/native-IAM intersection boundary
+  (`DEC-0060`, `ACR-2026-002`, approved 2026-08-30).
 
 ### Superseded Decisions
 
@@ -57,3 +61,9 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - First PostgreSQL runtime reuse choice: CloudNativePG, Crunchy, or Helm.
 - Operation engine backend: simple v0 first; Temporal/Argo later.
 - Secret backend: Kubernetes Secret for local MVP; Vault/External Secrets later.
+
+## Approved FEATURE-0018 stage boundary
+
+DEC-0060 and its exact architecture/reuse package are accepted. Independent
+security-review renewal-05 passed with no blocking findings. Requirements,
+design, tasks and implementation remain separate human-gated stages.

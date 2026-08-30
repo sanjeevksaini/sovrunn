@@ -40,6 +40,16 @@ Establish the canonical, implementation-neutral PaaS fabric foundation with seve
 |---|---|---|
 | FEATURE-0015 Canonical Cloud Model Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0059; ADH-2026-020/024/025/037/043/045 |
 
+## Approved FEATURE-0018 architecture application
+
+ACR-2026-002 and DEC-0060 apply the approved ADH-2026-070 FEATURE-0018 package.
+Final human and reuse approval are recorded, and independent security-review
+renewal-05 passed with no blocking findings. The approved package limits approver,
+privileged-requester and reviewer eligibility to exact Human PrincipalRefs;
+roles, assignments, groups and Membership cannot manufacture that eligibility.
+This record does not change the current feature execution position or
+independently authorize requirements, design, tasks or implementation.
+
 ## Phase 2R Feature Sequence
 
 See `docs/phase2/PHASE2_FEATURE_SEQUENCE.md` for the canonical order.

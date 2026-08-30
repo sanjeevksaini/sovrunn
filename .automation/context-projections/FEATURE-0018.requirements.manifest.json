@@ -1,0 +1,93 @@
+{
+  "feature": "FEATURE-0018",
+  "projection": ".automation/context-projections/FEATURE-0018.requirements.md",
+  "projection_bytes": 57196,
+  "projection_estimated_tokens": 14299,
+  "projection_sha256": "8f004423e09141636e5f3f3020ec08cb6ba98be6fc458d51d08f7ff3e217ce85",
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "bytes": 96359,
+      "path": "docs/architecture/canonical/sovrunn-finalized-data-model.md",
+      "selections": [
+        {
+          "end": 429,
+          "excerpt_sha256": "bdb5c634b5f803e28cb9e0e051cfa32158f207d20c3505e0e118e7107c353207",
+          "kind": "line_range",
+          "label": "Canonical identity, authorization and governance model",
+          "start": 327
+        }
+      ],
+      "sha256": "e08ad2713bba45233b553eaa8caaca1a51e911ca0af68e7e36e8784f3b240ef9"
+    },
+    {
+      "bytes": 104840,
+      "path": "docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md",
+      "selections": [
+        {
+          "end": 552,
+          "excerpt_sha256": "9e2f4dd1bc8bad615af53a4a9020589483fa835609d974e5e10cc489b9760f71",
+          "kind": "line_range",
+          "label": "Canonical FEATURE-0018 contract ledger and composition path",
+          "start": 488
+        },
+        {
+          "end": 724,
+          "excerpt_sha256": "a3e246d929529a0ee7b461d98c56435ed7713d4c1f675b183960905b1222c0e7",
+          "kind": "line_range",
+          "label": "Canonical GovernanceProfile contract boundary",
+          "start": 699
+        },
+        {
+          "end": 1290,
+          "excerpt_sha256": "e4104a74103cf5429532c91fbbed327c5d9d24d885f8db8257704d746b83176e",
+          "kind": "line_range",
+          "label": "Canonical writers and retention boundaries",
+          "start": 1244
+        }
+      ],
+      "sha256": "a74e2e54f974ceb974bb203acb28d239c07a03559e52b56b770a0292e347f772"
+    },
+    {
+      "bytes": 163311,
+      "path": "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
+      "selections": [
+        {
+          "excerpt_sha256": "2bab4800bedadb61ff66020f0f217784865180674e6f25033d0793720001da18",
+          "kind": "matching_lines",
+          "label": "FEATURE-0018 schema, writer and cross-scope registry entries",
+          "pattern": "FEATURE-0018|DEC-0060 Accepted|F18-RD-|VS0-CF-X0[12]"
+        }
+      ],
+      "sha256": "8038466933d424734b530ac8985fd3a158d1a1ef34184416cfdae84522346148"
+    },
+    {
+      "bytes": 54477,
+      "path": "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
+      "selections": [
+        {
+          "excerpt_sha256": "e44fb714d072afefdc0411d1a960ac146cac12502b8bc0d9b266fe334d9ba8f6",
+          "kind": "matching_lines",
+          "label": "FEATURE-0018 canonical traceability rows",
+          "pattern": "FEATURE-0018|DEC-0060 Accepted"
+        }
+      ],
+      "sha256": "b193a9039c2bb9cdb2ae16d1b0dabf88d0da80551a51db476e85738f8cb1afd5"
+    },
+    {
+      "bytes": 70711,
+      "path": "docs/reviews/architecture-readiness/FEATURE-0018-industry-validation-matrix.md",
+      "selections": [
+        {
+          "end": 337,
+          "excerpt_sha256": "9e25b44e69364f605272b45b535599a6ecf6dc949bfbb8d1765f31d7b633c71e",
+          "kind": "line_range",
+          "label": "Approved enterprise scenarios F18-SCN-01 through F18-SCN-49",
+          "start": 278
+        }
+      ],
+      "sha256": "fc6ee39865534a653727045dda62e19507c115d917bbd6ea4a7ba301656634c6"
+    }
+  ],
+  "stage": "requirements"
+}

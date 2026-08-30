@@ -122,7 +122,7 @@ One concept = one canonical term.
 | Term | Definition |
 |---|---|
 | EffectiveGovernanceContext | Single resolved governance composition from governance, security, data, and cost profiles (DEC-0050). Non-weakenable by default. |
-| GovernanceProfile | Set of governance controls applicable to a scope. |
+| GovernanceProfile | Versioned compositional envelope. FEATURE-0018 v1 contains only approval-policy references and privileged-access, access-review, exception and audit rule components; FEATURE-0020 owns assignment and effective resolution. |
 | SecurityProfile | Security baseline applied to resources. |
 | SovereigntyProfile | Sovereignty requirements and dimensional evaluation criteria (DEC-0055). |
 | SovereigntyFactSet | Registered facts about dependencies, jurisdictions, and control paths for sovereignty evidence. |
@@ -134,7 +134,7 @@ One concept = one canonical term.
 | QuotaPolicy | Resource limits and quotas, independently evaluated from entitlement (DEC-0039). |
 | DataPlacementPolicy | Policy describing where data may be stored, processed, replicated, backed up, or cached. |
 | CostGuardrail | Cost or budget boundary considered before placement/scaling/execution. |
-| ExceptionGrant | Scoped, time-bound, approved exception to a governance control. |
+| ExceptionGrant | Immutable evidence of a scoped, time-bound, approved exception or its linked revocation; effective application remains FEATURE-0020-owned. |
 
 ## 11. Decision and Policy Terms
 
@@ -160,13 +160,25 @@ One concept = one canonical term.
 
 | Term | Definition |
 |---|---|
-| Membership | Organization/tenant membership of a principal. |
-| RoleDefinition | Named set of permissions. |
-| RoleAssignment | Scoped binding of a principal to a role. |
-| PrivilegedAccessRequest | JIT request for elevated access. |
-| AccessReview | Periodic review of role assignments. |
-| ApprovalPolicy | Conditions under which an action requires approval. |
-| ApprovalRequest | Request for human approval before proceeding. |
+| PrincipalRef | Embedded stable reference to an already-authenticated Human, Workload or System identity. Identity lifecycle remains external; issuer/subject, not email, supplies durable identity. |
+| AccessGroup | Non-authenticating, access-only authorization subject with an explicit owner and directly auditable principal members. It is not a ScopeKind; external, nested and dynamic groups grant nothing in v1. |
+| AccessGroupRef | Kind-constrained reference to one canonical AccessGroup. |
+| Membership | Managed record of Organization/CloudProvider belonging or one direct same-scope AccessGroup relationship. It grants no permission or approval/review/privileged eligibility and carries explicit provenance, freshness, type and responsibility semantics. |
+| MembershipEnabledGrantEnvelope | Transient operation-local collection of exact group-held assignment action, scope, target, resource and validity tuples newly enabled or extended by an AccessGroup Membership assignment-effect expansion; it is never a resource or bearer authority. |
+| EligibilityRef | Embedded kind-constrained reference containing exactly one Human PrincipalRef. RoleDefinition, RoleAssignment, AccessGroup, Membership, external claim and other relationships never satisfy or create it in v1. |
+| RoleHolderRef | Closed union containing exactly one PrincipalRef or AccessGroupRef; the subject to which a RoleAssignment grants a role. |
+| RoleDefinition | Versioned definition containing a set of registered canonical Sovrunn actions. A published version is immutable and may be superseded, suspended/restored or retired. |
+| RoleAssignment | Controller-published managed grant of one exact published RoleDefinition version to one RoleHolderRef at one registered scope, optionally narrowed to one exact resource, with Standing or TimeBound validity. Delegated publication cannot exceed independently witnessed action/scope/target/resource/time/delegation reach. |
+| Standing | Assignment validity mode with no automatic expiry; it remains immediately revocable and requires applicable periodic certification. |
+| TimeBound | Assignment validity mode with mandatory notBefore and expiresAt; it is ineffective outside that interval and expires without grace. |
+| PrivilegedAccessRequest | Immutable request for one justified, individual and time-bounded JIT or break-glass assignment; activation requires fresh phishing-resistant AAL2-or-higher assurance. |
+| AccessReview | Long-running review of an immutable access snapshot with retained usage, decision and remediation evidence; reviewer eligibility uses exact Human PrincipalRef-only EligibilityRef plus separate action authorization, and a direct or indirect beneficiary—including the accountable Human behind a direct Workload/System member of a beneficiary AccessGroup—cannot preserve or replace their own authority. |
+| ApprovalPolicy | Immutable published version defining bounded stages, exact Human PrincipalRef-only EligibilityRef approvers, quorum, expiry and separation of duties for an applicable FEATURE-0018 operation. Eligibility never grants the decide action, and the policy never authorizes break-glass bypass. |
+| ApprovalRequest | Retained approval evidence for one bounded intent or immutable proposal. Approval is admission-time evidence, not continuing bearer authority. |
+| ApprovalRequirement | Trusted operation-local value selecting NotRequired or Required with one exact published ApprovalPolicy version. |
+| AuthorizationInput | Transient exact actor/action/target/scope/time/assurance/request/correlation input to one authorization evaluation. |
+| AuthorizationResult | Transient non-bearer Allow or Deny result with exact contributing provenance; valid only for the evaluated operation boundary. |
+| ActionTargetBinding | Closed discriminated registration: ExactResource(action,targetKind), CreateParent(action,parentScopeKind), or ScopeOnly(action,scopeKind). |
 
 ## 14. Adapter Terms
 

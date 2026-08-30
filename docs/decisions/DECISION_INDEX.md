@@ -101,6 +101,7 @@ Chat discussions and generated prompts do not create accepted decisions. Accepte
 | DEC-0057 | External maintenance has explicit notice authority, target lifecycle ownership, epochs, fences, and mandatory requalification. | Infrastructure | Accepted | ADH-2026-040 |
 | DEC-0058 | Alpha migration is one signed cutover with no dual write/authority and immutable history preservation. | Migration | Superseded by DEC-0059 | ADH-2026-041 |
 | DEC-0059 | Canonical bootstrap replaces alpha runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets, not live state requiring conversion; no CanonicalMigrationPlan/Record, migration controller, or cutover state machine. Supersedes DEC-0058. | Migration | Accepted | ADH-2026-045 |
+| DEC-0060 | FEATURE-0018 provides provider-neutral scoped authorization, access groups, exact-Human PrincipalRef-only approval/review/privileged eligibility, immutable exception evidence and a Sovrunn/native-IAM intersection boundary. | Governance and IAM | Accepted | ACR-2026-002 / ADH-2026-070 |
 
 ## 4. AI Usage Notes
 

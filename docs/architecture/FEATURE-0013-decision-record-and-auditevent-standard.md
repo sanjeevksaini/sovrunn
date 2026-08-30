@@ -460,6 +460,21 @@ common envelope:
 This table validates extensibility; it does not authorize implementation of
 these domains in FEATURE-0013.
 
+### 6.9.1 FEATURE-0018 adopting-domain registration
+
+Under accepted DEC-0060, FEATURE-0018 registers exactly
+`authorization-decision/v1`, `approval-decision/v1`, and
+`exception-decision/v1` through this document's existing DecisionProfile
+extension mechanism. FEATURE-0013 retains envelope, validity, authority,
+projection, obligation, publication and audit-linkage ownership. AccessReview
+remains a FEATURE-0018 LongRunningOperation and is not a fourth DecisionProfile.
+
+The exact input, result, validity and mandatory-emission semantics are
+F18-RD-19; the audit-before-publication boundary and exact event taxonomy are
+F18-RD-20. This registration does not change the FEATURE-0013 envelope or
+authorize any downstream effect. Executable use remains gated by separately
+approved FEATURE-0018 requirements, design, tasks and implementation.
+
 ### 6.10 Authorization specialization
 
 `AuthorizationDecision` is a profile of `DecisionRecord`, not a separate core

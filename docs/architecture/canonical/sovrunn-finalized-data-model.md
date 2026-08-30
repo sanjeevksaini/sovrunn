@@ -1,8 +1,8 @@
 # Sovrunn Finalized Data Model
 
-**Status:** Architecture-owner approved canonical conceptual baseline — repository integration and feature-level API specifications pending
-**Version:** 1.7
-**Date:** 4 August 2026
+**Status:** Architecture-owner approved canonical conceptual baseline — FEATURE-0018 repository integration complete; feature-level API specifications pending
+**Version:** 1.8
+**Date:** 30 August 2026
 **Scope:** CloudPlatform products, CloudProvider supply participation, customer governance, hosting topology, sovereignty, service placement, managed-service lifecycle, Sovrunn platform lifecycle, execution and customer visibility
 
 ## 1. Purpose
@@ -130,7 +130,7 @@ Not every concept should become an independently managed API resource. Resource 
 | Managed resource | Durable desired state with its own identity, authorization and lifecycle | `SovrunnInstallation`, `CloudPlatform`, `CloudProvider`, `CloudProviderParticipation`, `Organization`, `CloudEnrollment`, `ExecutionTarget`, `Membership`, `RoleAssignment`, `ServiceInstance`, `ServiceRelationship`, `ServiceBinding` |
 | Versioned definition | Referenced contract that is mutable in draft, immutable when published and independently retired or superseded | `SovrunnRelease`, `PlatformLifecyclePolicy`, `RoleDefinition`, `ServicePlan`, `ServiceTypeDefinition`, `ServiceRelationshipDefinition`, `ServiceRuntimeProfile`, `ServiceCompositionDefinition`, `GovernanceProfile`, `SovereigntyProfile`, `RegulatoryPolicyBundle` |
 | Observed external resource | Normalized observation of externally owned facts, with provenance and freshness | `SovereigntyFactSet` and qualified target observations |
-| Immutable record | System-produced append-only result of resolution, evaluation or planning | `PlatformLifecyclePlan`, `PlatformDependencySnapshot`, `EffectiveGovernanceContext`, `ServiceRequirementSet`, `ServicePlacement`, `ServiceDeploymentPlan`; material `AuthorizationDecision`, `SovereigntyAssessment` and `PlacementDecision` outcomes use profiled `DecisionRecord` instances |
+| Immutable record | System-produced append-only result of resolution, evaluation or planning | `PlatformLifecyclePlan`, `PlatformDependencySnapshot`, `EffectiveGovernanceContext`, `ServiceRequirementSet`, `ServicePlacement`, `ServiceDeploymentPlan`; material authorization, SovereigntyAssessment and PlacementDecision outcomes use profiled `DecisionRecord` instances |
 | Long-running operation | Accepted request whose request fields become immutable while system-owned status progresses to a terminal state | `PrivilegedAccessRequest`, `AccessReview`, `Operation`, `PluginExecution` |
 | Embedded value | Parent-owned data with no independent identity or lifecycle | `ServicePlacementIntent` within a `ServiceInstance` request |
 
@@ -334,12 +334,15 @@ Organization: Acme Bank
 
 | Concept | Canonical purpose | Required behavior |
 |---|---|---|
-| `PrincipalRef` | Stable reference to a human, workload or system identity from an identity provider | Use issuer and subject; email is not durable identity |
-| `Membership` | Records belonging to a provider or organization context | Grants no permission by itself |
-| `RoleDefinition` | Defines permissions using Sovrunn actions | Must not expose backend IAM roles as the customer authorization model |
-| `RoleAssignment` | Binds principal, role, scope, validity and conditions | Explicit, least-privileged, scoped and revocable |
-| `PrivilegedAccessRequest` | Requests just-in-time elevated authority | Strong authentication, approval, expiry and complete audit |
-| `AccessReview` | Periodically validates continued need for access | Stale or unjustified access is revoked |
+| `PrincipalRef` | Embedded stable reference to an already-authenticated Human, Workload or System identity | Identity lifecycle remains external; issuer/subject, not email, is durable identity |
+| `AccessGroup` | Non-authenticating, access-only authorization subject | Explicit owner; direct auditable principal membership only; external, nested or dynamic groups grant nothing |
+| `Membership` | Records Organization/CloudProvider belonging or one direct same-scope AccessGroup relationship | Grants no permission or approval/review/privileged eligibility; provenance, freshness, guest expiry and responsibility are explicit; every assignment-effect expansion that activates group-held authority passes the exact non-synthesized membership-enabled grant envelope |
+| `RoleDefinition` | Immutable published version of canonical Sovrunn actions | Backend IAM actions are prohibited; privilege classification is monotonic and emergency suspension is explicit |
+| `RoleAssignment` | Grants one role version to one `RoleHolderRef` at one registered scope and optional exact resource | `Standing` or `TimeBound`; per-action delegated reach containment; reviewable, revocable and written only by its controller |
+| `PrivilegedAccessRequest` | Requests justified JIT or break-glass elevation | Individual; requester eligibility is a non-empty exact-Human PrincipalRef list and cannot derive from roles, assignments, groups or Membership; activation requires separate submit authority and fresh phishing-resistant AAL2-or-higher assurance; bounded, no-grace expiry and fully audited |
+| `AccessReview` | Reviews an immutable access snapshot and retained usage/remediation evidence | Exact review modes and timing; reviewer eligibility is a non-empty exact-Human PrincipalRef list with separate decide authority; roles, assignments, groups and Membership never qualify; beneficiary conflict set includes accountable Humans behind direct Workload/System AccessGroup members and prevents direct/indirect self-certification; only exact-version standing certification advances the due date |
+| `ApprovalPolicy` / `ApprovalRequest` | Versioned admission rules and retained approval evidence | Approver eligibility is a non-empty exact-Human PrincipalRef list with separate decide authority; roles, assignments, groups and Membership never qualify; approval is current at effect publication, never continuing bearer authority |
+| `ExceptionGrant` | Immutable approved exception or linked revocation evidence | Exact subject/scope/control/interval; effective resolution remains FEATURE-0020-owned |
 
 ### 8.1 Persona realization and authorization
 
@@ -351,23 +354,38 @@ Persona
   non-normative; not an API resource
         ↓ maps to
 RoleDefinition
-  defines permitted canonical Sovrunn actions and conditions
+  defines permitted canonical Sovrunn actions
   may be supplied as a versioned default template
         ↓ applied through
 RoleAssignment
-  binds PrincipalRef + pinned RoleDefinition version + governed scope
-  includes validity period and optional conditions
+  binds RoleHolderRef + pinned RoleDefinition version + governed scope
+  optionally narrows to one exact resource; Standing or TimeBound
         ↓ evaluated by
-AuthorizationDecision
-  evaluates principal, canonical action, target resource, scope,
-  assignment, conditions, current policy and time
+AuthorizationResult
+  evaluates actor, canonical action, exact target binding, scope,
+  assignments, dependencies, policy guardrails, assurance and time
         ↓ recorded through
 material DecisionRecord profile and/or AuditEvent
 ```
 
 Default roles may be packaged for common platform, CloudProvider and customer journeys, but they are not permanent core enums. Providers and customers may create narrower roles from the canonical Sovrunn action vocabulary. Published role-template versions are immutable; changing permissions creates a new version and assignments do not silently acquire it.
 
-`AuthorizationDecision` is the conceptual result of policy evaluation, not a competing generic API envelope. Material, denied or privileged decisions use an applicable `DecisionRecord` profile when required by policy; all authorization activity produces an appropriately protected audit outcome.
+`AuthorizationResult` is a transient, non-bearer `Allow | Deny` result with exact
+decision provenance, not a persistent competing decision envelope. Applicable
+grants combine by union; all guardrails and independent dependencies combine by
+intersection. Missing, ambiguous, suspended, revoked, expired or denied evidence
+fails closed. Material, denied or privileged decisions use the registered
+`authorization-decision/v1` profile when required; every evaluation accepts its
+protected audit obligation before returning a result.
+
+The RoleAssignment controller is the sole assignment publisher and sole writer
+of its specification, lifecycle, status, revocation, replacement, expiry and
+review-due effects. Administrators and grant, approval, privileged-access and
+review controllers may submit exact immutable intents but cannot directly write
+any part of a RoleAssignment. Delegated publication requires independently
+applicable per-action witnesses covering the proposal's scope, target-binding
+mode, optional exact resource, validity and delegation capability; authority
+over one resource cannot grant another resource or scope-wide reach.
 
 ### 8.2 Zero-trust invariants
 
@@ -378,13 +396,14 @@ Default roles may be packaged for common platform, CloudProvider and customer jo
 - Use target-scoped, short-lived execution credentials where the backend permits.
 - Never provide target credentials to managed-service customers.
 - Record authorization, approval, execution and material policy decisions immutably.
-- Authorization depends only on authenticated identity, canonical Sovrunn actions, scoped role assignments, applicable conditions and current policy—not persona names, UI labels or organizational job titles.
+- Authorization depends only on authenticated identity, exact registered actions and targets, scoped assignments, explicit dependencies and current guardrails—not persona names, UI labels, job titles or unprovisioned external group claims.
+- A native ExecutionTarget effect requires both Sovrunn authorization and independent native-IAM authorization of a least-privileged adapter/controller identity. Neither layer's Allow substitutes for the other and neither overrides a Deny.
 
 ## 9. Governance policy model
 
 | Contract or record | Purpose |
 |---|---|
-| `GovernanceProfile` | Curated compositional package covering security, data placement, backup, cost, approvals, audit and evidence; it may require or constrain a separate SovereigntyProfile but does not own sovereignty semantics |
+| `GovernanceProfile` | Versioned v1 composition of only FEATURE-0018-owned privileged-access, access-review, exception and audit rule references and constraints |
 | `ProfileAssignment` | Applies a versioned profile to CloudProvider, portfolio, organization, tenant, project or service scope |
 | `EffectiveGovernanceContext` | Immutable resolution of applicable profiles, entitlements, restrictions and approved exceptions for one decision or operation |
 | `ApprovalPolicy` | Defines actions requiring approval, qualified approvers and separation-of-duties rules |
@@ -394,6 +413,12 @@ Default roles may be packaged for common platform, CloudProvider and customer jo
 | `AuditEvent` | Records actor, action, scope, time, result and correlation |
 
 ### 9.1 Policy resolution
+
+FEATURE-0018 owns the `GovernanceProfile` envelope and its v1 rule-component
+semantics only. FEATURE-0020 owns profile assignment, inheritance, conflict and
+exception application, and construction of `EffectiveGovernanceContext`.
+Security, sovereignty, placement, backup, cost and other future-domain semantics
+remain with their owning features and are not activated by FEATURE-0018.
 
 - Allowed sets intersect.
 - Prohibitions accumulate.
@@ -979,7 +1004,7 @@ Cross-Project relationships require authorization at both endpoints and reveal n
 25. Core schemas and workflows contain no implementation-native networking types, identifiers or conditional branches; those remain in provider configuration, plugins, adapters and protected execution records.
 26. Shared topology or logical-network ancestry never proves connectivity or relationship eligibility.
 27. Cross-Project relationships require authorization at both endpoints; cross-Organization and cross-CloudProvider relationships additionally require approved sharing, supply or federation contracts and are denied until those contracts exist.
-28. Persona names, UI labels and organizational job titles never grant authority; authorization depends on authenticated identity, canonical actions, pinned scoped role assignments, applicable conditions and current policy.
+28. Persona names, UI labels and organizational job titles never grant authority; authorization depends on authenticated identity, exact registered actions/targets, independently applicable scoped assignments and current explicit dependencies/guardrails.
 29. Platform lifecycle actions reuse the canonical `Operation`, approval, decision, evidence and audit contracts; no parallel platform-only authorization or operation framework is permitted.
 30. Installation, restore and rollback must remain executable through an independently recoverable `PlatformLifecycleAgent`; the affected Sovrunn control plane must not be the only holder of its recovery artifacts, metadata or authority path.
 31. `PlatformLifecycleAgent` executes an approved immutable plan with scoped authority and cannot grant itself release-publishing, policy, approval or authorization-decision authority.
@@ -1094,7 +1119,7 @@ Failure of this test triggers architecture review. It does not justify an untype
 | `ProviderCapability` / `ResourcePoolCapability` | Excluded from the finalized core model; technical compatibility is derived through runtime requirements, normalized target facts and adapter qualification |
 | Customer-selected `InfrastructureStack` | Not part of the normal customer API |
 | Backend IAM roles as customer roles | Prohibited; Sovrunn exposes its own stable action vocabulary |
-| `Persona` as an API kind or authorization attribute | Excluded; personas document job intent and journeys, while authority comes only from authenticated principals, canonical actions, scoped role assignments, conditions and policy |
+| `Persona` as an API kind or authorization attribute | Excluded; personas document job intent and journeys, while authority comes only from authenticated principals, registered actions/targets, scoped role assignments and explicit dependencies/guardrails |
 | Sovereignty as a boolean or country label | Prohibited; sovereignty is multidimensional, evidence-backed, versioned and continuously assessed |
 | Separate resource kinds for each industry cloud | Excluded; industry variation is expressed through portfolios, profiles, policies and plugins |
 | Sovrunn-owned IaaS scheduler | Outside the product boundary |
@@ -1151,11 +1176,11 @@ Customer governance model
 Identity and access model
   Persona (non-normative journey description)
       → maps to one or more default RoleDefinition templates
-  PrincipalRef + Membership
-      + pinned RoleDefinition + scoped RoleAssignment
+  PrincipalRef + direct Membership + optional AccessGroup
+      + pinned RoleDefinition + scoped RoleAssignment to RoleHolderRef
       → optional PrivilegedAccessRequest
       → periodic AccessReview
-      → AuthorizationDecision
+      → AuthorizationResult
           → material DecisionRecord profile and/or AuditEvent
 
 Registered external hosting facts

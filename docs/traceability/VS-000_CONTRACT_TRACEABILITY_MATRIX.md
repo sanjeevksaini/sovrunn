@@ -46,11 +46,11 @@
 | VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
 | VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
 | VS0-SCHEMA-019 | PolicyEvaluationResult | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
-| VS0-SCHEMA-020 | PrincipalRef | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
-| VS0-SCHEMA-021 | Membership | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
-| VS0-SCHEMA-022 | RoleDefinition | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02 |
-| VS0-SCHEMA-023 | RoleAssignment | FEATURE-0018 | DEC-0050; ADH-2026-033/042 | canonical data model | VS0-CF-F01,F02,X01..X03 |
-| VS0-SCHEMA-024 | GovernanceProfile | FEATURE-0018 | DEC-0050, ADH-2026-042 | canonical data model | VS0-CF-F07 |
+| VS0-SCHEMA-020 | PrincipalRef (EmbeddedValue) | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/F18-RD-02 | FEATURE-0018 architecture; canonical data model | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-021 | Membership | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-04/05/09/12/14/16 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 membership-enabled-grant-envelope and no-workflow-eligibility inventory; executable conformance pending |
+| VS0-SCHEMA-022 | RoleDefinition | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-06/07 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-023 | RoleAssignment | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-08/09 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-024 | GovernanceProfile | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/F18-RD-18 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
 | VS0-SCHEMA-025 | SovereigntyProfile | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
 | VS0-SCHEMA-026 | RegulatoryPolicyBundle | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
 | VS0-SCHEMA-027 | SovereigntyFactSet | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
@@ -88,10 +88,17 @@
 | VS0-SCHEMA-059 | AdapterConfiguration | FEATURE-0012 retained | DEC-0036; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
 | VS0-SCHEMA-060 | CanonicalMigrationPlan | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
 | VS0-SCHEMA-061 | CanonicalMigrationRecord | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
+| VS0-SCHEMA-062 | AccessGroup | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/04 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-063 | PrivilegedAccessRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-14/15 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-064 | AccessReview | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-16/18 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 exact reviewer-eligibility kind/scope/target/action/SoD inventory; executable conformance pending |
+| VS0-SCHEMA-065 | ApprovalPolicy | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-12 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-066 | ApprovalRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-13 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-067 | ExceptionGrant | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-17 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-068 | FEATURE-0018 supporting values | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/03/06/08/10/12/14/16/17/18 | FEATURE-0018 architecture | Closed EV/TRR inventory including Human PrincipalRef-only EligibilityRef; roles, assignments, groups, Membership and claims are excluded; executable conformance pending |
 
 ---
 
-## Writer Mapping (VS0-WRITER-001..019; VS0-WRITER-020/021 retired tombstones)
+## Writer Mapping (VS0-WRITER-001..019 and 022..023; VS0-WRITER-020/021 retired tombstones)
 
 | Registry ID | Writer Domain | Owner | Authority | Conformance Evidence |
 |-------------|---------------|-------|-----------|---------------------|
@@ -102,7 +109,7 @@
 | VS0-WRITER-005 | kind-registered-controller (F0015 resolves explicitly to api-server; ADH-2026-046 decision 1) | FEATURE-0012 | canonical contract catalog | VS0-CF-HP01,F15,F16 |
 | VS0-WRITER-006 | ExecutionTargetLifecycleService (sole committer of ExecutionTarget status and internal FactSet/Result records) | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-058 | VS0-CF-F10,Z01,F16-01..122 |
 | VS0-WRITER-007 | authorized-governance-publisher | FEATURE-0018+FEATURE-0019 | DEC-0041/0043/0050/0055 | VS0-CF-HP01,F07 |
-| VS0-WRITER-008 | delegated-identity-governance-admin | FEATURE-0018 | DEC-0050 | VS0-CF-F01,F02,X01..X03 |
+| VS0-WRITER-008 | RoleAssignment-controller (sole canonical publisher/writer; callers and workflow controllers submit exact intents only) | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/08 | VS0-CF-F01,F02,X01..X03 |
 | VS0-WRITER-009 | evidence-collector | FEATURE-0019 | DEC-0041/0043/0055 | VS0-CF-F08,L01 |
 | VS0-WRITER-010 | deterministic-resolver | FEATURE-0020 | DEC-0050 | VS0-CF-HP01,F07 |
 | VS0-WRITER-011 | authorized-decision-or-audit-producer | FEATURE-0013+FEATURE-0023 | ADH-2026-017; DEC-0043 | VS0-CF-HP01,T01 |
@@ -116,6 +123,8 @@
 | VS0-WRITER-019 | binding-controller | FEATURE-0008+FEATURE-0024 | DEC-0051 | VS0-CF-HP01,F17 |
 | VS0-WRITER-020 | **Retired-CanonicalBootstrap** (was migration-controller) | — | DEC-0059 supersedes DEC-0058; ADH-2026-045 | — |
 | VS0-WRITER-021 | **Retired-CanonicalBootstrap** (was approved-migration-plan-publisher) | — | DEC-0059 supersedes DEC-0058; ADH-2026-045 | — |
+| VS0-WRITER-022 | identity-membership-controller | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/05 | VS0-CF-F01,F02,X01..X03 |
+| VS0-WRITER-023 | delegated-governance-admin (existing ProfileAssignment authority preserved) | FEATURE-0020 | DEC-0050 | VS0-CF-F01,F02,X01..X03 |
 
 ---
 
@@ -175,8 +184,8 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, there is no migration failu
 | Conformance ID | Class | Owner | Gate | Controlling Decision | Registry Evidence |
 |----------------|-------|-------|------|---------------------|-------------------|
 | VS0-CF-HP01 | Positive integration | FEATURE-0026 | slice0 | ADH-2026-042 | All schemas, writers, states |
-| VS0-CF-X01 | Cross-organization isolation | FEATURE-0018 | security | DEC-0050 | VS0-WRITER-008, VS0-SCHEMA-023 |
-| VS0-CF-X02 | Cross-project isolation | FEATURE-0018 | security | DEC-0050 | VS0-WRITER-008, VS0-SCHEMA-023 |
+| VS0-CF-X01 | Cross-organization isolation | FEATURE-0018 | security | DEC-0050; DEC-0060 Accepted | VS0-WRITER-008, VS0-SCHEMA-023 |
+| VS0-CF-X02 | Cross-project isolation | FEATURE-0018 | security | DEC-0050; DEC-0060 Accepted | VS0-WRITER-008, VS0-SCHEMA-023 |
 | VS0-CF-X03 | Cross-provider isolation | FEATURE-0015 | security | DEC-0037 | VS0-WRITER-003, VS0-SCHEMA-015 |
 | VS0-CF-L01 | Leakage prevention | FEATURE-0026 | release-blocker | ADH-2026-042 | VS0-SCHEMA-051, redaction rules |
 | VS0-CF-Z01 | Zero external effect | FEATURE-0024 | release-blocker | DEC-0029 | VS0-WRITER-006,016, VS0-SCHEMA-048 |

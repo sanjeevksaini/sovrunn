@@ -145,6 +145,21 @@ its CloudProvider scope: an inaccessible target is safe 404; only then is
 the target-bound grant evaluated, so an accessible target without that grant
 is audited 403. Neither outcome discloses target details.
 
+Under accepted DEC-0060, FEATURE-0016 registers this additive
+authorization metadata for its existing actions:
+
+| Action | Exact target-binding variants | Intrinsic class |
+|---|---|---|
+| `executiontarget.read` | `ExactResource(ExecutionTarget)`; `ScopeOnly(CloudProvider)` | Ordinary |
+| `executiontarget.qualify` | `ExactResource(ExecutionTarget)` | Privileged |
+| `executiontarget.write` | `CreateParent(CloudProvider)`; `ExactResource(ExecutionTarget)` | Privileged |
+
+This table classifies and binds the already-approved operation meanings; it
+does not rename, split or reinterpret them. FEATURE-0018 consumes these
+registrations generically. Missing, wildcard, mixed or ambiguous registration
+is unassignable and fails closed. FEATURE-0016 retains semantic and registration
+ownership; FEATURE-0018 retains role-composition and authorization ownership.
+
 ### 4.5 Request grammar and representation
 
 Every POST requires `application/json` and exactly one `Idempotency-Key`.
