@@ -35,6 +35,7 @@ CF_IDS = (["HP01"]+[f"F{i:02d}" for i in range(1,21)]
     +["X01","X02","X03","L01","Z01","T01","I01","I02","D01"])
 F15_CF_IDS = [f"F15-{i:02d}" for i in range(1,42)]
 F16_CF_IDS = [f"F16-{i:02d}" for i in range(1,129)]
+F18_CF_IDS = [f"F18-{i:02d}" for i in range(1,55) if i != 38]
 F15_OWNED = {
     "CloudPlatform", "CloudProvider", "CloudProviderParticipation", "HostingLocation",
     "Datacenter", "FaultDomain", "InfrastructureStack",
@@ -43,7 +44,7 @@ F15_CONTROL_EXPECTED_OWNED = F15_OWNED
 RETIRED_SCHEMA_IDS = ["VS0-SCHEMA-057", "VS0-SCHEMA-060", "VS0-SCHEMA-061"]
 RETIRED_WRITER_IDS = ["VS0-WRITER-020", "VS0-WRITER-021"]
 RETIRED_STATE_IDS = ["VS0-STATE-011"]
-RETIRED_CONFORMANCE_IDS = ["VS0-CF-MIG01", "VS0-CF-MIG02", "VS0-CF-MIGF01", "VS0-CF-MIGF02", "VS0-CF-MIGF03"]
+RETIRED_CONFORMANCE_IDS = ["VS0-CF-F18-38", "VS0-CF-MIG01", "VS0-CF-MIG02", "VS0-CF-MIGF01", "VS0-CF-MIGF02", "VS0-CF-MIGF03"]
 RETIRED_MIGRATION_FAILURE_IDS = ["VS0-MIG-F01", "VS0-MIG-F02", "VS0-MIG-F03"]
 errs = []
 def e(m): errs.append(m)
@@ -62,15 +63,15 @@ def run():
     if set(m.get("scopeKinds",[]))!=SCOPES: e("metadata.scopeKinds != seven canonical scopes")
     # Schemas
     schemas = reg.get("schemas",[])
-    exp_s = [f"VS0-SCHEMA-{i:03d}" for i in range(1,62) if f"VS0-SCHEMA-{i:03d}" not in RETIRED_SCHEMA_IDS]
+    exp_s = [f"VS0-SCHEMA-{i:03d}" for i in range(1,69) if f"VS0-SCHEMA-{i:03d}" not in RETIRED_SCHEMA_IDS]
     ids_s = [s["id"] for s in schemas]
-    if ids_s!=exp_s: e(f"Active schema IDs must be 001..061 minus retired IDs, in order (got {len(ids_s)})")
+    if ids_s!=exp_s: e(f"Active schema IDs must be 001..068 minus retired IDs, in order (got {len(ids_s)})")
     retired = reg.get("retiredSchemas", [])
     exp_retired = RETIRED_SCHEMA_IDS
     ids_retired = [s.get("id") for s in retired]
     if ids_retired != exp_retired: e(f"retiredSchemas must contain exactly {exp_retired} tombstones in order")
-    if sorted(ids_s+ids_retired) != [f"VS0-SCHEMA-{i:03d}" for i in range(1,62)]:
-        e("Active plus retired schema IDs must consume exactly 001..061")
+    if sorted(ids_s+ids_retired) != [f"VS0-SCHEMA-{i:03d}" for i in range(1,69)]:
+        e("Active plus retired schema IDs must consume exactly 001..068")
     for tomb in retired:
         tid = tomb.get("id", "?")
         if tomb.get("status") != "tombstone": e(f"{tid}: retired status must be tombstone")
@@ -84,15 +85,16 @@ def run():
         for f in ("identity","owner","profile","boundary"):
             if not s.get(f): e(f"{sid}: missing {f}")
         sc=s.get("scopes")
-        if not s.get("externalRef") and not s.get("required"): e(f"{sid}: need externalRef or required")
+        if not s.get("externalRef") and not s.get("required") and not s.get("slice0Constraint"):
+            e(f"{sid}: need externalRef, required fields, or a bounded slice0Constraint")
         if isinstance(sc,list) and sc:
             for v in sc:
                 if v not in SCOPES: e(f"{sid}: bad scope '{v}'")
     # Writers
     writers = reg.get("writers",[])
-    exp_w = [f"VS0-WRITER-{i:03d}" for i in range(1,20)]
+    exp_w = [f"VS0-WRITER-{i:03d}" for i in range(1,24) if f"VS0-WRITER-{i:03d}" not in RETIRED_WRITER_IDS]
     ids_w = [w["id"] for w in writers]
-    if ids_w!=exp_w: e(f"Writer IDs not contiguous 001..019")
+    if ids_w!=exp_w: e("Active writer IDs must be 001..023 minus retired IDs, in order")
     pmap={}
     for w in writers:
         wid=w.get("id","?")
@@ -186,7 +188,7 @@ def run():
     if reg.get("migrationFailureMappings"): e("migrationFailureMappings must not exist as an active section (DEC-0059)")
     # Conformance
     confs = reg.get("conformance",[])
-    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS}; found_cf=set(); seen_cf=set()
+    exp_cf={f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS + F18_CF_IDS}; found_cf=set(); seen_cf=set()
     for c in confs:
         cid=c.get("id","?")
         if cid in seen_cf: e(f"Dup conformance: {cid}")
@@ -316,7 +318,7 @@ def run():
     # Traceability
     if TRACE_PATH.exists():
         txt=TRACE_PATH.read_text()
-        all_ids=(exp_s+exp_retired+exp_w+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS])
+        all_ids=(exp_s+exp_retired+exp_w+RETIRED_WRITER_IDS+exp_sm+exp_f+[f"VS0-CF-{c}" for c in CF_IDS + F15_CF_IDS + F16_CF_IDS + F18_CF_IDS]+RETIRED_CONFORMANCE_IDS)
         for a in all_ids:
             if a not in txt: e(f"Traceability missing: {a}")
         for p in ("VS-000-contract-registry.yaml","VS-000-contract-specification.md","VS-000_CONTRACT_TRACEABILITY_MATRIX.md"):

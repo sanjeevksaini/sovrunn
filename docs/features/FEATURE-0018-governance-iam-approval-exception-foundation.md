@@ -179,7 +179,7 @@ fixed-time in-memory fixtures and feature-local conformance for those contracts.
 
 | Field | Value |
 |---|---|
-| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0043, DEC-0050, DEC-0060; RFC-0012, RFC-0021, RFC-0022, RFC-0023; ADH-2026-070 package |
+| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0043, DEC-0050, DEC-0060; RFC-0012, RFC-0021, RFC-0022, RFC-0023; ADH-2026-070 package; ADH-2026-071 conformance reconciliation |
 | Linked acceptance criteria | F18-IVM-A01..I06, F18-SCN-01..49 with F18-SCN-38 retired, F18-RD-22 conformance inventory and the 36-item reconciliation ledger |
 | Validation and review evidence | FEATURE-0018 digest, industry matrix, leakage proof, standards mapping, passing independent security review renewal-05, strict docs/drift checks and later feature gate |
 
@@ -312,3 +312,61 @@ provider.
 | VS0-CF-F02 | Authorization safe-denial behavior; exact registry semantics only |
 | VS0-CF-X01 | Cross-Organization isolation; exact registry semantics only |
 | VS0-CF-X02 | Cross-Project isolation; exact registry semantics only |
+
+### 6.4 FEATURE-0018-local executable conformance ledger
+
+ADH-2026-071 registers the exact local range below without changing any
+F18-RD, REQ, AC, resource, action, state, writer, error, route or other runtime
+semantic:
+
+Active local registrations are `VS0-CF-F18-01..37` and
+`VS0-CF-F18-39..54`.
+
+```text
+VS0-CF-F18-01..37  active; one-to-one with AC-F18-01..37
+VS0-CF-F18-38      permanent excluded tombstone for AC-F18-38
+VS0-CF-F18-39..49  active; one-to-one with AC-F18-39..49
+VS0-CF-F18-50..54  active requirement-only architecture/contract proof
+```
+
+The exact `owner`, `inputs`, `expectedState`, `expectedError`,
+`expectedSideEffects`, and `gate` fields are owned solely by
+`docs/architecture/vertical-slices/VS-000-contract-registry.yaml`. Generated
+requirements must copy every active FEATURE-0018-owned row exactly. Shared
+`VS0-CF-F01`, `VS0-CF-F02`, `VS0-CF-X01`, and `VS0-CF-X02` remain supplementary;
+FEATURE-0015-owned `VS0-CF-X03` never counts as FEATURE-0018-local proof.
+
+### 6.5 Exact AC-to-conformance mapping
+
+Each active AC maps to the active local conformance ID with the same numeric
+suffix. `AC-F18-38` remains excluded and maps to no active case. Generated
+stage artifacts must render all 48 active mappings as individual rows.
+
+### 6.6 Exact REQ-to-conformance mapping
+
+| Requirement | Exact FEATURE-0018-local conformance IDs |
+|---|---|
+| REQ-F18-01 | VS0-CF-F18-50 |
+| REQ-F18-02 | VS0-CF-F18-06 |
+| REQ-F18-03 | VS0-CF-F18-01, VS0-CF-F18-02, VS0-CF-F18-05, VS0-CF-F18-06 |
+| REQ-F18-04 | VS0-CF-F18-01, VS0-CF-F18-08 |
+| REQ-F18-05 | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-07, VS0-CF-F18-08, VS0-CF-F18-32, VS0-CF-F18-36, VS0-CF-F18-46, VS0-CF-F18-47 |
+| REQ-F18-06 | VS0-CF-F18-10, VS0-CF-F18-11, VS0-CF-F18-12 |
+| REQ-F18-07 | VS0-CF-F18-34 |
+| REQ-F18-08 | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-05, VS0-CF-F18-07, VS0-CF-F18-09, VS0-CF-F18-21, VS0-CF-F18-31, VS0-CF-F18-32, VS0-CF-F18-39, VS0-CF-F18-44 |
+| REQ-F18-09 | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-05, VS0-CF-F18-08, VS0-CF-F18-09, VS0-CF-F18-25, VS0-CF-F18-29, VS0-CF-F18-33, VS0-CF-F18-35, VS0-CF-F18-44, VS0-CF-F18-46 |
+| REQ-F18-10 | VS0-CF-F18-25, VS0-CF-F18-26, VS0-CF-F18-27 |
+| REQ-F18-11 | VS0-CF-F18-26 |
+| REQ-F18-12 | VS0-CF-F18-13, VS0-CF-F18-14, VS0-CF-F18-15, VS0-CF-F18-41, VS0-CF-F18-47, VS0-CF-F18-49 |
+| REQ-F18-13 | VS0-CF-F18-13, VS0-CF-F18-15, VS0-CF-F18-16, VS0-CF-F18-41 |
+| REQ-F18-14 | VS0-CF-F18-13, VS0-CF-F18-17, VS0-CF-F18-40, VS0-CF-F18-47, VS0-CF-F18-49 |
+| REQ-F18-15 | VS0-CF-F18-18 |
+| REQ-F18-16 | VS0-CF-F18-18, VS0-CF-F18-19, VS0-CF-F18-20, VS0-CF-F18-31, VS0-CF-F18-37, VS0-CF-F18-42, VS0-CF-F18-45, VS0-CF-F18-47, VS0-CF-F18-48, VS0-CF-F18-49 |
+| REQ-F18-17 | VS0-CF-F18-21, VS0-CF-F18-22, VS0-CF-F18-23, VS0-CF-F18-24, VS0-CF-F18-43 |
+| REQ-F18-18 | VS0-CF-F18-51 |
+| REQ-F18-19 | VS0-CF-F18-52 |
+| REQ-F18-20 | VS0-CF-F18-06, VS0-CF-F18-28, VS0-CF-F18-52 |
+| REQ-F18-21 | VS0-CF-F18-16, VS0-CF-F18-17, VS0-CF-F18-27, VS0-CF-F18-30 |
+| REQ-F18-22 | VS0-CF-F18-01..37, VS0-CF-F18-39..53 |
+| REQ-F18-23 | VS0-CF-F18-54 |
+| REQ-F18-24 | VS0-CF-F18-29, VS0-CF-F18-39, VS0-CF-F18-40, VS0-CF-F18-41, VS0-CF-F18-42, VS0-CF-F18-43 |

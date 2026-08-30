@@ -6,6 +6,7 @@ status: approved
 phase: 2R
 baseline: ARCH-2026.08-PHASE2R-CANONICAL
 controlling_handoff: ADH-2026-070
+conformance_handoff: ADH-2026-071
 controlling_core_sha256: 489ccb5869ca4cc43835ef79de2d2b8f006f580cc22fdad8a6d674b112fdd769
 normative_appendix_a_sha256: 66479426f30759a21202c8beeb08989241d912b7ba69de3619619f45823fe485
 normative_appendix_b_sha256: 2424cff0130bf82d7b413069fc60580af0ab6e1a4bd00982fc669bebb80d8b49
@@ -31,14 +32,20 @@ The core handoff and both appendices must be loaded with this document:
 - [normative Appendix A](../reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md); and
 - [normative Appendix B](../reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md).
 
+[ADH-2026-071](../reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md)
+is the approved non-semantic conformance-executability correction. It registers
+stable local proof identifiers and REQ/AC mappings only; ADH-2026-070 and
+DEC-0060 remain the sole runtime-semantic authority.
+
 The SHA-256 values in front matter pin the package used to generate this
 document. A digest mismatch, missing file, duplicated decision group, or
 inconsistency is an architecture blocker. No file has precedence; Kiro must
 stop and return the complete package for renewed human review.
 
-Current status is **Approved architecture; requirements stage authorization
-pending**. This document does not independently authorize `requirements.md`,
-design, tasks, prompts, implementation, or source changes.
+Current architecture status is **Approved**, including the ADH-2026-071
+conformance reconciliation. Mutable Feature Factory stage authorization remains
+outside this architecture document. This document does not independently
+authorize design, tasks, implementation, or source changes.
 The first independent review rejected the prior payload with F18-SEC-001
 through F18-SEC-005. Renewal-01 closed F18-SEC-002 and F18-SEC-004 but rejected
 the payload with F18-REN-001 and F18-REN-002. Renewal-02 closed all of those
@@ -420,6 +427,26 @@ They may organize outcomes by resource or journey, but cannot:
 No requirement may cite the architecture digest, industry matrix, roadmap, or
 discussion history as independent semantic authority. Those artifacts provide
 context, validation, or provenance only.
+
+### 11.1 Executable conformance mapping
+
+ADH-2026-071 closes the Slice-0 executability correction without changing any
+F18-RD semantic:
+
+```text
+AC-F18-01..37 -> VS0-CF-F18-01..37 (same suffix)
+AC-F18-38     -> excluded; VS0-CF-F18-38 permanent tombstone
+AC-F18-39..49 -> VS0-CF-F18-39..49 (same suffix)
+REQ-only proof -> VS0-CF-F18-50..54
+```
+
+Every active `VS0-CF-F18-*` row is owned by FEATURE-0018 and its exact machine
+fields are authoritative only in
+`docs/architecture/vertical-slices/VS-000-contract-registry.yaml`. The complete
+REQ-to-case mapping is ADH-2026-071 section 6. Existing shared cases
+`VS0-CF-F01`, `VS0-CF-F02`, `VS0-CF-X01`, and `VS0-CF-X02` remain supplementary.
+FEATURE-0015-owned `VS0-CF-X03` is inherited evidence only and never counts as
+FEATURE-0018-local acceptance proof.
 
 ## 12. User-simplicity boundary
 

@@ -65,5 +65,9 @@ This file summarizes the currently binding architecture decisions. The detailed 
 ## Approved FEATURE-0018 stage boundary
 
 DEC-0060 and its exact architecture/reuse package are accepted. Independent
-security-review renewal-05 passed with no blocking findings. Requirements,
-design, tasks and implementation remain separate human-gated stages.
+security-review renewal-05 passed with no blocking findings. ADH-2026-071 is
+approved as a non-semantic conformance-executability correction; the controlled
+requirements context and fresh requirements-generation authorization are
+recorded. Independent requirements review approved the reconciled document with
+`APPROVED_FOR_DESIGN`; design is now the current stage, while tasks and
+implementation remain separately gated.

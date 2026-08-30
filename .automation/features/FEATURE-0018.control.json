@@ -13,7 +13,8 @@
     "handoffs": [
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md"
     ],
     "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation"
   },
@@ -127,7 +128,7 @@
       "review": ["docs/governance/REVIEW_GATES.md", ".automation/context-projections/FEATURE-0018.requirements.manifest.json"]
     },
     "budgets": {
-      "requirements": 500000,
+      "requirements": 600000,
       "design": 750000,
       "tasks": 700000,
       "implementation": 850000,

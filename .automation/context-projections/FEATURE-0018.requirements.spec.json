@@ -43,7 +43,7 @@
     },
     {
       "path": "docs/architecture/vertical-slices/VS-000-contract-registry.yaml",
-      "sha256": "8038466933d424734b530ac8985fd3a158d1a1ef34184416cfdae84522346148",
+      "sha256": "461d1c59e544b248dbb9b5fd0bc9471c6e3fbc9d0ce7eae4f07f8787a667b836",
       "selections": [
         {
           "kind": "matching_lines",
@@ -54,7 +54,7 @@
     },
     {
       "path": "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
-      "sha256": "b193a9039c2bb9cdb2ae16d1b0dabf88d0da80551a51db476e85738f8cb1afd5",
+      "sha256": "a8428d947de610f37fd47769363c7cd06292ff36004de37de826299a6ef394b2",
       "selections": [
         {
           "kind": "matching_lines",

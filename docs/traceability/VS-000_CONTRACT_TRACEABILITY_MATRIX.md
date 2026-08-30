@@ -15,7 +15,7 @@
 |----------|-----------|------|
 | 1 | Active architecture baseline | `docs/context/CURRENT_ARCHITECTURE_BASELINE.md` |
 | 2 | Canonical model and catalog | `docs/architecture/canonical/` |
-| 3 | Accepted decisions and controlling handoffs | `docs/decisions/DECISION_INDEX.md`; ADH-2026-042; ADH-2026-064 (ExecutionTarget ownership correction) |
+| 3 | Accepted decisions and controlling handoffs | `docs/decisions/DECISION_INDEX.md`; ADH-2026-042; ADH-2026-064 (ExecutionTarget ownership correction); ADH-2026-070/071 (FEATURE-0018 semantics and executable conformance) |
 | 4 | VS-000 core skeleton | `docs/architecture/vertical-slices/VS-000-core-skeleton.md` |
 | 5 | VS-000 contract specification | `docs/architecture/vertical-slices/VS-000-contract-specification.md` |
 | 6 | VS-000 contract registry YAML | `docs/architecture/vertical-slices/VS-000-contract-registry.yaml` |
@@ -46,11 +46,11 @@
 | VS0-SCHEMA-017 | TargetQualificationResult | FEATURE-0016 | DEC-0036/0042/0057; ADH-2026-040/042/058 | canonical data model | VS0-CF-F16-20..23,67..69,90 |
 | VS0-SCHEMA-018 | PolicyEvaluationRequest | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
 | VS0-SCHEMA-019 | PolicyEvaluationResult | FEATURE-0017 | DEC-0028/0043; ADH-2026-026/042/067/068/069 | `docs/architecture/policy-evaluation-abstraction.md` | FEATURE-0017 architecture §11, cases 1–24 |
-| VS0-SCHEMA-020 | PrincipalRef (EmbeddedValue) | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/F18-RD-02 | FEATURE-0018 architecture; canonical data model | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-021 | Membership | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-04/05/09/12/14/16 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 membership-enabled-grant-envelope and no-workflow-eligibility inventory; executable conformance pending |
-| VS0-SCHEMA-022 | RoleDefinition | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-06/07 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-023 | RoleAssignment | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-08/09 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-024 | GovernanceProfile | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/F18-RD-18 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
+| VS0-SCHEMA-020 | PrincipalRef (EmbeddedValue) | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical data model | VS0-CF-F18-01..08,13..18,29..31,35..49 |
+| VS0-SCHEMA-021 | Membership | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-01,03,04,07,08,32,36,46,47 |
+| VS0-SCHEMA-022 | RoleDefinition | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-01,09..13,21,25,31,33,34,39,44,49 |
+| VS0-SCHEMA-023 | RoleAssignment | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-01,03..05,08,09,13,17..21,25,28,31..35,39,44..46 |
+| VS0-SCHEMA-024 | GovernanceProfile | FEATURE-0018 | DEC-0050; DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-51 |
 | VS0-SCHEMA-025 | SovereigntyProfile | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
 | VS0-SCHEMA-026 | RegulatoryPolicyBundle | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
 | VS0-SCHEMA-027 | SovereigntyFactSet | FEATURE-0019 | DEC-0041/0043/0055; ADH-2026-024/026/038/042 | canonical data model | VS0-CF-F08 |
@@ -88,13 +88,13 @@
 | VS0-SCHEMA-059 | AdapterConfiguration | FEATURE-0012 retained | DEC-0036; ADH-2026-042 Slice 0 adoption | FEATURE-0012 schema | VS0-CF-HP01,Z01 |
 | VS0-SCHEMA-060 | CanonicalMigrationPlan | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
 | VS0-SCHEMA-061 | CanonicalMigrationRecord | **Retired-CanonicalBootstrap** | DEC-0059 supersedes DEC-0058; ADH-2026-045 | No live alpha state to convert; permanently retired tombstone | — |
-| VS0-SCHEMA-062 | AccessGroup | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/04 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-063 | PrivilegedAccessRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-14/15 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-064 | AccessReview | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-16/18 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 exact reviewer-eligibility kind/scope/target/action/SoD inventory; executable conformance pending |
-| VS0-SCHEMA-065 | ApprovalPolicy | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-12 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-066 | ApprovalRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-13 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-067 | ExceptionGrant | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-17 | FEATURE-0018 architecture; canonical catalog | F18-RD-22 inventory; executable conformance pending |
-| VS0-SCHEMA-068 | FEATURE-0018 supporting values | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/F18-RD-02/03/06/08/10/12/14/16/17/18 | FEATURE-0018 architecture | Closed EV/TRR inventory including Human PrincipalRef-only EligibilityRef; roles, assignments, groups, Membership and claims are excluded; executable conformance pending |
+| VS0-SCHEMA-062 | AccessGroup | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-08,45..49 |
+| VS0-SCHEMA-063 | PrivilegedAccessRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-13..18,28,40,41,47,49 |
+| VS0-SCHEMA-064 | AccessReview | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-18..20,31,37,42,45,47..49 |
+| VS0-SCHEMA-065 | ApprovalPolicy | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-13..16,18,21,26,40,41,47,49,51 |
+| VS0-SCHEMA-066 | ApprovalRequest | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-13..18,21,26,28,40,41,43,47,49 |
+| VS0-SCHEMA-067 | ExceptionGrant | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture; canonical catalog | VS0-CF-F18-21..24,41,43 |
+| VS0-SCHEMA-068 | FEATURE-0018 supporting values | FEATURE-0018 | DEC-0060 Accepted; ADH-2026-070/071 | FEATURE-0018 architecture | VS0-CF-F18-01..54 except retired F18-38; exact registry rows control |
 
 ---
 
@@ -409,7 +409,26 @@ Per DEC-0059 (supersedes DEC-0058) and ADH-2026-045, `VS0-CF-MIG01`, `VS0-CF-MIG
 
 ## Runtime Conformance Status
 
-No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..41, VS0-CF-F16-01..122) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015 and FEATURE-0016 each own their local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051). FEATURE-0016 owns exactly five explicit Go 1.22 `http.ServeMux` registrations plus a pre-ServeMux transport-only method/path guard (ADH-2026-058 clause 3).
+No runtime conformance test implementation exists yet. All conformance IDs (VS0-CF-HP01, VS0-CF-F01..F20, VS0-CF-X01..X03, VS0-CF-L01, VS0-CF-Z01, VS0-CF-T01, VS0-CF-I01..I02, VS0-CF-D01, VS0-CF-F15-01..41, VS0-CF-F16-01..128, and VS0-CF-F18-01..54 except retired F18-38) are exact test contracts owned by their respective feature tasks. FEATURE-0026 provides the integration proof that exercises the cross-feature Slice 0 contracts end-to-end in the synthetic profile; FEATURE-0015, FEATURE-0016, and FEATURE-0018 each own their local conformance cases only (no migration conformance exists under DEC-0059). FEATURE-0015 owns exactly 22 logical endpoint paths and registers exactly 35 explicit Go 1.22 `http.ServeMux` method/path patterns (ADH-2026-051). FEATURE-0016 owns exactly five explicit Go 1.22 `http.ServeMux` registrations plus a pre-ServeMux transport-only method/path guard (ADH-2026-058 clause 3). ADH-2026-071 registers FEATURE-0018 proof identifiers and mappings only; it adds no route or runtime semantic.
+
+### FEATURE-0018 local conformance mapping
+
+| Mapping class | Exact mapping | Authority |
+|---|---|---|
+| Active acceptance | AC-F18-01..37 map one-to-one to VS0-CF-F18-01..37 by equal suffix | ADH-2026-071 §5 |
+| Retired acceptance | AC-F18-38 is excluded; VS0-CF-F18-38 is a permanent inactive tombstone | ADH-2026-071 §2/5 |
+| Active acceptance | AC-F18-39..49 map one-to-one to VS0-CF-F18-39..49 by equal suffix | ADH-2026-071 §5 |
+| Requirement-only proof | VS0-CF-F18-50..54 cover REQ-F18-01, 18, 19, 22, and 23 without creating acceptance criteria | ADH-2026-071 §4/6 |
+| Complete REQ mapping | All REQ-F18-01..24 map to exact local cases in ADH-2026-071 §6 | ADH-2026-071 §6 |
+| Exact machine semantics | Every active local row's owner, inputs, expectedState, expectedError, expectedSideEffects, and gate | `VS-000-contract-registry.yaml` |
+| Shared supplementary proof | VS0-CF-F01, VS0-CF-F02, VS0-CF-X01, VS0-CF-X02 | Existing registry authority unchanged |
+| Inherited-only proof | VS0-CF-X03 remains FEATURE-0015-owned and never counts as FEATURE-0018-local acceptance | ADH-2026-071 §2 |
+
+The exact active machine ledger is:
+
+`VS0-CF-F18-01`, `VS0-CF-F18-02`, `VS0-CF-F18-03`, `VS0-CF-F18-04`, `VS0-CF-F18-05`, `VS0-CF-F18-06`, `VS0-CF-F18-07`, `VS0-CF-F18-08`, `VS0-CF-F18-09`, `VS0-CF-F18-10`, `VS0-CF-F18-11`, `VS0-CF-F18-12`, `VS0-CF-F18-13`, `VS0-CF-F18-14`, `VS0-CF-F18-15`, `VS0-CF-F18-16`, `VS0-CF-F18-17`, `VS0-CF-F18-18`, `VS0-CF-F18-19`, `VS0-CF-F18-20`, `VS0-CF-F18-21`, `VS0-CF-F18-22`, `VS0-CF-F18-23`, `VS0-CF-F18-24`, `VS0-CF-F18-25`, `VS0-CF-F18-26`, `VS0-CF-F18-27`, `VS0-CF-F18-28`, `VS0-CF-F18-29`, `VS0-CF-F18-30`, `VS0-CF-F18-31`, `VS0-CF-F18-32`, `VS0-CF-F18-33`, `VS0-CF-F18-34`, `VS0-CF-F18-35`, `VS0-CF-F18-36`, `VS0-CF-F18-37`, `VS0-CF-F18-39`, `VS0-CF-F18-40`, `VS0-CF-F18-41`, `VS0-CF-F18-42`, `VS0-CF-F18-43`, `VS0-CF-F18-44`, `VS0-CF-F18-45`, `VS0-CF-F18-46`, `VS0-CF-F18-47`, `VS0-CF-F18-48`, `VS0-CF-F18-49`, `VS0-CF-F18-50`, `VS0-CF-F18-51`, `VS0-CF-F18-52`, `VS0-CF-F18-53`, `VS0-CF-F18-54`.
+
+`VS0-CF-F18-38` is the permanent retired tombstone and never an active proof case.
 
 ---
 
