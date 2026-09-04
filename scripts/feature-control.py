@@ -189,10 +189,40 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
         require_string_list(excluded["concepts"], field=f"ownership.excluded_features[{index}].concepts", allow_empty=False)
 
     context = data["context"]
-    require_keys(context, {"always", "stages", "budgets"}, field="context")
+    required_context_keys = {"always", "stages", "budgets"}
+    optional_context_keys = {"review_exclusions"}
+    missing_context_keys = sorted(required_context_keys - set(context))
+    extra_context_keys = sorted(set(context) - required_context_keys - optional_context_keys)
+    if missing_context_keys or extra_context_keys:
+        details = []
+        if missing_context_keys:
+            details.append("missing=" + ",".join(missing_context_keys))
+        if extra_context_keys:
+            details.append("extra=" + ",".join(extra_context_keys))
+        raise ControlError("context has invalid keys: " + " ".join(details))
     for index, path in enumerate(require_string_list(context["always"], field="context.always")):
         repo_path(path, field=f"context.always[{index}]")
     validate_stage_paths(context["stages"], field="context.stages")
+    review_exclusions = context.get("review_exclusions", {})
+    if not isinstance(review_exclusions, dict):
+        raise ControlError("context.review_exclusions must be an object")
+    allowed_review_stages = {"requirements", "design", "tasks"}
+    unknown_review_stages = sorted(set(review_exclusions) - allowed_review_stages)
+    if unknown_review_stages:
+        raise ControlError(
+            "context.review_exclusions has unknown review stages: "
+            + ", ".join(unknown_review_stages)
+        )
+    handoff_paths = set(feature["handoffs"])
+    for review_stage, paths in review_exclusions.items():
+        for index, path in enumerate(
+            require_string_list(paths, field=f"context.review_exclusions.{review_stage}")
+        ):
+            repo_path(path, field=f"context.review_exclusions.{review_stage}[{index}]")
+            if path not in handoff_paths:
+                raise ControlError(
+                    f"context.review_exclusions.{review_stage}[{index}] must name a feature handoff"
+                )
     if not isinstance(context["budgets"], dict):
         raise ControlError("context.budgets must be an object")
     if set(context["budgets"]) != AI_STAGES:
@@ -285,11 +315,28 @@ def resolve_context(data: dict[str, Any], stage: str, *, review_stage: str | Non
     for dependency in data["ownership"]["previous_features"]:
         raw_paths.extend(dependency["context"].get(stage, []))
     raw_paths.extend(data["context"]["stages"].get(stage, []))
+    if stage == "review":
+        review_exclusions = set(data["context"].get("review_exclusions", {}).get(review_stage, []))
+        raw_paths = [path for path in raw_paths if path not in review_exclusions]
     if stage == "implementation":
         raw_paths.extend(data["guardrails"]["cursor"]["go_context"])
     spec = feature["spec_path"]
     spec_stage = review_stage if stage == "review" else stage
-    if spec_stage in {"design", "tasks", "implementation"}:
+    # A governed, source-hash-bound design-review projection may replace the
+    # implicit full requirements copy for design review. The projection remains
+    # an explicit control-file path and must carry the selected requirements
+    # evidence plus its approval receipt. This prevents loading both the
+    # projection and the same full document while leaving every other stage and
+    # feature on the default full-artifact behavior.
+    governed_design_review_projection = (
+        stage == "review"
+        and review_stage == "design"
+        and any(
+            raw == f".automation/context-projections/{feature['id']}.design-review.md"
+            for raw in data["context"]["stages"].get("review", [])
+        )
+    )
+    if spec_stage in {"design", "tasks", "implementation"} and not governed_design_review_projection:
         raw_paths.append(f"{spec}/requirements.md")
     if spec_stage in {"tasks", "implementation"}:
         raw_paths.append(f"{spec}/design.md")

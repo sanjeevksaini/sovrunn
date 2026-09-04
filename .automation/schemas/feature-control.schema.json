@@ -75,6 +75,15 @@
       "properties": {
         "always": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
         "stages": {"$ref": "#/$defs/stagePaths"},
+        "review_exclusions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"}
+          }
+        },
         "budgets": {
           "type": "object",
           "additionalProperties": {"type": "integer", "minimum": 1024}

@@ -110,6 +110,22 @@ class FeatureControlTests(unittest.TestCase):
         with self.assertRaisesRegex(control.ControlError, "review context requires"):
             control.resolve_context(self.data, "review")
 
+    def test_design_review_may_exclude_only_a_declared_handoff(self):
+        excluded = self.data["feature"]["handoffs"][0]
+        configured = deepcopy(self.data)
+        configured["context"]["review_exclusions"] = {"design": [excluded]}
+        control.validate(configured, expected_feature="FEATURE-0014")
+        paths = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(configured, "review", review_stage="design")
+        }
+        self.assertNotIn(excluded, paths)
+
+        invalid = deepcopy(configured)
+        invalid["context"]["review_exclusions"]["design"] = ["docs/glossary.md"]
+        with self.assertRaisesRegex(control.ControlError, "must name a feature handoff"):
+            control.validate(invalid, expected_feature="FEATURE-0014")
+
     def test_closeout_is_never_allowed_to_commit_or_push(self):
         self.assertEqual(self.data["closeout"]["mode"], "prepare_only")
         self.assertIs(self.data["closeout"]["commit"], False)

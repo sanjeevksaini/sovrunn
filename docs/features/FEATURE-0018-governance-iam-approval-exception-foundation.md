@@ -8,20 +8,21 @@ reuse_assessment_format_version: 1.0.0
 canonical_architecture: docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md
 kiro_slug: governance-iam-approval-exception-foundation
 controlling_handoff: ADH-2026-070
+audit_taxonomy_correction_handoff: ADH-2026-073
 accepted_decision: DEC-0060
 ai_load_priority: feature
-ai_summary: Approved scope, reuse and generation-control contract for FEATURE-0018; requirements, design, tasks and implementation remain separately gated.
+ai_summary: Approved scope, reuse and generation-control contract for FEATURE-0018, including the ADH-2026-073 terminal-exception audit-event correction; requirements, design, tasks and implementation remain separately gated.
 ---
 
 # FEATURE-0018: Governance, IAM, Approval and Exception Foundation
 
 | Field | Value |
 |---|---|
-| Status | Architecture approved; requirements generation authorized |
+| Status | Architecture approved; fresh requirements authorization required after ADH-2026-073 |
 | Baseline | ARCH-2026.08-PHASE2R-CANONICAL |
 | Phase / order | Phase 2R / 8 |
 | Direct dependencies | FEATURE-0012 and FEATURE-0017; adopting registrations in FEATURE-0013 and FEATURE-0016 |
-| Sole architecture authority | `docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md` plus its content-bound ADH-2026-070 package |
+| Sole architecture authority | `docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md`, its content-bound ADH-2026-070 package, and approved ADH-2026-073 taxonomy correction |
 | Approved change records | ACR-2026-002 and DEC-0060 |
 | Public routes / persistence / real adapters | None authorized at architecture stage |
 
@@ -179,7 +180,7 @@ fixed-time in-memory fixtures and feature-local conformance for those contracts.
 
 | Field | Value |
 |---|---|
-| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0043, DEC-0050, DEC-0060; RFC-0012, RFC-0021, RFC-0022, RFC-0023; ADH-2026-070 package; ADH-2026-071 conformance reconciliation |
+| Related DEC / RFC / ADH references | DEC-0026, DEC-0036, DEC-0043, DEC-0050, DEC-0060; RFC-0012, RFC-0021, RFC-0022, RFC-0023; ADH-2026-070 package; ADH-2026-071 conformance reconciliation; ADH-2026-072 design-authority and audited-evaluation clarification; ADH-2026-073 terminal-exception audit-event correction |
 | Linked acceptance criteria | F18-IVM-A01..I06, F18-SCN-01..49 with F18-SCN-38 retired, F18-RD-22 conformance inventory and the 36-item reconciliation ledger |
 | Validation and review evidence | FEATURE-0018 digest, industry matrix, leakage proof, standards mapping, passing independent security review renewal-05, strict docs/drift checks and later feature gate |
 

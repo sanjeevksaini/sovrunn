@@ -43,7 +43,7 @@ This matrix links decisions to architecture docs, RFCs, features, and validation
 | DEC-0057 Infrastructure Maintenance Authority | Accepted | canonical data model | FEATURE-0016 | Pending |
 | DEC-0058 Alpha Migration No Dual Authority | Superseded by DEC-0059 | Historical canonical migration authority; replaced by canonical bootstrap under DEC-0059 | Historical: FEATURE-0015, FEATURE-0026 | Superseded |
 | DEC-0059 Canonical Bootstrap Replaces Alpha Runtime Migration | Accepted | canonical data model, PHASE2R_REBASELINE | FEATURE-0015, FEATURE-0016 | Active |
-| DEC-0060 FEATURE-0018 Governance, IAM, Approval and Exception Foundation | Accepted | FEATURE-0018 architecture; canonical model/catalog; ADH-2026-070 | FEATURE-0018; dependency registrations in FEATURE-0013/0016 | Architecture/reuse approved; renewal-05 passed; implementation validation pending |
+| DEC-0060 FEATURE-0018 Governance, IAM, Approval and Exception Foundation | Accepted | FEATURE-0018 architecture; canonical model/catalog; ADH-2026-070; ADH-2026-073 terminal-exception audit-event correction | FEATURE-0018; dependency registrations in FEATURE-0013/0016 | Architecture/reuse approved; renewal-05 passed; requirements/design reapproval pending after ADH-2026-073 |
 
 ## Rule
 

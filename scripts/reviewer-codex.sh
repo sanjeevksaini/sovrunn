@@ -58,6 +58,12 @@ CODEX_ARGS=(
 if [[ -n "${CODEX_REVIEWER_MODEL:-}" ]]; then
   CODEX_ARGS+=(--model "$CODEX_REVIEWER_MODEL")
 fi
+if [[ -n "${CODEX_REVIEWER_REASONING_EFFORT:-}" ]]; then
+  CODEX_ARGS+=(
+    --config
+    "model_reasoning_effort=\"${CODEX_REVIEWER_REASONING_EFFORT}\""
+  )
+fi
 
 info "Running independent Codex CLI review for $FEATURE $STAGE (read-only sandbox)"
 set +e

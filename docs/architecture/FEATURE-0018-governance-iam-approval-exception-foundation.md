@@ -7,10 +7,13 @@ phase: 2R
 baseline: ARCH-2026.08-PHASE2R-CANONICAL
 controlling_handoff: ADH-2026-070
 conformance_handoff: ADH-2026-071
+design_clarification_handoff: ADH-2026-072
+audit_taxonomy_correction_handoff: ADH-2026-073
+audit_taxonomy_correction_sha256: 3cae0d0f138aa80f11d8db44db2b3e6b7a49e4153a5eb5b0aacbb1577ed4b08b
 controlling_core_sha256: 489ccb5869ca4cc43835ef79de2d2b8f006f580cc22fdad8a6d674b112fdd769
 normative_appendix_a_sha256: 66479426f30759a21202c8beeb08989241d912b7ba69de3619619f45823fe485
 normative_appendix_b_sha256: 2424cff0130bf82d7b413069fc60580af0ab6e1a4bd00982fc669bebb80d8b49
-updated: 2026-08-30
+updated: 2026-09-03
 ai_load_priority: always
 ai_summary: Approved FEATURE-0018 architecture authority generated from the approved ADH-2026-070 package; it indexes the immutable F18-RD decision payload, preserves ownership boundaries, and does not independently authorize requirements or implementation.
 ---
@@ -20,8 +23,9 @@ ai_summary: Approved FEATURE-0018 architecture authority generated from the appr
 ## 1. Authority and current status
 
 This document is the compact FEATURE-0018 architecture index and generation
-boundary produced from the human-authorized `ADH-2026-070` package. It adds no
-architecture decision beyond that package.
+boundary produced from the human-authorized `ADH-2026-070` package and the
+approved narrow ADH-2026-073 taxonomy correction. It adds no other architecture
+decision.
 
 The exact normative decision text remains in the two immutable handoff
 appendices. This document organizes those decisions for canonical application,
@@ -37,15 +41,33 @@ is the approved non-semantic conformance-executability correction. It registers
 stable local proof identifiers and REQ/AC mappings only; ADH-2026-070 and
 DEC-0060 remain the sole runtime-semantic authority.
 
-The SHA-256 values in front matter pin the package used to generate this
-document. A digest mismatch, missing file, duplicated decision group, or
-inconsistency is an architecture blocker. No file has precedence; Kiro must
-stop and return the complete package for renewed human review.
+[ADH-2026-072](../reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md)
+is the approved design-authority clarification. It does not add an F18-RD group
+or change a REQ, AC, route, writer, error, dependency, or conformance mapping. It
+clarifies that FEATURE-0013 owns carrier contracts and validation while
+FEATURE-0018 owns its deterministic non-durable local publication machinery;
+defines when a provisional candidate becomes a completed audited evaluation;
+and confirms the bounded mechanics owned by design.
+
+[ADH-2026-073](../reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md)
+is the approved narrow correction to the closed F18-RD-20 AuditEvent taxonomy.
+It registers `exceptionproposal.decided` exactly once for every terminal
+`ExceptionProposal` `Grant | Deny`, linked to its mandatory
+`exception-decision/v1` DecisionRecord. `exceptiongrant.issued` remains a
+separate Grant-only event, and `exceptiongrant.proposed` remains a
+proposal-submission event. No other F18-RD, resource, action, route, writer,
+error, dependency, or Phase 2R boundary changes.
+
+The SHA-256 values in front matter pin the package and approved correction used
+to generate this document. A digest mismatch, missing file, duplicated decision
+group, or inconsistency is an architecture blocker. No file has precedence;
+Kiro must stop and return the complete package for renewed human review.
 
 Current architecture status is **Approved**, including the ADH-2026-071
-conformance reconciliation. Mutable Feature Factory stage authorization remains
-outside this architecture document. This document does not independently
-authorize design, tasks, implementation, or source changes.
+conformance reconciliation and ADH-2026-073 taxonomy correction. Mutable Feature
+Factory stage authorization remains outside this architecture document. This
+document does not independently authorize design, tasks, implementation, or source
+changes.
 The first independent review rejected the prior payload with F18-SEC-001
 through F18-SEC-005. Renewal-01 closed F18-SEC-002 and F18-SEC-004 but rejected
 the payload with F18-REN-001 and F18-REN-002. Renewal-02 closed all of those
@@ -481,6 +503,12 @@ particular:
 - no artifact may be marked reconciled without exact evidence; and
 - any value not directly transcribable from the approved decision payload is a
   blocker, not a design choice.
+
+ADH-2026-072 additionally governs design interpretation and review
+classification. Its five finding classes distinguish stale transcription,
+design executability, requirements gaps, genuine architecture clarification,
+and out-of-scope concerns. A reviewer must cite the exact contradictory or
+missing authority before treating a closed decision as open.
 
 Structurizr requires no change merely because this document exists. Kiro must
 update `workspace.dsl` only if approved application introduces a genuine system

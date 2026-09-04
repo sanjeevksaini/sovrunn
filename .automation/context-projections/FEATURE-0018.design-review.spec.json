@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "feature": "FEATURE-0018",
+  "stage": "design-review",
+  "output": ".automation/context-projections/FEATURE-0018.design-review.md",
+  "manifest": ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
+  "sources": [
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+      "sha256": "f6b50ea9faba3d8dc09d86124b574ccebefad27733db1ac3c4eaf98361acd5ca",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Approved design authority, audited-evaluation boundary and reviewer classification",
+          "start": 70,
+          "end": 197
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+      "sha256": "3cae0d0f138aa80f11d8db44db2b3e6b7a49e4153a5eb5b0aacbb1577ed4b08b",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Approved terminal-ExceptionProposal AuditEvent registration",
+          "start": 64,
+          "end": 112
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+      "sha256": "231b8872d83c5ad46331ef8a0e2e24127cb2ef177f0685f829617e648387b0b6",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Conformance authority, non-semantic boundary and identifier invariants",
+          "start": 68,
+          "end": 112
+        }
+      ]
+    },
+    {
+      "path": ".kiro/steering/slice0-contract.md",
+      "sha256": "13c9901ef6e242d12080e27539e602ad67859105677a0f0dceb6f6a690764b38",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Writer, state, error and general conformance anti-drift rules",
+          "start": 71,
+          "end": 103
+        },
+        {
+          "kind": "line_range",
+          "label": "Prohibited concepts, stop conditions and generated-output contract",
+          "start": 130,
+          "end": 167
+        }
+      ]
+    },
+    {
+      "path": ".kiro/specs/governance-iam-approval-exception-foundation/requirements.md",
+      "sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Approved normative requirement details and acceptance-scenario coverage",
+          "start": 237,
+          "end": 891
+        }
+      ]
+    }
+  ]
+}

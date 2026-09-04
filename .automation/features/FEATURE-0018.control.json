@@ -14,7 +14,9 @@
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
     ],
     "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation"
   },
@@ -38,7 +40,10 @@
         "id": "FEATURE-0011",
         "relationship": "reuses the approved Reuse Assessment Standard; the FEATURE-0018 reuse disposition is already human-approved and requirements must not reopen it",
         "context": {
-          "review": ["docs/features/FEATURE-0011-reuse-assessment-standard.md"]
+          "review": [
+            ".automation/context-projections/FEATURE-0018.design-review.md",
+            ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
+          ]
         }
       },
       {
@@ -120,15 +125,27 @@
       "docs/context/ARCHITECTURE_VERSION.md",
       "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
       "docs/phase2/PHASE2R_REBASELINE.md",
-      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md",
-      ".kiro/steering/slice0-contract.md"
+      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md"
     ],
     "stages": {
-      "requirements": [".automation/context-projections/FEATURE-0018.requirements.md"],
-      "design": ["docs/engineering/go-coding-guardrails.md", "docs/architecture/controller-reconciliation-model.md", "docs/architecture/observability-and-audit-baseline.md"],
-      "tasks": ["docs/engineering/go-coding-guardrails.md", "docs/engineering/go-observability-standard.md"],
-      "implementation": ["docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md", "docs/engineering/go-observability-standard.md"],
-      "review": ["docs/governance/REVIEW_GATES.md", ".automation/context-projections/FEATURE-0018.requirements.manifest.json"]
+      "architecture": [".kiro/steering/slice0-contract.md"],
+      "requirements": [".kiro/steering/slice0-contract.md", ".automation/context-projections/FEATURE-0018.requirements.md"],
+      "design": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/architecture/controller-reconciliation-model.md", "docs/architecture/observability-and-audit-baseline.md"],
+      "tasks": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-observability-standard.md"],
+      "implementation": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md", "docs/engineering/go-observability-standard.md"],
+      "review": [
+        ".automation/context-projections/FEATURE-0018.design-review.md",
+        ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
+        ".automation/state/FEATURE-0018.json",
+        ".automation/reviews/FEATURE-0018/requirements.review.json"
+      ]
+    },
+    "review_exclusions": {
+      "design": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      ]
     },
     "budgets": {
       "requirements": 600000,
