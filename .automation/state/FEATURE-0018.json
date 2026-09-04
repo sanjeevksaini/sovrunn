@@ -3,9 +3,9 @@
   "architecture_approved_at": "2026-09-03T03:39:10.398949+00:00",
   "architecture_approved_by": "Sanjeev Kumar",
   "architecture_approved_sha256": "ffa21a700f3d82fba46deda63003659ee98ae9b2e53e64a898fedde9e9ca67ef",
-  "control_approval_source": "human-approved-implementation-context-projection",
+  "control_approval_source": "human-approved-tasks-review-context-deduplication",
   "control_approved_at": "2026-09-04T00:00:00Z",
-  "control_approved_sha256": "9d2754fb37295c05e7fb2d93bef4db9dc8dfd96fa5ccf6a1e688ffc2e3f0b793",
+  "control_approved_sha256": "2a5b4fa747c662cb0d2bd5bd4099b691752fac772e9356c9727239bcd97482c0",
   "created_at": "2026-08-30T09:03:51.175231+00:00",
   "current_stage": "cursor",
   "current_task": "2",
@@ -32,8 +32,8 @@
   "status": "tasks_approved",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
-  "tasks_approved_at": "2026-09-04T13:59:53Z",
-  "tasks_approved_sha256": "4ad881f56e35a2233b6075ed08fe492225e51605d7af91e8e06d51a4bc5a1a6c",
+  "tasks_approved_at": "2026-09-04T14:40:01Z",
+  "tasks_approved_sha256": "04f5991ee10c5aced35f6e2d68c0dff9c0f6720c0d507deb5c823115d0ee872b",
   "title": "Governance, IAM, Approval and Exception Foundation",
-  "updated_at": "2026-09-04T13:59:53.288641+00:00"
+  "updated_at": "2026-09-04T14:40:01.732449+00:00"
 }

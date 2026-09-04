@@ -214,19 +214,23 @@ Addresses: SEC-06
 
 ---
 
-### Task 2: State aggregate, transaction protocol, and evidence construction
+### Task 2: State aggregate, transaction protocol, evidence construction, and initial idempotency type contract
 
-**Consolidated atomic task units (traceability only; non-schedulable):** TASK-F18-04 (State aggregate and transaction protocol), TASK-F18-05 (Evidence construction and validation)
+**Consolidated atomic task units (traceability only; non-schedulable):** TASK-F18-04 (State aggregate and transaction protocol), TASK-F18-05 (Evidence construction and validation). This executable task additionally delivers the initial sealed `internal/govaccess/idempotency` value-type contract required by the already-approved `state -> idempotency` import edge (design §3.4; DD-11): it is the type-shape portion of the idempotency package that TASK-F18-10 (Task 6) extends, delivered here as a compile-order prerequisite so the Task-2 `state` aggregate compiles. It mirrors the existing `model/decisionfacts.go` precedent (a Task-2-owned subset of an otherwise Task-1-owned package), reassigns no atomic ID, and creates no new one; TASK-F18-10 retains its identifier and its behavioral idempotency ownership in Task 6.
 
-**Dependencies:** TASK-F18-01, TASK-F18-02. Internal order: TASK-F18-04 → TASK-F18-05.
+**Dependencies:** TASK-F18-01, TASK-F18-02. Internal order: initial idempotency value-type contract (imports only `model`/`apivalid`/`operation`, all delivered by Task 1) → TASK-F18-04 (state, which imports the idempotency value types per design §3.4) → TASK-F18-05 (evidence).
 
 **Requirements:** REQ-F18-20 (audit before authorization-changing publication), REQ-F18-21 (deterministic behavior), REQ-F18-22 (in-memory foundation), REQ-F18-19 (FEATURE-0013 adoption)
 
-**Design decisions:** DD-01 (sealed interfaces, acyclic topology; evidence ownership), DD-02 (deterministic in-process foundation), DD-09 (three profiles), DD-10 (in-memory publication protocol), DD-12 (audited evaluation service), design §5.4 (atomic publication), design §3.3 (VS0-WRITER-011)
+**Design decisions:** DD-01 (sealed interfaces, acyclic topology; evidence ownership), DD-02 (deterministic in-process foundation), DD-09 (three profiles), DD-10 (in-memory publication protocol), DD-11 (idempotency value-type shapes; `state` stores them per design §3.4), DD-12 (audited evaluation service), design §5.4 (atomic publication), design §3.3 (VS0-WRITER-011), design §3.4 (acyclic `state -> idempotency` edge)
 
 **Description:**
 
 Implement the neutral state aggregate in `internal/govaccess/state/` with sealed transaction interfaces (CallerMutationTransaction, ControllerMutationTransaction, EvidenceTransaction), MutationFinalizationPermit, PermitBinding, and AppliedChangeReceipt. State owns root/shadows, locks, dependency-version sets, currentness claims, and the permit-issuance registry. Implement evidence construction in `internal/govaccess/evidence/`: AuthorizationCandidateDescriptor, FinalizedAuthorizationCandidate, CurrentAllowProof, CompletedAuthorizationEvaluation, DomainDecisionMaterial, MutationDescriptor, DomainConclusionDescriptor, carrier plans, and PreparedEvidenceChange. The evidence constructors consume, as their exact existing design §3.2 evidence-carrier inputs, the immutable deep-copied model types `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` defined in the Task-2-owned `internal/govaccess/model/decisionfacts.go`. Each of these three carrier-input types is constructed by value, deep-copies every reference-typed field on construction and on every accessor return so no post-construction mutation of caller-held or evidence-held data is possible, exposes no setter, and is byte-stable for deterministic evidence assembly. These three types are evidence-carrier inputs only: they are not resources, not decisions, not DecisionRecords, not writers, not routes, and not public contracts, they introduce no new schema/writer/state/error ID, and they are consumed exclusively by the FEATURE-0018 evidence constructors. Evidence imports no state/uow/authzeval package. Evidence is also the sole FEATURE-0018 owner of the strict local `DecisionProfileBundle` bytes (`evidence/profiles.go`) containing exactly the three existing FEATURE-0013 carrier profiles `authorization-decision/v1`, `approval-decision/v1`, and `exception-decision/v1` with F18-RD-19 semantics; it constructs and validates those profile bytes but never registers them (root composition performs the sole `decision/bundle.Load` registration) and never creates a second registry, global mutable registry, network lookup, fallback version, or competing envelope.
+
+This task additionally delivers the initial sealed idempotency value-type contract in `internal/govaccess/idempotency/` required by the approved acyclic edge (design §3.4: `state -> model, operation, idempotency, decision, evidence, clock`; `idempotency -> model, apivalid, operation`; DD-11: the typed shapes live in the neutral child package that `state` stores). It defines exactly the sealed value types `IdempotencyLookupKey` (actor/operation/clientIdempotencyKey), `RequestBinding` (exactTarget/scopeRef/canonicalRequestDigest), `InFlightReservation`, `PreparedCompletedResult`, and `CompletedRecord`, together with their pure deterministic structural validation and read-only accessors only. It owns no `InFlightTable` reservation-table operation, no replay-recheck handling, no reservation/completed lifecycle transition, no `PrepareCompletedResult` construction, and no UOW coordination — those remain owned by Task 6 (TASK-F18-10), which extends rather than recreates these exact types. The value-type files are the sole `internal/govaccess/idempotency/` paths owned by Task 2; the behavioral files in the same package are Task-6-owned and are neither created nor modified here.
+
+Bounded Task 2 compile-time dependency audit — every `state` or `evidence` leaf import is delivered by Task 1 or writable in Task 2: `state -> {model (Task 1, plus Task-2 `model/decisionfacts.go`), operation (Task 1), idempotency (Task 2, initial value-type contract), decision (FEATURE-0013, merged), evidence (Task 2), clock (Task 1)}`; `evidence -> {model (Task 1, plus Task-2 `model/decisionfacts.go`), decision (FEATURE-0013, merged), operation (Task 1)}`; `idempotency -> {model (Task 1), apivalid (FEATURE-0012, merged), operation (Task 1)}`. Every leaf import resolves to Task 1, this Task 2, or an already-merged external feature (FEATURE-0012/0013); no `state` or `evidence` leaf import is unresolved. The audit specifically closes the previously-omitted `state -> idempotency` compile edge, which was unsatisfiable while the idempotency value types were created only in Task 6 (a later, `state`-dependent task). No cycle is introduced: the Task-2 idempotency value-type contract imports only Task-1 leaves and imports neither `state`, `evidence`, nor `uow`.
 
 **Writable paths:**
 
@@ -252,6 +256,11 @@ Implement the neutral state aggregate in `internal/govaccess/state/` with sealed
 - `internal/govaccess/evidence/preparedevidence.go`
 - `internal/govaccess/evidence/profiles.go` (sole FEATURE-0018 owner of the deterministic strict local `DecisionProfileBundle` bytes for the exact three profiles `authorization-decision/v1`, `approval-decision/v1`, `exception-decision/v1`, with F18-RD-19 semantics and profile-bundle construction/validation; design §"FEATURE-0013 Adoption")
 - `internal/govaccess/evidence/evidence_test.go`
+- `internal/govaccess/idempotency/lookupkey.go` (Task-2-owned initial sealed value type `IdempotencyLookupKey` with pure validation/accessors only)
+- `internal/govaccess/idempotency/binding.go` (Task-2-owned initial sealed value type `RequestBinding` with pure validation/accessors only)
+- `internal/govaccess/idempotency/reservation.go` (Task-2-owned initial sealed value type `InFlightReservation` with pure validation/accessors only)
+- `internal/govaccess/idempotency/completedresult.go` (Task-2-owned initial sealed value types `PreparedCompletedResult` and `CompletedRecord` with pure validation/accessors only; the `PrepareCompletedResult` constructor and reservation/completed lifecycle behavior are Task-6-owned and not created here)
+- `internal/govaccess/idempotency/idempotencytypes_test.go` (Task-2-owned tests for the initial idempotency value-type contract; the behavioral `idempotency_test.go` is Task-6-owned. These value-type files and this test are the sole `internal/govaccess/idempotency/` paths owned by Task 2 and are not created or modified by Task 6.)
 
 **Tests:**
 
@@ -276,6 +285,11 @@ Implement the neutral state aggregate in `internal/govaccess/state/` with sealed
 - Unit tests proving duplicate `(id, version)`, unknown version, malformed profile, or missing required registry entry fails through existing FEATURE-0013 validation
 - Unit tests proving evidence constructs the profile bytes but performs no registration (no second registry, no global mutable registry, no network lookup, no fallback version)
 - Property test: evidence never imports state/uow/authzeval
+- Unit tests for `IdempotencyLookupKey` construction (actor/operation/clientIdempotencyKey) and pure structural validation
+- Unit tests for `RequestBinding` (exactTarget/scopeRef/canonicalRequestDigest) construction, validation, and accessors, proving it is a distinct value type from `IdempotencyLookupKey`
+- Unit tests for `InFlightReservation`, `PreparedCompletedResult`, and `CompletedRecord` value-type construction and accessors, proving each carries the full `RequestBinding`
+- Property test: idempotency value types validate deterministically (same input → same result) and expose no reservation-table, replay, lifecycle-transition, `PrepareCompletedResult`, or coordination behavior
+- Property test: the idempotency value-type contract imports only `model`/`apivalid`/`operation` and never `state`/`evidence`/`uow`
 
 **Verification commands:**
 
@@ -286,6 +300,7 @@ go test -v ./internal/govaccess/state/...
 go test -race ./internal/govaccess/state/...
 go test -v ./internal/govaccess/model/... -run 'DecisionFacts|ApprovalDecisionFacts|ExceptionDecisionFacts|MutationEventFacts'
 go test -v ./internal/govaccess/evidence/...
+go test -v ./internal/govaccess/idempotency/... -run 'IdempotencyLookupKey|RequestBinding|InFlightReservation|PreparedCompletedResult|CompletedRecord'
 ```
 
 **Acceptance criteria:**
@@ -307,6 +322,11 @@ go test -v ./internal/govaccess/evidence/...
 - `evidence/profiles.go` owns the strict local `DecisionProfileBundle` bytes with exactly the three FEATURE-0013 profiles and no fourth, with F18-RD-19 semantics (REQ-F18-19, DD-09)
 - Evidence constructs profile bytes but performs no registration; root composition is the sole `decision/bundle.Load` registration point (REQ-F18-19, DD-01)
 - Evidence imports no state/uow/authzeval (DD-01, DD-13 Rule 003)
+- The initial sealed idempotency value-type contract exists in the Task-2-owned `internal/govaccess/idempotency/` files (`lookupkey.go`, `binding.go`, `reservation.go`, `completedresult.go`) with exactly `IdempotencyLookupKey`, `RequestBinding`, `InFlightReservation`, `PreparedCompletedResult`, and `CompletedRecord` plus pure validation/accessors only (DD-11, design §3.4)
+- `IdempotencyLookupKey` is a distinct value type from `RequestBinding`, and every reservation/completed value carries the full `RequestBinding` (DD-11, design §5.4)
+- The idempotency value-type contract satisfies the acyclic `idempotency -> model, apivalid, operation` edge and imports no `state`/`evidence`/`uow` (DD-01, design §3.4)
+- Task 2 owns no `InFlightTable` reservation-table operation, replay handling, lifecycle transition, `PrepareCompletedResult` construction, or UOW coordination; those remain Task-6-owned and extend rather than recreate these types (DD-11)
+- The bounded Task-2 compile-time dependency audit holds: every `state` and `evidence` leaf import is delivered by Task 1, this Task 2, or a merged external feature, closing the previously-omitted `state -> idempotency` compile edge with no cycle (DD-01, design §3.4)
 
 **Security/observability impact:**
 
@@ -325,6 +345,7 @@ go test -v ./internal/govaccess/evidence/...
 - No state mutation or transaction coordination (evidence is pure constructor)
 - No FEATURE-0013 carrier publication (state transaction owns physical publication)
 - No FEATURE-0013 bundle registration, `decision/bundle.Load` invocation, or `BundleView` distribution (owned by root composition per design §"FEATURE-0013 Adoption")
+- No `InFlightTable` reservation-table operations, replay-recheck handling, reservation/completed lifecycle transitions, `PrepareCompletedResult` construction, retention-horizon logic, or UOW coordination in the idempotency package (owned by Task 6, which extends the Task-2 value types)
 - No policy evaluation
 
 **Commit message:**
@@ -346,10 +367,12 @@ feat(govaccess): add state aggregate, transaction protocol, and evidence
 - Add model/decisionfacts.go carrier-input types (ApprovalDecisionFacts, ExceptionDecisionFacts, MutationEventFacts)
 - Enforce immutable deep-copied carrier inputs consumed by evidence constructors (design §3.2; not resources/decisions/public contracts)
 - Add evidence/profiles.go strict local DecisionProfileBundle (exact three profiles)
+- Add initial sealed idempotency value-type contract (IdempotencyLookupKey, RequestBinding, InFlightReservation, PreparedCompletedResult, CompletedRecord) with pure validation/accessors only
+- Close approved state -> idempotency compile edge (design §3.4); Task 6 extends these types without recreating them
 
 Implements: TASK-F18-04, TASK-F18-05
 Requirements: REQ-F18-20, REQ-F18-21, REQ-F18-22, REQ-F18-19
-Design: DD-01, DD-02, DD-09, DD-10, DD-12, §5.4, §3.3
+Design: DD-01, DD-02, DD-09, DD-10, DD-11, DD-12, §5.4, §3.3, §3.4
 Addresses: ADH-2026-073
 ```
 
@@ -691,7 +714,7 @@ Addresses: ADH-2026-073
 
 **Consolidated atomic task units (traceability only; non-schedulable):** TASK-F18-09 (Unit-of-work coordinator and stage-10/11/12 mechanics), TASK-F18-10 (Idempotency and completed-result coordination)
 
-**Dependencies:** TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05, TASK-F18-06, TASK-F18-07, TASK-F18-08. Internal order: TASK-F18-09 alongside TASK-F18-10 (idempotency is a neutral coordinator).
+**Dependencies:** TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05, TASK-F18-06, TASK-F18-07, TASK-F18-08. Internal order: TASK-F18-09 alongside TASK-F18-10 (idempotency is a neutral coordinator). TASK-F18-10 extends the Task-2-owned initial idempotency value-type contract delivered by TASK-F18-04/TASK-F18-05 and never recreates those types.
 
 **Requirements:** REQ-F18-20 (audit before publication), REQ-F18-21 (deterministic behavior, concurrency), REQ-F18-13 (approval immutability)
 
@@ -699,7 +722,7 @@ Addresses: ADH-2026-073
 
 **Description:**
 
-Implement the unit-of-work coordinator in `internal/govaccess/uow/`: it carries sealed intents and candidates to stage 10; manages leases/transactions; coordinates FinalizeCandidateAt, RequireCurrentAllow, AcceptCurrentAllow, FinalizationPermit, ApplyFinalized, evidence acceptance, and commit. UOW constructs no semantic value and performs no semantic revalidation. Implement the neutral idempotency coordinator in `internal/govaccess/idempotency/`: IdempotencyLookupKey (separate from RequestBinding), InFlightReservation, PreparedCompletedResult, CompletedRecord. Idempotency applies only to caller-keyed mutations; controller operations use CAS.
+Implement the unit-of-work coordinator in `internal/govaccess/uow/`: it carries sealed intents and candidates to stage 10; manages leases/transactions; coordinates FinalizeCandidateAt, RequireCurrentAllow, AcceptCurrentAllow, FinalizationPermit, ApplyFinalized, evidence acceptance, and commit. UOW constructs no semantic value and performs no semantic revalidation. Extend the neutral idempotency package in `internal/govaccess/idempotency/` with its behavioral coordination, building on the Task-2-owned initial value-type contract (`IdempotencyLookupKey`, `RequestBinding`, `InFlightReservation`, `PreparedCompletedResult`, `CompletedRecord`) and never recreating those types: add the `InFlightTable` reservation-table operations, replay-recheck handling, reservation/completed lifecycle transitions (including `PrepareCompletedResult` construction over the owner-supplied neutral `operation.ResultMaterial` and evidence-validated `operation.CompletionBinding`, plus the 24h retention horizon computed from the injected clock), and the UOW lifecycle coordination. Idempotency applies only to caller-keyed mutations; controller operations use CAS. Preserving DD-11 ownership, Task 6 remains the sole owner of reservation-table operations, replay handling, lifecycle transitions, and UOW coordination.
 
 **Writable paths:**
 
@@ -710,12 +733,11 @@ Implement the unit-of-work coordinator in `internal/govaccess/uow/`: it carries 
 - `internal/govaccess/uow/evidenceonly.go`
 - `internal/govaccess/uow/port.go` (MutationCoordinatorPort)
 - `internal/govaccess/uow/uow_test.go`
-- `internal/govaccess/idempotency/` (neutral idempotency coordinator)
-- `internal/govaccess/idempotency/lookupkey.go`
-- `internal/govaccess/idempotency/binding.go`
-- `internal/govaccess/idempotency/reservation.go`
-- `internal/govaccess/idempotency/completedresult.go`
-- `internal/govaccess/idempotency/idempotency_test.go`
+- `internal/govaccess/idempotency/` (neutral idempotency coordinator behavior; extends the Task-2-owned value-type contract, never recreates it)
+- `internal/govaccess/idempotency/table.go` (`InFlightTable` reservation-table operations over the Task-2-owned `IdempotencyLookupKey`/`InFlightReservation`/`CompletedRecord` values)
+- `internal/govaccess/idempotency/replay.go` (replay-recheck handling and ports comparing `RequestBinding` after lookup)
+- `internal/govaccess/idempotency/lifecycle.go` (reservation/completed lifecycle transitions, `PrepareCompletedResult` construction over neutral `operation.ResultMaterial`/`operation.CompletionBinding`, and the 24h retention horizon)
+- `internal/govaccess/idempotency/idempotency_test.go` (Task-6-owned behavioral tests; the Task-2-owned value-type files `lookupkey.go`/`binding.go`/`reservation.go`/`completedresult.go` and their `idempotencytypes_test.go` are neither created nor modified here)
 
 **Tests:**
 
@@ -728,12 +750,12 @@ Implement the unit-of-work coordinator in `internal/govaccess/uow/`: it carries 
 - Unit tests for evidence acceptance ordering
 - Unit tests for ReleaseAfterPublication with CommitReceipt
 - Property test: uow constructs no semantic value or descriptor
-- Unit tests for IdempotencyLookupKey (actor/operation/clientKey)
-- Unit tests for RequestBinding (target/scope/digest) separate from lookup
-- Unit tests for replay detection (same key, different binding)
-- Unit tests for waiting on in-flight reservation
-- Unit tests for completed-result staging with neutral CompletionBinding
-- Property test: idempotency never imports evidence types directly
+- Unit tests for `InFlightTable` reservation-table operations keyed by the Task-2-owned `IdempotencyLookupKey` (reserve/lookup/complete) that extend, not recreate, the value types
+- Unit tests for replay detection (same key, different `RequestBinding`) comparing binding after lookup
+- Unit tests for waiting on an in-flight reservation
+- Unit tests for reservation/completed lifecycle transitions (retention horizon computed from the injected clock)
+- Unit tests for `PrepareCompletedResult` construction staging with neutral `operation.CompletionBinding`
+- Property test: idempotency behavior imports no evidence type directly and does not redefine the Task-2-owned value types
 
 **Verification commands:**
 
@@ -753,10 +775,10 @@ go test -v ./internal/govaccess/idempotency/...
 - Evidence acceptance precedes result release (REQ-F18-20, design §5.4)
 - ReleaseAfterPublication requires sealed CommitReceipt (DD-12)
 - UOW constructs no descriptor/decision-material/result (DD-01, DD-13 Rule 008)
-- IdempotencyLookupKey separate from RequestBinding (DD-11, design §5.4)
-- Replay detection compares binding after lookup (REQ-F18-21, DD-11)
+- Task 6 extends the Task-2-owned idempotency value-type contract with `InFlightTable` reservation-table operations, replay handling, lifecycle transitions, and UOW coordination, and recreates none of those types (DD-11, design §3.4)
+- Replay detection compares the `RequestBinding` after `IdempotencyLookupKey` lookup (REQ-F18-21, DD-11)
 - In-flight waiting without duplicate publication (REQ-F18-21)
-- PreparedCompletedResult wraps neutral ResultMaterial and CompletionBinding (DD-11)
+- `PrepareCompletedResult` wraps neutral `operation.ResultMaterial` and `operation.CompletionBinding` over the Task-2-owned `PreparedCompletedResult` type (DD-11)
 - Idempotency never imports evidence directly (DD-01, DD-13)
 - Controller operations use CAS, not synthetic key (DD-11)
 
@@ -776,6 +798,7 @@ go test -v ./internal/govaccess/idempotency/...
 - No policy evaluation
 - No durable persistence (in-memory only)
 - No 24h retention enforcement in this slice (clock-based, verified in integration)
+- No redefinition of the Task-2-owned idempotency value types (`IdempotencyLookupKey`, `RequestBinding`, `InFlightReservation`, `PreparedCompletedResult`, `CompletedRecord`) or their value-type files; Task 6 extends them only
 
 **Commit message:**
 
@@ -789,15 +812,15 @@ feat(govaccess): add unit-of-work coordinator and idempotency coordination
 - Add RequireCurrentAllow gate (Allow → permit, Deny → abort)
 - Add evidence acceptance before result release
 - Add ReleaseAfterPublication with CommitReceipt
-- Add IdempotencyLookupKey (actor/operation/clientKey)
-- Add RequestBinding (target/scope/digest) separate from lookup
-- Add InFlightReservation and waiting protocol
-- Add PreparedCompletedResult with neutral CompletionBinding
-- Add CompletedRecord with 24h retention horizon
+- Extend Task-2 idempotency value types with InFlightTable reservation-table operations
+- Add replay-recheck handling (compare RequestBinding after lookup)
+- Add in-flight reservation waiting protocol
+- Add reservation/completed lifecycle transitions and PrepareCompletedResult construction
+- Add completed-record 24h retention horizon over the Task-2 CompletedRecord type
 
 Implements: TASK-F18-09, TASK-F18-10
 Requirements: REQ-F18-20, REQ-F18-21, REQ-F18-13
-Design: DD-01, DD-10, DD-11, DD-12, §5.4
+Design: DD-01, DD-10, DD-11, DD-12, §5.4, §3.4
 ```
 
 ---
@@ -1357,7 +1380,7 @@ both are enforced through `make ff-feature-gate FEATURE=FEATURE-0018`.
 | DD-08 | Task 4 |
 | DD-09 | Task 2, Task 8 |
 | DD-10 | Task 2, Task 6 |
-| DD-11 | Task 6 |
+| DD-11 | Task 2, Task 6 |
 | DD-12 | Task 2, Task 4, Task 6 |
 | DD-13 | Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7, Task 8, Task 10 |
 
@@ -1470,6 +1493,15 @@ non-schedulable traceability:
 - No forward reference exists in the topological order: no executable-task
   dependency references a task that follows it in the wave sequence defined by
   the diagram, waves, and dependency basis above
+- The approved `state -> idempotency` import edge (design §3.4) is satisfied
+  intra-Task-2: Task 2 delivers the initial sealed idempotency value-type contract
+  (imports only Task-1 `model`/`apivalid`/`operation`) before its `state`
+  aggregate, and Task 6 extends those exact types with reservation-table, replay,
+  lifecycle, and UOW-coordination behavior. This closes the prior compile-order
+  omission — the idempotency value types were previously created only in the
+  later, `state`-dependent Task 6 — without adding any cross-executable-task
+  edge, cycle, or wave change; the Task 1 → Task 10 order and the ten-wave
+  schedule are unchanged
 
 ---
 
@@ -1509,11 +1541,11 @@ The atomic-unit sets in parentheses are non-schedulable traceability only; only
 Task 1 through Task 10 are scheduled:
 
 - Task 1 — foundation, clock, core model, deterministic validation (consolidates TASK-F18-01, TASK-F18-02, TASK-F18-03).
-- Task 2 — state aggregate, transaction protocol, evidence (consolidates TASK-F18-04, TASK-F18-05).
+- Task 2 — state aggregate, transaction protocol, evidence, and the initial idempotency value-type contract (consolidates TASK-F18-04, TASK-F18-05; additionally delivers the DD-11 idempotency value-type shapes required by the `state -> idempotency` edge, extended by Task 6).
 - Task 3 — RoleAssignment domain and workflow triggers (consolidates TASK-F18-07).
 - Task 4 — authorization algebra, policy seam, approval derivation (consolidates TASK-F18-06, TASK-F18-11).
 - Task 5 — remaining domain owners (consolidates TASK-F18-08).
-- Task 6 — unit-of-work coordinator, idempotency coordination (consolidates TASK-F18-09, TASK-F18-10).
+- Task 6 — unit-of-work coordinator, idempotency coordination extending the Task-2 value-type contract (consolidates TASK-F18-09, TASK-F18-10).
 - Task 7 — command services and caller operations (consolidates TASK-F18-12).
 - Task 8 — root composition, static checker, deterministic fixtures (consolidates TASK-F18-13, TASK-F18-14, TASK-F18-15).
 - Task 9 — progressive-disclosure projections and local/inherited conformance tests (consolidates TASK-F18-18, TASK-F18-16, TASK-F18-17).
@@ -1547,13 +1579,13 @@ declared dependencies, verbatim; traceability only, never scheduled):
 - TASK-F18-01 — None
 - TASK-F18-02 — TASK-F18-01
 - TASK-F18-03 — TASK-F18-02
-- TASK-F18-04 — TASK-F18-01, TASK-F18-02
+- TASK-F18-04 — TASK-F18-01, TASK-F18-02 (plus the Task-2-delivered initial idempotency value-type contract per design §3.4 `state -> idempotency`; that contract imports only `model`/`apivalid`/`operation` from Task 1, so it is delivered within Task 2 before `state` and introduces no cross-executable-task edge or cycle)
 - TASK-F18-05 — TASK-F18-01, TASK-F18-02, TASK-F18-04
 - TASK-F18-06 — TASK-F18-02, TASK-F18-04, TASK-F18-05
 - TASK-F18-07 — TASK-F18-02, TASK-F18-03, TASK-F18-04, TASK-F18-05
 - TASK-F18-08 — TASK-F18-02, TASK-F18-03, TASK-F18-04, TASK-F18-05, TASK-F18-11
 - TASK-F18-09 — TASK-F18-04, TASK-F18-05, TASK-F18-06, TASK-F18-07, TASK-F18-08
-- TASK-F18-10 — TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05
+- TASK-F18-10 — TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05 (extends, and never recreates, the Task-2-delivered initial idempotency value-type contract with the `InFlightTable` reservation-table operations, replay handling, lifecycle transitions, and UOW coordination)
 - TASK-F18-11 — TASK-F18-02, TASK-F18-06, TASK-F18-07
 - TASK-F18-12 — TASK-F18-06, TASK-F18-07, TASK-F18-09
 - TASK-F18-13 — TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05, TASK-F18-06, TASK-F18-07, TASK-F18-08, TASK-F18-09, TASK-F18-10, TASK-F18-11, TASK-F18-12
@@ -1585,7 +1617,7 @@ scheduled graph, preserving the Task 1 → Task 10 dependency order):
 ```mermaid
 graph TD
     TASK1["Task 1: foundation, clock, core model, validation"]
-    TASK2["Task 2: state, transactions, evidence"]
+    TASK2["Task 2: state, transactions, evidence, initial idempotency types"]
     TASK3["Task 3: RoleAssignment domain, workflow triggers"]
     TASK4["Task 4: authorization algebra, policy seam, approval derivation"]
     TASK5["Task 5: remaining domain owners"]
