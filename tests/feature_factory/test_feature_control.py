@@ -126,6 +126,22 @@ class FeatureControlTests(unittest.TestCase):
         with self.assertRaisesRegex(control.ControlError, "must name a feature handoff"):
             control.validate(invalid, expected_feature="FEATURE-0014")
 
+    def test_review_stage_context_is_scoped_to_the_declared_review_stage(self):
+        configured = deepcopy(self.data)
+        context_path = "docs/engineering/go-observability-standard.md"
+        configured["context"]["review_stage_context"] = {"design": [context_path]}
+        control.validate(configured, expected_feature="FEATURE-0014")
+        design_paths = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(configured, "review", review_stage="design")
+        }
+        task_paths = {
+            str(path.relative_to(ROOT))
+            for path in control.resolve_context(configured, "review", review_stage="tasks")
+        }
+        self.assertIn(context_path, design_paths)
+        self.assertNotIn(context_path, task_paths)
+
     def test_task_context_may_exclude_only_a_declared_handoff(self):
         excluded = self.data["feature"]["handoffs"][0]
         configured = deepcopy(self.data)

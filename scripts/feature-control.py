@@ -190,7 +190,7 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
 
     context = data["context"]
     required_context_keys = {"always", "stages", "budgets"}
-    optional_context_keys = {"review_exclusions", "stage_exclusions"}
+    optional_context_keys = {"review_exclusions", "review_stage_context", "stage_exclusions"}
     missing_context_keys = sorted(required_context_keys - set(context))
     extra_context_keys = sorted(set(context) - required_context_keys - optional_context_keys)
     if missing_context_keys or extra_context_keys:
@@ -223,6 +223,20 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
                 raise ControlError(
                     f"context.review_exclusions.{review_stage}[{index}] must name a feature handoff"
                 )
+    review_stage_context = context.get("review_stage_context", {})
+    if not isinstance(review_stage_context, dict):
+        raise ControlError("context.review_stage_context must be an object")
+    unknown_review_context_stages = sorted(set(review_stage_context) - allowed_review_stages)
+    if unknown_review_context_stages:
+        raise ControlError(
+            "context.review_stage_context has unknown review stages: "
+            + ", ".join(unknown_review_context_stages)
+        )
+    for review_stage, paths in review_stage_context.items():
+        for index, path in enumerate(
+            require_string_list(paths, field=f"context.review_stage_context.{review_stage}")
+        ):
+            repo_path(path, field=f"context.review_stage_context.{review_stage}[{index}]")
     stage_exclusions = context.get("stage_exclusions", {})
     if not isinstance(stage_exclusions, dict):
         raise ControlError("context.stage_exclusions must be an object")
@@ -334,6 +348,7 @@ def resolve_context(data: dict[str, Any], stage: str, *, review_stage: str | Non
         raw_paths.extend(dependency["context"].get(stage, []))
     raw_paths.extend(data["context"]["stages"].get(stage, []))
     if stage == "review":
+        raw_paths.extend(data["context"].get("review_stage_context", {}).get(review_stage, []))
         review_exclusions = set(data["context"].get("review_exclusions", {}).get(review_stage, []))
         raw_paths = [path for path in raw_paths if path not in review_exclusions]
     else:

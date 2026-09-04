@@ -38,13 +38,10 @@
     "previous_features": [
       {
         "id": "FEATURE-0011",
-        "relationship": "reuses the approved Reuse Assessment Standard; the FEATURE-0018 reuse disposition is already human-approved and requirements must not reopen it",
-        "context": {
-          "review": [
-            ".automation/context-projections/FEATURE-0018.design-review.md",
-            ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
-          ]
-        }
+      "relationship": "reuses the approved Reuse Assessment Standard; the FEATURE-0018 reuse disposition is already human-approved and requirements must not reopen it",
+      "context": {
+        "review": ["docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md"]
+      }
       },
       {
         "id": "FEATURE-0012",
@@ -134,14 +131,30 @@
       "tasks": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-observability-standard.md", ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.md", ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.manifest.json"],
       "implementation": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md", "docs/engineering/go-observability-standard.md"],
       "review": [
-        ".automation/context-projections/FEATURE-0018.design-review.md",
-        ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
         ".automation/state/FEATURE-0018.json",
         ".automation/reviews/FEATURE-0018/requirements.review.json"
       ]
     },
+    "review_stage_context": {
+      "design": [
+        ".automation/context-projections/FEATURE-0018.design-review.md",
+        ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
+      ],
+      "tasks": [
+        ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.md",
+        ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.manifest.json"
+      ]
+    },
     "review_exclusions": {
       "design": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      ],
+      "tasks": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
         "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
         "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
         "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"

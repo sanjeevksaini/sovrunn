@@ -84,6 +84,15 @@
             "tasks": {"$ref": "#/$defs/pathArray"}
           }
         },
+        "review_stage_context": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"}
+          }
+        },
         "stage_exclusions": {
           "type": "object",
           "additionalProperties": false,
