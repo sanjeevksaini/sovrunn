@@ -140,10 +140,7 @@
         ".automation/context-projections/FEATURE-0018.design-review.md",
         ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
       ],
-      "tasks": [
-        ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.md",
-        ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.manifest.json"
-      ]
+      "tasks": []
     },
     "review_exclusions": {
       "design": [
