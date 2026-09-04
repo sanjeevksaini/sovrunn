@@ -21,6 +21,7 @@
   "feature_id": "FEATURE-0018",
   "generated_prompt_path": "docs/generated-prompts/FEATURE-0018",
   "human_gate_required": "false",
+  "last_committed_task": "1",
   "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
   "requirements_approval_source": "openai_machine_review",
   "requirements_approval_token": "APPROVED_FOR_DESIGN",
@@ -28,11 +29,11 @@
   "requirements_approved_sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
   "slug": "governance-iam-approval-exception-foundation",
   "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation",
-  "status": "cursor_task_1_completed",
+  "status": "cursor_task_1_committed",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
   "tasks_approved_at": "2026-09-04T13:14:12Z",
   "tasks_approved_sha256": "587f735514569922f691c2e8f72c19885625dc6cbceb6d89360c2aae4a3f1346",
   "title": "Governance, IAM, Approval and Exception Foundation",
-  "updated_at": "2026-09-04T13:41:26.651821+00:00"
+  "updated_at": "2026-09-04T13:43:59.239418+00:00"
 }
