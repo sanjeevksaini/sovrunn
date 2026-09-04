@@ -292,6 +292,31 @@ feat(example): grouped paths
         self.assertEqual(cursor_prompt.writable_paths(block), expected)
         self.assertEqual(orchestrator.task_writable_paths(block), expected)
 
+    def test_explicit_directory_rules_reach_cursor_and_orchestrator_allowlists(self):
+        block = """### Task 14: Directory-scoped foundation
+
+**Writable paths:**
+- `internal/govaccess/` (root composition package)
+- `internal/govaccess/clock/` (deterministic clock implementation)
+- `internal/govaccess/model/principalref.go`
+
+**Tests:**
+- `internal/govaccess/clock/clock_test.go`
+
+**Commit message:**
+```
+feat(govaccess): add deterministic foundation
+```
+"""
+        expected = [
+            "internal/govaccess/",
+            "internal/govaccess/clock/",
+            "internal/govaccess/model/principalref.go",
+            "internal/govaccess/clock/clock_test.go",
+        ]
+        self.assertEqual(cursor_prompt.writable_paths(block), expected)
+        self.assertEqual(orchestrator.task_writable_paths(block), expected)
+
     def test_tests_narrative_may_reuse_a_writable_test_path(self):
         block = """### Task 17: Conformance
 

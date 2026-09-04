@@ -55,7 +55,7 @@ def section_paths(
             for path in re.findall(r"`([^`]+)`", line):
                 if (
                     path.startswith(("internal/", "cmd/", "api/", "tests/", "scripts/", "docs/", ".automation/"))
-                    and Path(path).suffix
+                    and (Path(path).suffix or path.endswith("/"))
                 ):
                     paths.append(path)
     if require_paths and not paths:
