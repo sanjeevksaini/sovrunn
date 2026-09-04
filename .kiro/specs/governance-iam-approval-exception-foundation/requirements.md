@@ -7,12 +7,18 @@ status: draft
 baseline: ARCH-2026.08-PHASE2R-CANONICAL
 controlling_handoff: ADH-2026-070
 conformance_handoff: ADH-2026-071
+audit_taxonomy_correction_handoff: ADH-2026-073
 accepted_decision: DEC-0060
 change_request: ACR-2026-002
 sole_architecture_authority: docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md
 ai_load_priority: feature
 ai_summary: Requirements translation of the approved FEATURE-0018 architecture (F18-RD-01..24). Observable behavior only; no design, schema, route, or implementation choices. Every requirement maps one-to-one to an approved REQ ledger row and every acceptance criterion maps to an approved AC ledger row.
 ---
+
+# Requirements Document
+
+<!-- Canonical spec-format heading. The authoritative feature title, structure, and
+content are unchanged and continue below under the domain-specific numbered sections. -->
 
 # FEATURE-0018 Requirements: Governance, IAM, Approval and Exception Foundation
 
@@ -24,6 +30,25 @@ ai_summary: Requirements translation of the approved FEATURE-0018 architecture (
 > carried by the ADH-2026-070 three-file package and the authoritative
 > FEATURE-0018 architecture. Any value not transcribable from that authority is a
 > blocker, not a design or requirement choice.
+
+## Introduction
+
+This is a thin pointer to the authoritative content that follows; it introduces no
+new requirements. The feature intent and scope are stated in the intro blockquote
+above and in section 2 (Purpose and use cases).
+
+## Requirements
+
+This is a thin pointer to the authoritative content that follows; it introduces no
+new requirements or identifiers. The complete, canonical requirement set is the
+Canonical requirement ledger (REQ-F18-01..24) together with the normative details
+and acceptance scenarios in section 4 (Normative requirements and acceptance
+scenarios).
+
+## Glossary
+
+This is a thin pointer to section 3 (Terms introduced by this feature), which is the
+authoritative glossary for FEATURE-0018 terms; it introduces no new terms.
 
 ## 1. Identity and stage
 
@@ -447,6 +472,13 @@ dependency contract, it references that contract without redefining it.
   occurs only through replacement or revocation. `membershipRef` is prohibited for an
   AccessGroup holder and for Platform/CloudPlatform authorization. Responsible-party
   evidence supplies accountability, not permission or a per-request condition.
+- For a direct Workload/System holder, the system-selected `responsiblePartyRef` must
+  resolve to a current Human at assignment creation, at any replacement that materializes
+  a successor assignment, and at every AccessReview retention of that assignment. Where a
+  Membership applies to the assignment, that `responsiblePartyRef` must equal the
+  responsible party pinned on the exact authorizing Workload/System Membership. Missing,
+  mismatched, or non-Human responsibility evidence fails closed: the creation,
+  replacement, or retention is rejected and no RoleAssignment intent is published.
 - The RoleAssignment controller is the sole publisher and sole writer of specification,
   lifecycle, status, revocation, replacement, expiry, and review-due effects; it
   revalidates all pins and required decision/audit evidence before publishing and cannot
@@ -713,7 +745,17 @@ dependency contract, it references that contract without redefining it.
   union across reviewed and proposed assignments; the acting reviewer must be a current Human outside that
   union. Unresolved evidence fails closed with `REVIEW_BENEFICIARY_UNRESOLVED` (no effect, no due advancement);
   a conflict returns `REVIEWER_CONFLICT` (no effect, no `nextReviewDueAt`, item left for a different eligible
-  reviewer); independently authorized Revoke remains available. A completed exact-version `StandingCertification
+  reviewer); independently authorized Revoke remains available. For a Membership-only
+  `Retain` disposition the controller derives the equivalent beneficiary-Human expansion
+  (Human principal -> that Human; Workload/System principal -> its current responsible
+  Human; AccessGroup relationship -> current owner + every current direct Human member +
+  the responsible Human of every current direct Workload/System member), bounded to
+  current direct memberships, and the acting reviewer must be a current Human outside that
+  set. Retaining a Workload/System Membership or a Workload/System-held RoleAssignment
+  additionally requires that its `responsiblePartyRef` resolve to a current Human; failed
+  responsibility or beneficiary validation must not certify the item and must not silently
+  revoke it (the item is left undecided for a different eligible reviewer or an
+  independently authorized Revoke). A completed exact-version `StandingCertification
   + Retain` advances `nextReviewDueAt` to `completedAt + reviewInterval`; Manual and BreakGlassRetrospective
   never advance it. Missing usage is not proof of non-use unless coverage is complete; incomplete review never
   certifies. Certification and due advancement publish under the same local audit/concurrency boundary.
@@ -792,6 +834,18 @@ dependency contract, it references that contract without redefining it.
   terminal `Grant | Deny` and emits exactly one mandatory `exception-decision/v1` DecisionRecord (`Deny` creates no
   ExceptionGrant). AccessReview remains its own retained LRO and adds no fourth profile; status contains only current
   state with history in AuditEvent/DecisionRecord evidence.
+- Every terminal `ExceptionProposal` `Grant | Deny` emits exactly one
+  `exceptionproposal.decided` AuditEvent linked, through the existing FEATURE-0013
+  AuditEvent envelope and linkage semantics, to the exact immutable proposal, its
+  terminal reason, the mandatory `exception-decision/v1` DecisionRecord, and the
+  containing operation/correlation evidence. A terminal `Grant` additionally emits
+  the separate `exceptiongrant.issued` event for its immutable ExceptionGrant in
+  the same final exception atomic boundary; a terminal `Deny` publishes no
+  ExceptionGrant and emits neither an issuance event nor a second decision event.
+  `exceptiongrant.proposed` remains proposal-submission evidence only. This
+  registration adds no additional event, resource, writer, or error beyond the one
+  `exceptionproposal.decided` taxonomy type registered through FEATURE-0013's
+  existing extension mechanism (ADH-2026-073).
 
 #### REQ-F18-20 — Audit before authorization-changing publication (F18-RD-20)
 
@@ -801,6 +855,15 @@ dependency contract, it references that contract without redefining it.
   ExceptionProposal/ExceptionGrant, and completed idempotency result). Failure returns a safe internal failure and
   publishes none of the state change or completed replay result; application logs never substitute for the protected
   obligation or AuditEvent.
+- Required protected AuditEvent-obligation acceptance also precedes every accepted mutation represented by the
+  registered FEATURE-0018 AuditEvent taxonomy even when authorization is not yet changed, including RoleDefinition,
+  ApprovalPolicy, and GovernanceProfile Draft create/update; RoleAssignmentProposal and ExceptionProposal submission;
+  PrivilegedAccessRequest submission; Membership synchronization; and AccessReview campaign creation. Failure to accept
+  the protected obligation for any such accepted mutation returns a safe internal failure and publishes none of the
+  state change or completed replay result.
+- Every authorization evaluation accepts its protected audit obligation before returning Allow or Deny; an
+  authorization-evaluation audit-obligation failure returns a safe internal error, produces no `AuthorizationResult`,
+  and confers no downstream authority.
 - For an AccessGroup Membership assignment-effect expansion, and for approver/privileged-requester/reviewer eligibility,
   the protected evidence pins the exact enumerated fields and belongs in protected DecisionRecord/AuditEvent provenance;
   it is never copied into user-authored Membership fields and never becomes bearer authority. Approval publication and
@@ -808,8 +871,10 @@ dependency contract, it references that contract without redefining it.
   mandatory `approval-decision/v1`, and audit evidence and publishes no downstream effect. Privileged activation and the
   exception controller's final `Grant | Deny` are each later, freshly authorized, all-or-nothing atomic boundaries. Every
   authorization evaluation accepts its protected audit obligation before returning Allow or Deny. The initial registered
-  FEATURE-0018 AuditEvent taxonomy is exactly as enumerated by F18-RD-20; a new type requires FEATURE-0013 extension
-  registration and FEATURE-0018 conformance evidence.
+  FEATURE-0018 AuditEvent taxonomy is exactly as enumerated by F18-RD-20 as
+  corrected by approved ADH-2026-073; `exceptionproposal.decided` is its one
+  added terminal-exception decision type, registered through FEATURE-0013's
+  existing extension mechanism with FEATURE-0018 conformance evidence.
 - Authoritative-time effectiveness is independent of successful status/event materialization: reaching any enumerated
   expiry/deadline/due boundary fails closed without grace, and audit or projection failure never extends access or
   exception effect.
@@ -961,7 +1026,7 @@ is enforced as a negative acceptance case (section 7.3), never as an active obli
 |---|---|---|
 | OPS-01 | Time is obtained only from a deterministic authoritative UTC source; all expiry/deadline/due calculations use it. | REQ-F18-03, REQ-F18-20, REQ-F18-22 |
 | OPS-02 | The foundation is fully in-process and side-effect-free: zero network or external I/O; synthetic fixtures are immutable to consumers and invalid fixture sets are rejected before evaluation. | REQ-F18-22 |
-| OPS-03 | Idempotency and concurrency behavior is deterministic: same key/same digest replays return the stored result; same key/different content conflicts; concurrent grant-producing operations conflict or retry against a coherent snapshot. | REQ-F18-13, REQ-F18-21 |
+| OPS-03 | Idempotency and concurrency behavior is deterministic: a same key/same digest replay returns the stored successful result only after the F18-RD-21 replay rechecks pass — current authentication, current authorization, and safe target visibility are re-evaluated on every replay and a failed recheck yields the corresponding safe error rather than the stored result; same key/different content conflicts; a required audit-obligation failure publishes no state change and no completed replay result; concurrent grant-producing operations conflict or retry against a coherent snapshot. | REQ-F18-13, REQ-F18-21 |
 | OPS-04 | Owning controllers retry only permitted retained status, event, or non-authoritative projection materialization after audit/projection failure; effectiveness never depends on successful status/event materialization. | REQ-F18-20 |
 
 ## 6. Edge cases
@@ -1050,7 +1115,10 @@ imported merely because it is visible in a shared Slice 0 document.
 - Decision/change records: DEC-0060 (Accepted 2026-08-30); ACR-2026-002.
 - Controlling handoff package: ADH-2026-070 core, Appendix A (semantic contract),
   Appendix B (registries and evidence); ADH-2026-071 controls conformance IDs
-  and traceability only.
+  and traceability only; ADH-2026-073 (Accepted 2026-09-03) registers the single
+  `exceptionproposal.decided` AuditEvent taxonomy type for the terminal
+  `ExceptionProposal` decision boundary through FEATURE-0013's existing extension
+  mechanism (REQ-F18-19, REQ-F18-20).
 - Sole architecture authority: `docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md`.
 - Baseline: ARCH-2026.08-PHASE2R-CANONICAL.
 
@@ -1074,10 +1142,11 @@ requirement ledger). Reused-authority references, without redefinition:
 | Concern | Exact IDs |
 |---|---|
 | Owned schema IDs | VS0-SCHEMA-020 (PrincipalRef), 021 (Membership), 022 (RoleDefinition), 023 (RoleAssignment), 024 (GovernanceProfile), 062 (AccessGroup), 063 (PrivilegedAccessRequest), 064 (AccessReview), 065 (ApprovalPolicy), 066 (ApprovalRequest), 067 (ExceptionGrant), 068 (FEATURE-0018 supporting values) |
-| Owned writer IDs | VS0-WRITER-008 (RoleAssignment-controller, sole publisher), VS0-WRITER-022 (identity-membership-controller) |
-| Consumed/shared or out-of-scope writer IDs | VS0-WRITER-007 is a consumed shared authorized-governance-publisher registration; VS0-WRITER-023 is FEATURE-0020-owned ProfileAssignment authority and is not FEATURE-0018-owned |
+| Owned writer IDs | VS0-WRITER-008 (RoleAssignment-controller, sole publisher of `RoleAssignment.spec`/`RoleAssignment.status`), VS0-WRITER-022 (identity-membership-controller, sole writer of `Membership.spec`/`Membership.protected`/`Membership.status`) |
+| Consumed/shared writer IDs | VS0-WRITER-007 (authorized-governance-publisher) is consumed only on its manifest-pinned registered FEATURE-0018 paths `GovernanceProfile.spec` and `RoleDefinition.spec`; VS0-WRITER-011 (authorized-decision-or-audit-producer) is consumed unchanged for FEATURE-0013 `DecisionRecord.record`/`AuditEvent.record` publication (no competing writer is introduced) |
+| Out-of-scope writer IDs | VS0-WRITER-023 (delegated-governance-admin, `ProfileAssignment.spec`) is FEATURE-0020-owned and is not FEATURE-0018-owned or consumed |
 | Decision profiles (FEATURE-0013) | `authorization-decision/v1`, `approval-decision/v1`, `exception-decision/v1` (REQ-F18-19) |
-| Error/failure mappings | VS0-F01 → VS0-CF-F01 → `AUTH_REQUIRED`/401/`VS0_AUTH_REQUIRED`; VS0-F02 → VS0-CF-F02 → `RESOURCE_NOT_FOUND`/404/`VS0_AUTHORIZATION_SAFE_DENIAL`. Only FEATURE-0012 top-level codes are used; Slice-0 violation codes appear only in `violations[].code`; no `429`/quota HTTP code. |
+| Error/failure mappings | Exactly two inherited security failure mappings apply one-to-one: VS0-F01 → VS0-CF-F01 → `AUTH_REQUIRED`/401/`VS0_AUTH_REQUIRED`; VS0-F02 → VS0-CF-F02 → `RESOURCE_NOT_FOUND`/404/`VS0_AUTHORIZATION_SAFE_DENIAL`. VS0-F01 and VS0-F02 are never associated with any local `VS0-CF-F18-*` case; local cases carry their own exact registered outcomes. Only FEATURE-0012 top-level codes are used; Slice-0 violation codes (e.g. `REVIEWER_CONFLICT`, `REVIEW_BENEFICIARY_UNRESOLVED`) appear only in `violations[].code`; no `429`/quota HTTP code. |
 | State authorities | Resource lifecycles and effective projections are owned by their REQ/F18-RD (REQ-F18-04, 05, 07, 08, 12, 13, 14, 16, 18); no state-machine authority is substituted by a conformance case. |
 
 ### 8.4 Risk and finding traceability (exact IDs)
@@ -1098,6 +1167,79 @@ F18-SCN-49 with F18-SCN-38 retired into F18-SCN-29 (mirrored one-to-one by the C
 acceptance ledger AC-F18-01..49). F18-SCN-29 and F18-SCN-39..43 are architecture journey
 evidence; F18-SCN-44..49 are security-closure evidence; executable conformance is a
 downstream feature-gate obligation.
+
+### 8.6 Per-requirement architecture traceability matrix (REQ-F18-01..24)
+
+Each active requirement maps below to its controlling F18-RD/DEC authority, its
+owner, and the applicable **registered** schema/writer/state/error/conformance
+identifiers by their exact, fully qualified IDs. Where no registered
+schema/writer/state/error ID applies, the cell states `n/a — <reason>` and cites
+the controlling F18-RD separately; controller names, lifecycle prose, and inferred
+runtime errors are never substituted for a registered ID.
+
+Registered writers relevant to FEATURE-0018 are exactly four. Two are owned:
+VS0-WRITER-008 (RoleAssignment-controller, paths `RoleAssignment.spec`/
+`RoleAssignment.status`) and VS0-WRITER-022 (identity-membership-controller, paths
+`Membership.spec`/`Membership.protected`/`Membership.status`). Two are consumed
+unchanged: VS0-WRITER-007 (authorized-governance-publisher), whose registered
+FEATURE-0018 paths are exactly `GovernanceProfile.spec` and `RoleDefinition.spec`;
+and VS0-WRITER-011 (authorized-decision-or-audit-producer), whose registered paths
+`DecisionRecord.record` and `AuditEvent.record` carry FEATURE-0018's FEATURE-0013
+decision/audit publication. VS0-WRITER-023 (delegated-governance-admin,
+`ProfileAssignment.spec`) is FEATURE-0020-owned and out of scope. No registered
+writer exists for AccessGroup, ApprovalPolicy, ApprovalRequest,
+PrivilegedAccessRequest, AccessReview, or ExceptionGrant, so those write paths are
+`n/a — no registered writer ID` with the controlling F18-RD cited (each resource's
+sole-writer authority is fixed by its F18-RD, not by a Slice-0 writer registration).
+
+Error identifiers are distinguished from conformance IDs and domain outcomes. Each
+Error IDs cell contains either an exact registered Problem/failure identifier when
+one applies, or an explicit `n/a — <reason>` for domain decisions, success, or
+intentionally unspecified inherited safe errors; a conformance ID, HTTP status, or
+domain outcome is never presented as an error identifier. The two inherited security
+failure mappings are one-to-one and are never associated with any local
+`VS0-CF-F18-*` case: VS0-F01 maps only to VS0-CF-F01 (`AUTH_REQUIRED`/401, absent
+authentication only, never invalid/expired assurance); VS0-F02 maps only to
+VS0-CF-F02 (`RESOURCE_NOT_FOUND`/404 safe denial, never combined with
+`AUTHORIZATION_DENIED`). A local case that registers a domain `Deny` is classified
+as a terminal domain `Deny` outcome (not a Problem code); a local case that registers
+an exact FEATURE-0012 top-level code (`AUTHORIZATION_DENIED`, `RESOURCE_NOT_FOUND`,
+`CONFLICT`, `VALIDATION_FAILED`, `INTERNAL_ERROR`) is cited by that exact code; a
+local case that registers a violation code (`REVIEWER_CONFLICT`,
+`REVIEW_BENEFICIARY_UNRESOLVED`) is cited as a `violations[].code` value, not a
+top-level Problem code; and no error is inferred beyond an exact registered
+failure/conformance mapping. Canonical
+owners are cited by reference; contract text from the Slice-0 registry (section 8.3),
+the finalized data model, and the canonical contract catalog is not duplicated here.
+Owner for every FEATURE-0018 requirement is FEATURE-0018, consistent with
+`docs/phase2/PHASE2_FEATURE_SEQUENCE.md` order 8.
+
+| REQ | Authority | Owner | Schema IDs | Writer IDs | State IDs | Error IDs | Conformance IDs |
+|---|---|---|---|---|---|---|---|
+| REQ-F18-01 | F18-RD-01; DEC-0060; ACR-2026-002 | FEATURE-0018 | n/a — no owned schema; scope/exclusion authority only (F18-RD-01) | n/a — no registered writer; defines no mutable path (F18-RD-01) | n/a — no lifecycle (F18-RD-01) | n/a — architecture-drift/structural-validation rejection, no registered top-level code (VS0-CF-F18-50) | VS0-CF-F18-50 |
+| REQ-F18-02 | F18-RD-02; DEC-0026; ADH-2026-012; DEC-0037 | FEATURE-0018 | VS0-SCHEMA-020, VS0-SCHEMA-021, VS0-SCHEMA-022, VS0-SCHEMA-023, VS0-SCHEMA-024, VS0-SCHEMA-062, VS0-SCHEMA-063, VS0-SCHEMA-064, VS0-SCHEMA-065, VS0-SCHEMA-066, VS0-SCHEMA-067, VS0-SCHEMA-068 | VS0-WRITER-008, VS0-WRITER-022 (VS0-WRITER-007 and VS0-WRITER-011 consumed; VS0-WRITER-023 out of scope) | n/a — inventory/profile authority, no single lifecycle (per-contract lifecycles owned by F18-RD-04,05,07,08,12,13,14,16,18) | n/a — no registered failure/conformance error for the inventory rule itself; only FEATURE-0012 top-level codes apply where an operation errors (VS0-CF-F18-06) | VS0-CF-F18-06 |
+| REQ-F18-03 | F18-RD-03 | FEATURE-0018 | VS0-SCHEMA-020, VS0-SCHEMA-068 | n/a — no registered writer; consumes an already-authenticated PrincipalRef (F18-RD-03) | n/a — operation-local value, no lifecycle (F18-RD-03) | `AUTHORIZATION_DENIED` (VS0-CF-F18-06 as `none or AUTHORIZATION_DENIED`, the sole-writer/system-identity enforcement outcome, which is distinct from and does not arise from REQ-F18-03 identity-stability semantics); the identity-stability local cases register no top-level Problem code: VS0-CF-F18-02 registers success (`null`); VS0-CF-F18-01 and VS0-CF-F18-05 register domain `Deny`/`none` by fixture. Absent authentication is the inherited VS0-F01 → VS0-CF-F01 (`AUTH_REQUIRED`/401) case only; invalid/expired/mismatched assurance fails closed under F18-RD-03/F18-RD-21 with no registered assurance-specific top-level code | VS0-CF-F18-01, VS0-CF-F18-02, VS0-CF-F18-05, VS0-CF-F18-06 |
+| REQ-F18-04 | F18-RD-04; DEC-0018; DEC-0019; DEC-0020 | FEATURE-0018 | VS0-SCHEMA-062, VS0-SCHEMA-023 | VS0-WRITER-008 (RoleAssignment); n/a — no registered AccessGroup writer ID (AccessGroup sole-writer authority fixed by F18-RD-04) | n/a — no registered state-machine ID; AccessGroup lifecycle fixed by F18-RD-04 | n/a — no local case registers a top-level Problem code: VS0-CF-F18-01 registers domain `Deny` for the unrelated scope (with `Allow` for the requested scope); VS0-CF-F18-08 registers domain `Deny` for the raw-claim fixture (`none` when the canonical relationship applies). VS0-F02 → VS0-CF-F02 (`RESOURCE_NOT_FOUND`/404) is the separate inherited safe-denial case and is not either local case | VS0-CF-F18-01, VS0-CF-F18-08 |
+| REQ-F18-05 | F18-RD-05 | FEATURE-0018 | VS0-SCHEMA-021 | VS0-WRITER-022 | n/a — no registered state-machine ID; Membership lifecycle and GuestExpired/Stale projections fixed by F18-RD-05 | `VALIDATION_FAILED`/422 (VS0-CF-F18-32, guest TimeBound violation); domain `Deny` (VS0-CF-F18-01 unrelated scope, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-08 raw claim, VS0-CF-F18-36, VS0-CF-F18-46); n/a — no exact top-level or violation identifier is registered: VS0-CF-F18-47 is an intentionally unspecified existing structural-validation or safe-denial error (ADH-2026-071 authorizes no new top-level code, violation code, HTTP status, or precedence rule); n/a — success or intentionally unspecified inherited safe error (VS0-CF-F18-07 `none or existing safe error`). VS0-F02 → VS0-CF-F02 (`RESOURCE_NOT_FOUND`/404) is the separate inherited safe-denial case and is not any local case here | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-07, VS0-CF-F18-08, VS0-CF-F18-32, VS0-CF-F18-36, VS0-CF-F18-46, VS0-CF-F18-47 |
+| REQ-F18-06 | F18-RD-06; ADH-2026-058..066 | FEATURE-0018 | VS0-SCHEMA-068 | n/a — no registered writer; consumes FEATURE-0016 action registrations unchanged (F18-RD-06) | n/a — action composition, no lifecycle (F18-RD-06) | `AUTHORIZATION_DENIED` (VS0-CF-F18-11, qualifier-only retire); n/a — no exact top-level or violation identifier is registered: VS0-CF-F18-12 is an intentionally unspecified existing safe error, recorded granularity limitation (ADH-2026-071 authorizes no new top-level code, violation code, HTTP status, or precedence rule); n/a — success (VS0-CF-F18-10 `null`) | VS0-CF-F18-10, VS0-CF-F18-11, VS0-CF-F18-12 |
+| REQ-F18-07 | F18-RD-07; DEC-0044 | FEATURE-0018 | VS0-SCHEMA-022 | VS0-WRITER-007 (consumed; registered path `RoleDefinition.spec`) | n/a — no registered state-machine ID; RoleDefinition lifecycle fixed by F18-RD-07 | domain `Deny` (VS0-CF-F18-34, during suspension) | VS0-CF-F18-34 |
+| REQ-F18-08 | F18-RD-08; DEC-0018; DEC-0019 | FEATURE-0018 | VS0-SCHEMA-023 | VS0-WRITER-008 | n/a — no registered state-machine ID; RoleAssignment lifecycle and effective projection fixed by F18-RD-08 | `VALIDATION_FAILED`/422 (VS0-CF-F18-32, guest TimeBound violation); `AUTHORIZATION_DENIED` (VS0-CF-F18-44; VS0-CF-F18-09 and VS0-CF-F18-39 as `none or AUTHORIZATION_DENIED`); domain `Deny` (VS0-CF-F18-01 unrelated scope, VS0-CF-F18-03, VS0-CF-F18-04); n/a — success or intentionally unspecified inherited safe error (VS0-CF-F18-05, VS0-CF-F18-07, VS0-CF-F18-21, VS0-CF-F18-31 as `none or existing safe error`/`Deny`). VS0-F02 → VS0-CF-F02 (`RESOURCE_NOT_FOUND`/404) is the separate inherited safe-denial case and is not any local case here | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-05, VS0-CF-F18-07, VS0-CF-F18-09, VS0-CF-F18-21, VS0-CF-F18-31, VS0-CF-F18-32, VS0-CF-F18-39, VS0-CF-F18-44 |
+| REQ-F18-09 | F18-RD-09 | FEATURE-0018 | VS0-SCHEMA-023, VS0-SCHEMA-068 | VS0-WRITER-008, VS0-WRITER-022 | n/a — authorization algebra is operation-local, no persisted lifecycle (F18-RD-09) | domain `Deny` (VS0-CF-F18-01 unrelated scope, VS0-CF-F18-03, VS0-CF-F18-25, VS0-CF-F18-33, VS0-CF-F18-35); `AUTHORIZATION_DENIED` (VS0-CF-F18-09, VS0-CF-F18-44, VS0-CF-F18-46); n/a — success or intentionally unspecified inherited safe error (VS0-CF-F18-05, VS0-CF-F18-08, VS0-CF-F18-29 as `none or Deny/existing safe error`). VS0-F02 → VS0-CF-F02 (`RESOURCE_NOT_FOUND`/404) is the separate inherited safe-denial case and is not any local case here | VS0-CF-F18-01, VS0-CF-F18-03, VS0-CF-F18-05, VS0-CF-F18-08, VS0-CF-F18-09, VS0-CF-F18-25, VS0-CF-F18-29, VS0-CF-F18-33, VS0-CF-F18-35, VS0-CF-F18-44, VS0-CF-F18-46 |
+| REQ-F18-10 | F18-RD-10; DEC-0028; DEC-0036; ADH-2026-067..069 | FEATURE-0018 | VS0-SCHEMA-065, VS0-SCHEMA-068 | n/a — no registered writer; consumes FEATURE-0017 seam unchanged (F18-RD-10) | n/a — operation-local requirement, no lifecycle (F18-RD-10) | domain `Deny` (VS0-CF-F18-25, VS0-CF-F18-27, Indeterminate mapped to Deny); domain `RequiresApproval` (VS0-CF-F18-26, no implicit request) | VS0-CF-F18-25, VS0-CF-F18-26, VS0-CF-F18-27 |
+| REQ-F18-11 | F18-RD-11; DEC-0028; DEC-0036 | FEATURE-0018 | VS0-SCHEMA-063 | n/a — no registered writer; bounded FEATURE-0017 consumption (F18-RD-11) | n/a — evaluation-seam bound, no lifecycle (F18-RD-11) | domain `RequiresApproval` (VS0-CF-F18-26, compatible pinned subject only) | VS0-CF-F18-26 |
+| REQ-F18-12 | F18-RD-12; DEC-0018; DEC-0020 | FEATURE-0018 | VS0-SCHEMA-065, VS0-SCHEMA-068 | n/a — no registered ApprovalPolicy writer ID (ApprovalPolicy sole-writer authority fixed by F18-RD-12; not a VS0-WRITER-007 registered path) | n/a — no registered state-machine ID; ApprovalPolicy lifecycle fixed by F18-RD-12 | `AUTHORIZATION_DENIED` (VS0-CF-F18-14, VS0-CF-F18-15; VS0-CF-F18-41 as `none or AUTHORIZATION_DENIED`); n/a — no exact top-level or violation identifier is registered: VS0-CF-F18-47 and VS0-CF-F18-49 are intentionally unspecified existing structural-validation or safe-denial errors (ADH-2026-071 authorizes no new top-level code, violation code, HTTP status, or precedence rule); n/a — success (VS0-CF-F18-13 `null`) | VS0-CF-F18-13, VS0-CF-F18-14, VS0-CF-F18-15, VS0-CF-F18-41, VS0-CF-F18-47, VS0-CF-F18-49 |
+| REQ-F18-13 | F18-RD-13 | FEATURE-0018 | VS0-SCHEMA-066 | VS0-WRITER-008 (sole publisher of any downstream RoleAssignment effect); n/a — no registered ApprovalRequest writer ID (ApprovalRequest sole-writer authority fixed by F18-RD-13) | n/a — no registered state-machine ID; ApprovalRequest lifecycle fixed by F18-RD-13 | `CONFLICT`/409 (VS0-CF-F18-16, losing terminal CAS; none for the winner); `AUTHORIZATION_DENIED` (VS0-CF-F18-15; VS0-CF-F18-41 as `none or AUTHORIZATION_DENIED`); n/a — success (VS0-CF-F18-13 `null`) | VS0-CF-F18-13, VS0-CF-F18-15, VS0-CF-F18-16, VS0-CF-F18-41 |
+| REQ-F18-14 | F18-RD-14 | FEATURE-0018 | VS0-SCHEMA-063, VS0-SCHEMA-023 | VS0-WRITER-008 (sole publisher of the linked TimeBound RoleAssignment); n/a — no registered PrivilegedAccessRequest writer ID (sole-writer authority fixed by F18-RD-14) | n/a — no registered state-machine ID; PrivilegedAccessRequest lifecycle fixed by F18-RD-14 | `CONFLICT`/409 (VS0-CF-F18-17, safe replay or conflict); n/a — no exact top-level or violation identifier is registered: VS0-CF-F18-47 and VS0-CF-F18-49 are intentionally unspecified existing structural-validation or safe-denial errors (ADH-2026-071 authorizes no new top-level code, violation code, HTTP status, or precedence rule); n/a — success (VS0-CF-F18-13, VS0-CF-F18-40 `null`) | VS0-CF-F18-13, VS0-CF-F18-17, VS0-CF-F18-40, VS0-CF-F18-47, VS0-CF-F18-49 |
+| REQ-F18-15 | F18-RD-15 | FEATURE-0018 | VS0-SCHEMA-063, VS0-SCHEMA-064 | VS0-WRITER-008 (sole publisher of the linked TimeBound RoleAssignment); n/a — no registered PrivilegedAccessRequest/AccessReview writer ID (sole-writer authority fixed by F18-RD-15/16) | n/a — no registered state-machine ID; break-glass path and readiness fixed by F18-RD-15 | n/a — success (VS0-CF-F18-18 `null`, successful break-glass path); an activation-blocking required-audit failure is the separate `INTERNAL_ERROR`/500 case registered by VS0-CF-F18-28 under F18-RD-20 | VS0-CF-F18-18 |
+| REQ-F18-16 | F18-RD-16 | FEATURE-0018 | VS0-SCHEMA-064, VS0-SCHEMA-068 | VS0-WRITER-008 (sole publisher of RoleAssignment revocation/replacement), VS0-WRITER-022 (Membership disposition); n/a — no registered AccessReview writer ID (sole-writer authority fixed by F18-RD-16) | n/a — no registered state-machine ID; AccessReview lifecycle fixed by F18-RD-16 | `violations[].code` `REVIEWER_CONFLICT` or `REVIEW_BENEFICIARY_UNRESOLVED` (VS0-CF-F18-45, not top-level Problem codes); n/a — no exact top-level or violation identifier is registered: VS0-CF-F18-48 is an intentionally unspecified existing F18-RD-16 safe error, and VS0-CF-F18-47 and VS0-CF-F18-49 are intentionally unspecified existing structural-validation or safe-denial errors (ADH-2026-071 authorizes no new top-level code, violation code, HTTP status, or precedence rule); n/a — success or intentionally unspecified inherited safe error (VS0-CF-F18-18, VS0-CF-F18-19, VS0-CF-F18-20, VS0-CF-F18-31, VS0-CF-F18-37, VS0-CF-F18-42) | VS0-CF-F18-18, VS0-CF-F18-19, VS0-CF-F18-20, VS0-CF-F18-31, VS0-CF-F18-37, VS0-CF-F18-42, VS0-CF-F18-45, VS0-CF-F18-47, VS0-CF-F18-48, VS0-CF-F18-49 |
+| REQ-F18-17 | F18-RD-17 | FEATURE-0018 | VS0-SCHEMA-067, VS0-SCHEMA-068 | n/a — no registered ExceptionGrant writer ID (ExceptionGrant is an ImmutableRecord whose sole-writer authority is fixed by F18-RD-17; not a VS0-WRITER-007 registered path) | n/a — no registered state-machine ID; ExceptionGrant is append-only with terminal domain `Grant\|Deny` per F18-RD-17 | terminal domain `Deny` (VS0-CF-F18-22, non-exceptionable control, using the registered exception-decision outcome; VS0-CF-F18-21 and VS0-CF-F18-43 as `none or (approved) terminal Deny`); `CONFLICT`/409 (VS0-CF-F18-24, overlap); n/a — success (VS0-CF-F18-23 `null`) | VS0-CF-F18-21, VS0-CF-F18-22, VS0-CF-F18-23, VS0-CF-F18-24, VS0-CF-F18-43 |
+| REQ-F18-18 | F18-RD-18; DEC-0050; ADH-2026-033 | FEATURE-0018 | VS0-SCHEMA-024 | VS0-WRITER-007 (consumed; registered path `GovernanceProfile.spec`); VS0-WRITER-023 out of scope (FEATURE-0020 selection/resolution) | n/a — no registered state-machine ID; GovernanceProfile lifecycle fixed by F18-RD-18 | n/a — success or intentionally unspecified existing F18-RD-18 validation failure (VS0-CF-F18-51 `none or existing F18-RD-18 validation failure`); no new top-level Problem code is introduced | VS0-CF-F18-51 |
+| REQ-F18-19 | F18-RD-19; DEC-0043; ADH-2026-017; DEC-0044; ADH-2026-073 | FEATURE-0018 | n/a — no owned schema; FEATURE-0013 envelopes reused by reference and profiles `authorization-decision/v1`, `approval-decision/v1`, `exception-decision/v1` registered through the FEATURE-0013 extension process (F18-RD-19) | VS0-WRITER-011 (consumed; FEATURE-0013 DecisionRecord/AuditEvent producer reused unchanged; no competing writer) | n/a — no registered state-machine ID; DecisionRecord persisted `FINAL` is inherited FEATURE-0013 behavior; AccessReview LRO fixed by F18-RD-16 | `INTERNAL_ERROR`/500 (VS0-CF-F18-52, required-append failure; n/a — success otherwise) | VS0-CF-F18-52 |
+| REQ-F18-20 | F18-RD-20; DEC-0043; ADH-2026-017; ADH-2026-073 | FEATURE-0018 | n/a — no owned schema; FEATURE-0013 AuditEvent taxonomy reused by reference (F18-RD-20) | VS0-WRITER-011 (consumed; FEATURE-0013 AuditEvent producer reused unchanged); audit-obligation acceptance precedes VS0-WRITER-008/VS0-WRITER-022/VS0-WRITER-007 publication | n/a — audit-obligation boundary, no owned lifecycle (F18-RD-20) | `INTERNAL_ERROR`/500 (VS0-CF-F18-28, VS0-CF-F18-52, required audit failure publishes nothing); `AUTHORIZATION_DENIED` (VS0-CF-F18-06 as `none or AUTHORIZATION_DENIED`) | VS0-CF-F18-06, VS0-CF-F18-28, VS0-CF-F18-52 |
+| REQ-F18-21 | F18-RD-21; DEC-0026; ADH-2026-012 | FEATURE-0018 | n/a — validation precedence over all owned schemas; no distinct schema (F18-RD-21) | n/a — precedence/publication ordering, not a registered writer (F18-RD-21) | n/a — no owned lifecycle (F18-RD-21) | `RESOURCE_NOT_FOUND`/404 safe denial (VS0-CF-F18-30); `CONFLICT`/409 (VS0-CF-F18-16 losing terminal CAS; VS0-CF-F18-17 safe replay or conflict); domain `Deny` (VS0-CF-F18-27, Indeterminate mapped to Deny) | VS0-CF-F18-16, VS0-CF-F18-17, VS0-CF-F18-27, VS0-CF-F18-30 |
+| REQ-F18-22 | F18-RD-22 | FEATURE-0018 | n/a — deterministic fixtures over owned schemas; no distinct schema (F18-RD-22) | n/a — conformance harness, not a runtime writer (F18-RD-22) | n/a — no owned lifecycle (F18-RD-22) | n/a — fixture-validation failure is a conformance-gate outcome, not a registered runtime Problem code (VS0-CF-F18-50, 53) | VS0-CF-F18-01, VS0-CF-F18-02, VS0-CF-F18-03, VS0-CF-F18-04, VS0-CF-F18-05, VS0-CF-F18-06, VS0-CF-F18-07, VS0-CF-F18-08, VS0-CF-F18-09, VS0-CF-F18-10, VS0-CF-F18-11, VS0-CF-F18-12, VS0-CF-F18-13, VS0-CF-F18-14, VS0-CF-F18-15, VS0-CF-F18-16, VS0-CF-F18-17, VS0-CF-F18-18, VS0-CF-F18-19, VS0-CF-F18-20, VS0-CF-F18-21, VS0-CF-F18-22, VS0-CF-F18-23, VS0-CF-F18-24, VS0-CF-F18-25, VS0-CF-F18-26, VS0-CF-F18-27, VS0-CF-F18-28, VS0-CF-F18-29, VS0-CF-F18-30, VS0-CF-F18-31, VS0-CF-F18-32, VS0-CF-F18-33, VS0-CF-F18-34, VS0-CF-F18-35, VS0-CF-F18-36, VS0-CF-F18-37, VS0-CF-F18-39, VS0-CF-F18-40, VS0-CF-F18-41, VS0-CF-F18-42, VS0-CF-F18-43, VS0-CF-F18-44, VS0-CF-F18-45, VS0-CF-F18-46, VS0-CF-F18-47, VS0-CF-F18-48, VS0-CF-F18-49, VS0-CF-F18-50, VS0-CF-F18-51, VS0-CF-F18-52, VS0-CF-F18-53 |
+| REQ-F18-23 | F18-RD-23 | FEATURE-0018 | n/a — standards-gate obligation; no owned schema (F18-RD-23) | n/a — architecture-gate obligation, not a registered writer (F18-RD-23) | n/a — no owned lifecycle (F18-RD-23) | n/a — conformance-gate failure, not a registered runtime Problem code (VS0-CF-F18-54) | VS0-CF-F18-54 |
+| REQ-F18-24 | F18-RD-24; DEC-0035; DEC-0048 | FEATURE-0018 | n/a — projection over owned schemas; no distinct schema (F18-RD-24) | n/a — progressive-disclosure projection, not a registered writer (F18-RD-24) | n/a — no owned lifecycle; system-owned fields hidden (F18-RD-24) | n/a — no new error; reuses existing safe-denial/redaction behavior (VS0-CF-F18-29, VS0-CF-F18-39, VS0-CF-F18-40, VS0-CF-F18-41, VS0-CF-F18-42, VS0-CF-F18-43 register none or existing safe error) | VS0-CF-F18-29, VS0-CF-F18-39, VS0-CF-F18-40, VS0-CF-F18-41, VS0-CF-F18-42, VS0-CF-F18-43 |
 
 ## Exact conformance semantics ledger
 
@@ -1307,13 +1449,194 @@ the controlling authority and, if unresolvable, halt with a stop condition (sect
 
 ### 10.3 Unresolved decisions
 
-None. All 24 F18-RD decision groups are fully specified in the approved package and
-were transcribable without inference. No `ARCHITECTURE_DECISION_REQUIRED`,
+None unresolved. All 24 F18-RD decision groups are fully specified in the approved
+package and were transcribable without inference. A prior
+`REQUIREMENT_CLARIFICATION_REQUIRED` review condition — raised because the approved
+F18-RD-08, F18-RD-16, and F18-RD-20 security/audit safeguards were omitted from the
+requirements transcription — was resolved by faithful transcription (see section
+10.4). A subsequent `REQUIREMENT_CLARIFICATION_REQUIRED` review condition — raised
+because OPS-03 weakened the mandatory F18-RD-21 replay preconditions and because the
+per-REQ schema/writer/state/error mapping was absent (section 8.3 listed only
+aggregate IDs) — was resolved by qualifying OPS-03 to preserve all F18-RD-21 replay
+preconditions and by adding the section 8.6 per-requirement traceability matrix. A
+following `REQUIREMENT_CLARIFICATION_REQUIRED` review condition — raised because the
+first section 8.6 matrix abbreviated or ranged conformance IDs, mixed controller
+names and lifecycle prose into the writer/state columns, and introduced unsupported
+or contradictory error mappings (a VS0-F01 assurance generalization, an ambiguous
+combined VS0-F02 mapping, a REQ-F18-17 `VALIDATION_FAILED` mapping, and a
+REQ-F18-17 VS0-WRITER-007 association) — was resolved by an earlier rebuild of
+section 8.6 with fully qualified registered identifiers and justified
+`n/a — <reason>` cells. A subsequent `REQUIREMENT_CLARIFICATION_REQUIRED` review
+condition — raised because exact traceability remained inconsistent: (1) section 8.6
+still associated VS0-F02 with local cases (VS0-CF-F18-01, VS0-CF-F18-08) in
+REQ-F18-04/05/08/09 although the controlling mapping is one-to-one VS0-F02 →
+VS0-CF-F02 and those local cases produce domain `Deny`, not `RESOURCE_NOT_FOUND`/404;
+(2) the Error IDs column still mixed conformance IDs, domain outcomes, HTTP statuses,
+and unspecified safe outcomes as though they were error identifiers; and (3) the
+writer inventory was internally inconsistent because the section 8.6 preamble said
+only three relevant registered writers exist and section 8.3 omitted VS0-WRITER-011
+while REQ-F18-19/20 and sections 10.3/10.4 already treated VS0-WRITER-011 as a
+consumed registered writer — was resolved by (a) removing every
+VS0-F01/VS0-F02 association from local `VS0-CF-F18-*` rows and preserving VS0-F01 →
+VS0-CF-F01 and VS0-F02 → VS0-CF-F02 as the only one-to-one inherited mappings;
+(b) rebuilding each Error IDs cell to contain an exact registered Problem/failure
+identifier, a terminal domain `Deny`/`RequiresApproval` outcome, a `violations[].code`
+value, or an explicit `n/a — <reason>` for domain decisions, success, or intentionally
+unspecified inherited safe errors; and (c) reconciling one registry-backed writer
+inventory across sections 8.3, 8.6, 10.3, and 10.4 that classifies VS0-WRITER-008 and
+VS0-WRITER-022 as owned, VS0-WRITER-007 and VS0-WRITER-011 as consumed (confirmed by
+the manifest-pinned VS-000 contract registry), and VS0-WRITER-023 as out of scope. A prior
+`REQUIREMENT_CLARIFICATION_REQUIRED` review condition — raised because several
+registry placeholders had been converted into unapproved violation-channel choices and
+because REQ-F18-03's Error IDs cell was internally contradictory: (1) the Error IDs
+cells for REQ-F18-05, REQ-F18-06, REQ-F18-12, REQ-F18-14, and REQ-F18-16 classified the
+intentionally unspecified existing safe errors VS0-CF-F18-12, VS0-CF-F18-47,
+VS0-CF-F18-48, and VS0-CF-F18-49 as `violations[].code` values although ADH-2026-071
+states those placeholders authorize no choice of top-level code, violation code, HTTP
+status, or precedence; and (2) REQ-F18-03's Error IDs cell asserted that no mapped local
+case registers a top-level Problem code while the same cell cited VS0-CF-F18-06 with
+`AUTHORIZATION_DENIED` — was resolved by (a) replacing each inferred
+`violations[].code` classification of VS0-CF-F18-12, VS0-CF-F18-47, VS0-CF-F18-48, and
+VS0-CF-F18-49 with `n/a — no exact top-level or violation identifier is registered`,
+retaining the exact ADH-2026-071 wording as an intentionally unspecified existing safe
+error; (b) retaining `REVIEWER_CONFLICT` and `REVIEW_BENEFICIARY_UNRESOLVED`
+(VS0-CF-F18-45) as `violations[].code` values because they are the only explicitly
+registered violation codes; and (c) rewriting REQ-F18-03's Error IDs cell to state the
+mapped VS0-CF-F18-06 `AUTHORIZATION_DENIED` outcome as the sole-writer/system-identity
+enforcement outcome distinct from REQ-F18-03 identity-stability semantics, so the cell
+no longer claims that no mapped case registers a top-level Problem code. The current
+`REQUIREMENT_CLARIFICATION_REQUIRED` review condition — raised because the ADH-2026-073
+transcription was incomplete and its traceability inconsistent: REQ-F18-19 omitted the
+required `exceptionproposal.decided` linkage to the exact immutable proposal, terminal
+reason, and containing operation/correlation evidence, and sections 8.1 and 8.6 omitted
+ADH-2026-073 from the controlling authority for REQ-F18-19 and REQ-F18-20 — is resolved
+in this revision by faithfully transcribing the complete ADH-2026-073 event linkage into
+REQ-F18-19 through FEATURE-0013's existing envelope and linkage semantics (preserving
+exactly-once emission, the Grant-only separate `exceptiongrant.issued` event, no grant or
+issuance event for a terminal `Deny`, and submission-only meaning for
+`exceptiongrant.proposed`) and by adding ADH-2026-073 to section 8.1 and to the
+REQ-F18-19 and REQ-F18-20 authority cells in section 8.6. All
+corrections are transcription/traceability corrections and required no new decision,
+error choice, or inferred value; the only registered addition is the single approved
+`exceptionproposal.decided` AuditEvent taxonomy type registered through FEATURE-0013's
+existing extension mechanism. No `ARCHITECTURE_DECISION_REQUIRED`, unresolved
 `REQUIREMENT_CLARIFICATION_REQUIRED`, `BOUNDARY_CHANGE_REQUIRED`,
 `DEPENDENCY_APPROVAL_REQUIRED`, or `SECURITY_REVIEW_REQUIRED` condition was
 triggered during this requirements stage.
 
-### 10.4 Notes
+### 10.4 Semantic-delta report (regenerated)
+
+This revision makes the single approved ADH-2026-073 taxonomy correction in
+REQ-F18-19 and its controlling-authority traceability in sections 8.1 and 8.6, plus
+the corresponding delta record in section 10.4. It faithfully transcribes
+ADH-2026-073 by registering exactly one additional FEATURE-0018 AuditEvent taxonomy
+type, `exceptionproposal.decided`, through FEATURE-0013's existing extension
+mechanism and by completing the required `exceptionproposal.decided` linkage to the
+exact immutable proposal, its terminal reason, the mandatory `exception-decision/v1`
+DecisionRecord, and the containing operation/correlation evidence using FEATURE-0013's
+existing envelope and linkage semantics. It preserves OPS-03, the restored
+F18-RD-08/16/20 safeguards, and every prior traceability-presentation correction from
+the prior revisions unchanged, and preserves every REQ, AC, F18-RD semantic,
+conformance registration, local mapping, exclusion, owner, and stage boundary. The
+manifest-pinned target is unchanged and the ADH-2026-070 package hashes still match;
+every delta is a faithful transcription/traceability correction only, introducing no
+new resource, route, action, writer, state, error, decision profile, dependency,
+persistence, external effect, design, or implementation choice beyond the one approved
+`exceptionproposal.decided` taxonomy registration, and altering no REQ, AC, F18-RD
+semantic, conformance registration, mapping, exclusion, owner, or stage boundary.
+
+Current-revision delta (review-directed, ADH-2026-073):
+
+| Location | Prior state | Corrected state | Controlling authority |
+|---|---|---|---|
+| REQ-F18-19 (F18-RD-19) `exceptionproposal.decided` linkage | The `exceptionproposal.decided` AuditEvent was described as linked only to its mandatory `exception-decision/v1` DecisionRecord | The event is transcribed with the complete ADH-2026-073 linkage — exact immutable proposal, terminal reason, mandatory `exception-decision/v1` DecisionRecord, and containing operation/correlation evidence — through FEATURE-0013's existing envelope and linkage semantics, preserving exactly-once emission, the Grant-only separate `exceptiongrant.issued` event, no grant or issuance event for a `Deny`, and submission-only meaning for `exceptiongrant.proposed`; no additional event, resource, writer, or error is added | ADH-2026-073 (Accepted 2026-09-03); F18-RD-17, F18-RD-19, F18-RD-20; FEATURE-0013 extension mechanism |
+| Sections 8.1 and 8.6 (REQ-F18-19, REQ-F18-20) controlling authority | ADH-2026-073 was absent from the controlling handoff package in section 8.1 and from the REQ-F18-19/REQ-F18-20 authority cells in section 8.6 | ADH-2026-073 is added to the section 8.1 controlling handoff package and to the REQ-F18-19 and REQ-F18-20 authority cells in section 8.6 as the controlling authority for the `exceptionproposal.decided` registration | ADH-2026-073; ADH-2026-071 (traceability); VS-000 contract registry |
+
+Prior-revision deltas (retained record): The immediately preceding revision made the
+following review-directed traceability-presentation corrections; their text is
+unchanged in this revision.
+
+| Location | Prior state | Corrected state | Controlling authority |
+|---|---|---|---|
+| Section 8.6 rows REQ-F18-05, 06, 12, 14, 16 (placeholder violation-channel misclassification) | Each row classified the intentionally unspecified existing safe errors VS0-CF-F18-12 (REQ-F18-06), VS0-CF-F18-47 (REQ-F18-05/12/14/16), VS0-CF-F18-48 (REQ-F18-16), and VS0-CF-F18-49 (REQ-F18-12/14/16) as `violations[].code` values | Each of VS0-CF-F18-12, VS0-CF-F18-47, VS0-CF-F18-48, and VS0-CF-F18-49 is stated as `n/a — no exact top-level or violation identifier is registered`, retaining the exact ADH-2026-071 wording (existing safe error / existing structural-validation or safe-denial error / existing F18-RD-16 safe error) as an intentionally unspecified existing safe error; only the explicitly registered `REVIEWER_CONFLICT` and `REVIEW_BENEFICIARY_UNRESOLVED` (VS0-CF-F18-45) remain `violations[].code` values | ADH-2026-071 (placeholders authorize no top-level code, violation code, HTTP status, or precedence); VS-000 contract registry; .kiro/steering/slice0-contract.md §8–9 |
+| Section 8.6 row REQ-F18-03 (Error IDs internal contradiction) | The Error IDs cell asserted that no mapped local case registers a top-level Problem code while the same cell cited VS0-CF-F18-06 with `AUTHORIZATION_DENIED` | The mapped VS0-CF-F18-06 `AUTHORIZATION_DENIED` outcome is stated as the sole-writer/system-identity enforcement outcome, distinct from and not arising from REQ-F18-03 identity-stability semantics; the identity-stability local cases (VS0-CF-F18-01/02/05) are separately stated as registering no top-level Problem code, so the cell is no longer internally contradictory | ADH-2026-071 (traceability); VS-000 contract registry; F18-RD-03; .kiro/steering/slice0-contract.md §8–9 |
+
+Prior-revision deltas (retained record): The revisions preceding those made the
+following three review-directed traceability-presentation corrections; their text is
+unchanged in this revision.
+
+| Location | Prior state | Corrected state | Controlling authority |
+|---|---|---|---|
+| Section 8.6 rows REQ-F18-04, 05, 08, 09 (VS0-F02 misassociation) | Each row cited `VS0-F02 → RESOURCE_NOT_FOUND/404 safe denial` against local cases VS0-CF-F18-01 (and VS0-CF-F18-08), implying VS0-F02 maps to those local cases | VS0-F02 is stated only as the separate inherited one-to-one mapping VS0-F02 → VS0-CF-F02 and is no longer associated with any local case; the cited local cases are classified by their exact registered outcome (VS0-CF-F18-01 and VS0-CF-F18-08 as domain `Deny`), and VS0-F01 likewise stays limited to VS0-CF-F01 | ADH-2026-071 (traceability); VS-000 contract registry (`VS0-F01→VS0-CF-F01`, `VS0-F02→VS0-CF-F02`); .kiro/steering/slice0-contract.md §9 |
+| Section 8.6 Error IDs column (identifier vs outcome) | The column mixed conformance IDs, domain outcomes, HTTP statuses, and unspecified safe outcomes as though they were error identifiers | Each Error IDs cell contains an exact registered Problem/failure identifier (`AUTHORIZATION_DENIED`, `RESOURCE_NOT_FOUND`, `CONFLICT`, `VALIDATION_FAILED`, `INTERNAL_ERROR`), a terminal domain `Deny`/`RequiresApproval` outcome, a registered `violations[].code` value (`REVIEWER_CONFLICT`, `REVIEW_BENEFICIARY_UNRESOLVED`), or an explicit `n/a — <reason>` for domain decisions, success, or intentionally unspecified inherited safe errors; REQ-F18-17 uses terminal `Deny` plus `CONFLICT`/409 overlap, not `VALIDATION_FAILED`; no error is inferred | ADH-2026-071 (traceability); VS-000 contract registry; F18-RD-17; .kiro/steering/slice0-contract.md §8–9 |
+| Sections 8.3 and 8.6 preamble (VS0-WRITER-011 inventory) | Section 8.3 omitted VS0-WRITER-011 and the section 8.6 preamble asserted only three relevant registered writers exist, contradicting REQ-F18-19/20 and sections 10.3/10.4 treating VS0-WRITER-011 as consumed | One registry-backed writer inventory is reconciled across sections 8.3, 8.6, 10.3, and 10.4: VS0-WRITER-008 and VS0-WRITER-022 owned; VS0-WRITER-007 (`GovernanceProfile.spec`/`RoleDefinition.spec`) and VS0-WRITER-011 (`DecisionRecord.record`/`AuditEvent.record`) consumed; VS0-WRITER-023 out of scope; the preamble now names exactly four relevant registered writers | VS-000 contract registry (manifest-pinned VS0-WRITER-007/008/011/022/023); ADH-2026-071 |
+
+Prior-revision deltas (retained record): OPS-03 was qualified to preserve all
+F18-RD-21 replay preconditions, and the section 8.6 per-requirement matrix was first
+introduced; their controlling authority is REQ-F18-21 / F18-RD-21 and ADH-2026-071.
+Additionally, the following three approved safeguards were restored from the
+ADH-2026-070 package after having been omitted from the initial requirements
+transcription; their text is unchanged in this revision.
+
+| Location | Prior state | Restored approved safeguard | Controlling authority |
+|---|---|---|---|
+| REQ-F18-08 (F18-RD-08) | Responsible-party accountability stated without resolution/equality/fail-closed checks | System-selected `responsiblePartyRef` must resolve to a current Human at assignment creation, at replacement, and at every AccessReview retention; must equal the responsible party pinned on the exact authorizing Workload/System Membership where Membership applies; missing, mismatched, or non-Human responsibility evidence fails closed with no RoleAssignment intent published | REQ-F18-08 / F18-RD-08 |
+| REQ-F18-16 (F18-RD-16) | Beneficiary expansion stated for access-preserving/replacing RoleAssignment dispositions only | Equivalent beneficiary-Human expansion restored for Membership-only `Retain`; retaining a Workload/System Membership or Workload/System-held RoleAssignment requires a current Human `responsiblePartyRef`; failed responsibility or beneficiary validation must not certify and must not silently revoke the item | REQ-F18-16 / F18-RD-16 |
+| REQ-F18-20 (F18-RD-20) | Audit-obligation acceptance stated for authorization-changing publications; authorization-evaluation audit-failure consequence incomplete | Protected audit-obligation acceptance required before every accepted mutation represented by the taxonomy even when authorization is not yet changed (Draft create/update, proposal submission, request submission, synchronization, campaign creation); authorization-evaluation audit failure returns a safe internal error, produces no `AuthorizationResult`, and confers no downstream authority | REQ-F18-20 / F18-RD-20 |
+
+No other requirement text changed. The prior `REQUIREMENT_CLARIFICATION_REQUIRED`
+condition raised against the omission of F18-RD-08, F18-RD-16, and F18-RD-20
+security/audit semantics remains resolved by faithful transcription. The prior
+`REQUIREMENT_CLARIFICATION_REQUIRED` condition raised against the weakened OPS-03
+replay preconditions and the absent per-REQ mapping remains resolved by the retained
+OPS-03 qualification and the section 8.6 matrix. The earlier
+`REQUIREMENT_CLARIFICATION_REQUIRED` condition raised against the first section 8.6
+matrix's abbreviated conformance IDs and unsupported error/writer mappings remains
+resolved by the fully qualified rebuild. The prior
+`REQUIREMENT_CLARIFICATION_REQUIRED` condition — raised because exact traceability
+remained inconsistent (a VS0-F02 misassociation with local cases in
+REQ-F18-04/05/08/09, an Error IDs column that mixed conformance IDs, domain outcomes,
+HTTP statuses, and unspecified safe outcomes as error identifiers, and a
+VS0-WRITER-011 inventory inconsistency between the section 8.6 preamble, section 8.3,
+and REQ-F18-19/20 with sections 10.3/10.4) — remains resolved by the sections 8.3, 8.6,
+10.3, and 10.4 corrections recorded above: VS0-F01/VS0-F02 preserve their one-to-one
+VS0-CF-F01/VS0-CF-F02 mappings and are absent from local rows; every Error IDs cell
+now holds an exact registered identifier or a justified `n/a` distinguishing domain,
+violation, success, and inherited-safe outcomes; and one registry-backed writer
+inventory classifies VS0-WRITER-008/022 owned, VS0-WRITER-007/011 consumed, and
+VS0-WRITER-023 out of scope. A prior `REQUIREMENT_CLARIFICATION_REQUIRED`
+condition — raised because several registry placeholders had been converted into
+unapproved violation-channel choices (VS0-CF-F18-12, VS0-CF-F18-47, VS0-CF-F18-48,
+and VS0-CF-F18-49 classified as `violations[].code` in the section 8.6 Error IDs
+cells for REQ-F18-05, 06, 12, 14, and 16) and because REQ-F18-03's Error IDs cell was
+internally contradictory (claiming no mapped local case registers a top-level Problem
+code while citing VS0-CF-F18-06 with `AUTHORIZATION_DENIED`) — is resolved by the
+sections 8.6, 10.3, and 10.4 corrections above: each of VS0-CF-F18-12, VS0-CF-F18-47,
+VS0-CF-F18-48, and VS0-CF-F18-49 is now `n/a — no exact top-level or violation
+identifier is registered`, retaining the exact ADH-2026-071 wording as an
+intentionally unspecified existing safe error; only the explicitly registered
+`REVIEWER_CONFLICT` and `REVIEW_BENEFICIARY_UNRESOLVED` (VS0-CF-F18-45) remain
+`violations[].code` values; and REQ-F18-03's Error IDs cell now states the mapped
+VS0-CF-F18-06 `AUTHORIZATION_DENIED` outcome as the sole-writer/system-identity
+enforcement outcome distinct from REQ-F18-03 identity-stability semantics. The current
+`REQUIREMENT_CLARIFICATION_REQUIRED` condition — raised because the ADH-2026-073
+transcription was incomplete (REQ-F18-19 omitted the required `exceptionproposal.decided`
+linkage to the exact immutable proposal, terminal reason, and containing
+operation/correlation evidence) and its traceability was inconsistent (sections 8.1 and
+8.6 omitted ADH-2026-073 from the controlling authority for REQ-F18-19 and REQ-F18-20) —
+is resolved by the REQ-F18-19, section 8.1, section 8.6, and section 10.4 corrections
+recorded above: REQ-F18-19 now transcribes the complete ADH-2026-073 event linkage
+through FEATURE-0013's existing envelope and linkage semantics (preserving exactly-once
+emission, the Grant-only separate `exceptiongrant.issued` event, no grant or issuance
+event for a terminal `Deny`, and submission-only meaning for `exceptiongrant.proposed`),
+and ADH-2026-073 is added as controlling authority in section 8.1 and in the REQ-F18-19
+and REQ-F18-20 authority cells of section 8.6. The only registered addition is the
+single approved `exceptionproposal.decided` AuditEvent taxonomy type registered through
+FEATURE-0013's existing extension mechanism. No new resource, route, action, writer,
+state, error, decision profile, dependency, design, or error choice was introduced.
+Requirements are resubmitted for review.
+
+### 10.5 Notes
 
 - `VS0-CF-X03` remains FEATURE-0015-owned inherited safe-denial evidence. It is
   intentionally absent from the FEATURE-0018 exact local ledger and never counts
