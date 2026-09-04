@@ -8,7 +8,7 @@
   "control_approved_sha256": "9d2754fb37295c05e7fb2d93bef4db9dc8dfd96fa5ccf6a1e688ffc2e3f0b793",
   "created_at": "2026-08-30T09:03:51.175231+00:00",
   "current_stage": "cursor",
-  "current_task": "1",
+  "current_task": "2",
   "design_approval_source": "openai_machine_review",
   "design_approval_token": "APPROVED_FOR_TASKS",
   "design_approved_at": "2026-09-04T03:42:40Z",
@@ -29,11 +29,11 @@
   "requirements_approved_sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
   "slug": "governance-iam-approval-exception-foundation",
   "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation",
-  "status": "cursor_task_1_committed",
+  "status": "tasks_approved",
   "tasks_approval_source": "openai_machine_review",
   "tasks_approval_token": "APPROVED_FOR_CURSOR",
-  "tasks_approved_at": "2026-09-04T13:14:12Z",
-  "tasks_approved_sha256": "587f735514569922f691c2e8f72c19885625dc6cbceb6d89360c2aae4a3f1346",
+  "tasks_approved_at": "2026-09-04T13:59:53Z",
+  "tasks_approved_sha256": "4ad881f56e35a2233b6075ed08fe492225e51605d7af91e8e06d51a4bc5a1a6c",
   "title": "Governance, IAM, Approval and Exception Foundation",
-  "updated_at": "2026-09-04T13:43:59.239418+00:00"
+  "updated_at": "2026-09-04T13:59:53.288641+00:00"
 }

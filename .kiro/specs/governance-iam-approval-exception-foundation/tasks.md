@@ -226,7 +226,7 @@ Addresses: SEC-06
 
 **Description:**
 
-Implement the neutral state aggregate in `internal/govaccess/state/` with sealed transaction interfaces (CallerMutationTransaction, ControllerMutationTransaction, EvidenceTransaction), MutationFinalizationPermit, PermitBinding, and AppliedChangeReceipt. State owns root/shadows, locks, dependency-version sets, currentness claims, and the permit-issuance registry. Implement evidence construction in `internal/govaccess/evidence/`: AuthorizationCandidateDescriptor, FinalizedAuthorizationCandidate, CurrentAllowProof, CompletedAuthorizationEvaluation, DomainDecisionMaterial, MutationDescriptor, DomainConclusionDescriptor, carrier plans, and PreparedEvidenceChange. Evidence imports no state/uow/authzeval package. Evidence is also the sole FEATURE-0018 owner of the strict local `DecisionProfileBundle` bytes (`evidence/profiles.go`) containing exactly the three existing FEATURE-0013 carrier profiles `authorization-decision/v1`, `approval-decision/v1`, and `exception-decision/v1` with F18-RD-19 semantics; it constructs and validates those profile bytes but never registers them (root composition performs the sole `decision/bundle.Load` registration) and never creates a second registry, global mutable registry, network lookup, fallback version, or competing envelope.
+Implement the neutral state aggregate in `internal/govaccess/state/` with sealed transaction interfaces (CallerMutationTransaction, ControllerMutationTransaction, EvidenceTransaction), MutationFinalizationPermit, PermitBinding, and AppliedChangeReceipt. State owns root/shadows, locks, dependency-version sets, currentness claims, and the permit-issuance registry. Implement evidence construction in `internal/govaccess/evidence/`: AuthorizationCandidateDescriptor, FinalizedAuthorizationCandidate, CurrentAllowProof, CompletedAuthorizationEvaluation, DomainDecisionMaterial, MutationDescriptor, DomainConclusionDescriptor, carrier plans, and PreparedEvidenceChange. The evidence constructors consume, as their exact existing design §3.2 evidence-carrier inputs, the immutable deep-copied model types `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` defined in the Task-2-owned `internal/govaccess/model/decisionfacts.go`. Each of these three carrier-input types is constructed by value, deep-copies every reference-typed field on construction and on every accessor return so no post-construction mutation of caller-held or evidence-held data is possible, exposes no setter, and is byte-stable for deterministic evidence assembly. These three types are evidence-carrier inputs only: they are not resources, not decisions, not DecisionRecords, not writers, not routes, and not public contracts, they introduce no new schema/writer/state/error ID, and they are consumed exclusively by the FEATURE-0018 evidence constructors. Evidence imports no state/uow/authzeval package. Evidence is also the sole FEATURE-0018 owner of the strict local `DecisionProfileBundle` bytes (`evidence/profiles.go`) containing exactly the three existing FEATURE-0013 carrier profiles `authorization-decision/v1`, `approval-decision/v1`, and `exception-decision/v1` with F18-RD-19 semantics; it constructs and validates those profile bytes but never registers them (root composition performs the sole `decision/bundle.Load` registration) and never creates a second registry, global mutable registry, network lookup, fallback version, or competing envelope.
 
 **Writable paths:**
 
@@ -239,6 +239,8 @@ Implement the neutral state aggregate in `internal/govaccess/state/` with sealed
 - `internal/govaccess/state/versionset.go`
 - `internal/govaccess/state/currentness.go`
 - `internal/govaccess/state/state_test.go`
+- `internal/govaccess/model/decisionfacts.go` (Task-2-owned model evidence-carrier input types `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` — the exact existing design §3.2 evidence-carrier inputs consumed by the evidence constructors; immutable and deep-copied; not resources, decisions, or public contracts. Task 1 remains the owner of every other `internal/govaccess/model/` type; these two files are the sole `model/` paths owned by Task 2 and are not created, initialized, or modified by Task 1.)
+- `internal/govaccess/model/decisionfacts_test.go` (Task-2-owned tests for the `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` evidence-carrier input types)
 - `internal/govaccess/evidence/` (all evidence constructors and validators)
 - `internal/govaccess/evidence/authzcandidate.go`
 - `internal/govaccess/evidence/currentallow.go`
@@ -261,6 +263,10 @@ Implement the neutral state aggregate in `internal/govaccess/state/` with sealed
 - Property test: permit binding is unforgeable
 - Property test: transaction seal enforces commit/abort once
 - Unit tests for each sealed evidence type construction
+- Unit tests proving `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` construct only by value with every reference-typed field deep-copied on construction
+- Unit tests proving each carrier-input accessor returns a deep copy so caller-held or evidence-held data cannot be mutated after construction (immutability)
+- Unit tests proving the evidence constructors consume `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` as their exact design §3.2 evidence-carrier inputs
+- Property test: mutating a caller's source slice/map after constructing a carrier-input type does not change the constructed value (deep-copy isolation)
 - Unit tests for RequireCurrentAllow (Allow → proof, Deny → RouteDenyToEvidenceOnly)
 - Unit tests for mutation descriptor ordering and validation
 - Unit tests for terminal-exception descriptor validation (ADH-2026-073)
@@ -278,6 +284,7 @@ make fmt
 make test
 go test -v ./internal/govaccess/state/...
 go test -race ./internal/govaccess/state/...
+go test -v ./internal/govaccess/model/... -run 'DecisionFacts|ApprovalDecisionFacts|ExceptionDecisionFacts|MutationEventFacts'
 go test -v ./internal/govaccess/evidence/...
 ```
 
@@ -290,6 +297,10 @@ go test -v ./internal/govaccess/evidence/...
 - Dependency version revalidation at stage 10 (REQ-F18-21, design §5.4)
 - Thread-safe with correct lock ordering (DD-02)
 - Evidence types sealed and constructible only by evidence package (DD-01, DD-13)
+- `model.ApprovalDecisionFacts`, `model.ExceptionDecisionFacts`, and `model.MutationEventFacts` exist in the Task-2-owned `internal/govaccess/model/decisionfacts.go` as immutable, deep-copied evidence-carrier input types and are the exact existing design §3.2 evidence-carrier inputs consumed by the evidence constructors (REQ-F18-19, DD-01, design §3.2)
+- Each carrier-input type deep-copies every reference-typed field on construction and on accessor return, exposes no setter, and cannot be mutated after construction (REQ-F18-21, DD-01)
+- The three carrier-input types are evidence-carrier inputs only — not resources, decisions, DecisionRecords, writers, routes, or public contracts — and introduce no new schema/writer/state/error ID (REQ-F18-19, DD-01)
+- Task 1 remains the owner of all other `internal/govaccess/model/` types; `decisionfacts.go` and `decisionfacts_test.go` are the sole `model/` paths owned by Task 2 and are not created or modified by Task 1 (DD-01, design §3.2)
 - RequireCurrentAllow converts finalized Allow to CurrentAllowProof (DD-12, design §5.5)
 - Terminal-exception descriptors validated per ADH-2026-073 (REQ-F18-19, REQ-F18-20)
 - Carrier plans enforce mandatory domain DecisionRecords per F18-RD-19 (REQ-F18-19)
@@ -332,6 +343,8 @@ feat(govaccess): add state aggregate, transaction protocol, and evidence
 - Add MutationDescriptor and DomainConclusionDescriptor
 - Add carrier plans (authorized/automatic/domain-conclusion)
 - Add PreparedEvidenceChange construction
+- Add model/decisionfacts.go carrier-input types (ApprovalDecisionFacts, ExceptionDecisionFacts, MutationEventFacts)
+- Enforce immutable deep-copied carrier inputs consumed by evidence constructors (design §3.2; not resources/decisions/public contracts)
 - Add evidence/profiles.go strict local DecisionProfileBundle (exact three profiles)
 
 Implements: TASK-F18-04, TASK-F18-05
