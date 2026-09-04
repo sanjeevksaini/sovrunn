@@ -1,0 +1,95 @@
+{
+  "feature": "FEATURE-0018",
+  "projection": ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.md",
+  "projection_bytes": 8056,
+  "projection_estimated_tokens": 2014,
+  "projection_sha256": "819e1bc1e8c2d0ac0285c46f873168a92ed7b0cad6c215c005e56707ac4efd1f",
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "bytes": 41294,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+      "selections": [
+        {
+          "end": 18,
+          "excerpt_sha256": "2baa8254611dcafdfe7f558d85595b960f5a371f0a6e5310e606e592a6e8fb3a",
+          "kind": "line_range",
+          "label": "Approved core handoff identity and package authority",
+          "start": 1
+        }
+      ],
+      "sha256": "489ccb5869ca4cc43835ef79de2d2b8f006f580cc22fdad8a6d674b112fdd769"
+    },
+    {
+      "bytes": 74674,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+      "selections": [
+        {
+          "end": 23,
+          "excerpt_sha256": "7548c8e3c63234db047fa0c311e7bd25b8b6cd17be9475be2e41fb2b8c31f31d",
+          "kind": "line_range",
+          "label": "Appendix A immutable package relationship",
+          "start": 1
+        }
+      ],
+      "sha256": "66479426f30759a21202c8beeb08989241d912b7ba69de3619619f45823fe485"
+    },
+    {
+      "bytes": 48528,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+      "selections": [
+        {
+          "end": 23,
+          "excerpt_sha256": "8040939e7ad3ccd994d27dd98eb7660acb4e927d35c41edc88b26de09e53acb8",
+          "kind": "line_range",
+          "label": "Appendix B immutable package relationship",
+          "start": 1
+        }
+      ],
+      "sha256": "2424cff0130bf82d7b413069fc60580af0ab6e1a4bd00982fc669bebb80d8b49"
+    },
+    {
+      "bytes": 34749,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+      "selections": [
+        {
+          "end": 25,
+          "excerpt_sha256": "82f0bef27d2300f6772e0709733799c2f4e65686f95ce0e323791b575a6d7183",
+          "kind": "line_range",
+          "label": "Approved non-semantic conformance reconciliation identity",
+          "start": 1
+        }
+      ],
+      "sha256": "231b8872d83c5ad46331ef8a0e2e24127cb2ef177f0685f829617e648387b0b6"
+    },
+    {
+      "bytes": 17267,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+      "selections": [
+        {
+          "end": 25,
+          "excerpt_sha256": "5681fb476d86714b4abc14d3be658e6ad160f268df0e81a11ad2c764eb99f576",
+          "kind": "line_range",
+          "label": "Approved design-mechanics clarification identity",
+          "start": 1
+        }
+      ],
+      "sha256": "f6b50ea9faba3d8dc09d86124b574ccebefad27733db1ac3c4eaf98361acd5ca"
+    },
+    {
+      "bytes": 10759,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+      "selections": [
+        {
+          "end": 25,
+          "excerpt_sha256": "93e92dad92efdcd8f44b589fe96734a0a54811993077ecc73a0390b15e2dca31",
+          "kind": "line_range",
+          "label": "Approved terminal-decision audit taxonomy correction identity",
+          "start": 1
+        }
+      ],
+      "sha256": "3cae0d0f138aa80f11d8db44db2b3e6b7a49e4153a5eb5b0aacbb1577ed4b08b"
+    }
+  ],
+  "stage": "tasks-handoff-ledger"
+}

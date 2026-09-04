@@ -84,6 +84,17 @@
             "tasks": {"$ref": "#/$defs/pathArray"}
           }
         },
+        "stage_exclusions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "architecture": {"$ref": "#/$defs/pathArray"},
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"},
+            "implementation": {"$ref": "#/$defs/pathArray"}
+          }
+        },
         "budgets": {
           "type": "object",
           "additionalProperties": {"type": "integer", "minimum": 1024}

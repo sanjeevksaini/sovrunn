@@ -190,7 +190,7 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
 
     context = data["context"]
     required_context_keys = {"always", "stages", "budgets"}
-    optional_context_keys = {"review_exclusions"}
+    optional_context_keys = {"review_exclusions", "stage_exclusions"}
     missing_context_keys = sorted(required_context_keys - set(context))
     extra_context_keys = sorted(set(context) - required_context_keys - optional_context_keys)
     if missing_context_keys or extra_context_keys:
@@ -222,6 +222,24 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
             if path not in handoff_paths:
                 raise ControlError(
                     f"context.review_exclusions.{review_stage}[{index}] must name a feature handoff"
+                )
+    stage_exclusions = context.get("stage_exclusions", {})
+    if not isinstance(stage_exclusions, dict):
+        raise ControlError("context.stage_exclusions must be an object")
+    allowed_stages = set(STAGES) - {"review"}
+    unknown_stages = sorted(set(stage_exclusions) - allowed_stages)
+    if unknown_stages:
+        raise ControlError(
+            "context.stage_exclusions has unknown stages: " + ", ".join(unknown_stages)
+        )
+    for stage, paths in stage_exclusions.items():
+        for index, path in enumerate(
+            require_string_list(paths, field=f"context.stage_exclusions.{stage}")
+        ):
+            repo_path(path, field=f"context.stage_exclusions.{stage}[{index}]")
+            if path not in handoff_paths:
+                raise ControlError(
+                    f"context.stage_exclusions.{stage}[{index}] must name a feature handoff"
                 )
     if not isinstance(context["budgets"], dict):
         raise ControlError("context.budgets must be an object")
@@ -318,6 +336,9 @@ def resolve_context(data: dict[str, Any], stage: str, *, review_stage: str | Non
     if stage == "review":
         review_exclusions = set(data["context"].get("review_exclusions", {}).get(review_stage, []))
         raw_paths = [path for path in raw_paths if path not in review_exclusions]
+    else:
+        stage_exclusions = set(data["context"].get("stage_exclusions", {}).get(stage, []))
+        raw_paths = [path for path in raw_paths if path not in stage_exclusions]
     if stage == "implementation":
         raw_paths.extend(data["guardrails"]["cursor"]["go_context"])
     spec = feature["spec_path"]
