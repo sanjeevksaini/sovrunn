@@ -30,7 +30,7 @@ TASK_HEADING = re.compile(
 # and feature-local forms (for example, F15-01).  The word boundaries prevent
 # a local ID from also being counted as its non-existent F15 prefix.
 CF_ID = re.compile(r"\bVS0-CF-(?:[A-Z]+\d+(?:-\d+)?)\b")
-VS_ID = re.compile(r"VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9-]+")
+VS_ID = re.compile(r"VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?")
 
 
 def _mention_at_position_allowed(text: str, position: int) -> bool:
@@ -146,14 +146,20 @@ def expand_cf_ranges_with_positions(text: str) -> dict[str, int]:
     can check whether that specific mention occurs in an allowed exclusion
     context (e.g. a retired-ID range spelled out in a tombstone/non-goal note)."""
     found: dict[str, int] = {}
+
+    def record(cf_id: str, position: int) -> None:
+        previous = found.get(cf_id)
+        if previous is None or position < previous:
+            found[cf_id] = position
+
     for match in CF_ID.finditer(text):
-        found.setdefault(match.group(0), match.start())
+        record(match.group(0), match.start())
     local_range_pattern = re.compile(r"\bVS0-CF-([A-Z]+\d+)-(\d+)\.\.(\d+)\b")
     for match in local_range_pattern.finditer(text):
         prefix, left_number, right_number = match.groups()
         width = max(len(left_number), len(right_number))
         for number in range(int(left_number), int(right_number) + 1):
-            found.setdefault(f"VS0-CF-{prefix}-{number:0{width}d}", match.start())
+            record(f"VS0-CF-{prefix}-{number:0{width}d}", match.start())
     range_pattern = re.compile(r"VS0-CF-([A-Z]+)(\d+)\.\.([A-Z]*)(\d+)")
     for match in range_pattern.finditer(text):
         left_prefix, left_number, right_prefix, right_number = match.groups()
@@ -162,7 +168,7 @@ def expand_cf_ranges_with_positions(text: str) -> dict[str, int]:
             continue
         width = max(len(left_number), len(right_number))
         for number in range(int(left_number), int(right_number) + 1):
-            found.setdefault(f"VS0-CF-{prefix}{number:0{width}d}", match.start())
+            record(f"VS0-CF-{prefix}{number:0{width}d}", match.start())
     return found
 
 
@@ -321,6 +327,105 @@ def require_exact_ledger(
         errors.append(f"{title} invents IDs not present in the feature authority: {', '.join(extra)}")
 
 
+def authority_generation_rows(
+    feature_text: str, title: str, pattern: re.Pattern[str]
+) -> dict[str, list[tuple[str, ...]]]:
+    """Read IDs only from the approved canonical generation ledger section.
+
+    A feature authority may also contain downstream traceability tables keyed
+    by the same REQ/AC IDs. Those mappings are not duplicate definitions.
+    """
+    body = section(feature_text, title)
+    return rows_by_id(body if body is not None else feature_text, pattern)
+
+
+def check_exact_conformance_mappings(
+    errors: list[str],
+    feature: str,
+    source_requirements: dict[str, list[tuple[str, ...]]],
+    source_acceptance: dict[str, list[tuple[str, ...]]],
+    target_text: str,
+    conformance: dict[str, dict[str, Any]],
+) -> None:
+    """Enforce an authority-opted exact REQ/AC-to-local-conformance contract.
+
+    The check is generic: a feature opts in by defining both exact mapping
+    headings in its approved feature authority. Older completed feature
+    authorities are not retroactively changed by this reconciliation.
+    """
+    acceptance_title = "Acceptance-to-conformance mapping"
+    requirement_title = "Requirement-to-conformance mapping"
+    acceptance_body = section(target_text, acceptance_title)
+    requirement_body = section(target_text, requirement_title)
+    if acceptance_body is None:
+        errors.append(f"missing exact section heading: {acceptance_title}")
+    if requirement_body is None:
+        errors.append(f"missing exact section heading: {requirement_title}")
+    if acceptance_body is None or requirement_body is None:
+        return
+
+    acceptance_rows = rows_by_id(acceptance_body, AC_ID)
+    requirement_rows = rows_by_id(requirement_body, REQ_ID)
+
+    for ac_id, approved_rows in source_acceptance.items():
+        excluded = any(
+            any(cell.casefold() == "excluded" for cell in row)
+            for row in approved_rows
+        )
+        rows = acceptance_rows.get(ac_id, [])
+        if excluded:
+            if rows:
+                errors.append(f"excluded {ac_id} must not have an active conformance mapping")
+            continue
+        if len(rows) != 1:
+            errors.append(f"{ac_id} must map exactly once to one local VS0-CF ID; found {len(rows)}")
+            continue
+        mapped = [cf_id for cf_id in CF_ID.findall(" ".join(rows[0][1:]))]
+        if len(mapped) != 1:
+            errors.append(f"{ac_id} must map to exactly one explicit VS0-CF ID; found {len(mapped)}")
+            continue
+        cf_id = mapped[0]
+        entry = conformance.get(cf_id)
+        if entry is None:
+            errors.append(f"{ac_id} maps to unregistered conformance ID {cf_id}")
+        elif entry.get("owner") != feature:
+            errors.append(
+                f"{ac_id} maps to {cf_id} owned by {entry.get('owner')}, not local owner {feature}"
+            )
+
+    extra_acceptance = sorted(set(acceptance_rows) - set(source_acceptance))
+    if extra_acceptance:
+        errors.append(
+            "Acceptance-to-conformance mapping invents AC IDs: " + ", ".join(extra_acceptance)
+        )
+
+    for req_id in source_requirements:
+        rows = requirement_rows.get(req_id, [])
+        if len(rows) != 1:
+            errors.append(f"{req_id} must map exactly once to local VS0-CF IDs; found {len(rows)}")
+            continue
+        mapped = CF_ID.findall(" ".join(rows[0][1:]))
+        if not mapped:
+            errors.append(f"{req_id} must map to at least one explicit VS0-CF ID")
+            continue
+        if len(mapped) != len(set(mapped)):
+            errors.append(f"{req_id} contains duplicate conformance IDs")
+        for cf_id in mapped:
+            entry = conformance.get(cf_id)
+            if entry is None:
+                errors.append(f"{req_id} maps to unregistered conformance ID {cf_id}")
+            elif entry.get("owner") != feature:
+                errors.append(
+                    f"{req_id} maps to {cf_id} owned by {entry.get('owner')}, not local owner {feature}"
+                )
+
+    extra_requirements = sorted(set(requirement_rows) - set(source_requirements))
+    if extra_requirements:
+        errors.append(
+            "Requirement-to-conformance mapping invents REQ IDs: " + ", ".join(extra_requirements)
+        )
+
+
 def check_requirements(
     errors: list[str],
     feature: str,
@@ -329,8 +434,12 @@ def check_requirements(
     conformance: dict[str, dict[str, Any]],
     architecture_text: str = "",
 ) -> None:
-    source_requirements = rows_by_id(feature_text, REQ_ID)
-    source_acceptance = rows_by_id(feature_text, AC_ID)
+    source_requirements = authority_generation_rows(
+        feature_text, "Canonical requirement generation ledger", REQ_ID
+    )
+    source_acceptance = authority_generation_rows(
+        feature_text, "Canonical acceptance generation ledger", AC_ID
+    )
     if not source_requirements or not source_acceptance:
         errors.append("feature authority must define tabular REQ and AC ledgers")
         return
@@ -341,6 +450,19 @@ def check_requirements(
     require_exact_ledger(
         errors, source_acceptance, target_text, "Canonical acceptance ledger"
     )
+
+    if (
+        "### 6.5 Exact AC-to-conformance mapping" in feature_text
+        and "### 6.6 Exact REQ-to-conformance mapping" in feature_text
+    ):
+        check_exact_conformance_mappings(
+            errors,
+            feature,
+            source_requirements,
+            source_acceptance,
+            target_text,
+            conformance,
+        )
 
     for item_id in source_requirements:
         count = req_detail_heading_matches(item_id, target_text)
@@ -448,6 +570,11 @@ def check_requirements(
                     )
                     break
 
+    owned_side_effects = {
+        scalar(entry.get("expectedSideEffects"))
+        for entry in conformance.values()
+        if entry.get("owner") == feature
+    }
     for cf_id, entry in conformance.items():
         side_effect = scalar(entry.get("expectedSideEffects"))
         if (
@@ -455,6 +582,7 @@ def check_requirements(
             and cf_id not in source_cf_ids
             and side_effect.casefold() not in {"null", "none", "no side effects"}
             and len(side_effect) >= 12
+            and not any(side_effect in owned for owned in owned_side_effects)
             and side_effect in target_text
         ):
             errors.append(
@@ -465,8 +593,12 @@ def check_requirements(
 def check_coverage(
     errors: list[str], feature_text: str, target_text: str, stage: str
 ) -> None:
-    requirements = rows_by_id(feature_text, REQ_ID)
-    acceptance = rows_by_id(feature_text, AC_ID)
+    requirements = authority_generation_rows(
+        feature_text, "Canonical requirement generation ledger", REQ_ID
+    )
+    acceptance = authority_generation_rows(
+        feature_text, "Canonical acceptance generation ledger", AC_ID
+    )
     title = "Canonical coverage ledger"
     ledger = section(target_text, title)
     if ledger is None:
@@ -519,7 +651,7 @@ def check_stage(root: Path, control: dict[str, Any], stage: str) -> list[str]:
 
     known_registry_ids = set(
         re.findall(
-            r"\bid:\s*(VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9-]+)",
+            r"\bid:\s*[\"']?(VS0-(?:SCHEMA|WRITER|STATE|CF)-[A-Z0-9-]+)[\"']?",
             (root / "docs/architecture/vertical-slices/VS-000-contract-registry.yaml").read_text(),
         )
     )
@@ -667,7 +799,61 @@ def self_test() -> None:
         == set(),
     )
 
-    # --- Case 3: generic and feature-qualified task headings ---
+    # --- Case 3: exact generation-ledger and conformance mappings ---
+    authority_sample = """
+### 6.1 Canonical requirement generation ledger
+| Requirement ID | Architecture decision |
+|---|---|
+| REQ-F18-01 | F18-RD-01 |
+
+### 6.2 Canonical acceptance generation ledger
+| Acceptance ID | Disposition |
+|---|---|
+| AC-F18-01 | Active |
+| AC-F18-02 | Excluded |
+
+### 6.6 Exact REQ-to-conformance mapping
+| Requirement | Cases |
+|---|---|
+| REQ-F18-01 | VS0-CF-F18-01 |
+"""
+    check(
+        "canonical authority rows ignore later REQ mapping rows",
+        len(authority_generation_rows(
+            authority_sample, "Canonical requirement generation ledger", REQ_ID
+        )["REQ-F18-01"]) == 1,
+    )
+    mapping_target = """
+## Acceptance-to-conformance mapping
+| Acceptance ID | Case |
+|---|---|
+| AC-F18-01 | VS0-CF-F18-01 |
+
+## Requirement-to-conformance mapping
+| Requirement ID | Cases |
+|---|---|
+| REQ-F18-01 | VS0-CF-F18-01 |
+"""
+    mapping_errors: list[str] = []
+    check_exact_conformance_mappings(
+        mapping_errors,
+        "FEATURE-0018",
+        authority_generation_rows(
+            authority_sample, "Canonical requirement generation ledger", REQ_ID
+        ),
+        authority_generation_rows(
+            authority_sample, "Canonical acceptance generation ledger", AC_ID
+        ),
+        mapping_target,
+        {"VS0-CF-F18-01": {"owner": "FEATURE-0018"}},
+    )
+    check("accepts exact local AC/REQ mappings and omitted excluded AC", mapping_errors == [])
+    positions = expand_cf_ranges_with_positions(
+        "Active VS0-CF-F18-01..54. Later excluded context must not use VS0-CF-F18-50."
+    )
+    check("range expansion retains earliest authorization position", positions["VS0-CF-F18-50"] == 7)
+
+    # --- Case 4: generic and feature-qualified task headings ---
     task_text = "\n".join(
         [
             "### Task 1 — generic",
@@ -708,7 +894,7 @@ def self_test() -> None:
         for failure in failures:
             print(f"  ✗ {failure}")
         raise SystemExit(1)
-    print(f"PASS: kiro-semantic-check self-test — {6 + 4 + 3} checks")
+    print(f"PASS: kiro-semantic-check self-test — {6 + 4 + 3 + 3} checks")
 
 
 def main() -> None:

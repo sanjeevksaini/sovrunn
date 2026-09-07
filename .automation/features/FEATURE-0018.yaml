@@ -1,0 +1,7 @@
+feature_id: FEATURE-0018
+slug: governance-iam-approval-exception-foundation
+title: Governance, IAM, Approval and Exception Foundation
+phase_branch: phase2-reuse-first-paas-fabric-foundation
+feature_branch: feature-0018-governance-iam-approval-exception-foundation
+spec_path: .kiro/specs/governance-iam-approval-exception-foundation
+status: branch_created

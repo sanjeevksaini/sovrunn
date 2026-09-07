@@ -45,7 +45,8 @@ Architecture baselines should be updated only at controlled milestones:
 
 ## Current Milestone
 
-ADH-2026-042 canonical model adoption with ACR-2026-001 approval and DEC-0037 through DEC-0058 acceptance.
+ADH-2026-042 canonical model adoption, DEC-0059 canonical bootstrap, and
+ACR-2026-002/DEC-0060 FEATURE-0018 authorization-foundation acceptance.
 
 ## Next Planned Review
 

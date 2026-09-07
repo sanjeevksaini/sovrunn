@@ -444,6 +444,67 @@ done
 [ "$SPINE_FAIL" -eq 0 ] && pass
 
 # ---------------------------------------------------------------------------
+# CHECK 16: Active decision-status mirrors agree with the Decision Index
+# ---------------------------------------------------------------------------
+echo "16. Checking decision status and supersession consistency..."
+DECISION_INDEX="$REPO_ROOT/docs/decisions/DECISION_INDEX.md"
+DECISION_TRACE="$REPO_ROOT/docs/traceability/DECISION_TRACEABILITY_MATRIX.md"
+REBASELINE="$REPO_ROOT/docs/phase2/PHASE2R_REBASELINE.md"
+DEC_STATUS_FAIL=0
+
+if ! awk -F'|' '
+  function trim(s) {
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+    return s
+  }
+  function normalized(s) {
+    s = trim(s)
+    if (s ~ /^Accepted([[:space:]]|$|\()/) return "Accepted"
+    if (s ~ /^Proposed([[:space:]]|$|\()/) return "Proposed"
+    return s
+  }
+  FNR == NR && /^\| DEC-[0-9]+/ {
+    id = trim($2)
+    index_status[id] = normalized($5)
+    next
+  }
+  FNR != NR && /^\| DEC-[0-9]+/ {
+    cell = trim($2)
+    split(cell, parts, /[[:space:]]+/)
+    id = parts[1]
+    trace_status = normalized($3)
+    if (!(id in index_status)) {
+      printf "  FAIL: %s exists in traceability but not Decision Index\n", id
+      failed = 1
+    } else if (trace_status != index_status[id]) {
+      printf "  FAIL: %s status mismatch: Decision Index=%s; traceability=%s\n", id, index_status[id], trace_status
+      failed = 1
+    }
+  }
+  END { exit failed }
+' "$DECISION_INDEX" "$DECISION_TRACE"; then
+  DEC_STATUS_FAIL=1
+  FAIL=$((FAIL + 1))
+fi
+
+while IFS='|' read -r _ dec _ _ status _; do
+  dec=$(echo "$dec" | xargs)
+  status=$(echo "$status" | xargs)
+  case "$status" in
+    "Superseded by "*)
+      replacement=${status#Superseded by }
+      if grep -qE "^\|[[:space:]]*$dec[[:space:]]*\|" "$REBASELINE" && \
+         ! grep -E "^\|[[:space:]]*$dec[[:space:]]*\|" "$REBASELINE" | grep -qF "Superseded by $replacement"; then
+        fail "$dec supersession to $replacement is not mirrored by PHASE2R_REBASELINE"
+        DEC_STATUS_FAIL=1
+      fi
+      ;;
+  esac
+done < <(grep -E '^\| DEC-[0-9]+' "$DECISION_INDEX")
+
+[ "$DEC_STATUS_FAIL" -eq 0 ] && pass
+
+# ---------------------------------------------------------------------------
 # RESULT
 # ---------------------------------------------------------------------------
 echo ""

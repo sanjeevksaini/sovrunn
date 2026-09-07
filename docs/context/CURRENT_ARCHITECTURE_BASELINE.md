@@ -10,9 +10,9 @@ Controlling adoption: `ADH-2026-042`, `ACR-2026-001`, `ARCH-APPROVAL-2026-004`
 
 ## Canonical Model Authority
 
-The canonical semantic model is `docs/architecture/canonical/sovrunn-finalized-data-model.md` version 1.7.
+The canonical semantic model is `docs/architecture/canonical/sovrunn-finalized-data-model.md` version 1.8.
 
-The canonical contract catalog is `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` version 1.7.
+The canonical contract catalog is `docs/architecture/canonical/sovrunn-final-canonical-contract-catalog.md` version 1.8.
 
 The PostgreSQL reference flow is `docs/architecture/reference-flows/postgresql-end-to-end.md`.
 
@@ -82,6 +82,10 @@ The former six-scope vocabulary (Platform, Organization, OrganizationUnit, Tenan
 - **DecisionRecord** with registered profiles for sovereignty, placement, governance (DEC-0043).
 - **EntitlementPackage** / **ServiceEntitlement** — what may be consumed (DEC-0039).
 - **QuotaPolicy** — how much may be consumed, independently (DEC-0039).
+- **FEATURE-0018 authorization foundation** — direct-principal and direct-member
+  AccessGroup RoleAssignments, exact-Human workflow eligibility, bounded
+  approval/JIT/review/exception evidence, and Sovrunn/native-IAM intersection
+  under DEC-0060.
 
 ## Completed Feature History
 

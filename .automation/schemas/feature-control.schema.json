@@ -16,6 +16,7 @@
   ],
   "properties": {
     "schema_version": {"const": "1.0"},
+    "checkpoint": {"$ref": "#/$defs/implementationCheckpoint"},
     "feature": {
       "type": "object",
       "additionalProperties": false,
@@ -75,6 +76,44 @@
       "properties": {
         "always": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
         "stages": {"$ref": "#/$defs/stagePaths"},
+        "review_exclusions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"}
+          }
+        },
+        "review_stage_context": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"}
+          }
+        },
+        "review_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requirements": {"$ref": "#/$defs/reviewAuthority"},
+            "design": {"$ref": "#/$defs/reviewAuthority"},
+            "tasks": {"$ref": "#/$defs/reviewAuthority"}
+          }
+        },
+        "stage_exclusions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "architecture": {"$ref": "#/$defs/pathArray"},
+            "requirements": {"$ref": "#/$defs/pathArray"},
+            "design": {"$ref": "#/$defs/pathArray"},
+            "tasks": {"$ref": "#/$defs/pathArray"},
+            "implementation": {"$ref": "#/$defs/pathArray"}
+          }
+        },
         "budgets": {
           "type": "object",
           "additionalProperties": {"type": "integer", "minimum": 1024}
@@ -154,6 +193,60 @@
   "$defs": {
     "repoPath": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!\\.git(?:/|$)).+"},
     "pathArray": {"type": "array", "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true},
+    "stringArray": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "implementationCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handoff",
+        "active",
+        "last_committed_task",
+        "current_task",
+        "frozen_design_sha256",
+        "frozen_requirements_sha256",
+        "task_amendment_only",
+        "blocked_stages",
+        "blocked_review_stages",
+        "reentry_requires_handoff"
+      ],
+      "properties": {
+        "handoff": {"type": "string", "pattern": "^ADH-[0-9]{4}-[0-9]{3}$"},
+        "active": {"const": true},
+        "last_committed_task": {"type": "integer", "minimum": 1},
+        "current_task": {"type": "integer", "minimum": 1},
+        "frozen_design_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "frozen_requirements_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "task_amendment_only": {"const": true},
+        "blocked_stages": {"$ref": "#/$defs/stringArray"},
+        "blocked_review_stages": {"$ref": "#/$defs/stringArray"},
+        "reentry_requires_handoff": {"const": true},
+        "mechanics_evidence_only": {"type": "boolean"}
+      }
+    },
+    "reviewAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handoff",
+        "mechanics_authority",
+        "semantic_authority",
+        "finding_classifications",
+        "design_executability_allowed_only_when",
+        "reviewer_must_not",
+        "finding_requirement",
+        "hash_bound_evidence"
+      ],
+      "properties": {
+        "handoff": {"type": "string", "pattern": "^ADH-[0-9]{4}-[0-9]{3}$"},
+        "mechanics_authority": {"type": "string", "minLength": 1},
+        "semantic_authority": {"type": "string", "minLength": 1},
+        "finding_classifications": {"$ref": "#/$defs/stringArray"},
+        "design_executability_allowed_only_when": {"$ref": "#/$defs/stringArray"},
+        "reviewer_must_not": {"$ref": "#/$defs/stringArray"},
+        "finding_requirement": {"type": "string", "minLength": 1},
+        "hash_bound_evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/repoPath"}, "uniqueItems": true}
+      }
+    },
     "stagePaths": {
       "type": "object",
       "additionalProperties": false,

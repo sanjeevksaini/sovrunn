@@ -25,6 +25,16 @@ cd "$(repo_root)"
 ensure_feature_state "$FEATURE"
 CONTROL_FILE=".automation/features/${FEATURE}.control.json"
 
+# ADH-2026-077 §2/§4: while an implementation checkpoint is active, normal
+# requirements/design Kiro stages fail closed. Cursor resumes only through an
+# approved task-plan amendment or a separately approved semantic reentry.
+if [[ -f "$CONTROL_FILE" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/checkpoint-guard.py \
+    --feature "$FEATURE" --mode assert-stage-allowed --stage "$STAGE" \
+    --reentry-handoff "${FEATURE_FACTORY_CHECKPOINT_REENTRY:-}"
+fi
+
 if [[ -f "$CONTROL_FILE" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
     ./scripts/generic-kiro-boundary-check.py \

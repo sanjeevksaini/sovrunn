@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0",
+  "checkpoint": {
+    "handoff": "ADH-2026-077",
+    "active": true,
+    "last_committed_task": 3,
+    "current_task": 4,
+    "frozen_design_sha256": "4eb84a0002d8e58de466806b2dcd18085608a0a62d97cc78684b7e98210d92a8",
+    "frozen_requirements_sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
+    "task_amendment_only": true,
+    "blocked_stages": ["requirements", "design"],
+    "blocked_review_stages": ["requirements", "design"],
+    "reentry_requires_handoff": true,
+    "mechanics_evidence_only": true
+  },
+  "feature": {
+    "id": "FEATURE-0018",
+    "slug": "governance-iam-approval-exception-foundation",
+    "title": "Governance, IAM, Approval and Exception Foundation",
+    "tier": "A",
+    "phase": 2,
+    "phase_branch": "phase2-reuse-first-paas-fabric-foundation",
+    "feature_branch": "feature-0018-governance-iam-approval-exception-foundation",
+    "feature_file": "docs/features/FEATURE-0018-governance-iam-approval-exception-foundation.md",
+    "architecture": "docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md",
+    "handoffs": [
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-075-feature-0018-design-normalization-and-contract-check.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-076-feature-0018-semantic-review-authority-realignment.md"
+    ],
+    "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation"
+  },
+  "ownership": {
+    "owned_resources": [
+      "AccessGroup",
+      "Membership",
+      "RoleDefinition",
+      "RoleAssignment",
+      "PrivilegedAccessRequest",
+      "AccessReview",
+      "ApprovalPolicy",
+      "ApprovalRequest",
+      "ExceptionGrant",
+      "GovernanceProfile v1",
+      "FEATURE-0018 embedded and transient supporting contracts",
+      "Deterministic in-memory fixtures and local conformance"
+    ],
+    "previous_features": [
+      {
+        "id": "FEATURE-0011",
+      "relationship": "reuses the approved Reuse Assessment Standard; the FEATURE-0018 reuse disposition is already human-approved and requirements must not reopen it",
+      "context": {
+        "review": ["docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md"]
+      }
+      },
+      {
+        "id": "FEATURE-0012",
+        "relationship": "reuses canonical resource grammar, seven ScopeKinds, TypedRef, validation, safe denial, redaction, concurrency, idempotency and Problem authority without redefining them",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0012-api-resource-naming-status-and-validation-standard.md"],
+          "design": ["docs/architecture/api-resource-standard.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0013",
+        "relationship": "reuses DecisionRecord, DecisionProfile, EvaluationResult and AuditEvent envelopes; FEATURE-0018 only adopts the three approved profiles and event taxonomy",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0013-decision-object-and-auditevent-standard.md"],
+          "design": [
+            ".automation/context-projections/FEATURE-0018.design-dependencies.md",
+            ".automation/context-projections/FEATURE-0018.design-dependencies.manifest.json"
+          ]
+        }
+      },
+      {
+        "id": "FEATURE-0016",
+        "relationship": "consumes the existing ExecutionTarget action meanings, target bindings and intrinsic classifications without changing FEATURE-0016 lifecycle or execution authority",
+        "context": {
+          "requirements": ["docs/features/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"],
+          "design": ["docs/architecture/FEATURE-0016-adapter-boundary-and-executiontarget-qualification.md"]
+        }
+      },
+      {
+        "id": "FEATURE-0017",
+        "relationship": "reuses the deterministic engine-neutral evaluation seam, exact result vocabulary, pure mapper and fake; policy evaluation constrains but never creates authority",
+        "context": {
+          "requirements": ["docs/architecture/policy-evaluation-abstraction.md"],
+          "design": ["docs/architecture/policy-evaluation-abstraction.md"]
+        }
+      }
+    ],
+    "excluded_features": [
+      {"id": "FEATURE-0019", "concepts": ["sovereignty profiles", "regulatory policy bundles", "sovereignty facts and evidence", "placement-facing sovereignty interpretation"]},
+      {"id": "FEATURE-0020", "concepts": ["ProfileAssignment", "governance inheritance and conflict resolution", "exception application", "EffectiveGovernanceContext construction"]},
+      {"id": "FEATURE-0021", "concepts": ["CloudEnrollment", "entitlement", "quota", "provider-selection intent"]},
+      {"id": "FEATURE-0022", "concepts": ["service requirements", "service-region eligibility", "placement profile semantics"]},
+      {"id": "FEATURE-0023", "concepts": ["candidate-set policy adoption", "ranking and placement", "DecisionRecord publication for downstream placement"]},
+      {"id": "FEATURE-0024", "concepts": ["production adapter selection", "plugin execution", "provider-native IAM execution", "provisioning and realization"]},
+      {"id": "FEATURE-0025", "concepts": ["customer-safe explanation", "CloudProvider-safe explanation", "AI-readable explanation projection"]},
+      {"id": "FEATURE-0026", "concepts": ["cross-feature orchestration", "Slice 0 integration proof ownership"]}
+    ],
+    "forbidden_concepts": [
+      "identity-provider lifecycle",
+      "raw token validation",
+      "external group claim authorization",
+      "nested or dynamic AccessGroup",
+      "generic ABAC or role condition language",
+      "provider-native principal group role policy permission or credential",
+      "native IAM translation synchronization or execution",
+      "real policy engine",
+      "real workflow engine",
+      "ProfileAssignment",
+      "EffectiveGovernanceContext resolution",
+      "sovereignty placement entitlement quota service or plugin semantics",
+      "public API route",
+      "UI implementation",
+      "production persistence",
+      "network or external call",
+      "deployment topology",
+      "workflow controller direct RoleAssignment write",
+      "Membership-derived approver reviewer JIT or break-glass eligibility",
+      "cross-assignment grantor witness synthesis"
+    ]
+  },
+  "context": {
+    "always": [
+      "AGENTS.md",
+      "docs/foundation/constitution.md",
+      "docs/decisions/DECISION_INDEX.md",
+      "docs/glossary.md",
+      "docs/engineering/ai-context-loading-standard.md",
+      "docs/context/ARCHITECTURE_VERSION.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/phase2/PHASE2R_REBASELINE.md",
+      "docs/phase2/PHASE2_FEATURE_SEQUENCE.md"
+    ],
+    "stages": {
+      "architecture": [".kiro/steering/slice0-contract.md"],
+      "requirements": [".kiro/steering/slice0-contract.md", ".automation/context-projections/FEATURE-0018.requirements.md"],
+      "design": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/architecture/controller-reconciliation-model.md", "docs/architecture/observability-and-audit-baseline.md"],
+      "tasks": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-observability-standard.md", ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.md", ".automation/context-projections/FEATURE-0018.tasks-handoff-ledger.manifest.json"],
+      "implementation": [".kiro/steering/slice0-contract.md", "docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md", "docs/engineering/go-observability-standard.md", ".automation/context-projections/FEATURE-0018.implementation-handoff-ledger.md", ".automation/context-projections/FEATURE-0018.implementation-handoff-ledger.manifest.json"],
+      "review": [
+        ".automation/state/FEATURE-0018.json",
+        ".automation/reviews/FEATURE-0018/requirements.review.json"
+      ]
+    },
+    "review_stage_context": {
+      "design": [
+        ".automation/context-projections/FEATURE-0018.design-review-target.md",
+        ".automation/context-projections/FEATURE-0018.design-review-target.manifest.json",
+        ".automation/context-projections/FEATURE-0018.design-review.md",
+        ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
+      ],
+      "tasks": [
+        ".automation/context-projections/FEATURE-0018.tasks-review-requirements.md",
+        ".automation/context-projections/FEATURE-0018.tasks-review-requirements.manifest.json"
+      ]
+    },
+    "review_authority": {
+      "design": {
+        "handoff": "ADH-2026-076",
+        "mechanics_authority": "The hash-bound Design Mechanics Contract (.kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json) and its deterministic checker (make feature-0018-design-contract-check) are the sole authority for implementation-level mechanics: repository-owned package edges, named Go 1.22 API shapes, factory/caller confinement, StateEditor permissions, transaction state machines, lock order, identity issuance, test seams, static-checker fixtures and non-runtime gate evidence.",
+        "semantic_authority": "The independent LLM design review is the sole authority for semantic architecture coherence, security, canonical ownership, writer boundaries, audit/decision semantics, authorization composition, Phase 2R exclusions, literal route/action/resource traceability, contract hash binding and deterministic-check result, and evidence that required conformance, test and feature-gate ownership remains present.",
+        "finding_classifications": [
+          "STALE_TRANSCRIPTION",
+          "DESIGN_EXECUTABILITY",
+          "REQUIREMENT_GAP",
+          "ARCHITECTURE_CLARIFICATION_REQUIRED",
+          "OUT_OF_SCOPE"
+        ],
+        "design_executability_allowed_only_when": [
+          "a failed or absent deterministic Design Mechanics Contract check is identified with an exact citation",
+          "a contract field is missing a required authority, owner, test, fixture, result or proof artifact specified by ADH-2026-075, with an exact citation",
+          "a conflict between the contract and approved semantic authority is identified with an exact citation",
+          "a product-semantic assertion is leaked into the mechanics contract, with an exact citation"
+        ],
+        "reviewer_must_not": [
+          "reopen a closed mechanical representation merely because it would choose a different Go type, factory shape, method name, lock implementation or test seam when the checker passes and the contract satisfies ADH-2026-075",
+          "require duplicate mechanics prose in design.md as corroboration of the contract",
+          "waive a failed deterministic check, a failed test, a contract/hash mismatch or a genuine semantic security contradiction",
+          "replace deterministic evidence with an LLM assertion",
+          "add a new product architecture decision"
+        ],
+        "finding_requirement": "Every blocking or revision finding must be classified as exactly one of the finding_classifications above and must cite the exact contradictory controlling authority and target text before reopening any closed decision.",
+        "hash_bound_evidence": [
+          ".automation/context-projections/FEATURE-0018.design-review-target.md",
+          ".automation/context-projections/FEATURE-0018.design-review-target.manifest.json",
+          ".automation/context-projections/FEATURE-0018.design-review.md",
+          ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
+          ".kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json",
+          ".kiro/specs/governance-iam-approval-exception-foundation/design.md"
+        ]
+      }
+    },
+    "review_exclusions": {
+      "design": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md"
+      ],
+      "tasks": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      ]
+    },
+    "stage_exclusions": {
+      "implementation": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      ],
+      "tasks": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      ]
+    },
+    "budgets": {
+      "requirements": 600000,
+      "design": 750000,
+      "tasks": 700000,
+      "implementation": 850000,
+      "review": 650000
+    }
+  },
+  "guardrails": {
+    "kiro": {
+      "writable_by_stage": {
+        "requirements": [".kiro/specs/governance-iam-approval-exception-foundation/requirements.md"],
+        "design": [".kiro/specs/governance-iam-approval-exception-foundation/design.md"],
+        "tasks": [".kiro/specs/governance-iam-approval-exception-foundation/tasks.md"]
+      },
+      "forbidden_outputs": ["internal/", "cmd/", "api/schemas/", "tests/"]
+    },
+    "cursor": {
+      "go_context": ["docs/engineering/go-coding-guardrails.md", "docs/engineering/go-version-standard.md", "docs/engineering/go-observability-standard.md"],
+      "require_complete_receipt": true,
+      "verify_commands": ["make fmt", "make vet", "make test", "make test-race"]
+    },
+    "stop_conditions": [
+      "ARCHITECTURE_DECISION_REQUIRED",
+      "REQUIREMENT_CLARIFICATION_REQUIRED",
+      "BOUNDARY_CHANGE_REQUIRED",
+      "DEPENDENCY_APPROVAL_REQUIRED",
+      "SECURITY_REVIEW_REQUIRED"
+    ]
+  },
+  "execution": {
+    "human_gates": ["architecture", "executable_plan", "final"],
+    "tasks_per_run": 2,
+    "require_clean_tree": true,
+    "commit_per_task": true,
+    "max_stage_revisions": 2
+  },
+  "models": {
+    "architecture": "architecture",
+    "requirements": "requirements",
+    "design": "design",
+    "tasks": "tasks",
+    "review": "review",
+    "implementation": "implementation",
+    "mechanical": "deterministic_first"
+  },
+  "closeout": {
+    "mode": "prepare_only",
+    "metadata_targets": [
+      "docs/features/FEATURE_INDEX.md",
+      "docs/context/CURRENT_PHASE_CONTEXT.md",
+      "docs/context/CURRENT_ARCHITECTURE_BASELINE.md",
+      "docs/context/CURRENT_DECISION_SUMMARY.md",
+      "docs/traceability/FEATURE_TRACEABILITY_MATRIX.md",
+      "docs/traceability/VS-000_CONTRACT_TRACEABILITY_MATRIX.md"
+    ],
+    "commit": false,
+    "push": false
+  }
+}

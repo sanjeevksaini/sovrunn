@@ -12,6 +12,15 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ -n "$STAGE" ]] || fail "--stage required"
 cd "$(repo_root)"; ensure_feature_state "$FEATURE"
+CONTROL_FILE=".automation/features/${FEATURE}.control.json"
+# ADH-2026-077 §2: an active checkpoint must not be overwritten by a normal
+# requirements/design stage approval that advances current_stage.
+if [[ -f "$CONTROL_FILE" && ( "$STAGE" == "requirements" || "$STAGE" == "design" ) ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/checkpoint-guard.py \
+    --feature "$FEATURE" --mode assert-stage-allowed --stage "$STAGE" \
+    --reentry-handoff "${FEATURE_FACTORY_CHECKPOINT_REENTRY:-}"
+fi
 case "$STAGE" in
   requirements) REQUIRED_TOKEN="APPROVED_FOR_DESIGN"; NEXT_STAGE="design"; NEXT_STATUS="requirements_approved";;
   design) REQUIRED_TOKEN="APPROVED_FOR_TASKS"; NEXT_STAGE="tasks"; NEXT_STATUS="design_approved";;

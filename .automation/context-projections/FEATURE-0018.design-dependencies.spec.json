@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "feature": "FEATURE-0018",
+  "stage": "design",
+  "output": ".automation/context-projections/FEATURE-0018.design-dependencies.md",
+  "manifest": ".automation/context-projections/FEATURE-0018.design-dependencies.manifest.json",
+  "sources": [
+    {
+      "path": "docs/architecture/FEATURE-0013-decision-record-and-auditevent-standard.md",
+      "sha256": "325c20278da09149dabe7f4d0cee583269f78959a37294a98eb5bceeb13f6097",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Canonical DecisionRecord, DecisionProfile and FEATURE-0018 adoption contracts",
+          "start": 140,
+          "end": 510
+        },
+        {
+          "kind": "line_range",
+          "label": "Evaluation composition, execution neutrality and data locality",
+          "start": 512,
+          "end": 677
+        },
+        {
+          "kind": "line_range",
+          "label": "Audit consistency contract",
+          "start": 736,
+          "end": 775
+        },
+        {
+          "kind": "line_range",
+          "label": "Security, privacy and trust boundaries",
+          "start": 860,
+          "end": 988
+        },
+        {
+          "kind": "line_range",
+          "label": "Compatibility and observability adoption constraints",
+          "start": 1035,
+          "end": 1122
+        },
+        {
+          "kind": "line_range",
+          "label": "Lightweight downstream adoption contract",
+          "start": 1942,
+          "end": 2104
+        }
+      ]
+    }
+  ]
+}

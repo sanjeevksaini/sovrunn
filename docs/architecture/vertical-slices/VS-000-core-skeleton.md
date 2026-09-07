@@ -101,7 +101,7 @@ Fixture names are synthetic. They do not assert a real NIC/Yotta contract, facil
 | Cloud model | CloudPlatform, CloudProvider, CloudProviderParticipation, HostingLocation, Datacenter, FaultDomain, InfrastructureStack | FEATURE-0015 |
 | Integration | ExecutionTarget, normalized target facts, qualification, and synthetic observer boundary; consumes CloudProviderParticipation and InfrastructureStack read-only | FEATURE-0016 |
 | Policy | PolicyEvaluationRequest, PolicyEvaluationResult, fake PolicyEngineAdapter | FEATURE-0017 |
-| IAM/governance | PrincipalRef, Membership, RoleDefinition, RoleAssignment, GovernanceProfile; approval/exception shapes where applicable | FEATURE-0018 |
+| IAM/governance | PrincipalRef, AccessGroup, Membership, RoleDefinition, RoleAssignment, Human PrincipalRef-only EligibilityRef, PrivilegedAccessRequest, AccessReview, ApprovalPolicy, ApprovalRequest, ExceptionGrant and FEATURE-0018-limited GovernanceProfile | FEATURE-0018 |
 | Sovereignty inputs | SovereigntyProfile, RegulatoryPolicyBundle, SovereigntyFactSet, EvidenceRecord | FEATURE-0019 |
 | Resolution | ProfileAssignment, EffectiveGovernanceContext | FEATURE-0020 |
 | Customer access to catalog | CloudEnrollment, EntitlementPackage, ServiceEntitlement, QuotaPolicy/reservation | FEATURE-0021 |
@@ -131,7 +131,12 @@ No slice feature may redefine a contract owned by another feature.
 | Projection controller | Publish safe ServicePlacement and explanation | Canonical decision mutation or protected topology disclosure |
 | Binding controller | Publish safe endpoint metadata and fake SecretRef | Embed or log secret value |
 
-Authorization uses authenticated PrincipalRef, canonical action, scoped RoleAssignment, conditions and applicable policy. Persona labels and job titles grant no authority.
+Authorization uses authenticated PrincipalRef, an exact registered action/target,
+applicable scoped RoleAssignments and explicit dependencies/guardrails. Grants
+combine by union and guardrails by intersection; ambiguity fails closed.
+Persona labels, job titles, email, provider-native roles and unprovisioned
+external group claims grant no authority. DEC-0060 remains Proposed, so this is
+an architecture reconciliation record rather than executable Slice 0 authority.
 
 ## 8. Happy path
 

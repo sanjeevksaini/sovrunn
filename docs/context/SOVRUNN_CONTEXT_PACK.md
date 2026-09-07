@@ -81,3 +81,16 @@ Platform, Organization, OrganizationUnit, Tenant, Project, CloudPlatform, CloudP
 - ServiceTypeDefinition (reusable type) → ServiceOffering (platform product) → ServicePlan (versioned, immutable)
 - ServicePlacement (safe customer projection) — no topology/credential leakage
 - ServiceBinding (per-consumer, SecretRef-only, revocable)
+
+## Approved FEATURE-0018 Boundary
+
+ACR-2026-002 and DEC-0060 establish direct-principal and direct-member
+AccessGroup role assignments, explicit Standing/TimeBound validity, bounded
+approval/privileged/review/exception evidence, exact-Human PrincipalRef
+eligibility that cannot be satisfied by roles, assignments, groups or
+Membership, and a two-plane intersection of
+Sovrunn authorization with native IAM. FEATURE-0018 authorizes only
+Sovrunn control-plane actions; external identity lifecycle, provider-native IAM
+and FEATURE-0020 effective-governance resolution retain separate owners.
+Architecture, reuse and independent-security renewal-05 gates passed on
+2026-08-30; later Feature Factory stages remain separately gated.
