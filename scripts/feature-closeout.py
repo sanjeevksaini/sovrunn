@@ -63,6 +63,12 @@ def update_frontmatter(path: Path, values: dict[str, str]) -> None:
     path.write_text("---\n" + "\n".join(lines) + "\n---\n" + body)
 
 
+def validate_frontmatter(path: Path) -> None:
+    text = path.read_text()
+    if not text.startswith("---\n") or text.find("\n---\n", 4) < 0:
+        raise SystemExit(f"ERROR: invalid front matter: {path.relative_to(ROOT)}")
+
+
 def table_row(text: str, feature: str) -> tuple[str, list[str]]:
     matches = [line for line in text.splitlines() if re.match(rf"^\|\s*{re.escape(feature)}\s*\|", line)]
     if len(matches) != 1:
@@ -87,10 +93,17 @@ def update_feature_index(path: Path, feature: str, evidence: str) -> None:
 def update_traceability(path: Path, feature: str, gate: str) -> None:
     text = path.read_text()
     line, columns = table_row(text, feature)
-    if len(columns) != 8:
-        raise SystemExit("ERROR: unexpected traceability table shape")
     columns[2] = "Implemented and Merged"
-    columns[6] = gate
+    if len(columns) == 6:
+        # Phase 2R's canonical matrix is Feature, Phase, Status, Decisions,
+        # Controlling Source, Notes. Preserve its authority columns and make
+        # the final-gate evidence explicit in Notes.
+        columns[5] = gate
+    elif len(columns) == 8:
+        # Retain support for the legacy generic matrix used by older features.
+        columns[6] = gate
+    else:
+        raise SystemExit("ERROR: unsupported traceability table shape; expected 6 or 8 columns")
     replacement = "| " + " | ".join(columns) + " |"
     path.write_text(text.replace(line, replacement, 1))
 
@@ -193,7 +206,10 @@ def update_decision_summary(path: Path, data: dict[str, Any], evidence: str) -> 
         + ownership_summary(data)
     )
     text = path.read_text()
-    pattern = rf"(?m)^- {re.escape(feature['id'])}\b.*$"
+    # A feature decision is commonly a wrapped Markdown list item. Replace the
+    # entire item, not just its first physical line, so stale continuation text
+    # cannot survive a closeout update.
+    pattern = rf"(?m)^- {re.escape(feature['id'])}\b.*(?:\n(?:[ \t]+.*))*"
     if re.search(pattern, text):
         text = re.sub(pattern, replacement, text, count=1)
     else:
@@ -201,7 +217,64 @@ def update_decision_summary(path: Path, data: dict[str, Any], evidence: str) -> 
         if anchor not in text:
             raise SystemExit("ERROR: decision summary missing accepted-decisions section")
         text = text.replace(anchor, anchor + "\n" + replacement + "\n", 1)
+
+    stage_heading = f"## Approved {feature['id']} stage boundary"
+    if stage_heading in text:
+        closeout_heading = f"## {feature['id']} implementation closeout"
+        closeout = (
+            f"{closeout_heading}\n\n"
+            f"{feature['id']} is implemented and merged; {evidence}. Its final human approval "
+            "and feature gate are recorded. Its approved architecture and accepted handoffs remain controlling. "
+            + ownership_summary(data)
+        )
+        text = replace_unique(
+            text,
+            rf"(?ms)^{re.escape(stage_heading)}\n\n.*?(?=^## |\Z)",
+            closeout + "\n",
+            label="FEATURE-0018 stage-boundary section",
+        )
     path.write_text(text)
+
+
+def preflight_closeout_targets(feature_path: Path, targets: dict[str, Path], feature: str) -> None:
+    """Validate every closeout source before any --apply mutation occurs."""
+    required = {
+        "FEATURE_INDEX.md",
+        "CURRENT_PHASE_CONTEXT.md",
+        "CURRENT_ARCHITECTURE_BASELINE.md",
+        "CURRENT_DECISION_SUMMARY.md",
+        "FEATURE_TRACEABILITY_MATRIX.md",
+        "VS-000_CONTRACT_TRACEABILITY_MATRIX.md",
+    }
+    missing = sorted(required - targets.keys())
+    if missing:
+        raise SystemExit(f"ERROR: closeout metadata targets missing: {', '.join(missing)}")
+    validate_frontmatter(feature_path)
+    _, index_columns = table_row(targets["FEATURE_INDEX.md"].read_text(), feature)
+    if len(index_columns) != 6:
+        raise SystemExit("ERROR: unexpected FEATURE_INDEX table shape")
+    phase_text = targets["CURRENT_PHASE_CONTEXT.md"].read_text()
+    if len(re.findall(r"(?m)^## Phase [A-Za-z0-9]+ Goal\s*$", phase_text)) != 1:
+        raise SystemExit("ERROR: CURRENT_PHASE_CONTEXT must contain exactly one Phase <name> Goal heading")
+    phase_heading = re.search(r"(?m)^## (Phase [A-Za-z0-9]+) Goal\s*$", phase_text).group(1)
+    if f"## {phase_heading} Next Planned Feature" not in phase_text:
+        raise SystemExit(f"ERROR: CURRENT_PHASE_CONTEXT missing {phase_heading} next-feature section")
+    baseline_text = targets["CURRENT_ARCHITECTURE_BASELINE.md"].read_text()
+    if not any(
+        anchor in baseline_text
+        for anchor in ("## Implemented Phase 2R Features", "## Phase 2R Next Planned Feature", "## Approved Consolidated")
+    ):
+        raise SystemExit("ERROR: architecture baseline has no supported closeout insertion anchor")
+    if "## Accepted Decisions\n" not in targets["CURRENT_DECISION_SUMMARY.md"].read_text():
+        raise SystemExit("ERROR: decision summary missing accepted-decisions section")
+    _, trace_columns = table_row(targets["FEATURE_TRACEABILITY_MATRIX.md"].read_text(), feature)
+    if len(trace_columns) not in (6, 8):
+        raise SystemExit("ERROR: unsupported traceability table shape; expected 6 or 8 columns")
+    # The VS-000 matrix is an authoritative contract registry, not a feature
+    # lifecycle table. It is a required read-only evidence target at closeout.
+    vs000_text = targets["VS-000_CONTRACT_TRACEABILITY_MATRIX.md"].read_text()
+    if "## Schema Mapping" not in vs000_text or feature not in vs000_text:
+        raise SystemExit("ERROR: VS-000 traceability matrix lacks FEATURE-0018 evidence")
 
 
 def main() -> None:
@@ -245,6 +318,7 @@ def main() -> None:
     date = merged_at.date().isoformat()
     short = commit[:7]
     evidence = f"PR #{pr['number']} merged {date} as commit `{short}` into `{feature['phase_branch']}`"
+    targets = {Path(item).name: ROOT / item for item in control["closeout"]["metadata_targets"]}
     plan = {
         "feature": args.feature,
         "pr": pr["number"],
@@ -261,6 +335,7 @@ def main() -> None:
         print("DRY RUN: rerun with --apply to prepare metadata edits; commit and push remain manual.")
         return
     feature_path = ROOT / feature["feature_file"]
+    preflight_closeout_targets(feature_path, targets, args.feature)
     update_frontmatter(
         feature_path,
         {
@@ -271,7 +346,6 @@ def main() -> None:
             "merged_commit": commit,
         },
     )
-    targets = {Path(item).name: ROOT / item for item in control["closeout"]["metadata_targets"]}
     update_feature_index(targets["FEATURE_INDEX.md"], args.feature, evidence)
     update_phase_context(targets["CURRENT_PHASE_CONTEXT.md"], control, evidence, date)
     update_architecture_baseline(targets["CURRENT_ARCHITECTURE_BASELINE.md"], control, evidence)

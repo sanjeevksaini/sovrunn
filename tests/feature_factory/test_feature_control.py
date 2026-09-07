@@ -898,6 +898,39 @@ class CloseoutMetadataTests(unittest.TestCase):
             self.assertIn("Implemented and Merged", updated)
             self.assertIn("Final gate; PR #17", updated)
 
+    def test_traceability_update_supports_phase_2r_six_column_matrix(self):
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "FEATURE_TRACEABILITY_MATRIX.md"
+            path.write_text(
+                "| Feature | Phase | Status | Decisions | Controlling Source | Notes |\n"
+                "|---|---|---|---|---|---|\n"
+                "| FEATURE-0018 | Phase 2R | Design approved | DEC-0060 | ADH-2026-070 | Pending |\n"
+            )
+            closeout.update_traceability(path, "FEATURE-0018", "Final gate; PR #20")
+            updated = path.read_text()
+            self.assertIn("| FEATURE-0018 | Phase 2R | Implemented and Merged |", updated)
+            self.assertIn("| ADH-2026-070 | Final gate; PR #20 |", updated)
+
+    def test_decision_summary_replaces_wrapped_feature_item_and_stage_boundary(self):
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "CURRENT_DECISION_SUMMARY.md"
+            path.write_text(
+                "## Accepted Decisions\n\n"
+                "- FEATURE-0018 provides old semantics\n"
+                "  continuation that must not survive.\n\n"
+                "## Approved FEATURE-0018 stage boundary\n\n"
+                "Old stage-only status.\n"
+            )
+            data = {
+                "feature": {"id": "FEATURE-0018", "title": "Governance Foundation"},
+                "ownership": {"owned_resources": ["AccessGroup"], "excluded_features": []},
+            }
+            closeout.update_decision_summary(path, data, "PR #20 merged")
+            updated = path.read_text()
+            self.assertNotIn("continuation that must not survive", updated)
+            self.assertIn("## FEATURE-0018 implementation closeout", updated)
+            self.assertNotIn("## Approved FEATURE-0018 stage boundary", updated)
+
     def test_frontmatter_update_preserves_document_body(self):
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "feature.md"
