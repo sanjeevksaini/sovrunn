@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "feature": "FEATURE-0018",
+  "stage": "tasks-review-requirements",
+  "output": ".automation/context-projections/FEATURE-0018.tasks-review-requirements.md",
+  "manifest": ".automation/context-projections/FEATURE-0018.tasks-review-requirements.manifest.json",
+  "sources": [
+    {
+      "path": ".kiro/specs/governance-iam-approval-exception-foundation/requirements.md",
+      "sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Feature identity and purpose",
+          "start": 53,
+          "end": 113
+        },
+        {
+          "kind": "line_range",
+          "label": "Supporting values, canonical ledgers, normative requirements and acceptance mapping",
+          "start": 119,
+          "end": 989
+        },
+        {
+          "kind": "line_range",
+          "label": "Security, privacy, operations, edge cases, exclusions and negative cases",
+          "start": 991,
+          "end": 1110
+        },
+        {
+          "kind": "line_range",
+          "label": "Controlling-authority, traceability and conformance mappings",
+          "start": 1111,
+          "end": 1403
+        }
+      ]
+    }
+  ]
+}

@@ -34,11 +34,26 @@ esac
 [[ -f "$TARGET" ]] || fail "missing file to review: $TARGET"
 CONTROL_FILE=".automation/features/${FEATURE}.control.json"
 if [[ -f "$CONTROL_FILE" ]]; then
+  RENDER_TARGET_ARGS=()
+  # ADH-2026-076 clause 3: for the FEATURE-0018 design review only, render the
+  # hash-bound semantic design-review target projection instead of the raw
+  # ~4,000-line design.md, while semantic-delta.py keeps hashing raw design.md.
+  # The builder fails closed if the deterministic contract check does not pass or
+  # a source hash cannot be read, so the raw design mechanics can never override
+  # the contract at review time.
+  if [[ "$FEATURE" == "FEATURE-0018" && "$STAGE" == "design" ]]; then
+    RENDER_TARGET=".automation/context-projections/FEATURE-0018.design-review-target.md"
+    PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature0018-design-review-target.py >/dev/null
+    [[ -f "$RENDER_TARGET" ]] || fail "missing design-review target projection: $RENDER_TARGET"
+    RENDER_TARGET_ARGS=(--render-target "$RENDER_TARGET")
+    info "FEATURE-0018 design review renders hash-bound semantic projection: $RENDER_TARGET"
+  fi
   python3 ./scripts/generic-review-prompt.py \
     --feature "$FEATURE" \
     --title "$TITLE" \
     --stage "$STAGE" \
     --target "$TARGET" \
+    "${RENDER_TARGET_ARGS[@]}" \
     --prompt-out "$PROMPT_OUT" \
     --context-out "$CONTEXT_OUT"
 else

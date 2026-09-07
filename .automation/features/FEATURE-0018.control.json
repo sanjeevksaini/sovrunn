@@ -1,5 +1,18 @@
 {
   "schema_version": "1.0",
+  "checkpoint": {
+    "handoff": "ADH-2026-077",
+    "active": true,
+    "last_committed_task": 3,
+    "current_task": 4,
+    "frozen_design_sha256": "4eb84a0002d8e58de466806b2dcd18085608a0a62d97cc78684b7e98210d92a8",
+    "frozen_requirements_sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4",
+    "task_amendment_only": true,
+    "blocked_stages": ["requirements", "design"],
+    "blocked_review_stages": ["requirements", "design"],
+    "reentry_requires_handoff": true,
+    "mechanics_evidence_only": true
+  },
   "feature": {
     "id": "FEATURE-0018",
     "slug": "governance-iam-approval-exception-foundation",
@@ -16,7 +29,10 @@
       "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
       "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
-      "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-075-feature-0018-design-normalization-and-contract-check.md",
+      "docs/reviews/architecture-decision-handoffs/ADH-2026-076-feature-0018-semantic-review-authority-realignment.md"
     ],
     "spec_path": ".kiro/specs/governance-iam-approval-exception-foundation"
   },
@@ -137,16 +153,61 @@
     },
     "review_stage_context": {
       "design": [
+        ".automation/context-projections/FEATURE-0018.design-review-target.md",
+        ".automation/context-projections/FEATURE-0018.design-review-target.manifest.json",
         ".automation/context-projections/FEATURE-0018.design-review.md",
         ".automation/context-projections/FEATURE-0018.design-review.manifest.json"
       ],
-      "tasks": []
+      "tasks": [
+        ".automation/context-projections/FEATURE-0018.tasks-review-requirements.md",
+        ".automation/context-projections/FEATURE-0018.tasks-review-requirements.manifest.json"
+      ]
+    },
+    "review_authority": {
+      "design": {
+        "handoff": "ADH-2026-076",
+        "mechanics_authority": "The hash-bound Design Mechanics Contract (.kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json) and its deterministic checker (make feature-0018-design-contract-check) are the sole authority for implementation-level mechanics: repository-owned package edges, named Go 1.22 API shapes, factory/caller confinement, StateEditor permissions, transaction state machines, lock order, identity issuance, test seams, static-checker fixtures and non-runtime gate evidence.",
+        "semantic_authority": "The independent LLM design review is the sole authority for semantic architecture coherence, security, canonical ownership, writer boundaries, audit/decision semantics, authorization composition, Phase 2R exclusions, literal route/action/resource traceability, contract hash binding and deterministic-check result, and evidence that required conformance, test and feature-gate ownership remains present.",
+        "finding_classifications": [
+          "STALE_TRANSCRIPTION",
+          "DESIGN_EXECUTABILITY",
+          "REQUIREMENT_GAP",
+          "ARCHITECTURE_CLARIFICATION_REQUIRED",
+          "OUT_OF_SCOPE"
+        ],
+        "design_executability_allowed_only_when": [
+          "a failed or absent deterministic Design Mechanics Contract check is identified with an exact citation",
+          "a contract field is missing a required authority, owner, test, fixture, result or proof artifact specified by ADH-2026-075, with an exact citation",
+          "a conflict between the contract and approved semantic authority is identified with an exact citation",
+          "a product-semantic assertion is leaked into the mechanics contract, with an exact citation"
+        ],
+        "reviewer_must_not": [
+          "reopen a closed mechanical representation merely because it would choose a different Go type, factory shape, method name, lock implementation or test seam when the checker passes and the contract satisfies ADH-2026-075",
+          "require duplicate mechanics prose in design.md as corroboration of the contract",
+          "waive a failed deterministic check, a failed test, a contract/hash mismatch or a genuine semantic security contradiction",
+          "replace deterministic evidence with an LLM assertion",
+          "add a new product architecture decision"
+        ],
+        "finding_requirement": "Every blocking or revision finding must be classified as exactly one of the finding_classifications above and must cite the exact contradictory controlling authority and target text before reopening any closed decision.",
+        "hash_bound_evidence": [
+          ".automation/context-projections/FEATURE-0018.design-review-target.md",
+          ".automation/context-projections/FEATURE-0018.design-review-target.manifest.json",
+          ".automation/context-projections/FEATURE-0018.design-review.md",
+          ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
+          ".kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json",
+          ".kiro/specs/governance-iam-approval-exception-foundation/design.md"
+        ]
+      }
     },
     "review_exclusions": {
       "design": [
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
         "docs/reviews/architecture-decision-handoffs/ADH-2026-071-feature-0018-conformance-executability-reconciliation.md",
         "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
-        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md"
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-073-feature-0018-exceptionproposal-terminal-decision-audit-event.md",
+        "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md"
       ],
       "tasks": [
         "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",

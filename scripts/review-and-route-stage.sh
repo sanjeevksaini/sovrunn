@@ -14,6 +14,16 @@ done
 [[ -n "$FEATURE" ]] || fail "--feature required"
 [[ -n "$STAGE" ]] || fail "--stage required"
 cd "$(repo_root)"; ensure_feature_state "$FEATURE"
+CONTROL_FILE=".automation/features/${FEATURE}.control.json"
+# ADH-2026-077 §2/§4/§5: an active implementation checkpoint blocks
+# requirements/design LLM review routing. Post-checkpoint design review is not
+# a delivery authority and must not reopen the frozen semantic baseline.
+if [[ -f "$CONTROL_FILE" ]]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 \
+    ./scripts/checkpoint-guard.py \
+    --feature "$FEATURE" --mode assert-review-allowed --stage "$STAGE" \
+    --reentry-handoff "${FEATURE_FACTORY_CHECKPOINT_REENTRY:-}"
+fi
 if [[ "$FEATURE" == "FEATURE-0013" ]]; then
   PYTHONDONTWRITEBYTECODE=1 python3 \
     ./scripts/feature-0013-architecture-boundary-check.py \

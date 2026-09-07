@@ -319,7 +319,12 @@ else
   require_stage_label "$TASKS_PATH" "Tasks" "Tasks stage"
 
   # Reuse summary + non-goals + controlling ADH
-  if [[ "$FEATURE" == "FEATURE-0014" ]] && grep -qi "Feature-level reuse summary" "$REQUIREMENTS_PATH"; then
+  if [[ "$FEATURE" == "FEATURE-0018" ]]; then
+    REUSE_EVIDENCE_FILE="docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md"
+    require_file "$REUSE_EVIDENCE_FILE"
+    require_contains "$REUSE_EVIDENCE_FILE" "approval_status:[[:space:]]*Approved" "Approved reuse evidence status"
+    pass "Reuse Assessment (approved immutable evidence for FEATURE-0018)"
+  elif [[ "$FEATURE" == "FEATURE-0014" ]] && grep -qi "Feature-level reuse summary" "$REQUIREMENTS_PATH"; then
     pass "Reuse Assessment (approved FEATURE-0014 legacy heading: Feature-level reuse summary)"
   elif grep -qiE "Reuse Assessment|reuse governance contract" "$REQUIREMENTS_PATH"; then
     pass "Reuse Assessment present in $REQUIREMENTS_PATH"
@@ -364,15 +369,23 @@ else
 
   if [[ -x scripts/reuse-assessment-check.sh ]]; then
     REUSE_MODE="strict"
+    REUSE_EXTRA_ARGS=()
     if [[ "$FEATURE" == "FEATURE-0014" ]] && grep -q '"status": "implemented_and_merged"' ".automation/state/FEATURE-0014.json"; then
       REUSE_MODE="legacy"
       echo "INFO: FEATURE-0014 reuse assessment is immutable approved history; using legacy validation compatibility"
+    fi
+    if [[ "$FEATURE" == "FEATURE-0018" ]]; then
+      # FEATURE-0018 requirements are intentionally frozen; gate validation is
+      # enforced via immutable approved reuse evidence.
+      REUSE_EXTRA_ARGS+=(--skip-rac13)
+      echo "INFO: FEATURE-0018 uses immutable approved reuse evidence; skipping RA-C13 comparison"
     fi
     echo "==> Running reuse-assessment validator ($REUSE_MODE)"
     set +e
     bash scripts/reuse-assessment-check.sh "$FEATURE" \
       --assessment "$ASSESSMENT_PATH" \
       --mode "$REUSE_MODE" \
+      "${REUSE_EXTRA_ARGS[@]}" \
       --changed-files "$CHANGED_FILES_LIST" \
       --requirements "$REQUIREMENTS_PATH" \
       --design "$DESIGN_PATH" \
@@ -454,12 +467,16 @@ if compgen -G "*.go" >/dev/null || find cmd internal pkg api -type f -name '*.go
 fi
 
 if [[ -x scripts/phase1-consistency-check.sh ]]; then
-  if [[ -f go.mod && -d internal ]]; then
-    echo "==> Running phase1 consistency check"
-    scripts/phase1-consistency-check.sh
-    pass "phase1 consistency check"
+  if [[ "$LEGACY_PHASE1" == "true" ]]; then
+    if [[ -f go.mod && -d internal ]]; then
+      echo "==> Running phase1 consistency check"
+      scripts/phase1-consistency-check.sh
+      pass "phase1 consistency check"
+    else
+      echo "WARN: go.mod/internal not found; skipping phase1 consistency check in docs-only archive"
+    fi
   else
-    echo "WARN: go.mod/internal not found; skipping phase1 consistency check in docs-only archive"
+    echo "INFO: skipping phase1 consistency check for Phase 2+ feature"
   fi
 fi
 
@@ -482,6 +499,39 @@ case "$FEATURE" in
       pass "FEATURE-0012 API conformance check"
     else
       fail_config "scripts/api-conformance-check.sh is missing or not executable"
+    fi
+    ;;
+  FEATURE-0018)
+    echo "==> Running FEATURE-0018 architecture checker"
+    make feature-0018-architecture-check
+    pass "FEATURE-0018 architecture checker"
+
+    echo "==> Validating immutable FEATURE-0018 reuse evidence"
+    REUSE_EVIDENCE_FILE="docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md"
+    require_file "$REUSE_EVIDENCE_FILE"
+    require_contains "$REUSE_EVIDENCE_FILE" "approval_status:[[:space:]]*Approved" "Approved reuse evidence status"
+    pass "FEATURE-0018 immutable reuse evidence validated"
+
+    echo "==> Validating FEATURE-0018 standards-mapping architecture-gate artifact"
+    STANDARDS_MAPPING_FILE="docs/reviews/architecture-readiness/FEATURE-0018-standards-mapping.md"
+    require_file "$STANDARDS_MAPPING_FILE"
+    require_contains "$STANDARDS_MAPPING_FILE" "ARCHITECTURE EVIDENCE REVIEWED AND APPROVED" "Approved standards-mapping status"
+    pass "FEATURE-0018 standards-mapping artifact validated"
+
+    if [[ -f ".automation/feature-gates/FEATURE-0018-gate.sh" ]]; then
+      fail "Unexpected alternate FEATURE-0018 gate script present: .automation/feature-gates/FEATURE-0018-gate.sh"
+    fi
+    pass "No alternate FEATURE-0018 gate script present"
+
+    # ADH-2026-077: if an implementation checkpoint is active, the frozen
+    # semantic design and requirements must remain intact.
+    if [[ -f ".automation/features/FEATURE-0018.control.json" ]]; then
+      echo "==> Running FEATURE-0018 implementation-checkpoint frozen-baseline check"
+      PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py \
+        --feature FEATURE-0018 --mode status
+      PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py \
+        --feature FEATURE-0018 --mode assert-frozen
+      pass "FEATURE-0018 checkpoint frozen-baseline check"
     fi
     ;;
 esac

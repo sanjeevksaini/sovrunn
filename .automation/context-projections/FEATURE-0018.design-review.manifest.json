@@ -1,11 +1,74 @@
 {
   "feature": "FEATURE-0018",
   "projection": ".automation/context-projections/FEATURE-0018.design-review.md",
-  "projection_bytes": 71038,
-  "projection_estimated_tokens": 17760,
-  "projection_sha256": "3f423208c4ed9dfa9e7cf7c7763adcb567fa1fc887929d77c24cd76e290c6fab",
+  "projection_bytes": 141234,
+  "projection_estimated_tokens": 35309,
+  "projection_sha256": "a3e579677ffc147c0969d87adb92c8676c41ec1121863241f089354746c39f54",
   "schema_version": "1.0",
   "sources": [
+    {
+      "bytes": 41294,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+      "selections": [
+        {
+          "end": 234,
+          "excerpt_sha256": "4f018d2503c7d9582abadfdbf518ad0a8c60e2e29d9e66ef6c2f979b9130a9b8",
+          "kind": "line_range",
+          "label": "Package authority and complete F18-RD index",
+          "start": 155
+        }
+      ],
+      "sha256": "489ccb5869ca4cc43835ef79de2d2b8f006f580cc22fdad8a6d674b112fdd769"
+    },
+    {
+      "bytes": 74674,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+      "selections": [
+        {
+          "end": 32,
+          "excerpt_sha256": "3745bb7e1e62ea57505fe9b087591ce0453d719558d0e38fa9fba44405f94d57",
+          "kind": "line_range",
+          "label": "Appendix A normative allocation",
+          "start": 20
+        }
+      ],
+      "sha256": "66479426f30759a21202c8beeb08989241d912b7ba69de3619619f45823fe485"
+    },
+    {
+      "bytes": 48528,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+      "selections": [
+        {
+          "end": 32,
+          "excerpt_sha256": "97980876183502fd5ee55d28b6375960157145c762351fdfe774ca399b2bf480",
+          "kind": "line_range",
+          "label": "Appendix B normative allocation",
+          "start": 20
+        }
+      ],
+      "sha256": "2424cff0130bf82d7b413069fc60580af0ab6e1a4bd00982fc669bebb80d8b49"
+    },
+    {
+      "bytes": 10601,
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md",
+      "selections": [
+        {
+          "end": 29,
+          "excerpt_sha256": "a8dda118d57da285ab109f0e9ab2cdf8bf5b000ef2b31c299fead254f9d060c0",
+          "kind": "line_range",
+          "label": "Approved metadata, summary and classification",
+          "start": 3
+        },
+        {
+          "end": 101,
+          "excerpt_sha256": "d24a47743e3e374e10ada15ad88c5955735ae07ed2014dfef25cc0e93fa8b9cb",
+          "kind": "line_range",
+          "label": "Four exact approved local mechanics",
+          "start": 58
+        }
+      ],
+      "sha256": "9e527ebca822c24549ade7489b19c7a349a42c1629d4c476d92a2550516dc60a"
+    },
     {
       "bytes": 17267,
       "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
@@ -82,6 +145,20 @@
         }
       ],
       "sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4"
+    },
+    {
+      "bytes": 57546,
+      "path": ".kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json",
+      "selections": [
+        {
+          "end": 531,
+          "excerpt_sha256": "028d345dc5aa340d50784155d5f7ce9cd1b4640c452ffedd25efebbfb6a159e6",
+          "kind": "line_range",
+          "label": "ADH-2026-075 Design Mechanics Contract (sole executable-mechanics authority; hash-bound to design.md)",
+          "start": 1
+        }
+      ],
+      "sha256": "028d345dc5aa340d50784155d5f7ce9cd1b4640c452ffedd25efebbfb6a159e6"
     }
   ],
   "stage": "design-review"

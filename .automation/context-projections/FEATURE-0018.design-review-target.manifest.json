@@ -1,0 +1,47 @@
+{
+  "binding": {
+    "contract_check_receipt": "PASS: FEATURE-0018 design-mechanics contract is internally consistent, hash-bound to design.md, and cited by design.md",
+    "mechanics_contract": ".kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json",
+    "mechanics_contract_sha256": "028d345dc5aa340d50784155d5f7ce9cd1b4640c452ffedd25efebbfb6a159e6",
+    "raw_design": ".kiro/specs/governance-iam-approval-exception-foundation/design.md",
+    "raw_design_sha256": "bc516a50f2705b8ec168b8ed21476ddd88667b37de8e0654933329bd67915219"
+  },
+  "controlling_handoff": "ADH-2026-076",
+  "feature": "FEATURE-0018",
+  "omitted": [
+    "DD-13 (contract-governed static-checker mechanics)",
+    "DD-14 (contract-governed publication-instant mechanics)",
+    "\u00a75.4 in-memory atomic publication protocol (contract-governed mechanics)",
+    "\u00a77.2 focused-mechanics unit/property tests (contract-governed mechanics)",
+    "\u00a710.4 Final self-verification (non-normative history)",
+    "Model Execution Report (non-normative history)"
+  ],
+  "projection": ".automation/context-projections/FEATURE-0018.design-review-target.md",
+  "projection_bytes": 170602,
+  "projection_estimated_tokens": 42651,
+  "projection_sha256": "55cc31ac14dd385439e4296371e03ce0daff98f91405bb428f0b47a22f742f13",
+  "retained_ranges": [
+    {
+      "end": 575,
+      "label": "Front matter, section index, \u00a71 identity/boundary, \u00a72 decisions DD-01..DD-12",
+      "start": 1
+    },
+    {
+      "end": 1442,
+      "label": "\u00a73 components/ownership/writers/topology, \u00a74 data/API/route ledger, \u00a75.1-\u00a75.3 validation and error mapping",
+      "start": 904
+    },
+    {
+      "end": 2830,
+      "label": "\u00a75.5 audited release, \u00a76 security/privacy/observability/compat, FEATURE-0013 Adoption, \u00a77.1 local conformance",
+      "start": 2591
+    },
+    {
+      "end": 3471,
+      "label": "\u00a77.3 executable conformance gating, \u00a78 classification, \u00a79 traceability, \u00a710.1-\u00a710.3 non-goals/absence/unresolved",
+      "start": 3019
+    }
+  ],
+  "schema_version": "1.0",
+  "stage": "design-review-target"
+}

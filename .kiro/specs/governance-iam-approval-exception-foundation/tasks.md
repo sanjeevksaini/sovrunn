@@ -468,7 +468,7 @@ Design: DD-01, §3.2, §3.3 (VS0-WRITER-008)
 
 **Consolidated atomic task units (traceability only; non-schedulable):** TASK-F18-06 (Authorization evaluation algebra), TASK-F18-11 (Policy seam and approval-requirement derivation)
 
-**Dependencies:** TASK-F18-02, TASK-F18-04, TASK-F18-05, TASK-F18-07. Internal order: TASK-F18-06 → TASK-F18-11. TASK-F18-11 (policyseam, approvalreq, grantintent) additionally requires TASK-F18-07 because `grantintent` imports `roleassign` and submits to `roleassign.GrantPort` (design §3.4); TASK-F18-06 (authzeval) requires only TASK-F18-02, TASK-F18-04, TASK-F18-05.
+**Dependencies:** TASK-F18-01, TASK-F18-02, TASK-F18-04, TASK-F18-05, TASK-F18-07. Internal order: the Task-4-owned `internal/govaccess/model/` supporting values (`model.AuthorizationInput`, `model.AuthorizationResult`, `model.ApprovalRequirement`, `model.RoleAssignmentProposal`; import only Task-1 leaves) → TASK-F18-06 → TASK-F18-11. These four supporting values are delivered first within Task 4 as a compile-order prerequisite so that `authzeval` and `grantintent` compile; they mirror the `model/decisionfacts.go` precedent (a later-task-owned subset of the otherwise Task-1-owned `model` package) and add no cross-executable-task edge or cycle because they import only `model`/`operation`-level Task-1 leaves and never import `authzeval`, `grantintent`, `state`, `evidence`, or `uow`. TASK-F18-11 (policyseam, approvalreq, grantintent) additionally requires TASK-F18-07 because `grantintent` imports `roleassign` and submits to `roleassign.GrantPort` (design §3.4); TASK-F18-06 (authzeval) requires only TASK-F18-02, TASK-F18-04, TASK-F18-05. No forward dependency on any later executable task is introduced; the completed Task 1–3 paths and acceptance evidence are unchanged.
 
 **Requirements:** REQ-F18-09 (deterministic scoped authorization composition), REQ-F18-10 (FEATURE-0017 adoption), REQ-F18-11 (bounded FEATURE-0017 use), REQ-F18-12 (bounded ApprovalPolicy)
 
@@ -476,10 +476,20 @@ Design: DD-01, §3.2, §3.3 (VS0-WRITER-008)
 
 **Description:**
 
-Implement the pure authorization evaluator in `internal/govaccess/authzeval/`: Evaluator produces a sealed AuthorizationCandidate; FinalizeCandidateAt revalidates publication-time predicates; ReleaseAfterPublication constructs AuthorizationResult only after commit. Evaluator never imports uow or domain mutation owners. Implement the FEATURE-0017 seam in `internal/govaccess/policyseam/` and approval-requirement derivation ports in `internal/govaccess/approvalreq/`. Policyseam is the sole importer of policyeval; privileged is its sole wired caller. Approval derivation is independently implemented by each originating owner. Implement the `grantintent` workflow-trigger caller (design §3.2, §3.4): it admits the direct non-delegable RoleAssignment grant and the single `RoleAssignmentProposal`, derives the RoleGrant `ApprovalRequirement` through `RoleGrantRequirementDeriver.DeriveForRoleGrant`, and, when a grant is to be published, submits an exact immutable trigger intent to `roleassign.GrantPort` (RD-13). `grantintent` never constructs `PreparedRoleAssignmentIntent` or `FinalizedRoleAssignmentChange` and owns no activation/revocation/replacement/due-advancement trigger, so `roleassign` remains the sole RoleAssignment publisher and the finalized RoleAssignment change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary; only `grantintent` may invoke `GrantPort` (design §3.2, §3.3, §3.4, DD-01, DD-13 Rule F18-ARCH-006).
+Implement the pure authorization evaluator in `internal/govaccess/authzeval/`: Evaluator produces a sealed AuthorizationCandidate; FinalizeCandidateAt revalidates publication-time predicates; ReleaseAfterPublication constructs AuthorizationResult only after commit. Evaluator never imports uow or domain mutation owners. Implement the FEATURE-0017 seam in `internal/govaccess/policyseam/` and the approval-requirement derivation port surface in `internal/govaccess/approvalreq/`. Policyseam is the sole importer of policyeval; privileged is its sole wired caller (that privileged-caller wiring is proven in Task 5). The `approvalreq` port surface built here is the typed deriver-port contract only; the `RoleGrantRequirementDeriver` is the sole `ApprovalRequirementDeriver` implemented and tested in Task 4, and the Membership, Privileged, and Exception `ApprovalRequirementDeriver` implementations are owned and proven in Task 5 by their originating owners.
+
+This task additionally delivers the FEATURE-0018-owned supporting-value types in `internal/govaccess/model/` required by `authzeval` and `grantintent` before either package can compile: `model.AuthorizationInput`, `model.AuthorizationResult`, `model.ApprovalRequirement`, and `model.RoleAssignmentProposal`. These are immutable internal supporting values with deterministic structural/semantic validation and read-only accessors only. They are not resources, not routes, not writers, not errors, not events, and not new product semantics; they introduce no new schema/writer/state/error/event ID and no new route. They are constructed by value, deep-copy every reference-typed field on construction and on accessor return, expose no setter, and are byte-stable for deterministic evaluation and derivation. Task 1 remains the owner of every other `internal/govaccess/model/` type; the four supporting-value files and their tests listed below are the sole `model/` paths owned by Task 4 and are neither created nor modified by Task 1. These values follow the existing `model/decisionfacts.go` precedent of a later-task-owned subset of the otherwise Task-1-owned `model` package; they reassign no atomic ID and create no new one.
+
+Implement the `grantintent` workflow-trigger caller (design §3.2, §3.4): it admits the direct non-delegable RoleAssignment grant and the single `model.RoleAssignmentProposal`, derives the RoleGrant `model.ApprovalRequirement` through `RoleGrantRequirementDeriver.DeriveForRoleGrant`, and, when a grant is to be published, submits an exact immutable trigger intent to `roleassign.GrantPort` (RD-13). `grantintent` never constructs `PreparedRoleAssignmentIntent` or `FinalizedRoleAssignmentChange` and owns no activation/revocation/replacement/due-advancement trigger, so `roleassign` remains the sole RoleAssignment publisher and the finalized RoleAssignment change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary; only `grantintent` may invoke `GrantPort` (design §3.2, §3.3, §3.4, DD-01, DD-13 Rule F18-ARCH-006). Task 4 proves only that `grantintent` submits through `roleassign.GrantPort` and constructs no direct RoleAssignment intent/change; the full unit-of-work publication-boundary proof (that every RoleAssignment finalized change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary with no bypass) is owned by Task 6 (UOW coordination) and by the Task 8 static architecture checker (F18-ARCH-006), not by Task 4.
 
 **Writable paths:**
 
+- `internal/govaccess/model/authorization.go` (Task-4-owned immutable supporting values `model.AuthorizationInput` and `model.AuthorizationResult` with deterministic validation and read-only accessors only; not resources, routes, writers, errors, or new product semantics)
+- `internal/govaccess/model/authorization_test.go` (Task-4-owned tests for `model.AuthorizationInput`/`model.AuthorizationResult`)
+- `internal/govaccess/model/approvalrequirement.go` (Task-4-owned immutable supporting value `model.ApprovalRequirement` with deterministic validation and read-only accessors only; not a resource, route, writer, error, or new product semantic)
+- `internal/govaccess/model/approvalrequirement_test.go` (Task-4-owned tests for `model.ApprovalRequirement`)
+- `internal/govaccess/model/roleassignmentproposal.go` (Task-4-owned immutable supporting value `model.RoleAssignmentProposal` with deterministic validation and read-only accessors only; not a resource, route, writer, error, or new product semantic)
+- `internal/govaccess/model/roleassignmentproposal_test.go` (Task-4-owned tests for `model.RoleAssignmentProposal`)
 - `internal/govaccess/authzeval/` (pure evaluator, candidate finalization, result release)
 - `internal/govaccess/authzeval/evaluator.go`
 - `internal/govaccess/authzeval/candidate.go`
@@ -492,14 +502,22 @@ Implement the pure authorization evaluator in `internal/govaccess/authzeval/`: E
 - `internal/govaccess/policyseam/policyseam_test.go`
 - `internal/govaccess/approvalreq/` (typed deriver ports)
 - `internal/govaccess/approvalreq/port.go`
-- `internal/govaccess/grantintent/` (direct grant/`RoleAssignmentProposal` admission, `RoleGrantRequirementDeriver` derivation, and the `roleassign.GrantPort` submission path per design §3.2/§3.4)
-- `internal/govaccess/grantintent/deriver.go` (`RoleGrantRequirementDeriver.DeriveForRoleGrant`; derives the RoleGrant `ApprovalRequirement`)
-- `internal/govaccess/grantintent/admission.go` (admits the direct non-delegable RoleAssignment grant and the single `RoleAssignmentProposal` per design §3.2)
+- `internal/govaccess/grantintent/` (direct grant/`model.RoleAssignmentProposal` admission, `RoleGrantRequirementDeriver` derivation, and the `roleassign.GrantPort` submission path per design §3.2/§3.4)
+- `internal/govaccess/grantintent/deriver.go` (`RoleGrantRequirementDeriver.DeriveForRoleGrant`; derives the RoleGrant `model.ApprovalRequirement`)
+- `internal/govaccess/grantintent/admission.go` (admits the direct non-delegable RoleAssignment grant and the single `model.RoleAssignmentProposal` per design §3.2)
 - `internal/govaccess/grantintent/submission.go` (submits the exact immutable trigger intent to `roleassign.GrantPort` (RD-13); constructs no `PreparedRoleAssignmentIntent`/`FinalizedRoleAssignmentChange`, preserving `roleassign` as sole publisher per design §3.2/§3.3)
 - `internal/govaccess/grantintent/grantintent_test.go`
 
 **Tests:**
 
+- Unit tests for `model.AuthorizationInput` construction, deterministic structural/semantic validation, and read-only accessors, proving deep-copy isolation on construction and accessor return
+- Unit tests for `model.AuthorizationResult` construction, deterministic validation, and read-only accessors, proving deep-copy isolation
+- Unit tests for `model.ApprovalRequirement` construction, deterministic validation, and read-only accessors, proving deep-copy isolation
+- Unit tests for `model.RoleAssignmentProposal` construction, deterministic validation, and read-only accessors, proving deep-copy isolation
+- Property test: each supporting value validates deterministically (same input → same result) and exposes no setter, so it cannot be mutated after construction
+- Unit tests proving `authzeval` consumes `model.AuthorizationInput`/`model.AuthorizationResult` as its supporting-value inputs/outputs
+- Unit tests proving `approvalreq` and `grantintent` consume `model.ApprovalRequirement` as the derived requirement supporting value
+- Unit tests proving `grantintent` consumes `model.RoleAssignmentProposal` as the single admitted proposal supporting value
 - Unit tests for grant union + guardrail intersection (REQ-F18-09)
 - Unit tests for independent grant applicability
 - Unit tests for membership/validity/lifecycle constraints
@@ -509,12 +527,12 @@ Implement the pure authorization evaluator in `internal/govaccess/authzeval/`: E
 - Property test: candidate is not AuthorizationResult until released
 - Unit tests proving policyseam is sole policyeval importer
 - Unit tests for Indeterminate → Deny mapping (REQ-F18-11)
-- Unit tests for each ApprovalRequirementDeriver implementation
-- Unit tests for grantintent RoleGrantRequirementDeriver (`DeriveForRoleGrant` derives the RoleGrant `ApprovalRequirement`)
-- Unit tests for grantintent direct-grant and single `RoleAssignmentProposal` admission
+- Unit tests proving the `approvalreq` typed deriver-port surface exists and that only the `RoleGrantRequirementDeriver` implementation is realized here (Membership/Privileged/Exception derivers are implemented in Task 5)
+- Unit tests for grantintent RoleGrantRequirementDeriver (`DeriveForRoleGrant` derives the RoleGrant `model.ApprovalRequirement`)
+- Unit tests for grantintent direct-grant and single `model.RoleAssignmentProposal` admission
 - Unit tests proving grantintent submits the exact immutable trigger intent through `roleassign.GrantPort` (RD-13)
 - Unit tests proving grantintent constructs no `PreparedRoleAssignmentIntent`/`FinalizedRoleAssignmentChange` (roleassign remains sole publisher)
-- Unit tests proving only grantintent invokes `roleassign.GrantPort` and RoleAssignment publication occurs only through the `uow`-coordinated boundary (no bypass; F18-ARCH-006)
+- Unit tests proving only grantintent invokes `roleassign.GrantPort` (full uow-coordinated publication-boundary proof owned by Task 6 and the Task 8 static checker; F18-ARCH-006)
 - Property test: roleassign never derives approval
 
 **Verification commands:**
@@ -522,6 +540,7 @@ Implement the pure authorization evaluator in `internal/govaccess/authzeval/`: E
 ```bash
 make fmt
 make test
+go test -v ./internal/govaccess/model/... -run 'AuthorizationInput|AuthorizationResult|ApprovalRequirement|RoleAssignmentProposal'
 go test -v ./internal/govaccess/authzeval/...
 go test -v ./internal/govaccess/policyseam/...
 go test -v ./internal/govaccess/approvalreq/...
@@ -530,18 +549,23 @@ go test -v ./internal/govaccess/grantintent/...
 
 **Acceptance criteria:**
 
+- The four supporting values `model.AuthorizationInput`, `model.AuthorizationResult`, `model.ApprovalRequirement`, and `model.RoleAssignmentProposal` exist in the Task-4-owned `internal/govaccess/model/` files as immutable internal supporting values with deterministic validation and read-only accessors only (REQ-F18-09, REQ-F18-12, REQ-F18-21, DD-08)
+- Each supporting value deep-copies every reference-typed field on construction and on accessor return, exposes no setter, and cannot be mutated after construction (REQ-F18-21, DD-01)
+- The four supporting values are not resources, routes, writers, errors, events, or new product semantics and introduce no new schema/writer/state/error/event ID and no new route (REQ-F18-01, DD-01)
+- Task 1 remains the owner of all other `internal/govaccess/model/` types; `authorization.go`, `approvalrequirement.go`, `roleassignmentproposal.go`, and their tests are the sole `model/` paths owned by Task 4 and are not created or modified by Task 1 (DD-01, design §3.2)
+- `authzeval` consumes `model.AuthorizationInput`/`model.AuthorizationResult`; `approvalreq`/`grantintent` consume `model.ApprovalRequirement`; and `grantintent` consumes `model.RoleAssignmentProposal` (REQ-F18-09, REQ-F18-12)
 - Grant union + guardrail intersection implemented (REQ-F18-09)
 - Independent assignment applicability (REQ-F18-09)
 - FinalizeCandidateAt revalidates time/membership/lifecycle (DD-12)
 - ReleaseAfterPublication requires sealed CommitReceipt (DD-12, design §5.5)
 - Evaluator never imports uow/domain-owner (DD-01, DD-13)
 - Privileged roles require TimeBound direct-PrincipalRef (REQ-F18-07, REQ-F18-08)
-- Policyseam is sole policyeval importer (DD-01, DD-13 Rule 007)
+- Policyseam is sole policyeval importer; privileged-caller wiring is proven in Task 5 (DD-01, DD-13 Rule 007)
 - Indeterminate mapped to Deny (REQ-F18-11)
-- Each originating owner implements its ApprovalRequirementDeriver (REQ-F18-12)
-- grantintent admits the direct grant and single `RoleAssignmentProposal` and derives the RoleGrant `ApprovalRequirement` via `RoleGrantRequirementDeriver.DeriveForRoleGrant` (REQ-F18-12, design §3.2)
+- The `approvalreq` typed deriver-port surface exists; the `RoleGrantRequirementDeriver` is the sole `ApprovalRequirementDeriver` implemented and tested in Task 4, and the Membership, Privileged, and Exception `ApprovalRequirementDeriver` implementations are owned and proven in Task 5 (REQ-F18-12)
+- grantintent admits the direct grant and single `model.RoleAssignmentProposal` and derives the RoleGrant `model.ApprovalRequirement` via `RoleGrantRequirementDeriver.DeriveForRoleGrant` (REQ-F18-12, design §3.2)
 - grantintent submits the exact immutable trigger intent to `roleassign.GrantPort` (RD-13) and constructs no RoleAssignment intent/change, preserving roleassign as sole publisher (design §3.2, §3.3, DD-01)
-- Only grantintent invokes `GrantPort`; no caller bypass and no direct RoleAssignment publication outside the `uow`-coordinated boundary (DD-01, DD-13 Rule F18-ARCH-006)
+- Only grantintent invokes `GrantPort`; the full uow-coordinated publication-boundary proof (no bypass, no direct RoleAssignment publication outside the `uow`-coordinated boundary) is owned by Task 6 and the Task 8 static architecture checker, not by Task 4 (DD-01, DD-13 Rule F18-ARCH-006)
 - RoleAssignment controller never derives approval (DD-01, DD-13 Rule 007)
 
 **Security/observability impact:**
@@ -561,25 +585,31 @@ go test -v ./internal/govaccess/grantintent/...
 - No real policy engine (uses FEATURE-0017 deterministic fake)
 - No policy authoring or versioning
 - No policy conflict resolution
+- No Membership, Privileged, or Exception `ApprovalRequirementDeriver` implementation here (owned by Task 5 by their originating owners); Task 4 implements only the `RoleGrantRequirementDeriver`
+- No `privileged` policyseam-caller wiring here (owned by Task 5)
+- No full unit-of-work publication-boundary proof here; Task 4 proves only that `grantintent` submits through `roleassign.GrantPort` and constructs no direct RoleAssignment intent/change. The complete stage-10/11/12 uow-coordinated publication-boundary proof is owned by Task 6, and the compile-time no-bypass enforcement (F18-ARCH-006) is owned by the Task 8 static architecture checker
+- No new `internal/govaccess/model/` type beyond the four Task-4-owned supporting values; no modification of any Task-1-owned or Task-2-owned `model/` file
+- No external calls
 
 **Commit message:**
 
 ```
 feat(govaccess): add authorization algebra, policy seam, and approval derivation
 
+- Add model supporting values AuthorizationInput, AuthorizationResult, ApprovalRequirement, RoleAssignmentProposal (immutable, deep-copied, read-only accessors; not resources/routes/writers/errors/events)
 - Add pure Evaluator for grant union + guardrail intersection
 - Add FinalizeCandidateAt for publication-time revalidation
 - Add ReleaseAfterPublication for post-commit result construction
 - Enforce privileged role constraints
 - Implement eligibility evaluation
 - Add policyseam as sole FEATURE-0017 importer
-- Reserve policyseam for privileged-only calling (wiring proven in TASK-F18-08)
+- Reserve policyseam for privileged-only calling (wiring proven in Task 5 / TASK-F18-08)
 - Add Indeterminate → Deny mapping
-- Add ApprovalRequirementDeriver typed ports
-- Add grantintent RoleGrantRequirementDeriver
+- Add approvalreq typed deriver-port surface
+- Add grantintent RoleGrantRequirementDeriver (sole ApprovalRequirementDeriver here; Membership/Privileged/Exception derivers owned by Task 5)
 - Add grantintent direct-grant/RoleAssignmentProposal admission
 - Submit sealed RoleGrant trigger intent via roleassign.GrantPort (RD-13)
-- Enforce grantintent constructs no RoleAssignment intent/change (roleassign sole publisher)
+- Enforce grantintent constructs no RoleAssignment intent/change (roleassign sole publisher; full uow publication-boundary proof owned by Task 6 and the Task 8 static checker)
 - Enforce no roleassign approval derivation
 
 Implements: TASK-F18-06, TASK-F18-11
@@ -601,7 +631,7 @@ Design: DD-08, DD-12, DD-01, DD-13, §3.2, §3.3, §3.4, §5.5
 
 **Description:**
 
-Implement the remaining domain owners: membership, roledefinition, accessgroup, approval, privileged, review, exception, governanceprofile. Each owns a sealed PreparedIntent and FinalizedChange, implements FinalizeAt, and follows DD-01 topology. The `approval` owner consumes its `approvalreq` deriver ports and the `privileged` owner is wired as the sole `policyseam.Port` caller; both ports are constructed in TASK-F18-11, and this task supplies and proves the privileged-caller wiring now that `privileged` exists. The `privileged` owner submits activation and privileged revocation trigger intents to `roleassign.ActivationPort` (RD-14) only, and the `review` owner submits revocation/replacement/due-advancement trigger intents to `roleassign.ReviewRemediationPort` (RD-16) only. Neither owner constructs `PreparedRoleAssignmentIntent` or `FinalizedRoleAssignmentChange`; `roleassign` remains the sole RoleAssignment publisher and every RoleAssignment finalized change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary. No caller other than `privileged` invokes `ActivationPort`, no caller other than `review` invokes `ReviewRemediationPort`, and `membership` submits no RoleAssignment trigger intent (design §3.2, §3.3, §3.4, DD-01, DD-13 Rules F18-ARCH-006/007).
+Implement the remaining domain owners: membership, roledefinition, accessgroup, approval, privileged, review, exception, governanceprofile. Each owns a sealed PreparedIntent and FinalizedChange, implements FinalizeAt, and follows DD-01 topology. Each originating owner implements and tests its own `ApprovalRequirementDeriver` against the `approvalreq` typed deriver-port surface built in Task 4: the Membership derivation obligation (membership owner), the Privileged derivation obligation (privileged owner), and the Exception derivation obligation (exception owner) are owned and proven here in Task 5, not in Task 4 (Task 4 implements only the `grantintent` `RoleGrantRequirementDeriver`). The `approval` owner consumes its `approvalreq` deriver ports and the `privileged` owner is wired as the sole `policyseam.Port` caller; both ports are constructed in TASK-F18-11, and this task supplies and proves the privileged-caller wiring now that `privileged` exists. The `privileged` owner submits activation and privileged revocation trigger intents to `roleassign.ActivationPort` (RD-14) only, and the `review` owner submits revocation/replacement/due-advancement trigger intents to `roleassign.ReviewRemediationPort` (RD-16) only. Neither owner constructs `PreparedRoleAssignmentIntent` or `FinalizedRoleAssignmentChange`; `roleassign` remains the sole RoleAssignment publisher and every RoleAssignment finalized change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary. No caller other than `privileged` invokes `ActivationPort`, no caller other than `review` invokes `ReviewRemediationPort`, and `membership` submits no RoleAssignment trigger intent (design §3.2, §3.3, §3.4, DD-01, DD-13 Rules F18-ARCH-006/007).
 
 **Writable paths:**
 
@@ -627,6 +657,9 @@ Implement the remaining domain owners: membership, roledefinition, accessgroup, 
 - Unit tests for JIT/break-glass activation floor (REQ-F18-14, REQ-F18-15)
 - Unit tests for review beneficiary conflict (REQ-F18-16)
 - Unit tests for terminal-exception descriptors (REQ-F18-17, ADH-2026-073)
+- Unit tests for the Membership `ApprovalRequirementDeriver` implementation (membership owner) against the Task-4 `approvalreq` port surface
+- Unit tests for the Privileged `ApprovalRequirementDeriver` implementation (privileged owner) against the Task-4 `approvalreq` port surface
+- Unit tests for the Exception `ApprovalRequirementDeriver` implementation (exception owner) against the Task-4 `approvalreq` port surface
 - Unit tests proving privileged is sole policyseam caller (DD-01, DD-13 Rule 007)
 - Unit tests proving privileged submits activation and privileged revocation trigger intents through `roleassign.ActivationPort` (RD-14)
 - Unit tests proving review submits revocation/replacement/due-advancement trigger intents through `roleassign.ReviewRemediationPort` (RD-16)
@@ -657,6 +690,7 @@ go test -v ./internal/govaccess/governanceprofile/...
 - Membership publishes assignment-effect expansion within itself (REQ-F18-05, design §3.3)
 - RoleDefinition effective classification correct (REQ-F18-07)
 - Approval stages/quorum/SoD enforced (REQ-F18-12)
+- The Membership, Privileged, and Exception `ApprovalRequirementDeriver` implementations are owned and proven here by their originating owners against the Task-4 `approvalreq` port surface; Task 4 implements only the `grantintent` `RoleGrantRequirementDeriver` (REQ-F18-12, design §3.2)
 - Privileged activation floor AAL2+ phishing-resistant (REQ-F18-14)
 - Privileged is sole policyseam caller (DD-01, DD-13 Rule 007)
 - Privileged submits activation and privileged revocation trigger intents to `roleassign.ActivationPort` (RD-14) and constructs no RoleAssignment intent/change (REQ-F18-14, design §3.2, §3.3, DD-01)
@@ -693,6 +727,7 @@ feat(govaccess): add remaining domain owners
 - Add roledefinition (classification, supersession)
 - Add accessgroup (lifecycle, owner resolution)
 - Add approval (ApprovalPolicy/Request, stages/quorum/SoD)
+- Implement Membership/Privileged/Exception ApprovalRequirementDeriver by their owners (RoleGrant deriver stays in Task 4 grantintent)
 - Add privileged (JIT/break-glass, activation floor)
 - Wire privileged as sole policyseam caller
 - Submit privileged activation/revocation via roleassign.ActivationPort (RD-14)
@@ -749,6 +784,7 @@ Implement the unit-of-work coordinator in `internal/govaccess/uow/`: it carries 
 - Unit tests for RequireCurrentAllow gate (Allow → permit, Deny → abort + evidence-only)
 - Unit tests for evidence acceptance ordering
 - Unit tests for ReleaseAfterPublication with CommitReceipt
+- Unit tests proving every RoleAssignment finalized change (grant via `roleassign.GrantPort`, activation via `ActivationPort`, remediation via `ReviewRemediationPort`, direct revoke via `DirectRevokePort`) is published only through the `uow`-coordinated stage-10/11/12 transaction boundary with no bypass (full publication-boundary proof; the compile-time no-bypass enforcement F18-ARCH-006 is additionally owned by the Task 8 static checker)
 - Property test: uow constructs no semantic value or descriptor
 - Unit tests for `InFlightTable` reservation-table operations keyed by the Task-2-owned `IdempotencyLookupKey` (reserve/lookup/complete) that extend, not recreate, the value types
 - Unit tests for replay detection (same key, different `RequestBinding`) comparing binding after lookup
@@ -775,6 +811,7 @@ go test -v ./internal/govaccess/idempotency/...
 - Evidence acceptance precedes result release (REQ-F18-20, design §5.4)
 - ReleaseAfterPublication requires sealed CommitReceipt (DD-12)
 - UOW constructs no descriptor/decision-material/result (DD-01, DD-13 Rule 008)
+- The full RoleAssignment publication-boundary proof is owned here: every RoleAssignment finalized change is published only through the `uow`-coordinated stage-10/11/12 transaction boundary with no bypass (Task 4 proves only that `grantintent` submits through `roleassign.GrantPort`; the compile-time F18-ARCH-006 no-bypass enforcement is owned by the Task 8 static checker) (REQ-F18-20, DD-01, design §5.4)
 - Task 6 extends the Task-2-owned idempotency value-type contract with `InFlightTable` reservation-table operations, replay handling, lifecycle transitions, and UOW coordination, and recreates none of those types (DD-11, design §3.4)
 - Replay detection compares the `RequestBinding` after `IdempotencyLookupKey` lookup (REQ-F18-21, DD-11)
 - In-flight waiting without duplicate publication (REQ-F18-21)
@@ -1166,17 +1203,18 @@ Feature file: §6.3, §6.4
 
 This executable task consolidates the single atomic unit TASK-F18-19 and runs last, after the Task 9 projection and conformance work.
 
-Perform final repository integration: update the Makefile, integrate feature-0018-architecture-check into the feature gate (this task is the sole `ff-feature-gate` hook owner), verify go.mod, run the full mandatory verification command set, confirm a clean tree, and verify no external dependencies were added beyond gopkg.in/yaml.v3. The `internal/govaccess/projection/` package and all conformance tests are already delivered by Task 9; this task adds no new projection code or conformance test. VS0-CF-F18-54 (REQ-F18-23 standards-validation gate) is a CONTRACT_ONLY/NO_TASK mapping-matrix architecture-gate obligation over the existing `docs/reviews/architecture-readiness/FEATURE-0018-standards-mapping.md` matrix, enforced through the existing `make ff-feature-gate FEATURE=FEATURE-0018` mechanism (design §7.1/§7.3/§8.2); this task introduces no new standards-mapping script, tool, dependency, or Make target for it.
+Perform final repository integration: update the Makefile and the existing `scripts/feature-gate.sh` only, integrating `feature-0018-architecture-check` into the existing feature gate (this task is the sole `ff-feature-gate` hook owner), verify go.mod, run the full mandatory verification command set, confirm a clean tree, and verify no external dependencies were added beyond gopkg.in/yaml.v3. The frozen requirements' approved reuse assessment is the immutable `docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md`; the existing gate must validate that evidence rather than require a new requirements edit. The `internal/govaccess/projection/` package and all conformance tests are already delivered by Task 9; this task adds no new projection code or conformance test. VS0-CF-F18-54 (REQ-F18-23 standards-validation gate) is a CONTRACT_ONLY/NO_TASK mapping-matrix architecture-gate obligation over the existing `docs/reviews/architecture-readiness/FEATURE-0018-standards-mapping.md` matrix, enforced through the existing `make ff-feature-gate FEATURE=FEATURE-0018` mechanism (design §7.1/§7.3/§8.2); this task introduces no new standards-mapping script, tool, dependency, or Make target for it.
 
 **Writable paths:**
 
 - `Makefile` (feature-0018 targets)
+- `scripts/feature-gate.sh` (the sole FEATURE-0018 hook: existing architecture-check target and immutable approved reuse-evidence validation)
 - `go.mod` (verify no new dependencies)
-- `.automation/feature-gates/FEATURE-0018-gate.sh` (or integrate into ff-feature-gate)
 
 **Tests:**
 
 - All tests from TASK-F18-01 through TASK-F18-18 (including the Task 9 projection and conformance tests) must pass
+- The existing feature gate validates `docs/reviews/reuse-assessments/FEATURE-0018-approval-evidence.md` as the approved reuse assessment for frozen FEATURE-0018 requirements; no requirements mutation or separate gate script is permitted
 - VS0-CF-F18-54 standards-mapping gate: enforced as a CONTRACT_ONLY/NO_TASK mapping-matrix architecture-gate over the existing `docs/reviews/architecture-readiness/FEATURE-0018-standards-mapping.md` matrix through the existing `make ff-feature-gate FEATURE=FEATURE-0018` mechanism; it is not a runtime Go conformance test and introduces no new checker script or Make target
 
 **Verification commands:**
@@ -1200,6 +1238,7 @@ git status --porcelain
 
 - All FEATURE-0018 tests pass, including the Task 9 projection and conformance tests (REQ-F18-22)
 - Architecture checker (`make feature-0018-architecture-check`, created in Task 8) integrated into the feature gate; this task is the sole `ff-feature-gate` hook owner (DD-13)
+- The existing feature gate accepts the approved immutable FEATURE-0018 reuse evidence while requirements remain frozen; no `.automation/feature-gates/FEATURE-0018-gate.sh` or other alternate gate script exists
 - VS0-CF-F18-54 standards-mapping gate satisfied as a CONTRACT_ONLY/NO_TASK mapping-matrix architecture-gate over the existing standards-mapping matrix, enforced and passing through the existing `make ff-feature-gate FEATURE=FEATURE-0018` mechanism, with no new checker script, tool, dependency, or Make target introduced (REQ-F18-23, design §7.1/§7.3/§8.2)
 - Full concurrency verification clean: `go test -race ./...` reports no data races (REQ-F18-22, DD-02)
 - Architecture drift verification clean: `make vs000-contract-check` and `make phase2r-drift-check` pass (baseline anti-drift)
@@ -1227,6 +1266,7 @@ git status --porcelain
 feat(govaccess): repository integration and cleanup
 
 - Integrate feature-0018-architecture-check into the feature gate (sole ff-feature-gate hook)
+- Validate the approved immutable FEATURE-0018 reuse evidence through the existing feature gate
 - Enforce VS0-CF-F18-54 standards mapping-matrix gate via existing ff-feature-gate (no new script)
 - Verify go.mod (no new dependencies beyond yaml.v3)
 - Run mandatory verification: fmt/test/vet, go test -race ./...,
@@ -1581,7 +1621,7 @@ declared dependencies, verbatim; traceability only, never scheduled):
 - TASK-F18-03 — TASK-F18-02
 - TASK-F18-04 — TASK-F18-01, TASK-F18-02 (plus the Task-2-delivered initial idempotency value-type contract per design §3.4 `state -> idempotency`; that contract imports only `model`/`apivalid`/`operation` from Task 1, so it is delivered within Task 2 before `state` and introduces no cross-executable-task edge or cycle)
 - TASK-F18-05 — TASK-F18-01, TASK-F18-02, TASK-F18-04
-- TASK-F18-06 — TASK-F18-02, TASK-F18-04, TASK-F18-05
+- TASK-F18-06 — TASK-F18-02, TASK-F18-04, TASK-F18-05 (plus the Task-4-delivered `internal/govaccess/model/` supporting values `model.AuthorizationInput`/`model.AuthorizationResult`/`model.ApprovalRequirement`/`model.RoleAssignmentProposal`, which import only Task-1 leaves and are delivered within Task 4 before `authzeval`/`grantintent`, introducing no cross-executable-task edge or cycle)
 - TASK-F18-07 — TASK-F18-02, TASK-F18-03, TASK-F18-04, TASK-F18-05
 - TASK-F18-08 — TASK-F18-02, TASK-F18-03, TASK-F18-04, TASK-F18-05, TASK-F18-11
 - TASK-F18-09 — TASK-F18-04, TASK-F18-05, TASK-F18-06, TASK-F18-07, TASK-F18-08

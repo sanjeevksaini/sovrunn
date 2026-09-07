@@ -226,6 +226,43 @@ feature-0015-formal-check:
 feature-0016-formal-check:
 	bash ./scripts/run-feature-0016-formal-checks.sh
 
+.PHONY: feature-0018-design-contract-check feature-0018-architecture-check
+feature-0018-design-contract-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature0018-design-contract-check.py
+
+feature-0018-architecture-check:
+	go run ./scripts/feature0018-architecture-check/main.go -path ./internal/govaccess
+
+.PHONY: checkpoint-status checkpoint-assert-frozen checkpoint-amend-preflight checkpoint-amend-approve feature-0018-checkpoint-check
+checkpoint-status:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py --feature "$(FEATURE)" --mode status
+
+checkpoint-assert-frozen:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py --feature "$(FEATURE)" --mode assert-frozen
+
+checkpoint-amend-preflight:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	./scripts/checkpoint-task-amendment.sh --feature "$(FEATURE)"
+
+checkpoint-amend-approve:
+	@test -n "$(FEATURE)" || (echo "FEATURE is required"; exit 1)
+	@test -n "$(APPROVED_BY)" || (echo "APPROVED_BY is required"; exit 1)
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-task-amendment-approve.py --feature "$(FEATURE)" --approved-by "$(APPROVED_BY)" --approve
+
+feature-0018-checkpoint-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature-control.py validate --feature FEATURE-0018
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py --feature FEATURE-0018 --mode status
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/checkpoint-guard.py --feature FEATURE-0018 --mode assert-frozen
+
+.PHONY: feature-0018-design-review-target feature-0018-design-review-target-check
+feature-0018-design-review-target:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature0018-design-review-target.py
+
+feature-0018-design-review-target-check:
+	PYTHONDONTWRITEBYTECODE=1 python3 ./scripts/feature0018-design-review-target.py --check-only
+
 .PHONY: structurizr-lite
 structurizr-lite:
 	./scripts/structurizr-lite.sh

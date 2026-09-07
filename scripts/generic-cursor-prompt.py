@@ -110,8 +110,41 @@ def main() -> None:
     state_path = ROOT / f".automation/state/{args.feature}.json"
     state = json.loads(state_path.read_text())
     control_path = ROOT / f".automation/features/{args.feature}.control.json"
+    control = json.loads(control_path.read_text())
     if state.get("control_approved_sha256") != sha256(control_path):
         raise SystemExit("ERROR: feature control differs from the founder-approved digest")
+    # ADH-2026-077 §2: while an implementation checkpoint is active, Cursor must
+    # reject execution if the frozen semantic design or requirements hash changed
+    # without an approved semantic-architecture reentry, and may resume only at a
+    # task greater than the last committed task.
+    checkpoint = control.get("checkpoint")
+    if isinstance(checkpoint, dict) and checkpoint.get("active") is True:
+        spec_dir = ROOT / state["spec_path"]
+        design_sha = sha256(spec_dir / "design.md")
+        requirements_sha = sha256(spec_dir / "requirements.md")
+        if design_sha != checkpoint.get("frozen_design_sha256"):
+            raise SystemExit(
+                "ERROR: frozen design.md changed without approved semantic-architecture reentry"
+            )
+        if requirements_sha != checkpoint.get("frozen_requirements_sha256"):
+            raise SystemExit(
+                "ERROR: frozen requirements.md changed without approved semantic-architecture reentry"
+            )
+        if args.task <= int(checkpoint["last_committed_task"]):
+            raise SystemExit(
+                f"ERROR: Task {args.task} is committed under the checkpoint "
+                f"(last_committed_task={checkpoint['last_committed_task']}); it must not be re-executed"
+            )
+        tasks_path = ROOT / state["spec_path"] / "tasks.md"
+        tasks_sha = sha256(tasks_path)
+        if state.get("checkpoint_task_amendment_approval_token") != "APPROVED_FOR_CURSOR":
+            raise SystemExit(
+                "ERROR: active checkpoint requires explicit checkpoint task-amendment approval"
+            )
+        if state.get("checkpoint_task_amendment_tasks_sha256") != tasks_sha:
+            raise SystemExit(
+                "ERROR: checkpoint task-amendment approval does not match current tasks.md"
+            )
     if state.get("current_stage") != "cursor" or state.get("tasks_approval_token") != "APPROVED_FOR_CURSOR":
         raise SystemExit("ERROR: feature is not approved for Cursor")
     tasks_path = ROOT / state["spec_path"] / "tasks.md"

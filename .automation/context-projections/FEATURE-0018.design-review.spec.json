@@ -6,6 +6,60 @@
   "manifest": ".automation/context-projections/FEATURE-0018.design-review.manifest.json",
   "sources": [
     {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-feature-0018-governance-iam-approval-exception-foundation.md",
+      "sha256": "489ccb5869ca4cc43835ef79de2d2b8f006f580cc22fdad8a6d674b112fdd769",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Package authority and complete F18-RD index",
+          "start": 155,
+          "end": 234
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-a-feature-0018-semantic-contract.md",
+      "sha256": "66479426f30759a21202c8beeb08989241d912b7ba69de3619619f45823fe485",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Appendix A normative allocation",
+          "start": 20,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-070-appendix-b-feature-0018-registries-and-evidence.md",
+      "sha256": "2424cff0130bf82d7b413069fc60580af0ab6e1a4bd00982fc669bebb80d8b49",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Appendix B normative allocation",
+          "start": 20,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-074-feature-0018-local-publication-checkpoint-reconciliation.md",
+      "sha256": "9e527ebca822c24549ade7489b19c7a349a42c1629d4c476d92a2550516dc60a",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "Approved metadata, summary and classification",
+          "start": 3,
+          "end": 29
+        },
+        {
+          "kind": "line_range",
+          "label": "Four exact approved local mechanics",
+          "start": 58,
+          "end": 101
+        }
+      ]
+    },
+    {
       "path": "docs/reviews/architecture-decision-handoffs/ADH-2026-072-feature-0018-design-authority-and-audited-evaluation-clarification.md",
       "sha256": "f6b50ea9faba3d8dc09d86124b574ccebefad27733db1ac3c4eaf98361acd5ca",
       "selections": [
@@ -68,6 +122,18 @@
           "label": "Approved normative requirement details and acceptance-scenario coverage",
           "start": 237,
           "end": 891
+        }
+      ]
+    },
+    {
+      "path": ".kiro/specs/governance-iam-approval-exception-foundation/design-mechanics-contract.json",
+      "sha256": "028d345dc5aa340d50784155d5f7ce9cd1b4640c452ffedd25efebbfb6a159e6",
+      "selections": [
+        {
+          "kind": "line_range",
+          "label": "ADH-2026-075 Design Mechanics Contract (sole executable-mechanics authority; hash-bound to design.md)",
+          "start": 1,
+          "end": 531
         }
       ]
     }

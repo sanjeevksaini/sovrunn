@@ -1,0 +1,46 @@
+{
+  "feature": "FEATURE-0018",
+  "projection": ".automation/context-projections/FEATURE-0018.tasks-review-requirements.md",
+  "projection_bytes": 134289,
+  "projection_estimated_tokens": 33573,
+  "projection_sha256": "281821db418871c8594aae06d73ad2e072223349d15c814b71ab66df622fdf13",
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "bytes": 158590,
+      "path": ".kiro/specs/governance-iam-approval-exception-foundation/requirements.md",
+      "selections": [
+        {
+          "end": 113,
+          "excerpt_sha256": "0fb9a5e7270269bd28a62b112c99ee5bef435214020d8f4aa4cab8de513b83e2",
+          "kind": "line_range",
+          "label": "Feature identity and purpose",
+          "start": 53
+        },
+        {
+          "end": 989,
+          "excerpt_sha256": "c8298a09554e1724fb9bc600b5739e719db0159c2500ca042b9db7d0520f0453",
+          "kind": "line_range",
+          "label": "Supporting values, canonical ledgers, normative requirements and acceptance mapping",
+          "start": 119
+        },
+        {
+          "end": 1110,
+          "excerpt_sha256": "a8c82e73e9d7027721232389253c99da06d68c24930440578111a8c382237b6d",
+          "kind": "line_range",
+          "label": "Security, privacy, operations, edge cases, exclusions and negative cases",
+          "start": 991
+        },
+        {
+          "end": 1403,
+          "excerpt_sha256": "46b8627ee4c40db7d53db7891072cd6a89ca7f922a2ce36f56c07af734223a3e",
+          "kind": "line_range",
+          "label": "Controlling-authority, traceability and conformance mappings",
+          "start": 1111
+        }
+      ],
+      "sha256": "aed8f347ea154c30292cdd0d8f43841fad6d419b8cf789becacc8b57d9c2a9e4"
+    }
+  ],
+  "stage": "tasks-review-requirements"
+}

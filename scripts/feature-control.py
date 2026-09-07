@@ -112,9 +112,11 @@ def load(path: Path) -> dict[str, Any]:
 
 
 def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
-    if set(data) != REQUIRED_TOP_LEVEL:
-        missing = sorted(REQUIRED_TOP_LEVEL - set(data))
-        extra = sorted(set(data) - REQUIRED_TOP_LEVEL)
+    optional_top_level = {"checkpoint"}
+    allowed_top_level = REQUIRED_TOP_LEVEL | optional_top_level
+    missing = sorted(REQUIRED_TOP_LEVEL - set(data))
+    extra = sorted(set(data) - allowed_top_level)
+    if missing or extra:
         detail = []
         if missing:
             detail.append("missing=" + ",".join(missing))
@@ -125,6 +127,8 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
         raise ControlError("schema_version must be 1.0")
     if not SCHEMA_PATH.is_file():
         raise ControlError("feature-control schema is missing")
+    if "checkpoint" in data:
+        validate_checkpoint(data["checkpoint"])
 
     feature = data["feature"]
     if not isinstance(feature, dict):
@@ -190,7 +194,7 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
 
     context = data["context"]
     required_context_keys = {"always", "stages", "budgets"}
-    optional_context_keys = {"review_exclusions", "review_stage_context", "stage_exclusions"}
+    optional_context_keys = {"review_exclusions", "review_stage_context", "review_authority", "stage_exclusions"}
     missing_context_keys = sorted(required_context_keys - set(context))
     extra_context_keys = sorted(set(context) - required_context_keys - optional_context_keys)
     if missing_context_keys or extra_context_keys:
@@ -237,6 +241,49 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
             require_string_list(paths, field=f"context.review_stage_context.{review_stage}")
         ):
             repo_path(path, field=f"context.review_stage_context.{review_stage}[{index}]")
+    review_authority = context.get("review_authority", {})
+    if not isinstance(review_authority, dict):
+        raise ControlError("context.review_authority must be an object")
+    unknown_review_authority_stages = sorted(set(review_authority) - allowed_review_stages)
+    if unknown_review_authority_stages:
+        raise ControlError(
+            "context.review_authority has unknown review stages: "
+            + ", ".join(unknown_review_authority_stages)
+        )
+    review_authority_keys = {
+        "handoff",
+        "mechanics_authority",
+        "semantic_authority",
+        "finding_classifications",
+        "design_executability_allowed_only_when",
+        "reviewer_must_not",
+        "finding_requirement",
+        "hash_bound_evidence",
+    }
+    for review_stage, authority in review_authority.items():
+        field = f"context.review_authority.{review_stage}"
+        if not isinstance(authority, dict):
+            raise ControlError(f"{field} must be an object")
+        require_keys(authority, review_authority_keys, field=field)
+        if not re.fullmatch(r"ADH-\d{4}-\d{3}", authority["handoff"]):
+            raise ControlError(f"{field}.handoff must be an ADH-YYYY-NNN identifier")
+        for text_field in ("mechanics_authority", "semantic_authority", "finding_requirement"):
+            if not isinstance(authority[text_field], str) or not authority[text_field].strip():
+                raise ControlError(f"{field}.{text_field} must be a non-empty string")
+        for list_field in (
+            "finding_classifications",
+            "design_executability_allowed_only_when",
+            "reviewer_must_not",
+        ):
+            require_string_list(authority[list_field], field=f"{field}.{list_field}", allow_empty=False)
+        for index, path in enumerate(
+            require_string_list(
+                authority["hash_bound_evidence"],
+                field=f"{field}.hash_bound_evidence",
+                allow_empty=False,
+            )
+        ):
+            repo_path(path, field=f"{field}.hash_bound_evidence[{index}]")
     stage_exclusions = context.get("stage_exclusions", {})
     if not isinstance(stage_exclusions, dict):
         raise ControlError("context.stage_exclusions must be an object")
@@ -323,6 +370,55 @@ def validate(data: dict[str, Any], *, expected_feature: str = "") -> None:
         repo_path(path, field=f"closeout.metadata_targets[{index}]")
 
 
+def validate_checkpoint(value: Any) -> None:
+    """Validate the optional ADH-2026-077 implementation-checkpoint block.
+
+    The checkpoint declaration is a fail-closed, hash-bound delivery control.
+    It narrows what the Feature Factory may do while a feature has a committed
+    Cursor task; it never broadens product semantics.
+    """
+    if not isinstance(value, dict):
+        raise ControlError("checkpoint must be an object")
+    required = {
+        "handoff",
+        "active",
+        "last_committed_task",
+        "current_task",
+        "frozen_design_sha256",
+        "frozen_requirements_sha256",
+        "task_amendment_only",
+        "blocked_stages",
+        "blocked_review_stages",
+        "reentry_requires_handoff",
+    }
+    optional = {"mechanics_evidence_only"}
+    require_keys(value, required | optional, field="checkpoint")
+    if not re.fullmatch(r"ADH-\d{4}-\d{3}", value["handoff"]):
+        raise ControlError("checkpoint.handoff must be an ADH-YYYY-NNN identifier")
+    if value["active"] is not True:
+        raise ControlError("checkpoint.active must be true when a checkpoint block is present")
+    if value["task_amendment_only"] is not True:
+        raise ControlError("checkpoint.task_amendment_only must be true")
+    if value["reentry_requires_handoff"] is not True:
+        raise ControlError("checkpoint.reentry_requires_handoff must be true")
+    for key in ("last_committed_task", "current_task"):
+        if not isinstance(value[key], int) or isinstance(value[key], bool) or value[key] < 1:
+            raise ControlError(f"checkpoint.{key} must be a positive integer")
+    if value["current_task"] <= value["last_committed_task"]:
+        raise ControlError("checkpoint.current_task must be greater than last_committed_task")
+    for key in ("frozen_design_sha256", "frozen_requirements_sha256"):
+        if not isinstance(value[key], str) or not re.fullmatch(r"[0-9a-f]{64}", value[key]):
+            raise ControlError(f"checkpoint.{key} must be a 64-character hex sha256")
+    allowed_ai_stages = {"requirements", "design"}
+    for key in ("blocked_stages", "blocked_review_stages"):
+        stages = set(require_string_list(value[key], field=f"checkpoint.{key}", allow_empty=False))
+        unknown = sorted(stages - allowed_ai_stages)
+        if unknown:
+            raise ControlError(f"checkpoint.{key} may only block requirements/design: {', '.join(unknown)}")
+    if "mechanics_evidence_only" in value and not isinstance(value["mechanics_evidence_only"], bool):
+        raise ControlError("checkpoint.mechanics_evidence_only must be a boolean")
+
+
 def validate_stage_paths(value: Any, *, field: str, must_exist: bool = True) -> None:
     if not isinstance(value, dict):
         raise ControlError(f"{field} must be an object")
@@ -358,21 +454,20 @@ def resolve_context(data: dict[str, Any], stage: str, *, review_stage: str | Non
         raw_paths.extend(data["guardrails"]["cursor"]["go_context"])
     spec = feature["spec_path"]
     spec_stage = review_stage if stage == "review" else stage
-    # A governed, source-hash-bound design-review projection may replace the
-    # implicit full requirements copy for design review. The projection remains
-    # an explicit control-file path and must carry the selected requirements
-    # evidence plus its approval receipt. This prevents loading both the
-    # projection and the same full document while leaving every other stage and
-    # feature on the default full-artifact behavior.
-    governed_design_review_projection = (
+    # A governed, source-hash-bound review projection may replace the implicit
+    # full requirements copy only for the review stage that explicitly names
+    # it. This prevents loading both artifacts while leaving every other stage
+    # and feature on the default full-artifact behavior.
+    requirements_review_projection = {
+        "design": f".automation/context-projections/{feature['id']}.design-review.md",
+        "tasks": f".automation/context-projections/{feature['id']}.tasks-review-requirements.md",
+    }.get(review_stage)
+    governed_requirements_review_projection = (
         stage == "review"
-        and review_stage == "design"
-        and any(
-            raw == f".automation/context-projections/{feature['id']}.design-review.md"
-            for raw in data["context"]["stages"].get("review", [])
-        )
+        and requirements_review_projection is not None
+        and requirements_review_projection in raw_paths
     )
-    if spec_stage in {"design", "tasks", "implementation"} and not governed_design_review_projection:
+    if spec_stage in {"design", "tasks", "implementation"} and not governed_requirements_review_projection:
         raw_paths.append(f"{spec}/requirements.md")
     if spec_stage in {"tasks", "implementation"}:
         raw_paths.append(f"{spec}/design.md")
@@ -425,7 +520,9 @@ def context_manifest(
     }
 
 
-def prompt_fragment(data: dict[str, Any], manifest: dict[str, Any], stage: str) -> str:
+def prompt_fragment(
+    data: dict[str, Any], manifest: dict[str, Any], stage: str, *, review_stage: str | None = None
+) -> str:
     ownership = data["ownership"]
     lines = [
         "## Automation-controlled context and boundaries",
@@ -455,6 +552,33 @@ def prompt_fragment(data: dict[str, Any], manifest: dict[str, Any], stage: str) 
         lines.extend(["", f"During the `{stage}` stage, modify only:"])
         lines.extend(f"- `{path}`" for path in writable)
         lines.extend(["", "Do not generate or revise later-stage artifacts, source code, schemas, automation, or architecture."])
+    if stage == "review" and review_stage is not None:
+        authority = data["context"].get("review_authority", {}).get(review_stage)
+        if authority is not None:
+            lines.extend(
+                [
+                    "",
+                    f"## Controlled review authority ({authority['handoff']})",
+                    "",
+                    f"Mechanics authority: {authority['mechanics_authority']}",
+                    "",
+                    f"Semantic authority: {authority['semantic_authority']}",
+                    "",
+                    "Every blocking or revision finding must be classified as exactly one of:",
+                ]
+            )
+            lines.extend(f"- `{classification}`" for classification in authority["finding_classifications"])
+            lines.extend(
+                [
+                    "",
+                    "You may raise `DESIGN_EXECUTABILITY` only when you identify one of the following with an exact citation:",
+                ]
+            )
+            lines.extend(f"- {rule}" for rule in authority["design_executability_allowed_only_when"])
+            lines.extend(["", "You must not:"])
+            lines.extend(f"- {rule}" for rule in authority["reviewer_must_not"])
+            lines.extend(["", authority["finding_requirement"], "", "Hash-bound review evidence:"])
+            lines.extend(f"- `{path}`" for path in authority["hash_bound_evidence"])
     return "\n".join(lines) + "\n"
 
 
@@ -504,7 +628,7 @@ def main() -> None:
         if args.command == "context":
             rendered = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
         else:
-            rendered = prompt_fragment(data, manifest, args.stage)
+            rendered = prompt_fragment(data, manifest, args.stage, review_stage=args.review_stage)
         if args.output:
             output = repo_path(args.output, field="output", must_exist=False)
             output.parent.mkdir(parents=True, exist_ok=True)
