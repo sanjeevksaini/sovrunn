@@ -6,6 +6,8 @@ Architecture baseline: `ARCH-2026.08-PHASE2R-CANONICAL`.
 
 Controlling adoption: `ADH-2026-042`, `ACR-2026-001`, `ARCH-APPROVAL-2026-004`.
 
+FEATURE-0018 status: implemented and merged; PR #20 merged 2026-09-07 as commit `2295e9e` into `phase2-reuse-first-paas-fabric-foundation`.
+
 ## Phase 2R Goal
 
 Establish the canonical, implementation-neutral PaaS fabric foundation with seven-scope governance, qualified ExecutionTarget placement, sovereign evidence-backed decisions, and VS-000 cross-feature conformance — without real provider execution.
@@ -33,12 +35,13 @@ Establish the canonical, implementation-neutral PaaS fabric foundation with seve
 | FEATURE-0012 API, Resource Naming, Status, and Validation Standard | Merged through PR #14 | Final human approval 2026-07-24 |
 | FEATURE-0013 Decision Record and AuditEvent Standard | Merged through PR #15 | Final review 2026-07-29 |
 | FEATURE-0014 Provider-Neutral Resource Model | Merged through PR #16 | Final feature gate 2026-07-30 |
+| FEATURE-0018 Governance, IAM, Approval and Exception Foundation | Implemented and merged; PR #20 merged 2026-09-07 as commit `2295e9e` into `phase2-reuse-first-paas-fabric-foundation` | Final feature gate passed 2026-09-07 |
 
 ## Phase 2R Next Planned Feature
 
 | Feature | Status | Controlling decisions |
 |---|---|---|
-| FEATURE-0015 Canonical Cloud Model Foundation | Architecture ready; requirements not yet generated | DEC-0037, DEC-0038, DEC-0041, DEC-0042, DEC-0054, DEC-0059; ADH-2026-020/024/025/037/043/045 |
+| FEATURE-0019 Sovereignty Facts, Evidence and Policy Foundation | Architecture not started | Pending architecture decision handoff |
 
 ## Approved FEATURE-0018 architecture application
 

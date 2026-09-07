@@ -562,6 +562,27 @@ test(conformance): add local cases
             self.assertIn("FEATURE-0018 status: implemented and merged", result)
             self.assertIn("| FEATURE-0018 Governance Foundation | Implemented and merged", result)
 
+    def test_closeout_updates_phase_2r_baseline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "CURRENT_ARCHITECTURE_BASELINE.md"
+            path.write_text("# Baseline\n\n## Phase 2R Next Planned Feature\n\nFEATURE-0015\n")
+            closeout.update_architecture_baseline(
+                path,
+                {
+                    "feature": {
+                        "id": "FEATURE-0018",
+                        "title": "Governance Foundation",
+                        "architecture": "docs/architecture/feature-0018.md",
+                        "handoffs": [],
+                    },
+                    "ownership": {"owned_resources": [], "excluded_features": []},
+                },
+                "PR #20 merged 2026-09-07",
+            )
+            result = path.read_text()
+            self.assertIn("## Implemented Phase 2R Features", result)
+            self.assertIn("Completed and merged: `FEATURE-0018: Governance Foundation`", result)
+
     def test_full_flow_uses_manifest_controlled_cursor_runner(self):
         source = (ROOT / "scripts/feature-flow.sh").read_text()
         self.assertIn('PHASE_BRANCH="$PHASE_BRANCH"', source)

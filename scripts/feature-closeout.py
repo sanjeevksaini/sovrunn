@@ -167,10 +167,21 @@ def update_architecture_baseline(path: Path, data: dict[str, Any], evidence: str
     if re.search(pattern, text):
         text = re.sub(pattern, replacement, text, count=1)
     else:
-        anchor = "\n## Approved Consolidated"
-        if anchor not in text:
-            raise SystemExit("ERROR: architecture baseline has no insertion anchor")
-        text = text.replace(anchor, "\n" + replacement + anchor, 1)
+        phase2r_section = "## Implemented Phase 2R Features"
+        phase2r_anchor = "\n## Phase 2R Next Planned Feature"
+        if phase2r_section in text:
+            text = text.replace(phase2r_section, phase2r_section + "\n\n" + replacement, 1)
+        elif phase2r_anchor in text:
+            text = text.replace(
+                phase2r_anchor,
+                "\n" + phase2r_section + "\n\n" + replacement + "\n" + phase2r_anchor,
+                1,
+            )
+        else:
+            anchor = "\n## Approved Consolidated"
+            if anchor not in text:
+                raise SystemExit("ERROR: architecture baseline has no supported closeout insertion anchor")
+            text = text.replace(anchor, "\n" + replacement + anchor, 1)
     path.write_text(text)
 
 
