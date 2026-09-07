@@ -98,18 +98,22 @@ def update_traceability(path: Path, feature: str, gate: str) -> None:
 def update_phase_context(path: Path, data: dict[str, Any], evidence: str, date: str) -> None:
     feature = data["feature"]
     text = path.read_text()
+    phase_goals = re.findall(r"(?m)^## (Phase [A-Za-z0-9]+) Goal\s*$", text)
+    if len(phase_goals) != 1:
+        raise SystemExit("ERROR: CURRENT_PHASE_CONTEXT must contain exactly one Phase <name> Goal heading")
+    phase_heading = phase_goals[0]
     status_line = f"{feature['id']} status: implemented and merged; {evidence}."
     pattern = rf"(?m)^{re.escape(feature['id'])} status:.*$"
     if re.search(pattern, text):
         text = re.sub(pattern, status_line, text, count=1)
     else:
-        anchor = "## Phase 2 Goal"
+        anchor = f"## {phase_heading} Goal"
         if anchor not in text:
-            raise SystemExit("ERROR: CURRENT_PHASE_CONTEXT missing Phase 2 Goal")
+            raise SystemExit(f"ERROR: CURRENT_PHASE_CONTEXT missing {phase_heading} Goal")
         text = text.replace(anchor, status_line + "\n\n" + anchor, 1)
     row = f"| {feature['id']} {feature['title']} | Implemented and merged; {evidence} | Final feature gate passed {date} |"
-    completed_heading = "## Phase 2 Completed Features"
-    next_heading = "## Phase 2 Next Planned Feature"
+    completed_heading = f"## {phase_heading} Completed Features"
+    next_heading = f"## {phase_heading} Next Planned Feature"
     if completed_heading not in text or next_heading not in text:
         raise SystemExit("ERROR: CURRENT_PHASE_CONTEXT missing completed/next sections")
     before_completed, remainder = text.split(completed_heading, 1)

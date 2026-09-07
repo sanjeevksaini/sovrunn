@@ -540,6 +540,28 @@ test(conformance): add local cases
         self.assertNotIn('["git", "commit"', source)
         self.assertNotIn('["git", "push"', source)
 
+    def test_closeout_updates_phase_2r_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "CURRENT_PHASE_CONTEXT.md"
+            path.write_text(
+                "# Current Phase Context\n\n"
+                "## Phase 2R Goal\n\nGoal.\n\n"
+                "## Phase 2R Completed Features\n\n"
+                "| Feature | Status | Approval |\n|---|---|---|\n\n"
+                "## Phase 2R Next Planned Feature\n\n"
+                "| Feature | Status | Controlling decisions |\n|---|---|---|\n"
+            )
+            closeout.update_phase_context(
+                path,
+                {"feature": {"id": "FEATURE-0018", "title": "Governance Foundation"}},
+                "PR #20 merged 2026-09-07",
+                "2026-09-07",
+            )
+            result = path.read_text()
+            self.assertIn("## Phase 2R Goal", result)
+            self.assertIn("FEATURE-0018 status: implemented and merged", result)
+            self.assertIn("| FEATURE-0018 Governance Foundation | Implemented and merged", result)
+
     def test_full_flow_uses_manifest_controlled_cursor_runner(self):
         source = (ROOT / "scripts/feature-flow.sh").read_text()
         self.assertIn('PHASE_BRANCH="$PHASE_BRANCH"', source)

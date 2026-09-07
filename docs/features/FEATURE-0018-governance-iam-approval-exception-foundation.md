@@ -2,7 +2,7 @@
 doc_type: feature
 id: FEATURE-0018
 title: Governance, IAM, Approval and Exception Foundation
-status: architecture-approved
+status: implemented_and_merged
 phase: 2R
 reuse_assessment_format_version: 1.0.0
 canonical_architecture: docs/architecture/FEATURE-0018-governance-iam-approval-exception-foundation.md
@@ -11,7 +11,10 @@ controlling_handoff: ADH-2026-070
 audit_taxonomy_correction_handoff: ADH-2026-073
 accepted_decision: DEC-0060
 ai_load_priority: feature
-ai_summary: Approved scope, reuse and generation-control contract for FEATURE-0018, including the ADH-2026-073 terminal-exception audit-event correction; requirements, design, tasks and implementation remain separately gated.
+ai_summary: Implemented and merged through PR #20 as commit 2295e9e on 2026-09-07; approved architecture and handoffs remain controlling.
+merged_pr: #20
+merged_at: 2026-09-07
+merged_commit: 2295e9e8ace09843ddb17bb8c43521bb3d828ea6
 ---
 
 # FEATURE-0018: Governance, IAM, Approval and Exception Foundation
