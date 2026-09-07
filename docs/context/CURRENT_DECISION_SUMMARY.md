@@ -39,9 +39,6 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - Alpha migration is one signed cutover, no dual authority, immutable history preserved (`DEC-0058`) — superseded by `DEC-0059`.
 - Canonical bootstrap replaces alpha runtime migration: the first control-plane release exposes canonical contracts only; FEATURE-0001–0014 are retained repository assets and reuse input, not live state requiring conversion; no CanonicalMigrationPlan/Record, migration controller, or cutover state machine (`DEC-0059`, supersedes `DEC-0058`).
 - FEATURE-0018 is implemented and merged; PR #20 merged 2026-09-07 as commit `2295e9e` into `phase2-reuse-first-paas-fabric-foundation`. Its approved architecture and handoff package remain controlling. It owns AccessGroup, Membership, RoleDefinition, RoleAssignment, PrivilegedAccessRequest, AccessReview, ApprovalPolicy, ApprovalRequest, ExceptionGrant, GovernanceProfile v1, FEATURE-0018 embedded and transient supporting contracts, Deterministic in-memory fixtures and local conformance. Adjacent ownership remains excluded: FEATURE-0019 (sovereignty profiles, regulatory policy bundles, sovereignty facts and evidence, placement-facing sovereignty interpretation); FEATURE-0020 (ProfileAssignment, governance inheritance and conflict resolution, exception application, EffectiveGovernanceContext construction); FEATURE-0021 (CloudEnrollment, entitlement, quota, provider-selection intent); FEATURE-0022 (service requirements, service-region eligibility, placement profile semantics); FEATURE-0023 (candidate-set policy adoption, ranking and placement, DecisionRecord publication for downstream placement); FEATURE-0024 (production adapter selection, plugin execution, provider-native IAM execution, provisioning and realization); FEATURE-0025 (customer-safe explanation, CloudProvider-safe explanation, AI-readable explanation projection); FEATURE-0026 (cross-feature orchestration, Slice 0 integration proof ownership).
-  AccessGroup assignments, exact-Human approval/review/privileged eligibility,
-  immutable exception evidence and a Sovrunn/native-IAM intersection boundary
-  (`DEC-0060`, `ACR-2026-002`, approved 2026-08-30).
 
 ### Superseded Decisions
 
@@ -62,12 +59,6 @@ This file summarizes the currently binding architecture decisions. The detailed 
 - Operation engine backend: simple v0 first; Temporal/Argo later.
 - Secret backend: Kubernetes Secret for local MVP; Vault/External Secrets later.
 
-## Approved FEATURE-0018 stage boundary
+## FEATURE-0018 implementation closeout
 
-DEC-0060 and its exact architecture/reuse package are accepted. Independent
-security-review renewal-05 passed with no blocking findings. ADH-2026-071 is
-approved as a non-semantic conformance-executability correction; the controlled
-requirements context and fresh requirements-generation authorization are
-recorded. Independent requirements review approved the reconciled document with
-`APPROVED_FOR_DESIGN`; design is now the current stage, while tasks and
-implementation remain separately gated.
+FEATURE-0018 is implemented and merged; PR #20 merged 2026-09-07 as commit `2295e9e` into `phase2-reuse-first-paas-fabric-foundation`. Its final human approval and feature gate are recorded. Its approved architecture and accepted handoffs remain controlling. It owns AccessGroup, Membership, RoleDefinition, RoleAssignment, PrivilegedAccessRequest, AccessReview, ApprovalPolicy, ApprovalRequest, ExceptionGrant, GovernanceProfile v1, FEATURE-0018 embedded and transient supporting contracts, Deterministic in-memory fixtures and local conformance. Adjacent ownership remains excluded: FEATURE-0019 (sovereignty profiles, regulatory policy bundles, sovereignty facts and evidence, placement-facing sovereignty interpretation); FEATURE-0020 (ProfileAssignment, governance inheritance and conflict resolution, exception application, EffectiveGovernanceContext construction); FEATURE-0021 (CloudEnrollment, entitlement, quota, provider-selection intent); FEATURE-0022 (service requirements, service-region eligibility, placement profile semantics); FEATURE-0023 (candidate-set policy adoption, ranking and placement, DecisionRecord publication for downstream placement); FEATURE-0024 (production adapter selection, plugin execution, provider-native IAM execution, provisioning and realization); FEATURE-0025 (customer-safe explanation, CloudProvider-safe explanation, AI-readable explanation projection); FEATURE-0026 (cross-feature orchestration, Slice 0 integration proof ownership).
